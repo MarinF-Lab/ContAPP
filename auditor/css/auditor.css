@@ -1,0 +1,35 @@
+/* ══════════════════════════════════════════════
+   ContAPP Auditor — Branding y estilos exclusivos
+   Sobreescribe variables del núcleo para esta edición.
+══════════════════════════════════════════════ */
+
+:root {
+    --accent:        #1e3a8a;   /* Azul oscuro profesional */
+    --accent-hover:  #1e40af;
+    --accent-soft:   #eff6ff;
+    --accent-border: #bfdbfe;
+}
+
+/* Logo y título de la edición */
+.logo-text::after {
+    content: ' Auditor';
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: .04em;
+}
+
+/* Badge de edición en el sidebar */
+.auditor-edition-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+    text-transform: uppercase;
+}

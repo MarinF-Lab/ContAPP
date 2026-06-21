@@ -1,0 +1,474 @@
+/* ══════════════════════════════════════════════════════════════
+   REMUNERACIONES — estilos del módulo vanilla JS
+   Usa variables de variables.css / main.css.
+   Prefijo .rem- para evitar colisiones.
+══════════════════════════════════════════════════════════════ */
+
+/* ── Contenedor raíz ──────────────────────────────────────── */
+.rem-root { padding: 0; }
+
+/* ── KPI strip ────────────────────────────────────────────── */
+.rem-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.rem-kpi-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 22px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.rem-kpi-icon { font-size: 22px; margin-bottom: 4px; }
+.rem-kpi-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    line-height: 1;
+    font-family: 'Courier New', monospace;
+}
+.rem-kpi-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+}
+
+/* ── Tabs principales ─────────────────────────────────────── */
+.rem-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--divider);
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+.rem-tab {
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color .15s, border-color .15s;
+    white-space: nowrap;
+}
+.rem-tab:hover { color: var(--text); }
+.rem-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Toolbar ──────────────────────────────────────────────── */
+.rem-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.rem-search {
+    flex: 1;
+    min-width: 220px;
+    padding: 10px 14px;
+    border: 1px solid var(--divider);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--input-bg);
+    color: var(--text);
+    transition: border-color .2s;
+}
+.rem-search:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(43,91,246,.1);
+}
+
+/* ── Tabla ────────────────────────────────────────────────── */
+.rem-tabla-wrap {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+.rem-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.rem-tabla thead th {
+    background: var(--table-stripe);
+    padding: 13px 18px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--divider);
+    white-space: nowrap;
+}
+.rem-tabla tbody tr {
+    border-bottom: 1px solid var(--divider);
+    transition: background .12s;
+}
+.rem-tabla tbody tr:last-child { border-bottom: none; }
+.rem-tabla tbody tr:hover { background: var(--table-stripe); }
+.rem-tabla tbody td { padding: 14px 18px; color: var(--text); vertical-align: middle; }
+.rem-tabla tfoot td {
+    padding: 13px 18px;
+    font-weight: 700;
+    background: var(--table-stripe);
+    border-top: 2px solid var(--divider);
+    font-family: 'Courier New', monospace;
+}
+
+/* ── Avatar circular ──────────────────────────────────────── */
+.rem-avatar {
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    font-family: inherit;
+}
+
+/* ── Badges ───────────────────────────────────────────────── */
+.rem-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.rem-badge-ok   { background: var(--positive-soft); color: var(--positive); }
+.rem-badge-warn { background: var(--warning-soft);  color: var(--warning); }
+.rem-badge-info { background: var(--accent-soft);   color: var(--accent); }
+.rem-badge-gray {
+    background: var(--table-stripe);
+    color: var(--text-muted);
+    border: 1px solid var(--divider);
+}
+
+/* ── Layout liquidar ──────────────────────────────────────── */
+.rem-liq-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+.rem-worker-list { display: flex; flex-direction: column; gap: 2px; }
+.rem-worker-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .12s;
+    border: 1.5px solid transparent;
+}
+.rem-worker-item:hover { background: var(--table-stripe); }
+.rem-worker-item.sel   { background: var(--accent-soft); border-color: var(--accent); }
+.rem-worker-nombre {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rem-worker-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 1px;
+    font-family: 'Courier New', monospace;
+}
+
+/* ── Boleta de liquidación ────────────────────────────────── */
+.rem-boleta {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+.rem-bol-head {
+    background: #0F1623;
+    color: #fff;
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+}
+.rem-bol-alerta {
+    background: var(--warning-soft);
+    border-bottom: 1px solid #fde68a;
+    padding: 10px 22px;
+    font-size: 13px;
+    color: #92400e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.rem-bol-sec-head {
+    background: var(--table-stripe);
+    padding: 8px 22px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--divider);
+    border-top: 1px solid var(--divider);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.rem-bol-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 22px;
+    border-bottom: 1px solid var(--divider);
+    font-size: 14px;
+}
+.rem-bol-row:last-child { border-bottom: none; }
+.rem-bol-sub {
+    background: var(--table-stripe);
+    font-weight: 700;
+    border-top: 1px solid var(--divider);
+    border-bottom: 2px solid var(--divider) !important;
+}
+.rem-bol-concepto { color: var(--text); }
+.rem-bol-pct {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--input-bg);
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    border: 1px solid var(--divider);
+}
+.rem-bol-monto {
+    font-weight: 600;
+    text-align: right;
+    min-width: 110px;
+    white-space: nowrap;
+    font-family: 'Courier New', monospace;
+    font-size: 13.5px;
+}
+.rem-pos   { color: var(--positive); }
+.rem-neg   { color: var(--negative); }
+.rem-muted { color: var(--text-muted); }
+
+/* Pie boleta */
+.rem-bol-foot {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 2px solid var(--divider);
+}
+/* Pie boleta trabajador: líquido grande + costo empleador compacto */
+.rem-bol-foot-single {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    border-top: 2px solid var(--divider);
+    align-items: stretch;
+}
+.rem-total-liq, .rem-total-costo {
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.rem-total-liq   { background: var(--positive-soft); }
+.rem-total-costo { background: var(--negative-soft); border-left: 1px solid rgba(229,62,90,.2); }
+.rem-total-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.rem-total-liq   .rem-total-label { color: var(--positive); }
+.rem-total-costo .rem-total-label { color: var(--negative); }
+.rem-total-val {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    font-family: 'Courier New', monospace;
+}
+.rem-total-liq   .rem-total-val { color: var(--positive); }
+.rem-total-costo .rem-total-val { color: var(--negative); }
+.rem-total-sub { font-size: 12px; color: var(--text-muted); }
+
+.rem-bol-actions {
+    padding: 14px 22px;
+    border-top: 1px solid var(--divider);
+    background: var(--table-stripe);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* ── Libro (período card) ─────────────────────────────────── */
+.rem-periodo-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+}
+.rem-periodo-head {
+    background: var(--table-stripe);
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--divider);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* ── IA Banner ────────────────────────────────────────────── */
+.rem-ia-banner {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.rem-empty {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--text-muted);
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+}
+.rem-empty-icon  { font-size: 40px; margin-bottom: 14px; opacity: .4; }
+.rem-empty p     { font-size: 15px; font-weight: 500; }
+.rem-empty small { font-size: 13px; margin-top: 6px; display: block; }
+
+/* ── Modal: Ficha trabajador ──────────────────────────────── */
+.rem-form-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--divider);
+    margin-bottom: 24px;
+    overflow-x: auto;
+}
+.rem-form-tab {
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+    transition: color .15s;
+}
+.rem-form-tab:hover { color: var(--text); }
+.rem-form-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.rem-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px 20px;
+}
+.rem-fg {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.rem-fg-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: block;
+}
+.rem-input, .rem-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--divider);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--input-bg);
+    color: var(--text);
+    transition: border-color .2s, box-shadow .2s;
+    box-sizing: border-box;
+}
+.rem-input:focus, .rem-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(43,91,246,.1);
+}
+.rem-input.rem-input-warn { border-color: var(--warning); }
+.rem-fg-hint { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+.rem-form-divider {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    padding: 16px 0 8px;
+    border-top: 1px solid var(--divider);
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+/* Cuando el divisor aparece dentro de un rem-form-grid ya cerrado se maneja en HTML;
+   si estuviera dentro del grid necesita span completo */
+.rem-form-grid + .rem-form-divider { margin-top: 16px; }
+
+.rem-drop-zone {
+    border: 2px dashed var(--divider);
+    border-radius: 12px;
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    background: var(--input-bg);
+}
+.rem-drop-zone:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+.rem-contrato-adjunto {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--positive-soft);
+    border: 1px solid var(--positive);
+    border-radius: 10px;
+    font-size: 14px;
+}

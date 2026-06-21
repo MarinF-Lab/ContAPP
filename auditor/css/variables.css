@@ -1,0 +1,114 @@
+/* ─────────────────────────────────────────────────────────────
+   CONTAPP FORGE — Design System Variables
+   Light mode (default) + Dark mode via [data-theme="dark"]
+───────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ══════════════════════════════════════════
+   LIGHT MODE (default)
+══════════════════════════════════════════ */
+:root {
+    /* Core palette */
+    --bg:             #F0F2F7;
+    --sidebar:        #FFFFFF;
+    --card:           #FFFFFF;
+    --card-border:    #E4E8F0;
+    --text:           #0F1623;
+    --text-muted:     #6B7A99;
+    --text-subtle:    #9AA3BC;
+    --accent:         #2B5BF6;
+    --accent-soft:    #EEF2FF;
+    --accent-grad:    linear-gradient(135deg, #2B5BF6 0%, #7B3FF2 100%);
+    --positive:       #0FA86E;
+    --positive-soft:  #E8F8F2;
+    --negative:       #E53E5A;
+    --negative-soft:  #FEF0F2;
+    --warning:        #F59E0B;
+    --warning-soft:   #FEF9EC;
+    --divider:        #E4E8F0;
+    --table-stripe:   #F7F9FC;
+    --input-bg:       #F4F6FA;
+    --shadow:         0 2px 12px rgba(15,22,35,0.07);
+    --shadow-lg:      0 8px 32px rgba(15,22,35,0.10);
+    --nav-active:     #EEF2FF;
+
+    /* Sidebar-specific (white sidebar en light mode) */
+    --sidebar-text:          #2C3654;
+    --sidebar-text-hover:    #0F1623;
+    --sidebar-icon-color:    #6B7A99;
+    --sidebar-group-clr:     rgba(15,22,35,0.38);
+    --sidebar-item-hover:    #F4F6FA;
+    --sidebar-item-active-bg:  #EEF2FF;
+    --sidebar-item-active-txt: #2B5BF6;
+    --sidebar-border-clr:    rgba(15,22,35,0.08);
+    --sidebar-logo-border:   rgba(15,22,35,0.10);
+    --sidebar-divider:       1px solid rgba(15,22,35,0.08);
+
+    /* ── Legacy aliases — mantiene el CSS existente funcionando ── */
+    --primary:        var(--accent);
+    --primary-hover:  #1A4AE8;
+    --sidebar-bg:     var(--sidebar);
+    --sidebar-hover:  var(--sidebar-item-hover);
+    --surface:        var(--card);
+    --background:     var(--bg);
+    --text-main:      var(--text);
+    --border:         var(--divider);
+    --success-bg:     var(--positive-soft);
+    --success-text:   var(--positive);
+    --error-bg:       var(--negative-soft);
+    --error-text:     var(--negative);
+}
+
+/* ══════════════════════════════════════════
+   DARK MODE
+══════════════════════════════════════════ */
+[data-theme="dark"] {
+    /* Core palette */
+    --bg:             #0D1117;
+    --sidebar:        #161B27;
+    --card:           #1C2333;
+    --card-border:    #262F45;
+    --text:           #E8EDF8;
+    --text-muted:     #8A95B0;
+    --text-subtle:    #4A5470;
+    --accent:         #4F7BFF;
+    --accent-soft:    #1A2547;
+    --accent-grad:    linear-gradient(135deg, #4F7BFF 0%, #9B6FFF 100%);
+    --positive:       #1ACC8A;
+    --positive-soft:  #0D2B20;
+    --negative:       #FF4D6A;
+    --negative-soft:  #2B0F17;
+    --warning:        #FBBF24;
+    --warning-soft:   #2B1F07;
+    --divider:        #262F45;
+    --table-stripe:   #1A2030;
+    --input-bg:       #141924;
+    --shadow:         0 2px 12px rgba(0,0,0,0.3);
+    --shadow-lg:      0 8px 32px rgba(0,0,0,0.4);
+    --nav-active:     #1A2547;
+
+    /* Sidebar-specific (dark sidebar en dark mode) */
+    --sidebar-text:          #CBD5E1;
+    --sidebar-text-hover:    #FFFFFF;
+    --sidebar-icon-color:    #8A95B0;
+    --sidebar-group-clr:     rgba(255,255,255,0.35);
+    --sidebar-item-hover:    rgba(255,255,255,0.06);
+    --sidebar-item-active-bg:  #1A2547;
+    --sidebar-item-active-txt: #FFFFFF;
+    --sidebar-border-clr:    rgba(255,255,255,0.08);
+    --sidebar-logo-border:   rgba(255,255,255,0.10);
+    --sidebar-divider:       1px solid rgba(255,255,255,0.08);
+
+    /* ── Legacy overrides ── */
+    --primary-hover:  #3A65E8;
+    --sidebar-bg:     var(--sidebar);
+    --sidebar-hover:  var(--sidebar-item-hover);
+    --surface:        var(--card);
+    --background:     var(--bg);
+    --text-main:      var(--text);
+    --border:         var(--divider);
+    --success-bg:     var(--positive-soft);
+    --success-text:   var(--positive);
+    --error-bg:       var(--negative-soft);
+    --error-text:     var(--negative);
+}
