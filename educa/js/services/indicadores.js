@@ -37,6 +37,7 @@ const _ASIG_FAM = [
     { tramo: 'D', hastaClp: Infinity, montoClp: 0     },
 ];
 
+// Tasas AFP dependientes (cargo del trabajador)
 const _AFP_TASAS_BASE = {
     Capital:   11.44,
     Cuprum:    11.44,
@@ -44,11 +45,24 @@ const _AFP_TASAS_BASE = {
     PlanVital: 11.16,
     ProVida:   11.45,
     Modelo:    10.58,
-    Uno:       10.49,
+    Uno:       10.46,
 };
 
+// Tasas AFP independientes (incluye SIS — varía por AFP)
+const _AFP_TASAS_IND = {
+    Capital:   13.06,
+    Cuprum:    13.06,
+    Habitat:   12.89,
+    PlanVital: 12.78,
+    ProVida:   13.07,
+    Modelo:    12.20,
+    Uno:       12.08,
+};
+
+const _AFP_DEP_EMPL = 0.10; // Cargo empleador AFP (fijo por ley)
+
 const _TASAS_BASE = {
-    sis:      1.49,
+    sis:      1.62,
     mutual:   0.90,
     cesTrab:  0.60,
     cesEmpl:  2.40,
@@ -66,13 +80,20 @@ const _IMM_BASE = {
     _ref: 'desde 01/01/2026',
 };
 
-const PV_CREDS_KEY  = 'core_pv_creds';
-const PV_TASAS_KEY  = 'core_pv_tasas';
-const PV_ASIG_KEY   = 'core_pv_asig';
-const PV_IMM_KEY    = 'core_pv_imm';
+const PV_CREDS_KEY    = 'core_pv_creds';
+const PV_TASAS_KEY    = 'core_pv_tasas';
+const PV_TASAS_IND_KEY = 'core_pv_tasas_ind';
+const PV_ASIG_KEY     = 'core_pv_asig';
+const PV_IMM_KEY      = 'core_pv_imm';
 
-const _TOPE_AFP_UF = 81.6;
-const _TOPE_SAL_UF = 126.0;
+// Topes en UF (etiquetas y cálculo de montos CLP)
+const _TOPE_AFP_UF    = 90.0;
+const _TOPE_IPS_UF    = 60.0;
+const _TOPE_CES_UF    = 135.2;
+const _TOPE_SAL_UF    = 90.0;
+const _APV_TOPE_MEN_UF = 50.0;
+const _APV_TOPE_ANU_UF = 600.0;
+const _DEP_CONV_ANU_UF = 900.0;
 
 // ─────────────────────────────────────────────────────────────
 //  PERSISTENCIA LOCAL
@@ -426,6 +447,17 @@ function _immActivo() {
 window.immActivo = _immActivo;
 window.pvTasasActivas = _pvTasasActivas;
 
+function _afpIndActivas() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(PV_TASAS_IND_KEY) || 'null');
+        if (!saved) return { ..._AFP_TASAS_IND };
+        return Object.fromEntries(
+            Object.keys(_AFP_TASAS_IND).map(k => [k, saved[k] ?? _AFP_TASAS_IND[k]])
+        );
+    } catch { return { ..._AFP_TASAS_IND }; }
+}
+window.afpIndActivas = _afpIndActivas;
+
 // ─────────────────────────────────────────────────────────────
 //  PREVIRED — panel UI
 // ─────────────────────────────────────────────────────────────
@@ -490,10 +522,20 @@ function _pvCargarTasasUI() {
 
     const grid = document.getElementById('pvAfpGrid');
     if (!grid) return;
+    const tInd = _afpIndActivas();
     grid.innerHTML = Object.entries(t.afp).map(([nombre, tasa]) => `
-        <div class="pv-field">
-            <label class="pv-label">${nombre}</label>
-            <input id="pvAfp_${nombre}" type="number" step="0.01" min="0" value="${tasa}" class="pv-input">
+        <div style="margin-bottom:10px;">
+            <div style="font-weight:700;font-size:12px;margin-bottom:4px;color:var(--text);">${nombre}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <div>
+                    <label class="pv-label" style="font-size:10px;">Dep. Trabajador %</label>
+                    <input id="pvAfp_${nombre}" type="number" step="0.01" min="0" value="${tasa}" class="pv-input">
+                </div>
+                <div>
+                    <label class="pv-label" style="font-size:10px;">Independiente %</label>
+                    <input id="pvAfpInd_${nombre}" type="number" step="0.01" min="0" value="${tInd[nombre] ?? ''}" class="pv-input">
+                </div>
+            </div>
         </div>`).join('');
 }
 
@@ -534,6 +576,12 @@ function previredGuardarTasas() {
     });
     localStorage.setItem(PV_TASAS_KEY, JSON.stringify(tasas));
 
+    const tasasInd = {};
+    Object.keys(_AFP_TASAS_IND).forEach(nombre => {
+        tasasInd[nombre] = parseFloat(document.getElementById(`pvAfpInd_${nombre}`)?.value || '0') || _AFP_TASAS_IND[nombre];
+    });
+    localStorage.setItem(PV_TASAS_IND_KEY, JSON.stringify(tasasInd));
+
     const immData = {
         mayor: money('pvImmMayor') || _IMM_BASE.mayor,
         menor: money('pvImmMenor') || _IMM_BASE.menor,
@@ -560,6 +608,7 @@ function previredGuardarTasas() {
 function previredRestaurarTasas() {
     if (!confirm('¿Restaurar todas las tasas y tramos a los valores predeterminados?')) return;
     localStorage.removeItem(PV_TASAS_KEY);
+    localStorage.removeItem(PV_TASAS_IND_KEY);
     localStorage.removeItem(PV_ASIG_KEY);
     localStorage.removeItem(PV_IMM_KEY);
     _pvCargarTasasUI();
@@ -607,171 +656,314 @@ function renderPreviredTablas() {
     const cache  = window.indicadoresEconomicos || {};
     const utm    = cache.utm?.valor || 68000;
     const uf     = cache.uf?.valor  || 38000;
-    const utmFec = cache.utm?.fecha ? ` · UTM: ${cache.utm.fecha}` : '';
+    const utmFec = cache.utm?.fecha ? ` · UTM al ${cache.utm.fecha}` : '';
 
     const ref = document.getElementById('previredFechaRef');
     if (ref) ref.textContent = `(UTM: ${_fmtClp(utm)}${utmFec})`;
 
     const tasas      = _pvTasasActivas();
+    const tasasInd   = _afpIndActivas();
     const tramos     = _computeTramos(utm);
     const topeAfpClp = Math.round(tasas.topeAfp * uf);
+    const topeInpClp = Math.round(tasas.topeInp * uf);
+    const topeCesClp = Math.round(tasas.topeCes * uf);
     const topeSalClp = Math.round(tasas.topeSal * uf);
+    const apvMenClp  = Math.round(_APV_TOPE_MEN_UF * uf);
+    const apvAnuClp  = Math.round(_APV_TOPE_ANU_UF * uf);
+    const depConvClp = Math.round(_DEP_CONV_ANU_UF * uf);
+    const imm        = _immActivo();
+    const _afActiva  = _asigFamActiva();
 
-    const tramosHtml = tramos.map((t, i) => {
-        const isExento  = t.tasa === 0;
-        const desdeStr  = i === 0 ? '0' : _fmtN(t.desdeClp);
-        const hastaStr  = t.hasta === Infinity ? 'y más' : _fmtClp(t.hastaClp);
-        const tasaStr   = isExento ? 'Exento' : (t.tasa * 100).toFixed(1).replace('.', ',') + '%';
-        const rebajaStr = isExento ? '—' : _fmtClp(t.rebaja);
-        const utmStr    = t.hasta === Infinity
-            ? `${t.desde} UTM en adelante`
-            : i === 0 ? `hasta ${t.hasta} UTM` : `${t.desde} – ${t.hasta} UTM`;
-        const tasaColor = isExento ? 'var(--positive)' : t.tasa >= 0.30 ? 'var(--negative)' : 'var(--text)';
-        return `<tr style="border-bottom:1px solid var(--divider);">
-            <td style="padding:7px 10px;font-size:11px;color:var(--text-muted);">${utmStr}</td>
-            <td style="padding:7px 10px;text-align:right;font-family:'Courier New',monospace;font-size:12px;">${desdeStr}</td>
-            <td style="padding:7px 10px;text-align:right;font-family:'Courier New',monospace;font-size:12px;">${hastaStr}</td>
-            <td style="padding:7px 10px;text-align:right;font-family:'Courier New',monospace;font-weight:700;color:${tasaColor};">${tasaStr}</td>
-            <td style="padding:7px 10px;text-align:right;font-family:'Courier New',monospace;font-size:12px;color:var(--text-muted);">${rebajaStr}</td>
+    // Estilos
+    const PV  = '#5b4886';
+    const PVL = '#f0ebfa';
+    const PVB = '#d8cdf0';
+    const mono = "font-family:'Courier New',monospace;";
+
+    const secHead = (title, sub = '') => `
+        <div style="padding:10px 14px;background:${PV};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:baseline;gap:8px;">
+            ${title}${sub ? `<span style="font-size:11px;font-weight:400;opacity:.82;">${sub}</span>` : ''}
+        </div>`;
+    const thR = `padding:7px 10px;text-align:right;font-size:11px;font-weight:700;color:${PV};border-bottom:2px solid ${PVB};white-space:nowrap;`;
+    const thL = `padding:7px 10px;text-align:left;font-size:11px;font-weight:700;color:${PV};border-bottom:2px solid ${PVB};white-space:nowrap;`;
+    const tr0 = `border-bottom:1px solid ${PVB};`;
+    const foot = `padding:7px 12px;font-size:11px;color:var(--text-muted);`;
+    const card = `class="card" style="padding:0;overflow:hidden;"`;
+
+    // AFP rows
+    const afpHtml = Object.entries(tasas.afp).map(([nom, trab]) => {
+        const ind   = tasasInd[nom] ?? _AFP_TASAS_IND[nom] ?? 0;
+        const empl  = _AFP_DEP_EMPL;
+        const total = trab + empl;
+        return `<tr style="${tr0}">
+            <td style="padding:7px 12px;font-weight:600;">${nom}</td>
+            <td style="padding:7px 12px;text-align:right;${mono}">${trab.toFixed(2).replace('.', ',')}%</td>
+            <td style="padding:7px 12px;text-align:right;${mono}color:var(--text-muted);">${empl.toFixed(2).replace('.', ',')}%</td>
+            <td style="padding:7px 12px;text-align:right;${mono}font-weight:700;">${total.toFixed(2).replace('.', ',')}%</td>
+            <td style="padding:7px 12px;text-align:right;${mono}color:${PV};font-weight:600;">${ind.toFixed(2).replace('.', ',')}%</td>
         </tr>`;
     }).join('');
 
-    const afpHtml = Object.entries(tasas.afp).map(([nombre, trab]) => `
-        <tr style="border-bottom:1px solid var(--divider);">
-            <td style="padding:8px 14px;font-weight:600;">${nombre}</td>
-            <td style="padding:8px 14px;text-align:right;font-family:'Courier New',monospace;">${trab.toFixed(2).replace('.', ',')}%</td>
-            <td style="padding:8px 14px;text-align:right;font-family:'Courier New',monospace;color:var(--text-muted);">${tasas.sis.toFixed(2).replace('.', ',')}%</td>
-            <td style="padding:8px 14px;text-align:right;font-family:'Courier New',monospace;font-size:12px;color:var(--text-muted);">${_fmtClp(topeAfpClp)}</td>
-        </tr>`).join('');
-
-    const _afActiva = _asigFamActiva();
+    // Asig familiar rows
     const asigHtml = _afActiva.map((a, i) => `
-        <tr style="border-bottom:${i < _afActiva.length - 1 ? '1px solid var(--divider)' : 'none'};">
-            <td style="padding:8px 14px;font-weight:700;color:var(--accent);">Tramo ${a.tramo}</td>
-            <td style="padding:8px 14px;text-align:right;font-family:'Courier New',monospace;">
-                ${a.hastaClp === Infinity ? 'Sin límite' : _fmtClp(a.hastaClp)}</td>
-            <td style="padding:8px 14px;text-align:right;font-family:'Courier New',monospace;font-weight:700;
-                color:${a.montoClp > 0 ? 'var(--positive)' : 'var(--text-muted)'};">
+        <tr style="${i < _afActiva.length - 1 ? tr0 : ''}">
+            <td style="padding:7px 12px;font-weight:700;color:${PV};">Tramo ${a.tramo}</td>
+            <td style="padding:7px 12px;text-align:right;${mono}font-size:12px;">
+                ${a.hastaClp === Infinity ? 'Sin límite' : '≤ ' + _fmtClp(a.hastaClp)}</td>
+            <td style="padding:7px 12px;text-align:right;${mono}font-weight:700;color:${a.montoClp > 0 ? 'var(--positive)' : 'var(--text-muted)'};">
                 ${_fmtClp(a.montoClp)}</td>
         </tr>`).join('');
 
-    const thStyle = 'padding:7px 12px;text-align:right;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid var(--divider);white-space:nowrap;';
-    const thL     = thStyle.replace('text-align:right', 'text-align:left');
-    const secHead = (emoji, title, sub='') => `
-        <div style="padding:12px 16px;background:var(--table-stripe);border-bottom:1px solid var(--divider);font-weight:700;font-size:13px;display:flex;align-items:baseline;gap:8px;">
-            ${emoji} ${title}
-            ${sub ? `<span style="font-size:11px;font-weight:400;color:var(--text-muted);">${sub}</span>` : ''}
-        </div>`;
+    // IU tramos
+    const tramosHtml = tramos.map((t, i) => {
+        const isEx  = t.tasa === 0;
+        const desde = i === 0 ? '$ 0' : _fmtClp(t.desdeClp);
+        const hasta = t.hasta === Infinity ? 'y más' : _fmtClp(t.hastaClp);
+        const tStr  = isEx ? 'Exento' : (t.tasa * 100).toFixed(1).replace('.', ',') + '%';
+        const rStr  = isEx ? '—' : _fmtClp(t.rebaja);
+        const uStr  = t.hasta === Infinity ? `${t.desde} UTM en adelante`
+                    : i === 0 ? `0 – ${t.hasta} UTM` : `${t.desde} – ${t.hasta} UTM`;
+        const tc    = isEx ? 'var(--positive)' : t.tasa >= 0.30 ? 'var(--negative)' : 'var(--text)';
+        return `<tr style="${tr0}">
+            <td style="padding:7px 10px;font-size:11px;color:var(--text-muted);">${uStr}</td>
+            <td style="padding:7px 10px;text-align:right;${mono}font-size:12px;">${desde}</td>
+            <td style="padding:7px 10px;text-align:right;${mono}font-size:12px;">${hasta}</td>
+            <td style="padding:7px 10px;text-align:right;${mono}font-weight:700;color:${tc};">${tStr}</td>
+            <td style="padding:7px 10px;text-align:right;${mono}font-size:12px;color:var(--text-muted);">${rStr}</td>
+        </tr>`;
+    }).join('');
 
     el.innerHTML = `
 
-    <!-- IU 2ª Categoría -->
-    <div class="card" style="padding:0;overflow:hidden;grid-column:1/-1;">
-        ${secHead('📋','Impuesto Único 2ª Categoría — Tramos mensuales',`calculado sobre UTM ${_fmtClp(utm)}`)}
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead><tr style="background:var(--table-stripe);">
-                <th style="${thL}">Tramo en UTM</th>
-                <th style="${thStyle}">Renta desde (CLP)</th>
-                <th style="${thStyle}">Renta hasta (CLP)</th>
-                <th style="${thStyle}">Tasa</th>
-                <th style="${thStyle}">Rebaja (CLP)</th>
-            </tr></thead>
-            <tbody>${tramosHtml}</tbody>
-            <tfoot><tr style="background:var(--table-stripe);border-top:2px solid var(--divider);">
-                <td colspan="5" style="padding:8px 12px;font-size:11px;color:var(--text-muted);">
-                    Base imponible = renta imponible − AFP − salud − cesantía.
-                    Las rebajas en CLP se recalculan automáticamente con cada actualización de UTM.
-                </td>
-            </tr></tfoot>
-        </table>
-    </div>
-
     <!-- AFP -->
-    <div class="card" style="padding:0;overflow:hidden;">
-        ${secHead('🏦','AFP — Tasas de cotización','actualizadas automáticamente desde previred.com')}
+    <div ${card} style="padding:0;overflow:hidden;grid-column:1/-1;">
+        ${secHead('AFP — Tasas de cotización', `tope dependientes: ${tasas.topeAfp} UF = ${_fmtClp(topeAfpClp)}`)}
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead><tr style="background:var(--table-stripe);">
-                <th style="${thL}">Institución</th>
-                <th style="${thStyle}">Trabajador</th>
-                <th style="${thStyle}">SIS (empleador)</th>
-                <th style="${thStyle}">Tope (${_TOPE_AFP_UF} UF)</th>
+            <thead><tr style="background:${PVL};">
+                <th style="${thL}">AFP</th>
+                <th style="${thR}">Dep. Trabajador</th>
+                <th style="${thR}">Dep. Empleador</th>
+                <th style="${thR}">Dep. Total</th>
+                <th style="${thR}">Independiente</th>
             </tr></thead>
-            <tbody>${afpHtml}</tbody>
-            <tfoot><tr style="background:var(--table-stripe);border-top:2px solid var(--divider);">
-                <td colspan="4" style="padding:8px 14px;font-size:11px;color:var(--text-muted);">
-                    Tope imponible AFP: ${_TOPE_AFP_UF} UF = ${_fmtClp(topeAfpClp)} · UF al ${cache.uf?.fecha || '—'}
+            <tbody>
+                ${afpHtml}
+                <tr style="${tr0}background:${PVL};">
+                    <td style="padding:7px 12px;font-weight:600;color:var(--text-muted);">SIS (cargo empleador)</td>
+                    <td style="padding:7px 12px;text-align:right;color:var(--text-muted);">—</td>
+                    <td style="padding:7px 12px;text-align:right;${mono}font-weight:700;">${tasas.sis.toFixed(2).replace('.', ',')}%</td>
+                    <td style="padding:7px 12px;text-align:right;color:var(--text-muted);">—</td>
+                    <td style="padding:7px 12px;text-align:right;color:var(--text-muted);">—</td>
+                </tr>
+                <tr style="background:${PVL};">
+                    <td style="padding:7px 12px;font-weight:600;color:var(--text-muted);">Seguro Social (empleador)</td>
+                    <td style="padding:7px 12px;text-align:right;color:var(--text-muted);">—</td>
+                    <td style="padding:7px 12px;text-align:right;${mono}font-weight:700;">${tasas.mutual.toFixed(2).replace('.', ',')}%</td>
+                    <td style="padding:7px 12px;text-align:right;color:var(--text-muted);">—</td>
+                    <td style="padding:7px 12px;text-align:right;color:var(--text-muted);">—</td>
+                </tr>
+            </tbody>
+            <tfoot><tr style="background:${PVL};border-top:1px solid ${PVB};">
+                <td colspan="5" style="${foot}">
+                    IPS (ex-INP): tope ${tasas.topeInp} UF = ${_fmtClp(topeInpClp)} &nbsp;·&nbsp; UF al ${cache.uf?.fecha || '—'}: ${_fmtClp(uf)}
                 </td>
             </tr></tfoot>
         </table>
     </div>
 
-    <!-- Cesantía + Salud -->
-    <div style="display:flex;flex-direction:column;gap:16px;">
+    <!-- IMM -->
+    <div ${card}>
+        ${secHead('IMM — Ingreso Mínimo Mensual')}
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:${PVL};">
+                <th style="${thL}">Trabajador</th>
+                <th style="${thR}">Monto mensual</th>
+            </tr></thead>
+            <tbody>
+                <tr style="${tr0}">
+                    <td style="padding:8px 12px;">Mayor de 18 y menor de 65 años</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}font-weight:700;">${_fmtClp(imm.mayor)}</td>
+                </tr>
+                <tr style="${tr0}">
+                    <td style="padding:8px 12px;">Menor de 18 / mayor de 65 / Discapacitados</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}font-weight:700;">${_fmtClp(imm.menor)}</td>
+                </tr>
+                <tr>
+                    <td style="padding:8px 12px;">Fines no remuneracionales</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}font-weight:700;">${_fmtClp(imm.noRem)}</td>
+                </tr>
+            </tbody>
+            <tfoot><tr style="background:${PVL};border-top:1px solid ${PVB};">
+                <td colspan="2" style="${foot}">${imm._ref || ''}</td>
+            </tr></tfoot>
+        </table>
+    </div>
 
-        <div class="card" style="padding:0;overflow:hidden;">
-            ${secHead('🛡️','Seguro de Cesantía')}
-            <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                <thead><tr style="background:var(--table-stripe);">
-                    <th style="${thL}">Tipo contrato</th>
-                    <th style="${thStyle}">Trabajador</th>
-                    <th style="${thStyle}">Empleador</th>
-                </tr></thead>
-                <tbody>
-                    <tr style="border-bottom:1px solid var(--divider);">
-                        <td style="padding:8px 14px;">Indefinido</td>
-                        <td style="padding:8px 14px;text-align:right;font-family:'Courier New',monospace;">0,60%</td>
-                        <td style="padding:8px 14px;text-align:right;font-family:'Courier New',monospace;">2,40%</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:8px 14px;">Plazo fijo / obra</td>
-                        <td style="padding:8px 14px;text-align:right;font-family:'Courier New',monospace;color:var(--text-muted);">—</td>
-                        <td style="padding:8px 14px;text-align:right;font-family:'Courier New',monospace;">3,00%</td>
-                    </tr>
-                </tbody>
-                <tfoot><tr style="background:var(--table-stripe);border-top:2px solid var(--divider);">
-                    <td colspan="3" style="padding:8px 14px;font-size:11px;color:var(--text-muted);">
-                        Mutual de seguridad (empleador): 0,90%
-                    </td>
-                </tr></tfoot>
-            </table>
-        </div>
+    <!-- Seguro de Cesantía -->
+    <div ${card}>
+        ${secHead('Seguro de Cesantía', `tope ${tasas.topeCes} UF = ${_fmtClp(topeCesClp)}`)}
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:${PVL};">
+                <th style="${thL}">Tipo de contrato</th>
+                <th style="${thR}">Trabajador</th>
+                <th style="${thR}">Empleador</th>
+            </tr></thead>
+            <tbody>
+                <tr style="${tr0}">
+                    <td style="padding:8px 12px;">Indefinido</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">0,60%</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">2,40%</td>
+                </tr>
+                <tr style="${tr0}">
+                    <td style="padding:8px 12px;">Plazo fijo / obra o faena</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}color:var(--text-muted);">—</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">3,00%</td>
+                </tr>
+                <tr style="${tr0}">
+                    <td style="padding:8px 12px;">Indefinido ≥ 11 años (empleador)</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}color:var(--text-muted);">—</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">0,80%</td>
+                </tr>
+                <tr>
+                    <td style="padding:8px 12px;">Casa particular</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}color:var(--text-muted);">—</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">3,00%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-        <div class="card" style="padding:0;overflow:hidden;">
-            ${secHead('🏥','Cotización de Salud')}
-            <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                <tbody>
-                    <tr style="border-bottom:1px solid var(--divider);">
-                        <td style="padding:8px 14px;">Fonasa (mínimo legal)</td>
-                        <td style="padding:8px 14px;text-align:right;font-family:'Courier New',monospace;font-weight:700;">7,00%</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:8px 14px;">Isapre</td>
-                        <td style="padding:8px 14px;text-align:right;font-size:12px;color:var(--text-muted);">≥ 7% según plan</td>
-                    </tr>
-                </tbody>
-                <tfoot><tr style="background:var(--table-stripe);border-top:2px solid var(--divider);">
-                    <td colspan="2" style="padding:8px 14px;font-size:11px;color:var(--text-muted);">
-                        Tope: ${_TOPE_SAL_UF} UF = ${_fmtClp(topeSalClp)} · UF al ${cache.uf?.fecha || '—'}
-                    </td>
-                </tr></tfoot>
-            </table>
-        </div>
+    <!-- Trabajos Pesados -->
+    <div ${card}>
+        ${secHead('Trabajos Pesados')}
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:${PVL};">
+                <th style="${thL}">Calificación</th>
+                <th style="${thR}">Total</th>
+                <th style="${thR}">Empleador</th>
+                <th style="${thR}">Trabajador</th>
+            </tr></thead>
+            <tbody>
+                <tr style="${tr0}">
+                    <td style="padding:8px 12px;">Trabajo pesado</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}font-weight:700;">4,00%</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">2,00%</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">2,00%</td>
+                </tr>
+                <tr>
+                    <td style="padding:8px 12px;">Trabajo menos pesado</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}font-weight:700;">2,00%</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">1,00%</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">1,00%</td>
+                </tr>
+            </tbody>
+            <tfoot><tr style="background:${PVL};border-top:1px solid ${PVB};">
+                <td colspan="4" style="${foot}">Tope imponible AFP: ${tasas.topeAfp} UF = ${_fmtClp(topeAfpClp)}</td>
+            </tr></tfoot>
+        </table>
+    </div>
 
+    <!-- APV + Depósito Convenido -->
+    <div ${card}>
+        ${secHead('APV — Ahorro Previsional Voluntario')}
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:${PVL};">
+                <th style="${thL}">Período</th>
+                <th style="${thR}">Tope en UF</th>
+                <th style="${thR}">Equivalente CLP</th>
+            </tr></thead>
+            <tbody>
+                <tr style="${tr0}">
+                    <td style="padding:8px 12px;">Mensual</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}font-weight:700;">${_APV_TOPE_MEN_UF} UF</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}color:var(--text-muted);">${_fmtClp(apvMenClp)}</td>
+                </tr>
+                <tr>
+                    <td style="padding:8px 12px;">Anual</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}font-weight:700;">${_APV_TOPE_ANU_UF} UF</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}color:var(--text-muted);">${_fmtClp(apvAnuClp)}</td>
+                </tr>
+            </tbody>
+        </table>
+        ${secHead('Depósito Convenido')}
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <tbody>
+                <tr>
+                    <td style="padding:8px 12px;">Tope anual</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}font-weight:700;">${_DEP_CONV_ANU_UF} UF</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}color:var(--text-muted);">${_fmtClp(depConvClp)}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Cotización de Salud -->
+    <div ${card}>
+        ${secHead('Salud — Distribución cotización 7%', `tope ${tasas.topeSal} UF = ${_fmtClp(topeSalClp)}`)}
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:${PVL};">
+                <th style="${thL}">Destino</th>
+                <th style="${thR}">Tasa</th>
+                <th style="${thR}">Base</th>
+            </tr></thead>
+            <tbody>
+                <tr style="${tr0}">
+                    <td style="padding:8px 12px;font-weight:600;">Cotización legal mínima</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}font-weight:700;">7,00%</td>
+                    <td style="padding:8px 12px;text-align:right;font-size:12px;color:var(--text-muted);">R. Imponible</td>
+                </tr>
+                <tr style="${tr0}">
+                    <td style="padding:8px 12px;">CCAF (distribución de la cotización)</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">4,20%</td>
+                    <td style="padding:8px 12px;text-align:right;font-size:12px;color:var(--text-muted);">R. Imponible</td>
+                </tr>
+                <tr style="${tr0}">
+                    <td style="padding:8px 12px;">FONASA (distribución de la cotización)</td>
+                    <td style="padding:8px 12px;text-align:right;${mono}">2,80%</td>
+                    <td style="padding:8px 12px;text-align:right;font-size:12px;color:var(--text-muted);">R. Imponible</td>
+                </tr>
+                <tr>
+                    <td style="padding:8px 12px;color:var(--text-muted);">Isapre</td>
+                    <td style="padding:8px 12px;text-align:right;font-size:12px;color:var(--text-muted);">≥ 7% según plan</td>
+                    <td style="padding:8px 12px;text-align:right;font-size:12px;color:var(--text-muted);">R. Imponible</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <!-- Asignación Familiar -->
-    <div class="card" style="padding:0;overflow:hidden;">
-        ${secHead('👨‍👩‍👧','Asignación Familiar FONASA','montos por decreto · actualizados desde previred.com')}
+    <div ${card}>
+        ${secHead('Asignación Familiar FONASA', 'montos por decreto')}
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead><tr style="background:var(--table-stripe);">
+            <thead><tr style="background:${PVL};">
                 <th style="${thL}">Tramo</th>
-                <th style="${thStyle}">Renta bruta hasta</th>
-                <th style="${thStyle}">Monto por carga</th>
+                <th style="${thR}">Renta bruta hasta</th>
+                <th style="${thR}">Monto por carga</th>
             </tr></thead>
             <tbody>${asigHtml}</tbody>
-            <tfoot><tr style="background:var(--table-stripe);border-top:2px solid var(--divider);">
-                <td colspan="3" style="padding:8px 14px;font-size:11px;color:var(--text-muted);">
-                    Se aplica sobre la renta bruta mensual. Datos obtenidos automáticamente de previred.com.
+            <tfoot><tr style="background:${PVL};border-top:1px solid ${PVB};">
+                <td colspan="3" style="${foot}">
+                    Tramo D (renta &gt; $ 1.439.668): $ 0 — sin derecho a asignación
+                </td>
+            </tr></tfoot>
+        </table>
+    </div>
+
+    <!-- IU 2ª Categoría -->
+    <div ${card} style="padding:0;overflow:hidden;grid-column:1/-1;">
+        ${secHead('Impuesto Único 2ª Categoría — Tramos mensuales', `UTM: ${_fmtClp(utm)}`)}
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:${PVL};">
+                <th style="${thL}">Tramo en UTM</th>
+                <th style="${thR}">Renta desde</th>
+                <th style="${thR}">Renta hasta</th>
+                <th style="${thR}">Tasa</th>
+                <th style="${thR}">Rebaja</th>
+            </tr></thead>
+            <tbody>${tramosHtml}</tbody>
+            <tfoot><tr style="background:${PVL};border-top:1px solid ${PVB};">
+                <td colspan="5" style="${foot}">
+                    Base imponible = renta imponible − AFP − salud − cesantía. Las rebajas se recalculan automáticamente con la UTM vigente.
                 </td>
             </tr></tfoot>
         </table>
