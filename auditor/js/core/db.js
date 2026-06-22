@@ -1,12 +1,19 @@
 /**
  * db.js — Wrapper IPC del renderer hacia el proceso principal.
- * Usa electronAPI si está disponible (app Electron).
- * En caso contrario lanza error descriptivo.
+ * Usa electronAPI.db si está disponible (app Electron con SQLite).
+ * En web/PWA retorna un no-op silencioso; los datos van a localStorage.
  */
 
+const _DB_NOOP = {
+    query:       async () => [],
+    get:         async () => null,
+    run:         async () => ({ changes: 0, lastInsertRowid: 0 }),
+    transaction: async () => null,
+};
+
 const _api = () => {
-    if (typeof window !== 'undefined' && window.electronAPI) return window.electronAPI.db;
-    throw new Error('electronAPI no disponible. ¿Está corriendo en Electron?');
+    if (typeof window !== 'undefined' && window.electronAPI?.db) return window.electronAPI.db;
+    return _DB_NOOP;
 };
 
 // ─────────────────────────────────────────────────────────────

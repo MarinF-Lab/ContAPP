@@ -110,6 +110,9 @@ function _parsearMercado(mercado) {
     if (mercado.euro != null) {
         out.euro = { valor: mercado.euro, fecha: fmtFecha(mercado.fecha), fuente: mercado.fuente || 'mindicador.cl' };
     }
+    if (mercado.sueldo_minimo != null) {
+        out.imm = { valor: mercado.sueldo_minimo, fecha: fmtFecha(mercado.fecha), fuente: mercado.fuente || 'mindicador.cl' };
+    }
 
     for (const ind of (mercado.indices || [])) {
         if (ind.key === 'ipc') {
