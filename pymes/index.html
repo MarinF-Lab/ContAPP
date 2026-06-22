@@ -1,0 +1,2844 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContAPP PYMES</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#b45309">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+
+    <!-- Producto + adaptador web (define window.electronAPI) -->
+    <script>window.CONTAPP_PRODUCTO = { id: "pymes", nombre: "ContAPP PYMES" };</script>
+    <script src="js/web-adapter.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/remuneraciones.css">
+    <script>
+        // Restaurar tema guardado antes de que el DOM pinte (evita flash)
+        (function() {
+            var t = localStorage.getItem('appTheme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+
+    <div class="logo">
+        <span class="nav-icon">🏁</span>
+        <span class="te-text logo-text">ContApp Forge</span>
+    </div>
+
+    <nav>
+        <!-- Inicio (sin grupo) -->
+        <div class="nav-group nav-group-solo">
+            <div class="nav-item active" onclick="navegar('inicio', this)">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">Inicio</span>
+            </div>
+        </div>
+
+        <!-- ERP · CONTABILIDAD — solo primera categoría -->
+        <div class="nav-group" id="nav-grupo-contabilidad">
+            <div class="nav-group-title"><span class="nav-group-cat">ERP</span>CONTABILIDAD</div>
+            <div class="nav-group-items">
+                <div id="nav-diario" class="nav-item" onclick="navegar('diario', this)">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">Libro Diario</span>
+                </div>
+                <div id="nav-mayor" class="nav-item" onclick="navegar('mayor', this)">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">Libro Mayor</span>
+                </div>
+                <div id="nav-plan-cuentas" class="nav-item" onclick="navegar('plan-cuentas', this)">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Plan de Cuentas</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BI · REPORTES — solo primera categoría -->
+        <div class="nav-group" id="nav-grupo-informes">
+            <div class="nav-group-title"><span class="nav-group-cat">BI</span>REPORTES</div>
+            <div class="nav-group-items">
+                <div id="nav-balance" class="nav-item" onclick="navegar('balance', this)">
+                    <span class="nav-icon">⚖️</span>
+                    <span class="nav-text">Balance</span>
+                </div>
+                <div id="nav-balance-clasificado" class="nav-item" onclick="navegar('balance-clasificado', this)">
+                    <span class="nav-icon">🏦</span>
+                    <span class="nav-text">Bal. Clasificado</span>
+                </div>
+                <div id="nav-estado-resultados" class="nav-item" onclick="navegar('estado-resultados', this)">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Est. Resultados</span>
+                </div>
+                <div id="nav-flujo-caja" class="nav-item" onclick="navegar('flujo-caja', this)">
+                    <span class="nav-icon">💵</span>
+                    <span class="nav-text">Flujo de Caja</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCM · COMERCIAL — solo primera categoría -->
+        <div class="nav-group" id="nav-grupo-comercial">
+            <div class="nav-group-title"><span class="nav-group-cat">SCM</span>COMERCIAL</div>
+            <div class="nav-group-items">
+                <div id="nav-compras" class="nav-item" onclick="navegar('compras', this)">
+                    <span class="nav-icon">🛒</span>
+                    <span class="nav-text">Compras</span>
+                </div>
+                <div id="nav-ventas" class="nav-item" onclick="navegar('ventas', this)">
+                    <span class="nav-icon">💰</span>
+                    <span class="nav-text">Ventas</span>
+                </div>
+                <div id="nav-documentos" class="nav-item" onclick="navegar('documentos', this)">
+                    <span class="nav-icon">📁</span>
+                    <span class="nav-text">Documentación</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CRM · CLIENTES — solo primera categoría -->
+        <div class="nav-group" id="nav-grupo-crm">
+            <div class="nav-group-title"><span class="nav-group-cat">CRM</span>CLIENTES</div>
+            <div class="nav-group-items">
+                <div class="nav-item" onclick="navegar('clientes', this)">
+                    <span class="nav-icon">🤝</span>
+                    <span class="nav-text">Clientes / Prov.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- HRM · RRHH — solo primera categoría -->
+        <div class="nav-group" id="nav-grupo-rrhh">
+            <div class="nav-group-title"><span class="nav-group-cat">HRM</span>RRHH</div>
+            <div class="nav-group-items">
+                <div id="nav-remuneraciones" class="nav-item" onclick="navegar('remuneraciones', this)">
+                    <span class="nav-icon">👷</span>
+                    <span class="nav-text">Remuneraciones</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAX · TRIBUTARIO — solo primera categoría -->
+        <div class="nav-group" id="nav-grupo-tributario">
+            <div class="nav-group-title"><span class="nav-group-cat">TAX</span>TRIBUTARIO</div>
+            <div class="nav-group-items">
+                <div class="nav-item" onclick="navegar('indicadores', this)">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Indicadores</span>
+                </div>
+                <div id="nav-iva-resumen" class="nav-item" onclick="navegar('iva-resumen', this)">
+                    <span class="nav-icon">🧾</span>
+                    <span class="nav-text">Resumen IVA / F29</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SEGUNDA CATEGORÍA — grupos ocultos hasta que categoria='segunda' ══ -->
+
+        <!-- Contabilidad segunda categoría -->
+        <div class="nav-group" id="nav-grupo-contabilidad-hon" style="display:none;">
+            <div class="nav-group-title">CONTABILIDAD</div>
+            <div class="nav-group-items">
+                <div class="nav-item" onclick="navegar('libro-honorarios', this)">
+                    <span class="nav-icon">📒</span>
+                    <span class="nav-text">Libro de Honorarios</span>
+                </div>
+                <div class="nav-item" onclick="navegar('libro-egresos-hon', this)">
+                    <span class="nav-icon">📤</span>
+                    <span class="nav-text">Libro de Egresos</span>
+                </div>
+                <div class="nav-item" onclick="navegar('libro-ingresos-hon', this)">
+                    <span class="nav-icon">📥</span>
+                    <span class="nav-text">Libro de Ingresos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comercial segunda categoría -->
+        <div class="nav-group" id="nav-grupo-comercial-hon" style="display:none;">
+            <div class="nav-group-title">COMERCIAL</div>
+            <div class="nav-group-items">
+                <div class="nav-item" onclick="navegar('clientes', this)">
+                    <span class="nav-icon">🤝</span>
+                    <span class="nav-text">Clientes / Prov.</span>
+                </div>
+                <div class="nav-item" onclick="navegar('prestadores', this)">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-text">Prestadores</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tributario segunda categoría -->
+        <div class="nav-group" id="nav-grupo-tributario-hon" style="display:none;">
+            <div class="nav-group-title">TRIBUTARIO</div>
+            <div class="nav-group-items">
+                <div class="nav-item" onclick="navegar('f29-hon', this)">
+                    <span class="nav-icon">🧾</span>
+                    <span class="nav-text">Formulario 29</span>
+                </div>
+                <div class="nav-item" onclick="navegar('f22-hon', this)">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Formulario 22</span>
+                </div>
+                <div class="nav-item" onclick="navegar('indicadores', this)">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Indicadores</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grupo Sistema -->
+        <div class="nav-group">
+            <div class="nav-group-title">SISTEMA</div>
+            <div class="nav-group-items">
+                <div class="nav-item" onclick="navegar('configuracion', this)">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Configuración</span>
+                </div>
+                <div id="nav-auditoria" class="nav-item" data-requiere-rol="admin" onclick="navegar('auditoria', this)">
+                    <span class="nav-icon">🛡️</span>
+                    <span class="nav-text">Auditoría</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Modo Prueba -->
+    <div id="modoPruebaBar" class="sidebar-prueba-bar">
+        <button id="btnModoPrueba" onclick="toggleModoPrueba()" class="sidebar-prueba-btn">
+            🧪 Modo Prueba
+        </button>
+    </div>
+
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════
+     CONTENIDO PRINCIPAL
+════════════════════════════════════════════════════════ -->
+<main class="main-content">
+
+    <!-- Overlay para cerrar sidebar en móvil -->
+    <div id="sidebarOverlay" onclick="cerrarSidebar()" style="
+        display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:8999;
+    "></div>
+
+    <div class="top-header">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <button id="btnHamburger" onclick="toggleSidebar()"
+                    title="Menú" aria-label="Abrir menú"
+                    style="display:none;background:none;border:none;cursor:pointer;
+                           padding:6px;border-radius:8px;color:var(--text);font-size:22px;
+                           line-height:1;flex-shrink:0;">
+                    ☰
+                </button>
+                <div>
+                    <h1 id="txt-modulo-titulo">Sistema Contable</h1>
+                    <p id="txt-modulo-desc">Administración contable y generación automática de libros e informes</p>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <!-- Panel de usuario en topbar -->
+                <div id="fb-user-bar" style="display:none;align-items:center;gap:8px;">
+                    <div style="text-align:right;line-height:1.3;">
+                        <div id="fb-user-email" style="font-size:12px;font-weight:600;color:var(--text);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                        <span id="fbUserRolBadge" class="badge" style="display:none;font-size:10px;"></span>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-shrink:0;">
+                        <button onclick="cambiarEmpresa()" class="topbar-user-btn" title="Cambiar empresa">🏢 Cambiar</button>
+                        <button onclick="fbSyncToCloud()" class="topbar-user-btn" title="Sincronizar con la nube"><span id="fbSyncIcon">☁</span></button>
+                        <button onclick="fbLogout()" class="topbar-user-btn topbar-user-btn--danger" title="Cerrar sesión">✕ Salir</button>
+                    </div>
+                </div>
+                <!-- Empresa/período (se mantiene oculto, se actualiza por JS pero ya no se muestra) -->
+                <span id="headerEmpresa" style="display:none;"></span>
+                <span id="headerPeriodo" style="display:none;"></span>
+                <button id="btnThemeToggle" onclick="toggleTheme()" title="Cambiar tema claro/oscuro">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Encabezado profesional — visible solo al imprimir/exportar PDF -->
+    <div id="printEncabezado"></div>
+
+    <div class="view-container">
+
+        <!-- ════════════════════
+             INICIO / DASHBOARD
+        ═════════════════════ -->
+        <div id="view-inicio" class="view active">
+
+            <!-- Hero: identificación de empresa -->
+            <div class="dash-hero card">
+                <div class="dash-hero-bg-icon">🏢</div>
+                <div class="dash-hero-body">
+                    <div class="dash-hero-nombre" id="empresaNombre">Mi Empresa Ltda.</div>
+                    <div class="dash-hero-meta">
+                        <span class="dash-meta-chip">🪪 <span id="empresaRut">—</span></span>
+                        <span class="dash-meta-chip">📅 <span id="empresaPeriodo">—</span></span>
+                        <span class="dash-meta-chip version">ContApp Forge v3.0.0</span>
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;flex-shrink:0;">
+                    <button class="btn btn-secondary" style="font-size:12px;padding:6px 14px;" onclick="abrirEditarEmpresa()">✏ Editar empresa</button>
+                    <button class="btn btn-danger"    style="font-size:12px;padding:6px 14px;" onclick="eliminarEmpresaActual()">🗑 Eliminar</button>
+                </div>
+            </div>
+
+            <!-- Modal editar empresa -->
+            <div id="modalEditarEmpresa" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:6000;justify-content:center;align-items:center;">
+                <div class="card" style="width:460px;padding:28px;position:relative;border-radius:16px;">
+                    <div style="font-size:16px;font-weight:700;margin-bottom:20px;">✏ Editar empresa</div>
+                    <div style="display:grid;gap:12px;">
+                        <div>
+                            <label class="ctc-label">Nombre empresa</label>
+                            <input id="editEmpNombre" class="ctc-input" type="text" placeholder="Razón social">
+                        </div>
+                        <div>
+                            <label class="ctc-label">RUT</label>
+                            <input id="editEmpRut" class="ctc-input" type="text" placeholder="76.000.000-0" oninput="fmtRut(this)">
+                        </div>
+                        <div>
+                            <label class="ctc-label">Giro</label>
+                            <input id="editEmpGiro" class="ctc-input" type="text" placeholder="Actividad económica">
+                        </div>
+                        <div>
+                            <label class="ctc-label">Dirección</label>
+                            <input id="editEmpDireccion" class="ctc-input" type="text" placeholder="Dirección comercial">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px;">
+                        <button class="btn btn-secondary" onclick="cerrarEditarEmpresa()">Cancelar</button>
+                        <button class="btn btn-primary"   onclick="guardarEdicionEmpresa()">Guardar cambios</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPIs con icono y acento de color -->
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-card-activos">
+                    <span class="kpi-icon">🏦</span>
+                    <div class="kpi-label">Total Activos</div>
+                    <div class="kpi-valor" id="kpi-activos">$0</div>
+                </div>
+                <div class="kpi-card kpi-card-pasivos">
+                    <span class="kpi-icon">📋</span>
+                    <div class="kpi-label">Total Pasivos</div>
+                    <div class="kpi-valor" id="kpi-pasivos">$0</div>
+                </div>
+                <div class="kpi-card kpi-card-ingresos">
+                    <span class="kpi-icon">📈</span>
+                    <div class="kpi-label">Ingresos</div>
+                    <div class="kpi-valor kpi-verde" id="kpi-ingresos">$0</div>
+                </div>
+                <div class="kpi-card kpi-card-resultado">
+                    <span class="kpi-icon">⚖️</span>
+                    <div class="kpi-label">Resultado</div>
+                    <div class="kpi-valor" id="kpi-resultado">$0</div>
+                </div>
+            </div>
+
+            <!-- Gráficos: barra mensual (2/3) + donuts apilados (1/3) -->
+            <div style="display:grid;grid-template-columns:1fr 220px;gap:16px;align-items:start;margin-bottom:16px;">
+                <div class="card" style="padding:18px;">
+                    <div style="font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text-main);">📊 Ingresos vs Gastos — Año Actual</div>
+                    <div id="dashBarrasMensuales"></div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div class="card" style="padding:16px;">
+                        <div style="font-weight:700;font-size:12px;margin-bottom:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;">Estructura</div>
+                        <div id="dashDonutActivos"></div>
+                    </div>
+                    <div class="card" style="padding:16px;">
+                        <div style="font-weight:700;font-size:12px;margin-bottom:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;">Resultado</div>
+                        <div id="dashDonutResultado"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liquidez + actividad reciente en dos columnas -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                <div class="card" style="padding:18px;">
+                    <div style="font-weight:700;font-size:13px;margin-bottom:14px;color:var(--text-main);">💧 Indicadores de Liquidez</div>
+                    <div id="dashLiquidez" style="display:flex;flex-direction:column;gap:10px;"></div>
+                </div>
+                <div class="card" style="padding:18px;">
+                    <div style="font-weight:700;font-size:13px;margin-bottom:14px;color:var(--text-main);">🕐 Últimos Asientos</div>
+                    <div id="dashUltimosAsientos"></div>
+                </div>
+            </div>
+
+            <!-- Top cuentas (ancho completo) -->
+            <div class="card" style="padding:18px;margin-bottom:16px;">
+                <div style="font-weight:700;font-size:13px;margin-bottom:14px;color:var(--text-main);">🏆 Top Cuentas por Saldo</div>
+                <div id="dashTopCuentas"></div>
+            </div>
+
+            <!-- Alertas tributarias IA (oculta por defecto) -->
+            <div id="iaAlertasTribuCard" class="card ia-alertas-card" style="display:none;padding:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <div style="font-weight:700;font-size:14px;color:var(--text-main);">⚠️ Obligaciones Tributarias — Análisis IA</div>
+                    <button class="btn btn-secondary" style="font-size:12px;padding:4px 10px;" onclick="document.getElementById('iaAlertasTribuCard').style.display='none'">✕ Cerrar</button>
+                </div>
+                <div id="iaAlertasTribuCont" style="font-size:13px;color:var(--text-main);line-height:1.7;"></div>
+            </div>
+
+        </div>
+
+        <!-- ════════════════════
+             LIBRO DIARIO
+        ═════════════════════ -->
+        <div id="view-diario" class="view">
+
+            <div class="card">
+                <div class="glosa-area">
+                    <textarea id="glosaInput" class="glosa-input" rows="2"
+                        placeholder="Ej: Venta de mercadería por $120.000 con transferencia"></textarea>
+
+                    <div class="controls-row">
+                        <div>
+                            <label style="font-size:13px;color:var(--text-muted);font-weight:500;">Fecha:</label>
+                            <input type="date" id="fechaAsiento"
+                                style="padding:8px;border:1px solid var(--border);border-radius:6px;font-family:'JetBrains Mono';">
+                        </div>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn btn-primary"   onclick="procesarGlosa()">Generar Asiento →</button>
+                            <button class="btn btn-ia" id="btnIaGlosa" onclick="iaTentarGlosa()">✨ Intentar con IA</button>
+                            <button class="btn btn-secondary" onclick="abrirAsientoManual()">✏ Nuevo Asiento</button>
+                            <button class="btn btn-danger"    onclick="vaciarDiario()">🗑 Vaciar Diario</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="cont-table">
+                        <thead>
+                            <tr>
+                                <th>Cuenta</th>
+                                <th class="monto" style="width:180px;">Debe</th>
+                                <th class="monto" style="width:180px;">Haber</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diarioPreasientoBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="totales-bar">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <div id="badgePreasiento" class="totales-badge error">Balance: Cuadrado $0</div>
+                        <span id="badgeIaGlosa" style="display:none;background:#f0f4ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Propuesto por IA — revisa antes de guardar</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <div style="position:relative;">
+                            <input type="text" id="contactoAsiento" list="listaContactosAsiento"
+                                placeholder="👤 Contacto (opcional)"
+                                style="width:220px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg);color:var(--text);">
+                            <datalist id="listaContactosAsiento"></datalist>
+                        </div>
+                        <button class="btn btn-secondary" id="btnGuardarAsiento" disabled onclick="guardarAsiento()">
+                            💾 Registrar en Diario
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:16px;">📚 Registros Históricos del Diario</h3>
+            <div id="historialDiarioLista"></div>
+
+        </div>
+
+        <!-- ════════════════════
+             LIBRO MAYOR
+        ═════════════════════ -->
+        <div id="view-mayor" class="view">
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFMayor()">⬇ PDF</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelMayor()">⬇ Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirMayor()">🖨 Imprimir</button>
+            </div>
+            <div class="mayor-grid" id="contenedorMayor"></div>
+        </div>
+
+        <!-- ════════════════════
+             BALANCE
+        ═════════════════════ -->
+        <div id="view-balance" class="view">
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFBalance()">⬇ PDF</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelBalance()">⬇ Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirBalance()">🖨 Imprimir</button>
+                <button class="btn-export btn-export-ia"    onclick="iaAnalizarBalance()">✨ Analizar con IA</button>
+                <button class="btn-export btn-export-ia"    onclick="iaCompararPeriodos('Balance General')" title="Comparar dos períodos">⚖ Comparar períodos</button>
+            </div>
+            <div id="balanceAlertas" style="display:none;margin-bottom:12px;"></div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="cont-table" style="font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Cuenta Contable</th>
+                                <th colspan="2">Sumas</th>
+                                <th colspan="2">Saldos</th>
+                                <th colspan="2">Inventario</th>
+                                <th colspan="2">Resultados</th>
+                            </tr>
+                            <tr>
+                                <th class="monto">Debe</th>   <th class="monto">Haber</th>
+                                <th class="monto">Deudor</th> <th class="monto">Acreedor</th>
+                                <th class="monto">Activo</th> <th class="monto">Pasivo/Pat.</th>
+                                <th class="monto">Pérdida</th><th class="monto">Ganancia</th>
+                            </tr>
+                        </thead>
+                        <tbody id="balanceBody"></tbody>
+                        <tfoot>
+                            <tr id="balanceTotalesRow"></tr>
+                            <tr id="balanceResultadoRow"></tr>
+                            <tr id="balanceFinalRow"></tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════
+             LIBRO DE COMPRAS
+        ═════════════════════ -->
+        <div id="view-compras" class="view">
+
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFCompras()">⬇ PDF</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelCompras()">⬇ Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirCompras()">🖨 Imprimir</button>
+            </div>
+
+            <!-- Barra superior: filtros + resumen + acciones -->
+            <div class="libro-toolbar card">
+                <div class="libro-toolbar-left">
+                    <select id="selComprasMes"  class="sel-periodo"
+                        onchange="comprasMes=parseInt(this.value); renderCompras()">
+                        <option value="1">Enero</option><option value="2">Febrero</option>
+                        <option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option>
+                        <option value="7">Julio</option><option value="8">Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option>
+                        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
+                    <select id="selComprasAnio" class="sel-periodo"
+                        onchange="comprasAnio=parseInt(this.value); renderCompras()">
+                        <option value="2023">2023</option><option value="2024">2024</option>
+                        <option value="2025">2025</option><option value="2026">2026</option>
+                    </select>
+                    <button class="btn btn-primary"   onclick="abrirNuevaCompra()">+ Registrar Compra</button>
+                    <button class="btn btn-danger"    onclick="vaciarLibroCompras()">🗑 Vaciar Libro</button>
+                </div>
+                <div class="libro-kpis">
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Neto</span>
+                        <span class="libro-kpi-val" id="comprasResNeto">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">IVA CF</span>
+                        <span class="libro-kpi-val" id="comprasResIva">$0</span>
+                    </div>
+                    <div class="libro-kpi libro-kpi-total">
+                        <span class="libro-kpi-label">Total Mes</span>
+                        <span class="libro-kpi-val" id="comprasResTotal">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de centralización -->
+            <div class="card centralizacion-panel">
+                <div class="centralizacion-title">⚙️ Asiento Centralizado</div>
+                <div class="centralizacion-cuerpo">
+                    <div class="centralizacion-campo">
+                        <label>Cuenta de cargo (Debe)</label>
+                        <select id="compraCtaCargo"></select>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-muted);padding:4px 0;">
+                        El Haber se distribuye automáticamente según el medio de pago de cada documento
+                        (Caja, Banco, Proveedores, etc.)
+                    </div>
+                    <button class="btn btn-primary" onclick="generarAsientoCompras()">
+                        📋 Generar Asiento → Diario
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="cont-table" style="font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">N°</th>
+                                <th style="width:130px;">Tipo Doc.</th>
+                                <th style="width:90px;">N° Doc.</th>
+                                <th style="width:100px;">Fecha</th>
+                                <th style="width:110px;">RUT</th>
+                                <th>Razón Social</th>
+                                <th style="width:130px;">Medio de Pago</th>
+                                <th class="monto" style="width:100px;">Exento</th>
+                                <th class="monto" style="width:110px;">Neto</th>
+                                <th class="monto" style="width:110px;">IVA</th>
+                                <th class="monto" style="width:120px;">Total</th>
+                                <th style="width:80px;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyCompras"></tbody>
+                        <tfoot id="tfootCompras"></tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div id="resumenIvaCompras" style="display:none;"></div>
+
+        </div>
+
+        <!-- ════════════════════
+             LIBRO DE VENTAS
+        ═════════════════════ -->
+        <div id="view-ventas" class="view">
+
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFVentas()">⬇ PDF</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelVentas()">⬇ Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirVentas()">🖨 Imprimir</button>
+            </div>
+
+            <!-- Barra superior -->
+            <div class="libro-toolbar card">
+                <div class="libro-toolbar-left">
+                    <select id="selVentasMes"  class="sel-periodo"
+                        onchange="ventasMes=parseInt(this.value); renderVentas()">
+                        <option value="1">Enero</option><option value="2">Febrero</option>
+                        <option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option>
+                        <option value="7">Julio</option><option value="8">Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option>
+                        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
+                    <select id="selVentasAnio" class="sel-periodo"
+                        onchange="ventasAnio=parseInt(this.value); renderVentas()">
+                        <option value="2023">2023</option><option value="2024">2024</option>
+                        <option value="2025">2025</option><option value="2026">2026</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="abrirNuevaVenta()">+ Registrar Venta</button>
+                    <button class="btn btn-danger"  onclick="vaciarLibroVentas()">🗑 Vaciar Libro</button>
+                </div>
+                <div class="libro-kpis">
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Facturas</span>
+                        <span class="libro-kpi-val" id="ventasResFacturas">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Boletas</span>
+                        <span class="libro-kpi-val" id="ventasResBoletas">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">IVA DF</span>
+                        <span class="libro-kpi-val" id="ventasResIva">$0</span>
+                    </div>
+                    <div class="libro-kpi libro-kpi-total">
+                        <span class="libro-kpi-label">Total Mes</span>
+                        <span class="libro-kpi-val" id="ventasResTotal">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de centralización -->
+            <div class="card centralizacion-panel">
+                <div class="centralizacion-title">⚙️ Asiento Centralizado</div>
+                <div class="centralizacion-cuerpo">
+                    <div class="centralizacion-campo">
+                        <label>Cuenta de ingreso (Haber)</label>
+                        <select id="ventaCtaIngreso"></select>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-muted);padding:4px 0;">
+                        El Debe se distribuye automáticamente según el medio de pago de cada documento
+                        (Caja, Banco, Clientes, etc.)
+                    </div>
+                    <button class="btn btn-primary" onclick="generarAsientoVentas()">
+                        📋 Generar Asiento → Diario
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="cont-table" style="font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">N°</th>
+                                <th style="width:130px;">Tipo Doc.</th>
+                                <th style="width:90px;">N° Doc.</th>
+                                <th style="width:100px;">Fecha</th>
+                                <th style="width:110px;">RUT</th>
+                                <th>Razón Social / Cliente</th>
+                                <th style="width:130px;">Medio de Pago</th>
+                                <th class="monto" style="width:100px;">Exento</th>
+                                <th class="monto" style="width:110px;">Neto</th>
+                                <th class="monto" style="width:110px;">IVA</th>
+                                <th class="monto" style="width:120px;">Total</th>
+                                <th style="width:80px;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyVentas"></tbody>
+                        <tfoot id="tfootVentas"></tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div id="resumenF29" style="display:none;"></div>
+            <div style="display:none;" id="ventasResNetoWrap">
+                Neto: <span id="ventasResNeto">$0</span>
+            </div>
+
+        </div>
+
+        <!-- ════════════════════
+             PLAN DE CUENTAS
+        ═════════════════════ -->
+        <div id="view-plan-cuentas" class="view">
+
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+                    <h2>⚙️ Plan de Cuentas</h2>
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                        <input type="text" id="busquedaPlanInput"
+                            placeholder="🔍  Buscar cuenta o código..."
+                            oninput="busquedaPlan=this.value; renderPlanCuentas()"
+                            style="padding:9px 14px;border:1px solid var(--border);border-radius:8px;
+                                   font-size:14px;width:260px;">
+                        <button class="btn btn-primary" onclick="abrirNuevaCuenta()">+ Nueva Cuenta</button>
+                    </div>
+                </div>
+
+                <!-- Pestañas del plan de cuentas -->
+                <div class="rem-tabs" style="margin-bottom:20px;">
+                    <button class="rem-tab active" id="planTab-activos"
+                        onclick="planSetTab('activos')">
+                        💵 Activos
+                        <span id="planCnt-activos" style="font-size:11px;font-weight:400;margin-left:5px;opacity:.7;"></span>
+                    </button>
+                    <button class="rem-tab" id="planTab-pasivos"
+                        onclick="planSetTab('pasivos')">
+                        📋 Pasivos
+                        <span id="planCnt-pasivos" style="font-size:11px;font-weight:400;margin-left:5px;opacity:.7;"></span>
+                    </button>
+                    <button class="rem-tab" id="planTab-patrimonio"
+                        onclick="planSetTab('patrimonio')">
+                        🏛️ Patrimonio
+                        <span id="planCnt-patrimonio" style="font-size:11px;font-weight:400;margin-left:5px;opacity:.7;"></span>
+                    </button>
+                    <button class="rem-tab" id="planTab-resultados"
+                        onclick="planSetTab('resultados')">
+                        📊 Resultados
+                        <span id="planCnt-resultados" style="font-size:11px;font-weight:400;margin-left:5px;opacity:.7;"></span>
+                    </button>
+                </div>
+
+                <div id="listaPlanCuentas"></div>
+            </div>
+
+        </div>
+
+        <!-- ════════════════════
+             REGISTRO DOCUMENTACIÓN
+        ═════════════════════ -->
+        <div id="view-documentos" class="view">
+        </div>
+
+        <!-- ════════════════════
+             CLIENTES / PROVEEDORES
+        ═════════════════════ -->
+        <div id="view-clientes" class="view">
+
+            <div class="export-bar">
+                <button class="btn-export btn-export-excel" onclick="exportarExcelContactos()">⬇ Excel</button>
+            </div>
+
+            <!-- Barra superior -->
+            <div class="libro-toolbar card">
+                <div class="libro-toolbar-left">
+                    <!-- Tabs de filtro -->
+                    <div class="ctc-tabs">
+                        <button class="ctc-tab ctc-tab-active" onclick="filtroContactos='todos';renderContactos();_ctcTabActiva(this)">
+                            Todos <span id="cntTodos" class="ctc-cnt">0</span>
+                        </button>
+                        <button class="ctc-tab" onclick="filtroContactos='cliente';renderContactos();_ctcTabActiva(this)">
+                            Clientes <span id="cntClientes" class="ctc-cnt">0</span>
+                        </button>
+                        <button class="ctc-tab" onclick="filtroContactos='proveedor';renderContactos();_ctcTabActiva(this)">
+                            Proveedores <span id="cntProveedores" class="ctc-cnt">0</span>
+                        </button>
+                    </div>
+
+                    <input type="text" class="sel-periodo" id="busqContactosInput"
+                        placeholder="🔍  Buscar por RUT, nombre o giro…" style="width:280px;"
+                        oninput="busqContactos=this.value;renderContactos()">
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-primary" onclick="abrirNuevoContacto()">
+                        ➕ Nuevo Contacto
+                    </button>
+                    <button class="btn btn-danger" onclick="vaciarContactos()">
+                        🗑 Vaciar Directorio
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla de contactos -->
+            <div class="card" style="padding:0;overflow-x:auto;">
+                <table class="cont-table">
+                    <thead>
+                        <tr>
+                            <th style="width:110px;">RUT</th>
+                            <th>Nombre / Razón Social</th>
+                            <th style="width:100px;">Tipo</th>
+                            <th style="width:80px;">Empresa</th>
+                            <th>Giro</th>
+                            <th style="width:120px;">Teléfono</th>
+                            <th style="width:150px;">Email</th>
+                            <th class="monto" style="width:110px;">Saldo</th>
+                            <th style="width:80px;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyContactos">
+                        <tr>
+                            <td colspan="9" style="text-align:center;padding:36px;color:var(--text-muted);">
+                                Sin contactos registrados
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- ════════════════════
+             CONFIGURACIÓN
+        ═════════════════════ -->
+        <div id="view-configuracion" class="view">
+            <!-- Empresa -->
+            <div class="card">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <h2 style="margin:0;">Configuración Empresa</h2>
+                    <span id="cfgCategoriaBadge" class="badge"></span>
+                </div>
+                <div class="form-grid">
+                    <label>Nombre Empresa</label><input id="cfgEmpresa">
+                    <label>RUT</label>            <input id="cfgRut" oninput="fmtRut(this)">
+                    <label>Período</label>        <input id="cfgPeriodo" type="number" min="2000" max="2100">
+                    <label>IVA (%)</label>        <input id="cfgIva" value="19" type="number">
+                    <label>Giro</label>           <input id="cfgGiro">
+                    <label>Dirección</label>      <input id="cfgDireccion">
+                    <label>Categoría tributaria</label>
+                    <select id="cfgCategoria">
+                        <option value="primera">1ª Categoría — Contabilidad completa</option>
+                        <option value="segunda">2ª Categoría — Honorarios / Freelance</option>
+                    </select>
+                </div>
+                <br>
+                <button class="btn btn-primary" data-requiere-rol="contador" onclick="guardarConfiguracion()">💾 Guardar Configuración</button>
+            </div>
+
+            <!-- Certificado Digital (4.4) -->
+            <div class="card" style="padding:24px;" data-requiere-rol="admin">
+                <h2 style="margin-bottom:4px;">🔐 Certificado Digital</h2>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
+                    Carga tu certificado digital (.pfx / .p12) para firma electrónica de documentos SII.
+                    Se almacena de forma segura en este equipo.
+                </p>
+                <div id="certEstadoBox" style="display:none;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;margin-bottom:14px;"></div>
+                <input type="file" id="certFileInput" accept=".pfx,.p12" style="display:none;" onchange="procesarCertificado(this)">
+                <div style="display:flex;gap:10px;">
+                    <button class="btn btn-primary" onclick="cargarCertificado()">📂 Cargar Certificado</button>
+                    <button class="btn btn-secondary" onclick="eliminarCertificado()">🗑️ Eliminar</button>
+                </div>
+            </div>
+
+            <!-- Gestión de Usuarios / Invitaciones (4.5 + 4.6) -->
+            <div class="card" style="padding:24px;" data-requiere-rol="admin">
+                <h2 style="margin-bottom:4px;">👥 Usuarios de la Empresa</h2>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
+                    Invita colaboradores compartiendo un código de 6 caracteres. El código expira en 48 horas.
+                </p>
+
+                <div id="usuariosListaCont" style="margin-bottom:20px;"></div>
+                <button class="btn btn-secondary" style="margin-bottom:20px;" onclick="cargarUsuariosEmpresa()">🔄 Cargar lista de usuarios</button>
+
+                <div style="border-top:1px solid var(--border);padding-top:16px;">
+                    <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Nueva Invitación</h3>
+                    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;">
+                        <div>
+                            <label class="ctc-label">Correo del invitado</label>
+                            <input id="invEmail" class="ctc-input" type="email" placeholder="colaborador@empresa.cl">
+                        </div>
+                        <div>
+                            <label class="ctc-label">Rol</label>
+                            <select id="invRol" class="ctc-input">
+                                <option value="contador">Contador</option>
+                                <option value="asistente" selected>Asistente</option>
+                                <option value="lectura">Solo Lectura</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="crearInvitacion()">Generar Código</button>
+                    </div>
+                    <div id="invCodigoBox" style="display:none;margin-top:16px;background:var(--card-bg);border:2px solid var(--accent);border-radius:10px;padding:16px;text-align:center;">
+                        <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Código de invitación (válido 48h) — comparte este código manualmente</div>
+                        <div id="invCodigoGen" style="font-size:32px;font-weight:800;letter-spacing:.3em;color:var(--accent);font-family:'JetBrains Mono',monospace;"></div>
+                        <button class="btn btn-secondary" style="margin-top:10px;" onclick="copiarCodigoInvitacion()">📋 Copiar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sesión activa -->
+            <div class="card" style="padding:24px;">
+                <h2 style="margin-bottom:4px;">👤 Sesión activa</h2>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
+                    Cuenta conectada en este dispositivo. Puedes cerrar sesión o cambiar de cuenta.
+                </p>
+                <div id="cfgSesionInfo" style="background:var(--table-stripe);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;margin-bottom:16px;">
+                    <div style="margin-bottom:6px;"><span style="color:var(--text-muted);">Correo:</span> <strong id="cfgSesionEmail">—</strong></div>
+                    <div style="margin-bottom:6px;"><span style="color:var(--text-muted);">Rol:</span> <strong id="cfgSesionRol">—</strong></div>
+                    <div><span style="color:var(--text-muted);">Empresa ID:</span> <span id="cfgSesionEmpresa" style="font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;"></span></div>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="fbSyncToCloud()" style="display:flex;align-items:center;gap:6px;">
+                        ☁ Sincronizar ahora
+                    </button>
+                    <button class="btn" onclick="fbLogout()"
+                        style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">
+                        🚪 Cerrar sesión
+                    </button>
+                    <button class="btn btn-secondary" onclick="fbCambiarCuenta()"
+                        style="display:flex;align-items:center;gap:6px;">
+                        🔄 Cambiar cuenta
+                    </button>
+                </div>
+            </div>
+
+            <!-- IA — API Key (Fase 6) -->
+            <div class="card" style="padding:24px;">
+                <h2 style="margin-bottom:4px;">✨ Inteligencia Artificial — Claude API</h2>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
+                    Ingresa tu API key de Anthropic para activar las funciones de IA. Se almacena cifrada en este equipo y nunca se envía a terceros.
+                    Obtén tu key en <strong>console.anthropic.com</strong>.
+                </p>
+                <div id="iaKeyEstado" style="font-size:13px;margin-bottom:14px;color:var(--text-muted);">Verificando…</div>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <input type="password" id="iaApiKeyInput" placeholder="sk-ant-…"
+                        style="flex:1;min-width:260px;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--input-bg);color:var(--text);">
+                    <button class="btn btn-primary" onclick="iaGuardarApiKey()">💾 Guardar Key</button>
+                    <button class="btn btn-secondary" onclick="iaBorrarApiKey()">🗑 Eliminar</button>
+                </div>
+                <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="iaAlertasTribu()">⚠️ Analizar obligaciones tributarias</button>
+                    <button class="btn btn-secondary" onclick="iaVerificarConsistencia()">🔍 Verificar consistencia de libros</button>
+                </div>
+            </div>
+
+            <!-- Info Firebase -->
+            <div class="card" style="padding:24px;">
+                <h2 style="margin-bottom:4px;">☁️ Sincronización Firebase</h2>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
+                    Los datos se sincronizan automáticamente con Firebase al guardar cualquier registro.
+                    Cada cuenta tiene sus datos completamente separados.
+                </p>
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;font-size:13px;color:#166534;">
+                    ✅ Proyecto conectado: <strong>cont-app-forge</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════
+             FLUJO DE CAJA
+        ═════════════════════ -->
+        <div id="view-flujo-caja" class="view">
+
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFFlujoCaja()">⬇ PDF</button>
+                <button class="btn-export btn-export-ia"    onclick="iaAnalizarFlujoCaja()">✨ Analizar con IA</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelFlujoCaja()">⬇ Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirFlujoCaja()">🖨 Imprimir</button>
+            </div>
+            <div class="libro-toolbar card">
+                <div class="libro-toolbar-left">
+                    <select id="selFlujoCajaAnio" class="sel-periodo"
+                        onchange="generarFlujoCaja()">
+                        <option value="2023">2023</option><option value="2024">2024</option>
+                        <option value="2025">2025</option><option value="2026">2026</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="generarFlujoCaja()">Generar</button>
+                </div>
+                <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Entradas</span>
+                        <span class="libro-kpi-val" id="fcEntradas">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Salidas</span>
+                        <span class="libro-kpi-val" id="fcSalidas">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Operacional</span>
+                        <span class="libro-kpi-val" id="fcOperacional">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Inversión</span>
+                        <span class="libro-kpi-val" id="fcInversion">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Financiamiento</span>
+                        <span class="libro-kpi-val" id="fcFinanciamiento">$0</span>
+                    </div>
+                    <div class="libro-kpi libro-kpi-total">
+                        <span class="libro-kpi-label">Flujo Neto</span>
+                        <span class="libro-kpi-val" id="fcNeto">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="padding:16px;">
+                <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📉 Movimientos Mensuales de Efectivo</div>
+                <div id="graficoFlujoCaja"></div>
+            </div>
+
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="cont-table" style="font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th style="width:110px;">Fecha</th>
+                                <th>Descripción / Contacto</th>
+                                <th class="monto" style="width:130px;">Entrada (+)</th>
+                                <th class="monto" style="width:130px;">Salida (−)</th>
+                                <th class="monto" style="width:120px;">Neto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyFlujoCaja"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ════════════════════
+             BALANCE CLASIFICADO
+        ═════════════════════ -->
+        <div id="view-balance-clasificado" class="view">
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFBalanceClasificado()">⬇ PDF</button>
+                <button class="btn-export btn-export-ia"    onclick="iaAnalizarBalanceClasificado()">✨ Analizar con IA</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelBalanceClasificado()">⬇ Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirBalanceClasificado()">🖨 Imprimir</button>
+            </div>
+            <div id="balanceClasificadoCont"></div>
+        </div>
+
+        <!-- ════════════════════
+             ESTADO DE RESULTADOS
+        ═════════════════════ -->
+        <div id="view-estado-resultados" class="view">
+
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFEstadoResultados()">⬇ PDF</button>
+                <button class="btn-export btn-export-ia"    onclick="iaAnalizarEstadoResultados()">✨ Analizar con IA</button>
+                <button class="btn-export btn-export-ia"    onclick="iaCompararPeriodos('Estado de Resultados')" title="Comparar dos períodos">⚖ Comparar períodos</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelEstadoResultados()">⬇ Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirEstadoResultados()">🖨 Imprimir</button>
+            </div>
+            <div class="libro-toolbar card">
+                <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Ingresos</span>
+                        <span class="libro-kpi-val" id="erKpiIngresos" style="color:var(--positive);">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Costo Ventas</span>
+                        <span class="libro-kpi-val" id="erKpiCostos" style="color:var(--negative);">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Gastos Op.</span>
+                        <span class="libro-kpi-val" id="erKpiGastos" style="color:var(--warning);">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Ut. antes Impuesto</span>
+                        <span class="libro-kpi-val" id="erKpiAntesImp">$0</span>
+                    </div>
+                    <div class="libro-kpi libro-kpi-total">
+                        <span class="libro-kpi-label">Utilidad Neta</span>
+                        <span class="libro-kpi-val" id="erKpiResultado">$0</span>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Régimen tributario:</label>
+                    <select id="erTasaImpuesto" onchange="generarEstadoResultados()"
+                        style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--input-bg);color:var(--text);">
+                        <option value="0.27">27% — Régimen General (S.A.)</option>
+                        <option value="0.25">25% — Propyme (14D)</option>
+                        <option value="0.10">10% — Propyme Transparente</option>
+                        <option value="0">0% — Segunda Categoría / Exento</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="generarEstadoResultados()">Generar</button>
+                </div>
+            </div>
+
+            <div class="card" style="max-width:700px;">
+                <div id="estadoResultadosCont" style="padding:8px 0;"></div>
+            </div>
+
+        </div>
+
+        <!-- ════════════════════
+             INDICADORES
+        ═════════════════════ -->
+        <div id="view-indicadores" class="view">
+
+            <!-- Toolbar -->
+            <div class="libro-toolbar card" style="justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="actualizarIndicadores(true)">
+                        ↻ Actualizar ahora
+                    </button>
+                    <span id="indFechaActualizacion" style="font-size:12px;color:var(--text-muted);">
+                        Sin datos cargados
+                    </span>
+                </div>
+                <div id="indEstadoConexion" style="font-size:12px;"></div>
+            </div>
+
+            <!-- Cards: Indicadores Tributarios -->
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+                        color:var(--text-muted);margin-bottom:10px;">Indicadores Tributarios</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
+
+                <div class="card ind-card" id="cardUF">
+                    <div class="ind-card-label">UF</div>
+                    <div class="ind-card-nombre">Unidad de Fomento</div>
+                    <div class="ind-card-valor" id="indValUF">—</div>
+                    <div class="ind-card-fecha" id="indFecUF"></div>
+                </div>
+
+                <div class="card ind-card" id="cardUTM">
+                    <div class="ind-card-label">UTM</div>
+                    <div class="ind-card-nombre">Unidad Tributaria Mensual</div>
+                    <div class="ind-card-valor" id="indValUTM">—</div>
+                    <div class="ind-card-fecha" id="indFecUTM"></div>
+                </div>
+
+                <div class="card ind-card" id="cardIPC">
+                    <div class="ind-card-label">IPC</div>
+                    <div class="ind-card-nombre">Índice de Precios al Consumidor</div>
+                    <div class="ind-card-valor" id="indValIPC">—</div>
+                    <div class="ind-card-fecha" id="indFecIPC"></div>
+                </div>
+
+                <div class="card ind-card" id="cardTasa">
+                    <div class="ind-card-label">TPM</div>
+                    <div class="ind-card-nombre">Tasa Política Monetaria (BCCh)</div>
+                    <div class="ind-card-valor" id="indValTasa">—</div>
+                    <div class="ind-card-fecha" id="indFecTasa"></div>
+                </div>
+
+            </div>
+
+            <!-- Cards: Indicadores Laborales -->
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+                        color:var(--text-muted);margin-bottom:10px;">Indicadores Laborales</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
+
+                <div class="card ind-card" id="cardIMM">
+                    <div class="ind-card-label">IMM</div>
+                    <div class="ind-card-nombre">Ingreso Mínimo Mensual</div>
+                    <div class="ind-card-valor" id="indValIMM">—</div>
+                    <div class="ind-card-fecha" id="indFecIMM"></div>
+                </div>
+
+            </div>
+
+            <!-- Cards: Tipo de Cambio -->
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+                        color:var(--text-muted);margin-bottom:10px;">Tipo de Cambio</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px;">
+
+                <div class="card ind-card" id="cardDolar">
+                    <div class="ind-card-label">USD</div>
+                    <div class="ind-card-nombre">Dólar Observado</div>
+                    <div class="ind-card-valor" id="indValDolar">—</div>
+                    <div class="ind-card-fecha" id="indFecDolar"></div>
+                </div>
+
+                <div class="card ind-card" id="cardEuro">
+                    <div class="ind-card-label">EUR</div>
+                    <div class="ind-card-nombre">Euro</div>
+                    <div class="ind-card-valor" id="indValEuro">—</div>
+                    <div class="ind-card-fecha" id="indFecEuro"></div>
+                </div>
+
+            </div>
+
+            <!-- Previred — Tasas y Tramos (renderizados dinámicamente desde indicadores.js) -->
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+                        color:var(--text-muted);margin-bottom:10px;">
+                Previred — Tasas y Tramos
+                <span id="previredFechaRef" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);margin-left:8px;"></span>
+            </div>
+            <div id="previred-tablas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:24px;">
+                <div style="color:var(--text-muted);font-size:13px;padding:20px;grid-column:1/-1;">
+                    Cargando… presiona <strong>Actualizar ahora</strong> si los datos no aparecen.
+                </div>
+            </div>
+
+            <!-- Previred — Panel de configuración -->
+            <div class="pv-panel">
+
+                <!-- Cabecera + credenciales -->
+                <div class="card pv-card">
+                    <div class="pv-card-header">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <img src="https://www.previred.com/favicon.ico" class="pv-logo" onerror="this.style.display='none'">
+                            <div>
+                                <div style="font-weight:700;font-size:15px;line-height:1.2;">Configuración Previred
+                                    <span id="previredBadge" style="display:none;" class="pv-badge pv-badge--ok">Conectado</span>
+                                </div>
+                                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+                                    Tasas, topes e indicadores laborales vigentes
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn" style="font-size:12px;white-space:nowrap;"
+                            onclick="electronAPI.shell.openExternal('https://www.previred.com/web/previred/indicadores-previsionales')">
+                            🔗 previred.com
+                        </button>
+                    </div>
+
+                    <div class="pv-section-label">Credenciales empresa</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+                        Conecta tu empresa para sincronizar tasas automáticamente. Sin conexión, edítalas manualmente abajo.
+                    </div>
+                    <div class="pv-creds-grid">
+                        <label class="pv-label">RUT empresa</label>
+                        <input id="pvRut" type="text" placeholder="12.345.678-9" oninput="fmtRut(this)" class="pv-input" style="font-family:'Courier New',monospace;">
+                        <label class="pv-label">Contraseña</label>
+                        <input id="pvPass" type="password" placeholder="••••••••" class="pv-input">
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                        <button class="btn btn-primary" onclick="previredConectar()">Conectar</button>
+                        <button class="btn" onclick="previredBorrar()" style="color:var(--negative);">Borrar credenciales</button>
+                    </div>
+                    <div id="pvEstado" style="margin-top:8px;font-size:12px;min-height:18px;"></div>
+                </div>
+
+                <!-- inputs ocultos para compatibilidad con indicadores.js -->
+                <div style="display:none;">
+                    <input id="pvSis"><input id="pvMutual"><input id="pvCesTrab"><input id="pvCesEmpl">
+                    <input id="pvTopeAfp"><input id="pvTopeSal"><input id="pvTopeCes"><input id="pvTopeInp">
+                    <div id="pvAfpGrid"></div>
+                    <input id="pvImmMayor"><input id="pvImmMenor"><input id="pvImmNoRem"><span id="pvImmRef"></span>
+                    <input id="pvAfHastaA"><input id="pvAfMontoA">
+                    <input id="pvAfHastaB"><input id="pvAfMontoB">
+                    <input id="pvAfHastaC"><input id="pvAfMontoC">
+                    <div id="pvTasasEstado"></div>
+                </div>
+
+            </div>
+            </div>
+
+
+        </div>
+
+        <!-- ════════════════════
+             IVA RESUMEN — F29
+        ═════════════════════ -->
+        <div id="view-iva-resumen" class="view">
+
+            <!-- Toolbar con período y KPIs -->
+            <div class="libro-toolbar card" style="flex-wrap:wrap;gap:16px;">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <select id="selIvaMes" class="sel-periodo" onchange="generarIvaResumen()">
+                        <option value="1">Enero</option><option value="2">Febrero</option>
+                        <option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option>
+                        <option value="7">Julio</option><option value="8">Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option>
+                        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
+                    <select id="selIvaAnio" class="sel-periodo" onchange="generarIvaResumen()">
+                        <option value="2023">2023</option><option value="2024">2024</option>
+                        <option value="2025">2025</option><option value="2026">2026</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="generarIvaResumen()">Calcular</button>
+                </div>
+                <div style="display:flex;gap:20px;flex-wrap:wrap;">
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">IVA Débito</span>
+                        <span class="libro-kpi-val" id="ivaKpiDebito">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">IVA Crédito</span>
+                        <span class="libro-kpi-val" id="ivaKpiCredito">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Remanente reaj.</span>
+                        <span class="libro-kpi-val" id="ivaKpiRemanente">$0</span>
+                    </div>
+                    <div class="libro-kpi libro-kpi-total">
+                        <span class="libro-kpi-label">Neto F29</span>
+                        <span class="libro-kpi-val" id="ivaKpiNeto">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalle del cálculo -->
+            <div class="card" style="max-width:680px;">
+                <div id="ivaResumenCont" style="padding:8px 0;"></div>
+            </div>
+
+            <!-- Panel remanente manual -->
+            <div class="card" style="max-width:480px;">
+                <div style="font-weight:700;font-size:14px;margin-bottom:4px;">
+                    📥 Remanente mes anterior (ingreso manual)
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">
+                    Ingresa el remanente de crédito fiscal del período anterior
+                    si no se generó automáticamente desde esta vista.
+                </div>
+                <div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end;">
+                    <div>
+                        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Monto remanente ($)</label>
+                        <input id="ivaInputRemanente" type="number" min="0"
+                            placeholder="0"
+                            style="width:100%;padding:8px 10px;border:1px solid var(--divider);
+                                   border-radius:6px;background:var(--input-bg);color:var(--text);font-size:13px;">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Mes origen</label>
+                        <select id="ivaRemMes"
+                            style="padding:8px 10px;border:1px solid var(--divider);
+                                   border-radius:6px;background:var(--input-bg);color:var(--text);font-size:13px;">
+                            <option value="1">Ene</option><option value="2">Feb</option>
+                            <option value="3">Mar</option><option value="4">Abr</option>
+                            <option value="5">May</option><option value="6">Jun</option>
+                            <option value="7">Jul</option><option value="8">Ago</option>
+                            <option value="9">Sep</option><option value="10">Oct</option>
+                            <option value="11">Nov</option><option value="12">Dic</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Año</label>
+                        <select id="ivaRemAnio"
+                            style="padding:8px 10px;border:1px solid var(--divider);
+                                   border-radius:6px;background:var(--input-bg);color:var(--text);font-size:13px;">
+                            <option value="2023">2023</option><option value="2024">2024</option>
+                            <option value="2025">2025</option><option value="2026">2026</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" style="margin-top:12px;" onclick="guardarRemanenteIVA()">
+                    💾 Guardar remanente
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ════════════════════
+             AUDITORÍA
+        ═════════════════════ -->
+        <!-- ═══ REMUNERACIONES ════════════════════════════════════ -->
+        <div id="view-remuneraciones" class="view"></div>
+
+        <div id="view-auditoria" class="view">
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <div>
+                        <h2 style="margin:0;">Log de Auditoría</h2>
+                        <p style="color:var(--text-muted);font-size:13px;margin:4px 0 0;">
+                            Registro de todas las acciones importantes — solo visible para administradores.
+                        </p>
+                    </div>
+                    <button class="btn btn-primary" onclick="cargarAuditLog()">🔄 Cargar registros</button>
+                </div>
+                <div id="auditLogCont">
+                    <p style="color:var(--text-muted);font-size:13px;">Presiona "Cargar registros" para ver el historial de auditoría.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             VISTAS SEGUNDA CATEGORÍA
+        ══════════════════════════════════════════════ -->
+
+        <!-- ── Boleta de Honorarios ───────────────── -->
+        <div id="view-honorarios" class="view">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+                <div class="card" style="padding:24px;">
+                    <h2 style="margin-bottom:18px;">📄 Emitir Boleta de Honorarios</h2>
+                    <div class="form-grid" style="grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;">
+                        <label>Fecha</label>
+                        <input id="honFecha" type="date" class="wiz-input" style="margin:0;">
+                        <label>RUT Pagador</label>
+                        <input id="honRutPagador" class="wiz-input" type="text" placeholder="76.000.000-0" oninput="fmtRut(this)" style="margin:0;">
+                        <label>Nombre Pagador</label>
+                        <input id="honNombrePagador" class="wiz-input" type="text" placeholder="Empresa o persona que paga" style="margin:0;">
+                        <label>Monto</label>
+                        <input id="honMonto" class="wiz-input" type="text" placeholder="0" oninput="honActualizarCalculo()" style="margin:0;">
+                        <label>Calcular desde</label>
+                        <select id="honDesde" class="wiz-input" onchange="honActualizarCalculo()" style="margin:0;">
+                            <option value="bruto">Monto bruto</option>
+                            <option value="liquido">Líquido deseado</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%;margin-top:18px;" onclick="honEmitirBoleta()">
+                        ✅ Registrar Boleta
+                    </button>
+                </div>
+                <div class="card" style="padding:24px;">
+                    <h2 style="margin-bottom:18px;">🧮 Desglose de Retención</h2>
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Tasa vigente 2026: <strong>15,25%</strong></div>
+                    <div class="hon-desglose">
+                        <div class="hon-desglose-fila"><span>Bruto</span><span id="honResBruto">$0</span></div>
+                        <div class="hon-desglose-fila" style="color:var(--negative);"><span>Retención (15,25%)</span><span id="honResRetencion">$0</span></div>
+                        <div class="hon-desglose-fila hon-desglose-total" style="color:var(--positive);"><span>Líquido a recibir</span><span id="honResLiquido">$0</span></div>
+                    </div>
+                    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--divider);font-size:12px;color:var(--text-muted);">
+                        La retención es enterada al SII directamente por el pagador.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Libro de Ingresos (segunda categoría) ── -->
+        <div id="view-libro-ingresos-hon" class="view">
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('ingBody','Libro de Ingresos')">⬇ PDF</button>
+            </div>
+            <div class="libro-toolbar card">
+                <div class="libro-toolbar-left">
+                    <select id="ingAnio" class="sel-periodo" onchange="honRenderLibroIngresos()">
+                        <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+                    </select>
+                </div>
+                <div class="libro-kpis">
+                    <div class="libro-kpi"><span class="libro-kpi-label">Total bruto</span><span class="libro-kpi-val" id="ingKpiBruto" style="color:var(--positive);">$0</span></div>
+                    <div class="libro-kpi"><span class="libro-kpi-label">Retenciones</span><span class="libro-kpi-val" id="ingKpiRet" style="color:var(--negative);">$0</span></div>
+                    <div class="libro-kpi libro-kpi-total"><span class="libro-kpi-label">Líquido recibido</span><span class="libro-kpi-val" id="ingKpiLiq">$0</span></div>
+                </div>
+            </div>
+            <!-- Agregar ingreso manual -->
+            <div class="card" style="padding:16px;">
+                <div style="font-weight:600;font-size:13px;margin-bottom:12px;">+ Ingreso adicional (no BHE)</div>
+                <!-- Fila 1: Fecha | Tipo | N° doc | RUT pagador | Nombre pagador -->
+                <div style="display:grid;grid-template-columns:130px 160px 120px 160px 1fr;gap:10px;margin-bottom:10px;">
+                    <div><label class="ctc-label">Fecha</label><input id="ingFecha" type="date" class="ctc-input"></div>
+                    <div><label class="ctc-label">Tipo ingreso</label>
+                        <select id="ingTipo" class="ctc-input">
+                            <option value="arriendo">Arriendo</option>
+                            <option value="servicios">Servicios profesionales</option>
+                            <option value="devolucion">Devolución</option>
+                            <option value="interes">Intereses</option>
+                            <option value="otro">Otro ingreso</option>
+                        </select>
+                    </div>
+                    <div><label class="ctc-label">N° Documento</label><input id="ingNDoc" class="ctc-input" type="text" placeholder="Folio / N°"></div>
+                    <div><label class="ctc-label">RUT Pagador</label><input id="ingRutPag" class="ctc-input" type="text" placeholder="76.000.000-0" oninput="fmtRut(this)"></div>
+                    <div><label class="ctc-label">Nombre pagador</label><input id="ingNombrePag" class="ctc-input" type="text" placeholder="Empresa o persona"></div>
+                </div>
+                <!-- Fila 2: Descripción | Monto | Botón -->
+                <div style="display:grid;grid-template-columns:1fr 160px auto;gap:10px;align-items:end;">
+                    <div><label class="ctc-label">Descripción / Concepto</label><input id="ingDesc" class="ctc-input" type="text" placeholder="Concepto del ingreso"></div>
+                    <div><label class="ctc-label">Monto</label><input id="ingMonto" class="ctc-input" type="text" placeholder="0" oninput="fmtMoneyInput(this)"></div>
+                    <button class="btn btn-primary" style="height:36px;" onclick="honAgregarIngreso()">Agregar</button>
+                </div>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Las boletas BHE aparecen automáticamente desde el Libro de Honorarios.</p>
+            </div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="cont-table" style="font-size:13px;">
+                        <thead><tr>
+                            <th>Fecha</th><th>Tipo</th><th>N° Doc</th><th>RUT Pagador</th>
+                            <th>Pagador / Concepto</th><th class="monto">Bruto</th>
+                            <th class="monto">Retención</th><th class="monto">Líquido</th><th></th>
+                        </tr></thead>
+                        <tbody id="ingBody"></tbody>
+                        <tfoot id="ingTotales"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Libro de Egresos (segunda categoría) ─── -->
+        <div id="view-libro-egresos-hon" class="view">
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('egrBody','Libro de Egresos')">⬇ PDF</button>
+            </div>
+            <div class="libro-toolbar card">
+                <div class="libro-toolbar-left">
+                    <select id="egrAnio" class="sel-periodo" onchange="honRenderLibroEgresos()">
+                        <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+                    </select>
+                    <select id="egrFiltroCat" class="sel-periodo" onchange="honRenderLibroEgresos()">
+                        <option value="">Todas las categorías</option>
+                        <option value="materiales">Materiales</option>
+                        <option value="servicios">Servicios</option>
+                        <option value="tecnologia">Tecnología</option>
+                        <option value="capacitacion">Capacitación</option>
+                        <option value="arriendo">Arriendo</option>
+                        <option value="transporte">Transporte</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <div class="libro-kpis">
+                    <div class="libro-kpi"><span class="libro-kpi-label">N° documentos</span><span class="libro-kpi-val" id="egrKpiCount">0</span></div>
+                    <div class="libro-kpi libro-kpi-total"><span class="libro-kpi-label">Total egresos</span><span class="libro-kpi-val" id="egrKpiTotal" style="color:var(--negative);">$0</span></div>
+                </div>
+            </div>
+            <div class="card" style="padding:20px;">
+                <div style="font-weight:700;font-size:14px;margin-bottom:14px;">+ Registrar egreso</div>
+                <!-- Fila 1: documento y proveedor -->
+                <div style="display:grid;grid-template-columns:150px 160px 130px 1fr 1fr;gap:10px;margin-bottom:10px;">
+                    <div>
+                        <label class="ctc-label">Fecha</label>
+                        <input id="egrFecha" type="date" class="ctc-input">
+                    </div>
+                    <div>
+                        <label class="ctc-label">Tipo documento</label>
+                        <select id="egrTipoDoc" class="ctc-input">
+                            <option value="factura">Factura</option>
+                            <option value="boleta">Boleta</option>
+                            <option value="boleta_honorarios">Boleta honorarios</option>
+                            <option value="recibo">Recibo</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="ctc-label">N° documento</label>
+                        <input id="egrNDoc" class="ctc-input" type="text" placeholder="Ej: 001234">
+                    </div>
+                    <div>
+                        <label class="ctc-label">RUT proveedor</label>
+                        <input id="egrRutProv" class="ctc-input" type="text" placeholder="12.345.678-9" oninput="fmtRut(this)">
+                    </div>
+                    <div>
+                        <label class="ctc-label">Nombre proveedor</label>
+                        <input id="egrNombreProv" class="ctc-input" type="text" placeholder="Razón social o nombre">
+                    </div>
+                </div>
+                <!-- Fila 2: concepto, categoría y montos -->
+                <div style="display:grid;grid-template-columns:1fr 190px 140px 130px auto;gap:10px;align-items:end;">
+                    <div>
+                        <label class="ctc-label">Descripción / Concepto</label>
+                        <input id="egrDesc" class="ctc-input" type="text" placeholder="Detalle del gasto">
+                    </div>
+                    <div>
+                        <label class="ctc-label">Categoría</label>
+                        <select id="egrCat" class="ctc-input">
+                            <option value="materiales">Materiales / Insumos</option>
+                            <option value="servicios">Servicios externos</option>
+                            <option value="tecnologia">Tecnología / Software</option>
+                            <option value="capacitacion">Capacitación</option>
+                            <option value="arriendo">Arriendo de oficina</option>
+                            <option value="transporte">Transporte</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="ctc-label">Monto neto</label>
+                        <input id="egrMonto" class="ctc-input" type="text" placeholder="0"
+                            oninput="fmtMoneyInput(this);honCalcIvaEgreso()">
+                    </div>
+                    <div>
+                        <label class="ctc-label" style="display:flex;align-items:center;gap:4px;">
+                            IVA
+                            <label style="font-weight:400;font-size:11px;display:flex;align-items:center;gap:3px;">
+                                <input type="checkbox" id="egrConIva" onchange="honCalcIvaEgreso()"> 19%
+                            </label>
+                        </label>
+                        <input id="egrIva" class="ctc-input" type="text" placeholder="0" readonly
+                            style="background:var(--sidebar-bg);color:var(--text-muted);">
+                    </div>
+                    <button class="btn btn-primary" onclick="honAgregarEgreso()" style="height:36px;padding:0 18px;">Agregar</button>
+                </div>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:10px;">
+                    Los gastos registrados alimentan los <strong>gastos efectivos</strong> del F22. El IVA es un costo (segunda categoría no recupera crédito fiscal).
+                </p>
+            </div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="cont-table" style="font-size:12px;">
+                        <thead><tr>
+                            <th>Fecha</th><th>Tipo doc.</th><th>N°</th>
+                            <th>Proveedor</th><th>Descripción</th><th>Categoría</th>
+                            <th class="monto">Neto</th><th class="monto">IVA</th><th class="monto">Total</th><th></th>
+                        </tr></thead>
+                        <tbody id="egrBody"></tbody>
+                        <tfoot id="egrTotales"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Libro de Honorarios ────────────────── -->
+        <div id="view-libro-honorarios" class="view">
+            <!-- Formulario BHE detallado -->
+            <div class="card" style="padding:22px;margin-bottom:0;">
+                <div style="font-weight:700;font-size:15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                    📄 Nueva Boleta de Honorarios Electrónica (BHE)
+                </div>
+                <!-- Fila 1: identificación del pagador -->
+                <div style="display:grid;grid-template-columns:150px 150px 1fr 1fr;gap:10px;margin-bottom:10px;">
+                    <div>
+                        <label class="ctc-label">Fecha emisión</label>
+                        <input id="bheFecha" type="date" class="ctc-input">
+                    </div>
+                    <div>
+                        <label class="ctc-label">N° Folio / Referencia</label>
+                        <input id="bheFolio" class="ctc-input" type="text" placeholder="Ej: 125">
+                    </div>
+                    <div>
+                        <label class="ctc-label">RUT pagador</label>
+                        <input id="bheRutPagador" class="ctc-input" type="text" placeholder="12.345.678-9" oninput="fmtRut(this)">
+                    </div>
+                    <div>
+                        <label class="ctc-label">Nombre / Razón social del pagador</label>
+                        <input id="bheNombrePagador" class="ctc-input" type="text" placeholder="Empresa o persona natural">
+                    </div>
+                </div>
+                <!-- Fila 2: concepto y período -->
+                <div style="display:grid;grid-template-columns:1fr 220px;gap:10px;margin-bottom:10px;">
+                    <div>
+                        <label class="ctc-label">Concepto / Descripción del servicio</label>
+                        <input id="bheConcepto" class="ctc-input" type="text" placeholder="Ej: Servicios de consultoría contable mes de junio 2026">
+                    </div>
+                    <div>
+                        <label class="ctc-label">Período del servicio</label>
+                        <input id="bhePeriodo" class="ctc-input" type="month" placeholder="yyyy-mm">
+                    </div>
+                </div>
+                <!-- Fila 3: monto + resumen + retención -->
+                <div style="display:grid;grid-template-columns:200px 140px 1fr auto;gap:10px;align-items:end;margin-bottom:14px;">
+                    <div>
+                        <label class="ctc-label">Monto</label>
+                        <input id="bheMonto" class="ctc-input" type="text" placeholder="0"
+                            oninput="fmtMoneyInput(this);honActualizarCalculo()">
+                    </div>
+                    <div>
+                        <label class="ctc-label">Ingresado como</label>
+                        <select id="bheDesde" class="ctc-input" onchange="honActualizarCalculo()">
+                            <option value="bruto">Monto bruto</option>
+                            <option value="liquido">Monto líquido</option>
+                        </select>
+                    </div>
+                    <div style="background:var(--sidebar-bg);border-radius:8px;padding:10px 14px;font-size:13px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+                        <div><div style="color:var(--text-muted);font-size:11px;margin-bottom:2px;">Bruto</div><strong id="bheResBruto">$0</strong></div>
+                        <div><div style="color:var(--text-muted);font-size:11px;margin-bottom:2px;">Retención 15,25%</div><strong id="bheResRetencion" style="color:var(--negative);">$0</strong></div>
+                        <div><div style="color:var(--text-muted);font-size:11px;margin-bottom:2px;">Líquido a recibir</div><strong id="bheResLiquido" style="color:var(--positive);">$0</strong></div>
+                    </div>
+                    <button class="btn btn-primary" style="height:36px;padding:0 22px;white-space:nowrap;" onclick="honEmitirBoleta()">Emitir BHE</button>
+                </div>
+                <!-- Tipo retención -->
+                <div style="border-top:1px solid var(--divider);padding-top:12px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+                    <span style="font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap;">¿Quién retiene el 15,25%?</span>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="radio" name="honTipoRet" id="honRetPagador" value="pagador" checked>
+                        <span><strong>Pagador (empresa / persona jurídica)</strong> — retiene y entera al SII directamente</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="radio" name="honTipoRet" id="honRetAuto" value="auto">
+                        <span><strong>Persona natural</strong> — yo me auto-retengo y declaro en F29</span>
+                    </label>
+                </div>
+            </div>
+            <div class="export-bar" style="margin-top:0;">
+                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('honLibroBody','Libro de Honorarios')">⬇ PDF</button>
+            </div>
+            <div class="libro-toolbar card">
+                <div class="libro-toolbar-left">
+                    <select id="honLibroMes" class="sel-periodo" onchange="honRenderLibro()">
+                        <option value="0">Todos los meses</option>
+                        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
+                    <select id="honLibroAnio" class="sel-periodo" onchange="honRenderLibro()">
+                        <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="cont-table" style="font-size:13px;">
+                        <thead><tr>
+                            <th>Fecha</th><th>Folio</th><th>RUT Pagador</th><th>Pagador / Concepto</th><th>Período</th>
+                            <th class="monto">Bruto</th><th class="monto">Retención</th><th class="monto">Líquido</th>
+                            <th>Retiene</th><th>Estado</th><th>Acciones</th>
+                        </tr></thead>
+                        <tbody id="honLibroBody"></tbody>
+                        <tfoot id="honLibroTotales"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Cotizaciones estimadas ─────────────── -->
+        <div id="view-cotizaciones-hon" class="view">
+            <div class="card" style="max-width:560px;padding:28px;">
+                <h2 style="margin-bottom:6px;">🏥 Estimación de Cotizaciones Previsionales</h2>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">
+                    Ley 21.133: base de cotización = <strong>80% del ingreso bruto</strong>.
+                </p>
+                <label class="wiz-label">Honorarios brutos del mes</label>
+                <input id="cotBruto" class="wiz-input" type="text" placeholder="Ej: 1.500.000" oninput="fmtMoneyInput(this)">
+                <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="honCalcularCotizaciones()">Calcular cotizaciones</button>
+                <div id="cotResultado" style="display:none;margin-top:22px;border-top:1px solid var(--divider);padding-top:18px;">
+                    <div class="hon-desglose">
+                        <div class="hon-desglose-fila" style="color:var(--text-muted);"><span>Base de cotización (80%)</span><span id="cotBase">$0</span></div>
+                        <div class="hon-desglose-fila"><span id="cotAfpLabel">AFP</span><span id="cotAfp">$0</span></div>
+                        <div class="hon-desglose-fila"><span>Salud Fonasa (7%)</span><span id="cotSalud">$0</span></div>
+                        <div class="hon-desglose-fila"><span>SIS (0,87%)</span><span id="cotSIS">$0</span></div>
+                        <div class="hon-desglose-fila hon-desglose-total"><span>Total cotizaciones estimadas</span><span id="cotTotal">$0</span></div>
+                    </div>
+                    <p style="font-size:12px;color:var(--text-muted);margin-top:12px;">
+                        La tasa AFP se obtiene del módulo Indicadores (Previred). Si no aparece, usa el valor predeterminado 11,27%.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Gastos Presuntos vs Efectivos ──────── -->
+        <div id="view-gastos-presuntos" class="view">
+            <div class="card" style="max-width:600px;padding:28px;">
+                <h2 style="margin-bottom:6px;">🧮 Gastos Presuntos vs. Efectivos</h2>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">
+                    Tope gastos presuntos: <strong>15 UTA</strong> — calculado con UTM vigente del módulo Indicadores.
+                </p>
+                <div class="form-grid" style="grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;">
+                    <label>Honorarios brutos anuales</label>
+                    <input id="gpBruto" class="wiz-input" type="text" placeholder="0" oninput="fmtMoneyInput(this)" style="margin:0;">
+                    <label>Gastos efectivos acumulados</label>
+                    <input id="gpEfectivos" class="wiz-input" type="text" placeholder="0" oninput="fmtMoneyInput(this)" style="margin:0;">
+                </div>
+                <p style="font-size:12px;color:var(--text-muted);margin:10px 0;">
+                    ⚠️ Gastos efectivos deben estar respaldados por documentos válidos.
+                </p>
+                <button class="btn btn-primary" style="width:100%;margin-top:6px;" onclick="honCalcularGastos()">Comparar opciones</button>
+                <div id="gpResultado" style="margin-top:22px;border-top:1px solid var(--divider);padding-top:18px;" hidden>
+                    <div class="hon-desglose">
+                        <div class="hon-desglose-fila"><span>Gastos presuntos (30%)</span><span id="gpPresuntosCalc">$0</span></div>
+                        <div class="hon-desglose-fila" style="color:var(--text-muted);font-size:12px;"><span>Tope aplicado</span><span id="gpTope">—</span></div>
+                        <div class="hon-desglose-fila"><span>Diferencia (efectivos − presuntos)</span><span id="gpDiferencia">$0</span></div>
+                    </div>
+                    <div id="gpRecomendacion" style="margin-top:14px;font-weight:700;font-size:14px;padding:12px;border-radius:8px;background:var(--table-stripe);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Retenciones recibidas ──────────────── -->
+        <div id="view-retenciones-hon" class="view">
+            <div class="libro-toolbar card">
+                <div class="libro-toolbar-left">
+                    <select id="retAnio" class="sel-periodo" onchange="honRenderRetenciones()">
+                        <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+                    </select>
+                </div>
+                <div class="libro-kpis">
+                    <div class="libro-kpi libro-kpi-total">
+                        <span class="libro-kpi-label">Total retenciones año</span>
+                        <span class="libro-kpi-val" id="retKpiTotal">$0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="padding:16px;">
+                <div style="font-weight:700;margin-bottom:12px;">+ Registrar retención recibida</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 2fr 1fr auto;gap:10px;align-items:end;">
+                    <div><label class="ctc-label">Fecha</label><input id="retFecha" type="date" class="ctc-input"></div>
+                    <div><label class="ctc-label">RUT Pagador</label><input id="retRut" class="ctc-input" type="text" placeholder="76.000.000-0" oninput="fmtRut(this)"></div>
+                    <div><label class="ctc-label">Nombre</label><input id="retNombre" class="ctc-input" type="text" placeholder="Nombre del pagador"></div>
+                    <div><label class="ctc-label">Monto Bruto</label><input id="retBruto" class="ctc-input" type="text" placeholder="0" oninput="fmtMoneyInput(this)"></div>
+                    <button class="btn btn-primary" onclick="honAgregarRetencion()">Agregar</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="cont-table" style="font-size:13px;">
+                        <thead><tr>
+                            <th>Fecha</th><th>RUT</th><th>Nombre</th>
+                            <th class="monto">Bruto</th><th class="monto">Retención (15,25%)</th><th></th>
+                        </tr></thead>
+                        <tbody id="retBody"></tbody>
+                        <tfoot id="retTotales"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── F29 Segunda Categoría ──────────────── -->
+        <div id="view-f29-hon" class="view">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+                <!-- PPM voluntario -->
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div class="card" style="padding:22px;">
+                        <h2 style="margin-bottom:6px;">🧾 F29 — Segunda Categoría</h2>
+                        <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
+                            Declara PPM voluntario (cód. 67) y retenciones pagadas a prestadores (cód. 72).
+                        </p>
+                        <div style="display:flex;gap:10px;margin-bottom:16px;">
+                            <select id="f29honMes" class="sel-periodo" onchange="honGenerarF29()">
+                                <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option>
+                                <option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option>
+                                <option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+                            </select>
+                            <select id="f29honAnio" class="sel-periodo" onchange="honGenerarF29()">
+                                <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+                            </select>
+                        </div>
+                        <div class="hon-f29-tabla">
+                            <div class="hon-f29-fila"><span class="hon-f29-cod">Cód. 67</span><span>PPM voluntario</span><span id="f29honPPM" class="hon-f29-monto">$0</span></div>
+                            <div class="hon-f29-fila" id="f29FilaAutoRet" style="display:none;">
+                                <span class="hon-f29-cod">Cód. 74</span>
+                                <span>Auto-retención (pagador persona natural)</span>
+                                <span id="f29honAutoRet" class="hon-f29-monto">$0</span>
+                            </div>
+                            <div class="hon-f29-fila"><span class="hon-f29-cod">Cód. 72</span><span>Retenciones pagadas a prestadores</span><span id="f29honRetenciones" class="hon-f29-monto">$0</span></div>
+                            <div class="hon-f29-fila hon-f29-total"><span></span><span>Total a declarar</span><span id="f29honTotal" class="hon-f29-monto">$0</span></div>
+                        </div>
+                        <p style="font-size:11px;color:var(--text-muted);margin-top:10px;">
+                            Cód. 74 aparece solo cuando hay boletas emitidas a personas naturales donde te auto-retuviste.
+                        </p>
+                        <button class="btn btn-secondary" style="width:100%;margin-top:16px;opacity:.5;cursor:not-allowed;" disabled>
+                            🌐 Declarar en SII (próximamente)
+                        </button>
+                    </div>
+                    <!-- Registrar PPM -->
+                    <div class="card" style="padding:20px;">
+                        <div style="font-weight:700;font-size:13px;margin-bottom:12px;">📅 Registrar PPM del mes</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;">
+                            <div><label class="ctc-label">Mes</label>
+                                <select id="ppmMes" class="ctc-input">
+                                    <option value="1">Ene</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Abr</option>
+                                    <option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Ago</option>
+                                    <option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dic</option>
+                                </select>
+                            </div>
+                            <div><label class="ctc-label">Año</label>
+                                <select id="ppmAnio" class="ctc-input">
+                                    <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+                                </select>
+                            </div>
+                            <div><label class="ctc-label">Monto</label>
+                                <input id="ppmMonto" class="ctc-input" type="text" placeholder="0" oninput="fmtMoneyInput(this)">
+                            </div>
+                            <button class="btn btn-secondary" onclick="honRegistrarPPM()" style="height:36px;padding:0 12px;">+</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Historial PPM -->
+                <div class="card" style="padding:22px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                        <h3 style="margin:0;">Historial PPM</h3>
+                        <select id="ppmListaAnio" class="sel-periodo" onchange="honRenderPPM()">
+                            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+                        </select>
+                    </div>
+                    <div class="libro-kpis" style="margin-bottom:14px;">
+                        <div class="libro-kpi libro-kpi-total"><span class="libro-kpi-label">Total PPM año</span><span class="libro-kpi-val" id="ppmTotal">$0</span></div>
+                    </div>
+                    <table class="cont-table" style="font-size:13px;">
+                        <thead><tr><th>Mes</th><th class="monto">Monto</th><th></th></tr></thead>
+                        <tbody id="ppmBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── F22 Renta Anual ────────────────────── -->
+        <div id="view-f22-hon" class="view">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+                <div class="card" style="padding:24px;">
+                    <h2 style="margin-bottom:6px;">📋 Formulario 22 — Renta Anual</h2>
+                    <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;">
+                        Calcula el Impuesto Global Complementario (IGC) sobre honorarios brutos del año, descontando cotizaciones, gastos y créditos (retenciones + PPM).
+                    </p>
+                    <div class="form-grid" style="grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;">
+                        <label>Año tributario</label>
+                        <select id="f22Anio" class="wiz-input" style="margin:0;">
+                            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+                        </select>
+                        <label>Opción de gastos</label>
+                        <label style="font-weight:400;display:flex;align-items:center;gap:8px;">
+                            <input type="checkbox" id="f22UsePresuntos" checked onchange="honToggleGastosF22(this)"> Usar gastos presuntos (30%)
+                        </label>
+                        <label>Gastos efectivos ($)</label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input id="f22GastosEfectivos" class="wiz-input" type="text" placeholder="O escribe el monto" oninput="fmtMoneyInput(this)" style="margin:0;flex:1;" disabled>
+                            <button class="btn btn-secondary" style="white-space:nowrap;height:36px;padding:0 10px;font-size:12px;" onclick="honCargarEgresosEnF22()">Desde libro</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%;margin-top:18px;" onclick="honCalcularF22()">Calcular F22</button>
+                    <div style="margin-top:20px;border-top:1px solid var(--divider);padding-top:16px;">
+                        <div style="font-weight:700;font-size:13px;margin-bottom:10px;">📈 Proyección al cierre del año</div>
+                        <button class="btn btn-secondary" style="width:100%;" onclick="honProyectarF22()">Proyectar con datos actuales</button>
+                        <div id="proyMesActual" style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px;"></div>
+                        <div id="proyDetalle" style="margin-top:12px;" hidden>
+                            <div class="hon-desglose" style="font-size:13px;">
+                                <div class="hon-desglose-fila"><span>Bruto proyectado anual</span><span id="proyBruto">$0</span></div>
+                                <div class="hon-desglose-fila"><span>Impuesto proyectado</span><span id="proyImpuesto">$0</span></div>
+                                <div class="hon-desglose-fila"><span>Créditos (ret. + PPM)</span><span id="proyCreditos">$0</span></div>
+                            </div>
+                            <div id="proyResultado" style="margin-top:10px;padding:10px;border-radius:8px;font-weight:700;font-size:13px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="padding:24px;">
+                    <h2 style="margin-bottom:18px;">Resultado estimado</h2>
+                    <div id="f22Placeholder" style="text-align:center;padding:40px 0;color:var(--text-muted);">
+                        <div style="font-size:40px;margin-bottom:8px;">📋</div>
+                        <div>Presiona <strong>Calcular F22</strong> para ver el resultado.</div>
+                    </div>
+                    <div id="f22Detalle" hidden>
+                        <div class="hon-desglose">
+                            <div class="hon-desglose-fila"><span>Honorarios brutos anuales</span><span id="f22BrutoAnual">$0</span></div>
+                            <div class="hon-desglose-fila" style="color:var(--negative);"><span>Cotizaciones previsionales</span><span id="f22Cotizaciones">$0</span></div>
+                            <div class="hon-desglose-fila" style="color:var(--negative);">
+                                <span>Gastos (<span id="f22TipoGastos">—</span>)</span><span id="f22Gastos">$0</span>
+                            </div>
+                            <div class="hon-desglose-fila hon-desglose-subtotal"><span>Base imponible IGC</span><span id="f22BaseImponible">$0</span></div>
+                            <div class="hon-desglose-fila"><span>Impuesto IGC</span><span id="f22Impuesto">$0</span></div>
+                            <div class="hon-desglose-fila" style="color:var(--positive);"><span>Crédito retenciones</span><span id="f22Retenciones">$0</span></div>
+                            <div class="hon-desglose-fila" style="color:var(--positive);"><span>Crédito PPM voluntario</span><span id="f22PPM">$0</span></div>
+                            <div class="hon-desglose-fila hon-desglose-subtotal"><span>Total créditos</span><span id="f22Creditos">$0</span></div>
+                        </div>
+                        <div id="f22Resultado" style="margin-top:16px;padding:16px;border-radius:10px;font-weight:800;font-size:16px;text-align:center;"></div>
+                        <button class="btn btn-secondary" style="width:100%;margin-top:12px;opacity:.5;cursor:not-allowed;" disabled>
+                            🌐 Declarar en SII (próximamente)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── DJ 1879 ─────────────────────────────── -->
+        <div id="view-dj1879" class="view">
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('dj1879Body','DJ 1879')">⬇ PDF</button>
+            </div>
+            <div class="libro-toolbar card">
+                <div class="libro-toolbar-left">
+                    <label style="font-size:13px;font-weight:600;">Año tributario:</label>
+                    <select id="dj1879Anio" class="sel-periodo" onchange="honRenderDJ1879()">
+                        <option value="2023">2023</option><option value="2024">2024</option><option value="2025" selected>2025</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="honRenderDJ1879()">Generar</button>
+                </div>
+            </div>
+            <div class="card">
+                <div style="padding:14px 16px;font-size:13px;color:var(--text-muted);border-bottom:1px solid var(--divider);">
+                    Declaración de honorarios pagados a prestadores independientes. Generado desde el módulo <strong>Prestadores</strong>.
+                </div>
+                <div class="table-wrapper">
+                    <table class="cont-table" style="font-size:13px;">
+                        <thead><tr>
+                            <th>RUT</th><th>Nombre</th><th>Correo</th>
+                            <th class="monto">Bruto pagado</th><th class="monto">Retención</th>
+                        </tr></thead>
+                        <tbody id="dj1879Body"></tbody>
+                        <tfoot id="dj1879Totales"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Calendario Tributario ──────────────── -->
+        <div id="view-calendario-hon" class="view">
+            <div class="card" style="padding:24px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <div>
+                        <h2 style="margin:0;">📆 Calendario Tributario</h2>
+                        <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">Vencimientos calculados en base a tus registros actuales.</p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="honRenderCalendario()">🔄 Actualizar</button>
+                </div>
+                <div id="calendarCont" class="cal-grid"></div>
+            </div>
+        </div>
+
+        <!-- ── Prestadores / Terceros ─────────────── -->
+        <div id="view-prestadores" class="view">
+            <div class="card" style="padding:20px;">
+                <div style="font-weight:700;font-size:14px;margin-bottom:12px;">+ Registrar prestador independiente</div>
+                <div style="display:grid;grid-template-columns:1fr 2fr 2fr auto;gap:10px;align-items:end;">
+                    <div><label class="ctc-label">RUT</label><input id="prestRut" class="ctc-input" type="text" placeholder="12.345.678-9" oninput="fmtRut(this)"></div>
+                    <div><label class="ctc-label">Nombre</label><input id="prestNombre" class="ctc-input" type="text" placeholder="Nombre completo"></div>
+                    <div><label class="ctc-label">Correo (opcional)</label><input id="prestCorreo" class="ctc-input" type="email" placeholder="correo@ejemplo.cl"></div>
+                    <button class="btn btn-primary" onclick="honAgregarPrestador()">Agregar</button>
+                </div>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:10px;">
+                    💡 Los prestadores registrados aquí alimentan la <strong>DJ 1879</strong> automáticamente.
+                </p>
+            </div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="cont-table" style="font-size:13px;">
+                        <thead><tr>
+                            <th>RUT</th><th>Nombre</th><th>Correo</th>
+                            <th class="monto">Total honorarios pagados</th><th></th>
+                        </tr></thead>
+                        <tbody id="prestBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════
+             SELECTOR DE EMPRESA
+        ═════════════════════ -->
+        <div id="view-empresa" class="view">
+            <div class="emp-page">
+
+                <!-- Cabecera -->
+                <div class="emp-page-header">
+                    <div>
+                        <div class="emp-page-titulo">🏁 Mis Empresas</div>
+                        <div class="emp-page-sub">Selecciona una empresa para comenzar a trabajar</div>
+                    </div>
+                    <div class="emp-user-info">
+                        <span id="empUserEmail" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+                        <button onclick="fbLogout()">Cerrar sesión</button>
+                    </div>
+                </div>
+
+                <!-- Lista dinámica de empresas -->
+                <div class="emp-lista" id="empLista">
+                    <div class="emp-empty">
+                        <div class="emp-empty-icon">🏢</div>
+                        <div>Cargando empresas…</div>
+                    </div>
+                </div>
+
+                <!-- Botones principales -->
+                <div class="emp-acciones">
+                    <button class="emp-btn-crear" onclick="empAbrirCrear()">➕ Nueva Empresa</button>
+                    <button class="emp-btn-codigo" onclick="empAbrirCodigo()">🔑 Código de invitación</button>
+                </div>
+
+                <!-- Formulario: crear empresa -->
+                <div id="empCrearForm" class="emp-subform" style="display:none;">
+                    <div class="emp-subform-titulo">Nueva Empresa</div>
+
+                    <label class="wiz-label">Categoría tributaria</label>
+                    <div style="display:flex;gap:10px;margin-bottom:12px;">
+                        <label class="wiz-radio-card" style="flex:1;font-size:13px;">
+                            <input type="radio" name="empCategoria" value="primera" checked>
+                            <div><strong>1ª Categoría</strong><p>Empresas con contabilidad completa.</p></div>
+                        </label>
+                        <label class="wiz-radio-card" style="flex:1;font-size:13px;">
+                            <input type="radio" name="empCategoria" value="segunda">
+                            <div><strong>2ª Categoría</strong><p>Honorarios, sin IVA.</p></div>
+                        </label>
+                    </div>
+
+                    <label class="wiz-label">RUT de la empresa</label>
+                    <input id="empRut" class="wiz-input" type="text" placeholder="12.345.678-9" oninput="fmtRut(this)" style="margin-bottom:10px;">
+
+                    <label class="wiz-label">Nombre de la empresa</label>
+                    <input id="empNombre" class="wiz-input" type="text" placeholder="Ej: Comercial López Ltda." style="margin-bottom:10px;">
+
+                    <label class="wiz-label">Giro comercial <span style="font-weight:400;">(opcional)</span></label>
+                    <input id="empGiro" class="wiz-input" type="text" placeholder="Ej: Comercio al por menor">
+
+                    <div id="empCrearError" class="emp-subform-error"></div>
+
+                    <div class="emp-subform-btns">
+                        <button class="login-btn" style="flex:1;" onclick="empGuardarNueva()">Crear empresa</button>
+                        <button class="login-btn-offline" style="flex:1;" onclick="empCerrarForms()">Cancelar</button>
+                    </div>
+                </div>
+
+                <!-- Formulario: unirse con código -->
+                <div id="empCodigoForm" class="emp-subform" style="display:none;">
+                    <div class="emp-subform-titulo">Unirse con código de invitación</div>
+                    <p style="color:var(--text-muted);font-size:13px;margin-bottom:12px;">
+                        Ingresa el código de 6 caracteres que te compartió el administrador.
+                    </p>
+                    <input id="empCodigo" class="wiz-input" type="text" maxlength="6"
+                        placeholder="XXXXXX"
+                        style="text-transform:uppercase;letter-spacing:.2em;font-size:22px;text-align:center;">
+
+                    <div id="empCodigoError" class="emp-subform-error"></div>
+
+                    <div class="emp-subform-btns">
+                        <button class="login-btn" style="flex:1;" onclick="empVerificarCodigo()">Verificar código</button>
+                        <button class="login-btn-offline" style="flex:1;" onclick="empCerrarForms()">Cancelar</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div><!-- /view-container -->
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════
+     LOGIN OVERLAY
+════════════════════════════════════════════════════════ -->
+<div id="login-overlay" style="display:none;">
+    <div class="login-card">
+        <div class="login-logo">🏁</div>
+        <h1 class="login-titulo">ContApp ERP Forge</h1>
+        <p class="login-sub">Sistema contable para PYMEs chilenas</p>
+
+        <div class="login-form">
+            <div>
+                <label class="login-label">Correo electrónico</label>
+                <input id="loginEmail" class="login-input" type="email"
+                    placeholder="correo@empresa.cl"
+                    onkeydown="if(event.key==='Enter') fbLogin()">
+            </div>
+
+            <div>
+                <label class="login-label">Contraseña</label>
+                <input id="loginPass" class="login-input" type="password"
+                    placeholder="••••••••"
+                    onkeydown="if(event.key==='Enter') fbLogin()">
+            </div>
+
+            <div id="loginError" class="login-error"></div>
+
+            <button id="btnLoginSubmit" class="login-btn" onclick="fbLogin()">
+                Iniciar Sesión
+            </button>
+
+            <p class="login-toggle">
+                <a href="#" onclick="wizardAbrir();return false;">
+                    ¿No tienes cuenta? Regístrate
+                </a>
+            </p>
+
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     WIZARD — REGISTRO MULTI-PASO
+════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════
+     WIZARD — REGISTRO (solo email + contraseña)
+════════════════════════════════════════════════════════ -->
+<div id="wizardOverlay" style="display:none;">
+    <div class="wiz-card">
+
+        <div class="wiz-header">
+            <div class="wiz-titulo">Crear Cuenta</div>
+            <div class="wiz-dots">
+                <span class="wiz-dot wiz-dot-active"></span>
+                <span class="wiz-dot"></span>
+            </div>
+        </div>
+
+        <!-- Paso 1: Credenciales -->
+        <div class="wiz-step" id="wizStep1">
+            <h3 class="wiz-step-titulo">Datos de acceso</h3>
+            <label class="wiz-label">Correo electrónico</label>
+            <input id="wizEmail" class="wiz-input" type="email" placeholder="correo@empresa.cl"
+                onkeydown="if(event.key==='Enter') wizardSiguiente()">
+            <label class="wiz-label">Contraseña</label>
+            <input id="wizPass" class="wiz-input" type="password" placeholder="Mínimo 6 caracteres">
+            <label class="wiz-label">Repetir contraseña</label>
+            <input id="wizPass2" class="wiz-input" type="password" placeholder="Repite la contraseña"
+                onkeydown="if(event.key==='Enter') wizardSiguiente()">
+        </div>
+
+        <!-- Paso 2: Confirmación -->
+        <div class="wiz-step" id="wizStep2" style="display:none;">
+            <h3 class="wiz-step-titulo">Confirmar registro</h3>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
+                Se creará tu cuenta. Luego podrás registrar o unirte a una empresa.
+            </p>
+            <div id="wizResumenCont" class="wiz-resumen"></div>
+        </div>
+
+        <div id="wizError" class="login-error" style="margin-top:10px;"></div>
+
+        <div class="wiz-nav">
+            <button class="login-btn-offline" onclick="wizardAtras()">← Atrás</button>
+            <button id="wizBtnSig" class="login-btn" style="flex:1;" onclick="wizardSiguiente()">Siguiente →</button>
+            <button id="wizBtnFin" class="login-btn" style="display:none;flex:1;" onclick="wizardFinalizar()">Crear Cuenta</button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SELECTOR DE EMPRESA — vista integrada (no overlay)
+════════════════════════════════════════════════════════ -->
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL — PLAN DE CUENTAS
+════════════════════════════════════════════════════════ -->
+<div id="modalCuenta" class="modal-overlay">
+    <div class="modal-box">
+        <h2 id="tituloModalCuenta">Nueva Cuenta</h2>
+        <div class="form-grid">
+            <label>Código</label>  <input id="cuentaCodigo" placeholder="Ej: 1101">
+            <label>Nombre</label>  <input id="cuentaNombre" placeholder="Nombre de la cuenta">
+            <label>Tipo</label>
+            <select id="cuentaTipo">
+                <option>Activo</option><option>Pasivo</option><option>Patrimonio</option>
+                <option>Pérdida</option><option>Ganancia</option>
+                <option>Contra Activo</option><option>Contra Pasivo</option><option>Contra Patrimonio</option>
+            </select>
+            <label>Grupo</label>
+            <select id="cuentaGrupo">
+                <option>Activo Circulante</option><option>Activo No Circulante</option>
+                <option>Pasivo Circulante</option><option>Pasivo No Circulante</option>
+                <option>Patrimonio</option><option>Pérdidas</option><option>Ganancias</option>
+                <option>Contra Activo</option><option>Contra Pasivo</option><option>Contra Patrimonio</option>
+            </select>
+            <label>Estado</label>
+            <select id="cuentaEstado"><option>ACTIVA</option><option>INACTIVA</option></select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-primary"   onclick="guardarCuentaModal()">💾 Guardar</button>
+            <button class="btn btn-secondary" onclick="cerrarModalCuenta()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL — ASIENTO MANUAL
+════════════════════════════════════════════════════════ -->
+<div id="modalManual" class="modal-overlay">
+    <div class="modal-box" style="width:850px;">
+        <h2>✏️ Asiento Manual</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;">
+            <div>
+                <label style="font-size:13px;font-weight:600;">Fecha</label>
+                <input type="date" id="fechaManual"
+                    style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);">
+            </div>
+            <div>
+                <label style="font-size:13px;font-weight:600;">Glosa / Descripción</label>
+                <input type="text" id="glosaManual" placeholder="Descripción del asiento"
+                    style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);">
+            </div>
+            <div>
+                <label style="font-size:13px;font-weight:600;">Contacto <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+                <input type="text" id="contactoManual" list="listaContactosManual"
+                    placeholder="Buscar contacto..."
+                    style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);">
+                <datalist id="listaContactosManual"></datalist>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table class="cont-table">
+                <thead>
+                    <tr>
+                        <th style="width:50%;">Cuenta</th>
+                        <th class="monto" style="width:22%;">Debe</th>
+                        <th class="monto" style="width:22%;">Haber</th>
+                        <th style="width:6%;"></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyManual"></tbody>
+            </table>
+        </div>
+        <div style="margin:12px 0;">
+            <button class="btn btn-secondary" onclick="agregarFilaManual()">➕ Agregar Línea</button>
+        </div>
+        <div class="totales-bar" style="border-top:1px solid var(--border);">
+            <div id="badgeManual" class="totales-badge error">Descuadrado</div>
+            <div style="display:flex;gap:10px;">
+                <button class="btn btn-primary" id="btnGuardarManual" disabled onclick="guardarAsientoManual()">
+                    💾 Registrar en Diario
+                </button>
+                <button class="btn btn-secondary" onclick="cerrarModalManual()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL — NUEVA COMPRA
+════════════════════════════════════════════════════════ -->
+<div id="modalCompra" class="modal-overlay">
+    <div class="modal-box" style="width:720px;">
+        <h2>🛒 Registrar Compra</h2>
+
+        <div class="form-libro">
+            <div class="form-libro-fila2">
+                <div>
+                    <label>Fecha</label>
+                    <input type="date" id="compraFecha">
+                </div>
+                <div>
+                    <label>Tipo Documento</label>
+                    <select id="compraTipoDoc" onchange="_actualizarEtiquetaIva()">
+                        <option value="factura">Factura</option>
+                        <option value="nota_debito">Nota de Débito</option>
+                        <option value="nota_credito">Nota de Crédito</option>
+                        <option value="liquidacion">Liquidación-Factura</option>
+                        <option value="boleta">Boleta</option>
+                        <option value="guia">Guía de Despacho</option>
+                    </select>
+                </div>
+                <div>
+                    <label>N° Documento</label>
+                    <input type="text" id="compraNumDoc" placeholder="Ej: 123456">
+                </div>
+            </div>
+
+            <div class="form-libro-fila2">
+                <div>
+                    <label>RUT Proveedor</label>
+                    <input type="text" id="compraRut" placeholder="Ej: 76.000.000-0"
+                        oninput="fmtRut(this)" maxlength="12">
+                </div>
+                <div style="grid-column:span 2;">
+                    <label>Razón Social / Proveedor</label>
+                    <input type="text" id="compraNombre" placeholder="Escriba para buscar o ingrese manualmente">
+                </div>
+            </div>
+
+            <div>
+                <label>Medio de Pago</label>
+                <select id="compraMedioPago">
+                    <option value="credito">A Crédito → Proveedores</option>
+                    <option value="contado">Al Contado (Efectivo) → Caja</option>
+                    <option value="transferencia">Transferencia Bancaria → Banco</option>
+                    <option value="cheque">Cheque → Banco</option>
+                    <option value="tarjeta_debito">Tarjeta Débito → Banco</option>
+                    <option value="tarjeta_credito">Tarjeta Crédito → Banco</option>
+                    <option value="letra">Letra de Cambio → Letras por Pagar</option>
+                    <option value="compensacion">Compensación → Proveedores</option>
+                    <option value="doc_pagar">Documento por Pagar</option>
+                </select>
+            </div>
+
+            <div class="form-libro-fila3">
+                <div>
+                    <label>Monto Exento</label>
+                    <input type="number" id="compraExento" min="0" placeholder="0"
+                        oninput="calcularDesdeExentoCompra()">
+                </div>
+                <div>
+                    <label>Neto <small style="color:var(--text-muted);">→ calcula IVA y Total</small></label>
+                    <input type="number" id="compraNeto" min="0" placeholder="0"
+                        oninput="calcularDesdeNetoCompra()">
+                </div>
+                <div id="filaIvaCompra">
+                    <label>IVA (19%) <small style="color:var(--text-muted);">→ calcula Neto</small></label>
+                    <input type="number" id="compraIva" min="0" placeholder="0"
+                        oninput="calcularDesdeIvaCompra()">
+                </div>
+                <div>
+                    <label>Total <small style="color:var(--text-muted);">→ calcula Neto e IVA</small></label>
+                    <input type="number" id="compraTotal" min="0" placeholder="0"
+                        oninput="calcularDesdeTotalCompra()">
+                </div>
+            </div>
+
+            <div>
+                <label>Glosa / Observación</label>
+                <input type="text" id="compraGlosa" placeholder="Opcional">
+            </div>
+
+            <div>
+                <label>Estado</label>
+                <select id="compraEstado">
+                    <option value="pendiente">Pendiente de pago</option>
+                    <option value="pagada">Pagada</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Documento Adjunto</label>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-secondary" onclick="adjuntarArchivoCompra()">📎 Adjuntar PDF/Imagen</button>
+                    <span id="compraAdjuntoBadge" class="adjunto-badge" style="display:none;"
+                          onclick="abrirAdjuntoCompra()" title="Abrir archivo adjunto"></span>
+                    <button type="button" id="compraAdjuntoEliminar" style="display:none;background:none;border:none;cursor:pointer;color:var(--negative);font-size:18px;" onclick="eliminarAdjuntoCompra()" title="Quitar adjunto">✕</button>
+                    <span id="compraIaBadge" style="display:none;background:#f0f4ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Completado por IA</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-primary"   onclick="guardarCompra()">💾 Guardar</button>
+            <button class="btn btn-secondary" onclick="cerrarModalCompra()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL — NUEVA VENTA
+════════════════════════════════════════════════════════ -->
+<div id="modalVenta" class="modal-overlay">
+    <div class="modal-box" style="width:720px;">
+        <h2>💰 Registrar Venta</h2>
+
+        <div class="form-libro">
+            <div class="form-libro-fila2">
+                <div>
+                    <label>Fecha</label>
+                    <input type="date" id="ventaFecha">
+                </div>
+                <div>
+                    <label>Tipo Documento</label>
+                    <select id="ventaTipoDoc">
+                        <option value="factura">Factura</option>
+                        <option value="boleta">Boleta</option>
+                        <option value="nota_debito">Nota de Débito</option>
+                        <option value="nota_credito">Nota de Crédito</option>
+                        <option value="factura_exenta">Factura Exenta</option>
+                        <option value="boleta_exenta">Boleta Exenta</option>
+                    </select>
+                </div>
+                <div>
+                    <label>N° Documento</label>
+                    <input type="text" id="ventaNumDoc" placeholder="Ej: 123456">
+                </div>
+            </div>
+
+            <div class="form-libro-fila2">
+                <div>
+                    <label>RUT Cliente</label>
+                    <input type="text" id="ventaRut" placeholder="Ej: 12.345.678-9"
+                        oninput="fmtRut(this)" maxlength="12">
+                </div>
+                <div style="grid-column:span 2;">
+                    <label>Razón Social / Cliente</label>
+                    <input type="text" id="ventaNombre" placeholder="Escriba para buscar o ingrese manualmente">
+                </div>
+            </div>
+
+            <div>
+                <label>Medio de Pago</label>
+                <select id="ventaMedioPago">
+                    <option value="credito">A Crédito → Clientes</option>
+                    <option value="contado">Al Contado (Efectivo) → Caja</option>
+                    <option value="transferencia">Transferencia Bancaria → Banco</option>
+                    <option value="cheque">Cheque → Banco</option>
+                    <option value="tarjeta_debito">Tarjeta Débito → Banco</option>
+                    <option value="tarjeta_credito">Tarjeta Crédito → Banco</option>
+                    <option value="letra">Letra de Cambio → Letras por Cobrar</option>
+                    <option value="compensacion">Compensación → Clientes</option>
+                    <option value="doc_cobrar">Documento por Cobrar</option>
+                </select>
+            </div>
+
+            <div class="form-libro-fila3">
+                <div>
+                    <label>Monto Exento</label>
+                    <input type="number" id="ventaExento" min="0" placeholder="0"
+                        oninput="calcularDesdeExentoVenta()">
+                </div>
+                <div>
+                    <label>Neto <small style="color:var(--text-muted);">→ calcula IVA y Total</small></label>
+                    <input type="number" id="ventaNeto" min="0" placeholder="0"
+                        oninput="calcularDesdeNetoVenta()">
+                </div>
+                <div>
+                    <label>IVA (19%) <small style="color:var(--text-muted);">→ calcula Neto</small></label>
+                    <input type="number" id="ventaIva" min="0" placeholder="0"
+                        oninput="calcularDesdeIvaVenta()">
+                </div>
+                <div>
+                    <label>Total <small style="color:var(--text-muted);">→ calcula Neto e IVA</small></label>
+                    <input type="number" id="ventaTotal" min="0" placeholder="0"
+                        oninput="calcularDesdeTotalVenta()">
+                </div>
+            </div>
+
+            <div>
+                <label>Glosa / Observación</label>
+                <input type="text" id="ventaGlosa" placeholder="Opcional">
+            </div>
+
+            <div>
+                <label>Estado</label>
+                <select id="ventaEstado">
+                    <option value="pendiente">Pendiente de cobro</option>
+                    <option value="cobrada">Cobrada</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Documento Adjunto</label>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-secondary" onclick="adjuntarArchivoVenta()">📎 Adjuntar PDF/Imagen</button>
+                    <span id="ventaAdjuntoBadge" class="adjunto-badge" style="display:none;"
+                          onclick="abrirAdjuntoVenta()" title="Abrir archivo adjunto"></span>
+                    <button type="button" id="ventaAdjuntoEliminar" style="display:none;background:none;border:none;cursor:pointer;color:var(--negative);font-size:18px;" onclick="eliminarAdjuntoVenta()" title="Quitar adjunto">✕</button>
+                    <span id="ventaIaBadge" style="display:none;background:#f0f4ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Completado por IA</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-primary"   onclick="guardarVenta()">💾 Guardar</button>
+            <button class="btn btn-secondary" onclick="cerrarModalVenta()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL — CONTACTO (CREAR / EDITAR)
+════════════════════════════════════════════════════════ -->
+<div id="modalContacto" class="modal-overlay">
+    <div class="ctc-modal-box">
+
+        <!-- Header del modal -->
+        <div class="ctc-modal-header">
+            <div>
+                <h2 id="tituloModalContacto" class="ctc-modal-titulo">Nuevo Contacto</h2>
+                <p class="ctc-modal-subtitulo">Complete los datos del cliente o proveedor</p>
+            </div>
+            <button class="ctc-modal-close" onclick="cerrarModalContacto()">✕</button>
+        </div>
+
+        <!-- Cuerpo del formulario -->
+        <div class="ctc-modal-body">
+
+            <!-- SECCIÓN: Identificación -->
+            <div class="ctc-seccion-titulo">🪪 Identificación</div>
+            <div class="ctc-fila ctc-fila-4">
+                <div class="ctc-campo">
+                    <label class="ctc-label">RUT <span class="ctc-requerido">*</span>
+                        <span id="ctcRutEstado" style="margin-left:6px;font-size:11px;font-weight:600;"></span>
+                    </label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input class="ctc-input" type="text" id="ctcRut"
+                            placeholder="12.345.678-9"
+                            oninput="fmtRut(this); validarRutInput(this)"
+                            maxlength="12" style="flex:1;">
+                        <button type="button" id="btnConsultarSII"
+                            onclick="consultarSII()"
+                            title="Consultar razón social en el SII"
+                            style="display:none;padding:8px 12px;font-size:12px;white-space:nowrap;
+                                   background:var(--accent);color:#fff;border:none;border-radius:6px;
+                                   cursor:pointer;font-weight:600;">
+                            🔍 SII
+                        </button>
+                    </div>
+                    <div id="ctcSiiEstado" style="font-size:11px;margin-top:4px;min-height:16px;"></div>
+                </div>
+                <div class="ctc-campo">
+                    <label class="ctc-label">Tipo de relación</label>
+                    <select class="ctc-input" id="ctcTipo">
+                        <option value="cliente">Cliente</option>
+                        <option value="proveedor">Proveedor</option>
+                        <option value="ambos">Cliente y Proveedor</option>
+                    </select>
+                </div>
+                <div class="ctc-campo">
+                    <label class="ctc-label">Tipo empresa</label>
+                    <select class="ctc-input" id="ctcTipoEmpresa">
+                        <option value="EIRL">EIRL</option>
+                        <option value="SRL">SRL (Ltda.)</option>
+                        <option value="SA">S.A.</option>
+                        <option value="SpA">SpA</option>
+                        <option value="cooperativa">Cooperativa</option>
+                        <option value="persona_natural">Persona Natural</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <div class="ctc-campo">
+                    <label class="ctc-label">Categoría</label>
+                    <select class="ctc-input" id="ctcCategoria">
+                        <option value="">— Sin categoría —</option>
+                        <option value="retail">Retail / Comercio</option>
+                        <option value="servicios">Servicios</option>
+                        <option value="construccion">Construcción</option>
+                        <option value="manufactura">Manufactura</option>
+                        <option value="transporte">Transporte</option>
+                        <option value="tecnologia">Tecnología</option>
+                        <option value="salud">Salud</option>
+                        <option value="educacion">Educación</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="ctc-fila ctc-fila-2a">
+                <div class="ctc-campo">
+                    <label class="ctc-label">Nombre / Razón Social <span class="ctc-requerido">*</span></label>
+                    <input class="ctc-input" type="text" id="ctcNombre" placeholder="Razón social completa">
+                </div>
+                <div class="ctc-campo">
+                    <label class="ctc-label">Nombre de Fantasía</label>
+                    <input class="ctc-input" type="text" id="ctcFantasia" placeholder="Nombre comercial">
+                </div>
+            </div>
+            <div class="ctc-campo">
+                <label class="ctc-label">Giro Comercial</label>
+                <input class="ctc-input" type="text" id="ctcGiro"
+                    placeholder="Ej: Comercio al por menor de alimentos">
+            </div>
+
+            <!-- SECCIÓN: Contacto -->
+            <div class="ctc-seccion-titulo">📞 Datos de Contacto</div>
+            <div class="ctc-fila ctc-fila-3">
+                <div class="ctc-campo">
+                    <label class="ctc-label">Teléfono fijo</label>
+                    <input class="ctc-input" type="text" id="ctcTelefono" placeholder="+56 2 2345 6789">
+                </div>
+                <div class="ctc-campo">
+                    <label class="ctc-label">Móvil / WhatsApp</label>
+                    <input class="ctc-input" type="text" id="ctcMovil" placeholder="+56 9 8765 4321">
+                </div>
+                <div class="ctc-campo">
+                    <label class="ctc-label">Email</label>
+                    <input class="ctc-input" type="email" id="ctcEmail" placeholder="contacto@empresa.cl">
+                </div>
+            </div>
+
+            <!-- SECCIÓN: Ubicación -->
+            <div class="ctc-seccion-titulo">📍 Ubicación</div>
+            <div class="ctc-fila ctc-fila-3">
+                <div class="ctc-campo" style="grid-column:span 1;">
+                    <label class="ctc-label">Dirección</label>
+                    <input class="ctc-input" type="text" id="ctcDireccion" placeholder="Calle y número">
+                </div>
+                <div class="ctc-campo">
+                    <label class="ctc-label">Ciudad / Comuna</label>
+                    <input class="ctc-input" type="text" id="ctcComuna" placeholder="Ej: Providencia">
+                </div>
+                <div class="ctc-campo">
+                    <label class="ctc-label">Región</label>
+                    <select class="ctc-input" id="ctcRegion">
+                        <option value="">— Seleccione —</option>
+                        <option value="XV">XV — Arica y Parinacota</option>
+                        <option value="I">I — Tarapacá</option>
+                        <option value="II">II — Antofagasta</option>
+                        <option value="III">III — Atacama</option>
+                        <option value="IV">IV — Coquimbo</option>
+                        <option value="V">V — Valparaíso</option>
+                        <option value="RM">RM — Metropolitana</option>
+                        <option value="VI">VI — O'Higgins</option>
+                        <option value="VII">VII — Maule</option>
+                        <option value="XVI">XVI — Ñuble</option>
+                        <option value="VIII">VIII — Biobío</option>
+                        <option value="IX">IX — La Araucanía</option>
+                        <option value="XIV">XIV — Los Ríos</option>
+                        <option value="X">X — Los Lagos</option>
+                        <option value="XI">XI — Aysén</option>
+                        <option value="XII">XII — Magallanes</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Notas -->
+            <div class="ctc-campo">
+                <label class="ctc-label">Notas / Observaciones</label>
+                <textarea class="ctc-input ctc-textarea" id="ctcNotas" rows="2"
+                    placeholder="Información adicional relevante…"></textarea>
+            </div>
+
+        </div>
+
+        <!-- Footer del modal -->
+        <div class="ctc-modal-footer">
+            <button class="btn btn-secondary" onclick="cerrarModalContacto()">Cancelar</button>
+            <button class="btn btn-primary"   onclick="guardarContacto()">Guardar contacto</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL — DETALLE CONTACTO
+════════════════════════════════════════════════════════ -->
+<div id="modalDetalleContacto" class="modal-overlay">
+    <div class="modal-box" style="width:820px;max-height:85vh;display:flex;flex-direction:column;">
+
+        <!-- Encabezado del contacto -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+            <div>
+                <h2 style="margin:0;" id="detalleNombre">—</h2>
+                <div style="display:flex;gap:16px;margin-top:6px;font-size:13px;color:var(--text-muted);">
+                    <span>RUT: <strong id="detalleRut">—</strong></span>
+                    <span>Tipo: <strong id="detalleTipo">—</strong></span>
+                    <span>Giro: <strong id="detalleGiro">—</strong></span>
+                </div>
+                <div style="display:flex;gap:16px;margin-top:4px;font-size:13px;color:var(--text-muted);">
+                    <span>📞 <span id="detalleTel">—</span></span>
+                    <span>✉️ <span id="detalleEmail">—</span></span>
+                    <span>📍 <span id="detalleDirec">—</span></span>
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="cerrarDetalleContacto()">✕ Cerrar</button>
+        </div>
+
+        <!-- Tabs -->
+        <div style="display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:16px;">
+            <button class="tab-detalle-btn tab-active" data-tab="info">
+                ℹ️ Información
+            </button>
+            <button class="tab-detalle-btn" data-tab="compras">
+                🛒 Compras
+            </button>
+            <button class="tab-detalle-btn" data-tab="ventas">
+                💰 Ventas
+            </button>
+            <button class="tab-detalle-btn" data-tab="saldo">
+                📊 Estado de Cuenta
+            </button>
+        </div>
+
+        <!-- Contenido de tab -->
+        <div id="panelDetalleContenido" style="overflow-y:auto;flex:1;min-height:200px;">
+        </div>
+    </div>
+</div>
+
+<!-- ─────────────────────────────────────────────── -->
+<!--  SCRIPTS  (orden importante)                    -->
+<!-- ─────────────────────────────────────────────── -->
+<script src="js/core/db.js"></script>
+<script src="js/core/autocomplete.js"></script>
+<script src="js/core/helpers.js"></script>
+<script src="js/core/parser.js"></script>
+<script src="js/core/plan-cuentas.js"></script>
+<script src="js/core/contabilidad.js"></script>
+
+<script src="js/services/diario.js"></script>
+<script src="js/services/mayor.js"></script>
+<script src="js/services/balance.js"></script>
+<script src="js/services/dashboard.js"></script>
+<script src="js/services/flujo-caja.js"></script>
+<script src="js/services/balance-clasificado.js"></script>
+<script src="js/services/estado-resultados.js"></script>
+<script src="js/services/indicadores.js"></script>
+<script src="js/services/iva-resumen.js"></script>
+
+<script src="js/modules/compras.js"></script>
+<script src="js/modules/ventas.js"></script>
+<script src="js/modules/documentos.js"></script>
+<script src="js/modules/clientes.js"></script>
+<script src="js/modules/remuneraciones.js"></script>
+<script src="js/modules/segunda-categoria.js"></script>
+
+<script src="js/services/app.js"></script>
+
+<!-- Firebase SDK (compat) — cargado después de app.js -->
+<!-- ═══════════════════════════════════════════════════════
+     MODALES IA (Fase 6)
+════════════════════════════════════════════════════════ -->
+
+<!-- 6.4 — Modal alerta duplicado / monto inusual -->
+<div id="iaModalAlerta" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:480px;">
+        <h2 style="margin-bottom:12px;">⚠️ Alerta IA</h2>
+        <p id="iaModalAlertaMsg" style="font-size:14px;line-height:1.6;color:var(--text-main);margin-bottom:20px;"></p>
+        <div class="modal-actions">
+            <button class="btn btn-primary"   onclick="iaConfirmarAlerta()">Guardar de todas formas</button>
+            <button class="btn btn-secondary" onclick="iaCancelarAlerta()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- 6.5 / 6.6 — Modal análisis narrativo + comparación -->
+<div id="iaModalAnalisis" class="modal-overlay" style="display:none;">
+    <div class="modal-box ia-modal-analisis">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:12px;">
+            <h2 id="iaModalAnalisisTit" style="margin:0;font-size:17px;flex:1;">✨ Análisis IA</h2>
+            <button onclick="iaCerrarAnalisis()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);line-height:1;">✕</button>
+        </div>
+        <!-- Selectores para comparación de períodos (6.6) -->
+        <div id="iaCompRowPeriodos" style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+            <span style="font-size:13px;color:var(--text-muted);">Comparar:</span>
+            <select id="iaCompPer1" class="sel-periodo">
+                <option value="2023">2023</option><option value="2024">2024</option>
+                <option value="2025">2025</option><option value="2026" selected>2026</option>
+            </select>
+            <span style="font-size:13px;color:var(--text-muted);">vs</span>
+            <select id="iaCompPer2" class="sel-periodo">
+                <option value="2023">2023</option><option value="2024">2024</option>
+                <option value="2025" selected>2025</option><option value="2026">2026</option>
+            </select>
+        </div>
+        <div id="iaModalAnalisisCuerpo" class="ia-analisis-cuerpo">
+            <div class="ia-loading">Analizando con Claude…</div>
+        </div>
+    </div>
+</div>
+
+<!-- 6.7 — Panel chat flotante -->
+<div id="iaChatPanel" class="ia-chat-panel" style="display:none;">
+    <div class="ia-chat-header">
+        <span>✨ Asistente Financiero</span>
+        <div style="display:flex;gap:8px;">
+            <button onclick="iaLimpiarChat()" title="Nueva conversación" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);font-size:16px;">↺</button>
+            <button onclick="iaCerrarChat()" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);font-size:20px;line-height:1;">✕</button>
+        </div>
+    </div>
+    <div id="iaChatMensajes" class="ia-chat-mensajes">
+        <div class="ia-chat-bienvenida">👋 Hola, soy tu asistente financiero.<br>Pregúntame sobre tu contabilidad.</div>
+    </div>
+    <div class="ia-chat-footer">
+        <textarea id="iaChatInput" class="ia-chat-textarea" rows="2"
+            placeholder="¿Cuál fue mi utilidad en mayo?…"
+            onkeydown="iaChatKeydown(event)"></textarea>
+        <button class="ia-chat-send" onclick="iaEnviarChat()">➤</button>
+    </div>
+</div>
+
+<!-- Botón flotante para abrir el chat -->
+<button id="iaChatFab" class="ia-chat-fab" onclick="iaAbrirChat()" title="Asistente IA">✨</button>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/services/permisos.js"></script>
+<script src="js/services/audit.js"></script>
+<script src="js/services/auth-manager.js"></script>
+<script src="js/services/exportar.js"></script>
+<script src="js/services/ia.js"></script>
+<script src="js/services/firebase-service.js"></script>
+<script>
+    // Firebase siempre activo — config hardcodeada en firebase-service.js
+    fbInit();
+</script>
+<script>
+    function toggleTheme() {
+        var html = document.documentElement;
+        var current = html.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('appTheme', next);
+        var icon = document.getElementById('themeIcon');
+        if (icon) icon.textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    // Sincronizar ícono con el tema actual al cargar
+    (function() {
+        var t = localStorage.getItem('appTheme') || 'light';
+        var icon = document.getElementById('themeIcon');
+        if (icon) icon.textContent = t === 'dark' ? '☀️' : '🌙';
+    })();
+</script>
+
+
+<!-- Service Worker (PWA) -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(e => console.warn('[pwa]', e)));
+    }
+</script>
+</body>
+</html>
