@@ -77,11 +77,12 @@
 
         _cacheMerc = {
             fecha: api.fecha || null, fuente: 'mindicador.cl', indices,
-            uf_oficial: api.uf ? { valor: api.uf.valor, fecha: (api.uf.fecha || '').slice(0, 10) } : null,
-            utm_oficial: api.utm ? api.utm.valor : null,
+            uf_oficial:    api.uf             ? { valor: api.uf.valor,             fecha: (api.uf.fecha   || '').slice(0, 10) } : null,
+            utm_oficial:   api.utm            ? api.utm.valor                                                                   : null,
+            sueldo_minimo: api.sueldo_minimo  ? api.sueldo_minimo.valor                                                        : null,
             uf_diaria, utm_serie,
             dolar: api.dolar ? api.dolar.valor : null,
-            euro: api.euro ? api.euro.valor : null,
+            euro:  api.euro  ? api.euro.valor  : null,
         };
         return { ..._cacheMerc, desde_cache: false };
     }
@@ -124,12 +125,46 @@
             },
         },
 
-        // IA: en la beta web no hay backend → desactivada (no expone API key).
+        // IA: llamada directa a Claude API desde el navegador.
+        // La API key se guarda en localStorage (herramienta de uso profesional personal).
         ia: {
-            setKey:    async () => false,
-            borrarKey: async () => true,
-            getKeySet: async () => false,
-            consultar: async () => ({ error: 'La IA no está disponible en la versión web de beta.' }),
+            setKey:    async (key) => { if (key) localStorage.setItem('_ia_api_key', key); return true; },
+            borrarKey: async ()    => { localStorage.removeItem('_ia_api_key'); return true; },
+            getKeySet: async ()    => !!localStorage.getItem('_ia_api_key'),
+            consultar: async (opts) => {
+                const key = localStorage.getItem('_ia_api_key');
+                if (!key) return { ok: false, error: 'Sin API key configurada.' };
+                try {
+                    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: {
+                            'x-api-key':                                 key,
+                            'anthropic-version':                         '2023-06-01',
+                            'anthropic-dangerous-direct-browser-access': 'true',
+                            'content-type':                              'application/json',
+                        },
+                        body: JSON.stringify({
+                            model:      opts.model      || 'claude-haiku-4-5-20251001',
+                            max_tokens: opts.max_tokens || 1024,
+                            messages:   opts.messages,
+                            ...(opts.system ? { system: opts.system } : {}),
+                        }),
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok) return { ok: false, error: data.error?.message || 'Error API Claude' };
+                    const texto = (data.content || []).map(b => b.text || '').join('');
+                    let json = null;
+                    if (opts.json) {
+                        try {
+                            const m = texto.match(/```json\s*([\s\S]*?)```/) || texto.match(/(\{[\s\S]*\})/);
+                            json = m ? JSON.parse(m[1]) : JSON.parse(texto);
+                        } catch (_) {}
+                    }
+                    return { ok: true, texto, ...(opts.json ? { json } : {}) };
+                } catch (e) {
+                    return { ok: false, error: e.message };
+                }
+            },
         },
 
         http: { get: async (url) => fetch(url).then(r => r.text()) },

@@ -1,0 +1,77 @@
+rules_version = '2';
+// ─────────────────────────────────────────────────────────────
+//  CONTAPP PYMES — Reglas Firestore
+//  Ámbito: Pequeñas y medianas empresas
+//  Características:
+//    - Sin acceso anónimo por código
+//    - Sin modelo vinculadoA (no hay invitados)
+//    - Roles: admin | contador | asistente | lectura
+//    - Auditoría accesible por admin y contador
+// ─────────────────────────────────────────────────────────────
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────
+    function esMiembro(empresaId) {
+      return exists(/databases/$(database)/documents/empresas/$(empresaId)/usuarios/$(request.auth.uid));
+    }
+    function rolEn(empresaId) {
+      return get(/databases/$(database)/documents/empresas/$(empresaId)/usuarios/$(request.auth.uid)).data.rol;
+    }
+    function esAdmin(empresaId) {
+      return rolEn(empresaId) == 'admin';
+    }
+    function esAdminOContador(empresaId) {
+      return rolEn(empresaId) in ['admin', 'contador'];
+    }
+    function puedeEscribir(empresaId) {
+      return rolEn(empresaId) in ['admin', 'contador', 'asistente'];
+    }
+
+    // ── Perfiles ─────────────────────────────────────────────
+    // Solo el propio usuario puede leer y modificar su perfil
+    match /perfiles/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ── Invitaciones ─────────────────────────────────────────
+    // Las pymes usan invitación por email, no por código anónimo.
+    // Solo miembros autenticados con cuenta propia pueden operar.
+    match /invitaciones/{codigo} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null && !request.auth.token.firebase.sign_in_provider.matches('anonymous');
+    }
+
+    // ── Empresa y subcolecciones ─────────────────────────────
+    match /empresas/{empresaId} {
+
+      // Cualquier usuario autenticado (no anónimo) puede crear una empresa
+      allow create: if request.auth != null
+        && !request.auth.token.firebase.sign_in_provider.matches('anonymous');
+
+      // Solo miembros pueden leer
+      allow read: if request.auth != null && esMiembro(empresaId);
+
+      // Miembros con permiso de escritura pueden actualizar datos
+      allow update: if request.auth != null && esMiembro(empresaId) && puedeEscribir(empresaId);
+
+      // Solo admin puede eliminar
+      allow delete: if request.auth != null && esAdmin(empresaId);
+
+      // ── Usuarios de la empresa ──────────────────────────
+      match /usuarios/{uid} {
+        allow create: if request.auth != null && request.auth.uid == uid;
+        allow read:   if request.auth != null && request.auth.uid == uid;
+        allow read:   if request.auth != null && esMiembro(empresaId);
+        allow update, delete: if request.auth != null && esAdmin(empresaId);
+      }
+
+      // ── Log de auditoría ────────────────────────────────
+      // Admin y contador pueden leer el log; cualquier miembro puede registrar
+      match /audit_log/{logId} {
+        allow read:   if request.auth != null && esAdminOContador(empresaId);
+        allow create: if request.auth != null && esMiembro(empresaId);
+      }
+    }
+  }
+}

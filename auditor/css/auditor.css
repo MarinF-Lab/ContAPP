@@ -33,3 +33,131 @@
     vertical-align: middle;
     text-transform: uppercase;
 }
+
+/* ── Multi-cliente: tarjetas de cliente ──────────────────── */
+.aud-emp-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--bg-card);
+    transition: box-shadow .15s, border-color .15s;
+    margin-bottom: 8px;
+}
+.aud-emp-item:hover {
+    box-shadow: 0 4px 14px rgba(0,0,0,.09);
+    border-color: var(--accent-border);
+}
+.aud-emp-item.aud-propio {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+.aud-emp-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+    color: #fff;
+    flex-shrink: 0;
+    text-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+.aud-emp-info    { flex: 1; min-width: 0; }
+.aud-emp-nombre  { font-weight: 600; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+.aud-emp-meta    { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--text-muted); }
+.aud-emp-arrow   { font-size: 22px; color: var(--text-muted); font-weight: 300; flex-shrink: 0; }
+
+.aud-badge-propio {
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: .04em;
+}
+.aud-cat-badge   { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+.aud-cat-primera { background: #dbeafe; color: #1d4ed8; }
+.aud-cat-segunda { background: #d1fae5; color: #065f46; }
+
+/* ── Color picker ────────────────────────────────────────── */
+.aud-color-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 0 10px;
+}
+.aud-color-dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: transform .12s, border-color .12s;
+}
+.aud-color-dot:hover     { transform: scale(1.18); }
+.aud-color-dot-sel       { border-color: #0f172a !important; transform: scale(1.22); }
+
+/* ── Módulos toggle ──────────────────────────────────────── */
+.aud-modulos-header {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+    margin: 14px 0 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+.aud-modulos-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-style: italic;
+}
+.aud-modulos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+}
+@media (max-width: 520px) { .aud-modulos-grid { grid-template-columns: 1fr; } }
+.aud-mod-grupo        { margin-bottom: 10px; }
+.aud-mod-grupo-titulo {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--accent);
+    margin-bottom: 5px;
+}
+.aud-mod-toggle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    padding: 3px 0;
+    font-size: 13px;
+    color: var(--text-primary);
+    user-select: none;
+}
+.aud-mod-toggle input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* ── Sección de datos de contacto del cliente ────────────── */
+.aud-contacto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 12px;
+}
+@media (max-width: 520px) { .aud-contacto-grid { grid-template-columns: 1fr; } }

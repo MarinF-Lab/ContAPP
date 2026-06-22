@@ -1,0 +1,86 @@
+rules_version = '2';
+// ─────────────────────────────────────────────────────────────
+//  CONTAPP EMPRESA — Reglas Firestore
+//  Ámbito: Empresas medianas y grandes
+//  Características:
+//    - Sin acceso anónimo (cuentas corporativas obligatorias)
+//    - RBAC estricto: cada rol con permisos bien definidos
+//    - Roles: admin | contador | asistente | lectura
+//    - Auditoría solo para admin
+//    - El admin puede gestionar roles del equipo
+// ─────────────────────────────────────────────────────────────
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────
+    function esMiembro(empresaId) {
+      return exists(/databases/$(database)/documents/empresas/$(empresaId)/usuarios/$(request.auth.uid));
+    }
+    function rolEn(empresaId) {
+      return get(/databases/$(database)/documents/empresas/$(empresaId)/usuarios/$(request.auth.uid)).data.rol;
+    }
+    function esAdmin(empresaId) {
+      return rolEn(empresaId) == 'admin';
+    }
+    function esContadorOSuperior(empresaId) {
+      return rolEn(empresaId) in ['admin', 'contador'];
+    }
+    function puedeEscribir(empresaId) {
+      return rolEn(empresaId) in ['admin', 'contador', 'asistente'];
+    }
+    function noEsAnonimo() {
+      return !request.auth.token.firebase.sign_in_provider.matches('anonymous');
+    }
+
+    // ── Perfiles ─────────────────────────────────────────────
+    // Solo el propio usuario gestiona su perfil
+    match /perfiles/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid && noEsAnonimo();
+    }
+
+    // ── Invitaciones ─────────────────────────────────────────
+    // Invitaciones por enlace; solo usuarios con cuenta propia
+    match /invitaciones/{codigo} {
+      allow read:  if request.auth != null && noEsAnonimo();
+      allow write: if request.auth != null && noEsAnonimo();
+    }
+
+    // ── Empresa y subcolecciones ─────────────────────────────
+    match /empresas/{empresaId} {
+
+      // Solo usuarios con cuenta propia pueden crear empresa
+      allow create: if request.auth != null && noEsAnonimo();
+
+      // Lectura: cualquier miembro
+      allow read: if request.auth != null && esMiembro(empresaId);
+
+      // Escritura de datos: admin, contador o asistente
+      allow update: if request.auth != null && esMiembro(empresaId) && puedeEscribir(empresaId);
+
+      // Eliminación: solo admin
+      allow delete: if request.auth != null && esAdmin(empresaId);
+
+      // ── Usuarios de la empresa ──────────────────────────
+      match /usuarios/{uid} {
+        // Auto-registro al aceptar invitación
+        allow create: if request.auth != null && request.auth.uid == uid && noEsAnonimo();
+
+        // Cada usuario lee su propio doc
+        allow read: if request.auth != null && request.auth.uid == uid;
+
+        // Contadores y superiores pueden ver el equipo completo
+        allow read: if request.auth != null && esContadorOSuperior(empresaId);
+
+        // Solo admin modifica o elimina usuarios del equipo
+        allow update, delete: if request.auth != null && esAdmin(empresaId);
+      }
+
+      // ── Log de auditoría ────────────────────────────────
+      // Solo el admin lee el log; cualquier miembro puede registrar eventos
+      match /audit_log/{logId} {
+        allow read:   if request.auth != null && esAdmin(empresaId);
+        allow create: if request.auth != null && esMiembro(empresaId);
+      }
+    }
+  }
+}

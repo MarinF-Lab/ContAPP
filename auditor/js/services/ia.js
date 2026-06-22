@@ -649,7 +649,6 @@ Genera una lista de alertas con: F29 (vencimiento y monto), cotizaciones previsi
 async function iaGuardarApiKey() {
     const key = document.getElementById('iaApiKeyInput')?.value?.trim();
     if (!key) { mostrarToast('Ingresa una API key válida.', 'error'); return; }
-    if (!IA_DISPONIBLE()) { mostrarToast('IA solo disponible en la app de escritorio.', 'error'); return; }
     await window.electronAPI.ia.setKey(key);
     document.getElementById('iaApiKeyInput').value = '';
     document.getElementById('iaKeyEstado').textContent = '✅ API key guardada correctamente.';
@@ -658,15 +657,13 @@ async function iaGuardarApiKey() {
 }
 
 async function iaBorrarApiKey() {
-    if (!IA_DISPONIBLE()) return;
     await window.electronAPI.ia.borrarKey();
     document.getElementById('iaKeyEstado').textContent = '⚠️ API key eliminada.';
     document.getElementById('iaKeyEstado').style.color = 'var(--negative)';
 }
 
 async function iaVerificarKeyAlCargar() {
-    if (!IA_DISPONIBLE()) return;
-    const set = await window.electronAPI.ia.getKeySet();
+    const set = await window.electronAPI?.ia?.getKeySet?.();
     const el  = document.getElementById('iaKeyEstado');
     if (!el) return;
     el.textContent = set ? '✅ API key configurada.' : '⚠️ Sin API key — funciones de IA desactivadas.';

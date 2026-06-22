@@ -1,15 +1,15 @@
 // ─────────────────────────────────────────────────────────────
 //  FIREBASE SERVICE — Auth + Firestore sync
-//  Proyecto: cont-app-forge
+//  Proyecto: contapp-auditor
 // ─────────────────────────────────────────────────────────────
 
 const FB_CONFIG = {
-    apiKey:            "AIzaSyBApMQ7lT0-3p7VjvKHDnAYIO2fyYN0yak",
-    authDomain:        "cont-app-forge.firebaseapp.com",
-    projectId:         "cont-app-forge",
-    storageBucket:     "cont-app-forge.firebasestorage.app",
-    messagingSenderId: "733024060677",
-    appId:             "1:733024060677:web:c0b89d4d7f177225f4a36c",
+    apiKey:            "AIzaSyCXOdGxHzccm624-p2FIYgVKsJAhwONFDk",
+    authDomain:        "contapp-auditor.firebaseapp.com",
+    projectId:         "contapp-auditor",
+    storageBucket:     "contapp-auditor.firebasestorage.app",
+    messagingSenderId: "449801913268",
+    appId:             "1:449801913268:web:166038705a5fd563e3a8e1",
 };
 
 const FB_KEYS = [
@@ -313,16 +313,16 @@ async function _fbShowEmpresaSelector() {
 }
 
 async function _fbCargarListaEmpresas() {
-    const lista   = document.getElementById('empLista');
+    const lista    = document.getElementById('empLista');
     const empresas = window.currentUser?.empresas || [];
 
     if (!empresas.length) {
         lista.innerHTML = `
             <div class="emp-empty">
                 <div class="emp-empty-icon">🏢</div>
-                <div>Aún no tienes empresas registradas.</div>
+                <div>Aún no tienes clientes registrados.</div>
                 <div style="font-size:12px;margin-top:6px;color:var(--text-muted);">
-                    Crea una empresa nueva o únete con un código de invitación.
+                    Crea un cliente nuevo o únete con un código de invitación.
                 </div>
             </div>`;
         return;
@@ -333,46 +333,47 @@ async function _fbCargarListaEmpresas() {
     try {
         const cards = await Promise.all(empresas.map(async id => {
             try {
-                const [empDoc, usrDoc] = await Promise.all([
-                    _fbDb.collection('empresas').doc(id).get(),
-                    _fbDb.collection('empresas').doc(id)
-                         .collection('usuarios').doc(window.currentUser.uid).get(),
-                ]);
+                const empDoc = await _fbDb.collection('empresas').doc(id).get();
                 if (!empDoc.exists) return null;
-                const d = empDoc.data();
-                // Si no existe el doc de usuario en la empresa, usar el rol del perfil como fallback
-                const rol = usrDoc.exists
-                    ? (usrDoc.data().rol || 'asistente')
-                    : (window.currentUser.rol || 'admin');
-                return { id, rol, ...d };
+                return { id, ...empDoc.data() };
             } catch { return null; }
         }));
 
         const validas = cards.filter(Boolean);
         if (!validas.length) {
-            lista.innerHTML = '<div class="emp-empty"><div class="emp-empty-icon">⚠️</div><div>No se pudieron cargar las empresas.</div></div>';
+            lista.innerHTML = '<div class="emp-empty"><div class="emp-empty-icon">⚠️</div><div>No se pudieron cargar los clientes.</div></div>';
             return;
         }
 
-        lista.innerHTML = validas.map(e => {
-            const rolLabel = window.ROLES?.[e.rol]?.label || e.rol;
-            const catLabel = e.categoria === 'segunda' ? '2ª Categoría' : '1ª Categoría';
-            return `
-            <div class="emp-item" onclick="seleccionarEmpresa('${e.id}')">
-                <div class="emp-item-top">
-                    <div class="emp-item-nombre">${e.empresa || '(Sin nombre)'}</div>
-                    <span class="badge">${rolLabel}</span>
-                </div>
-                <div class="emp-item-meta">
-                    <span>🪪 ${e.rut || '—'}</span>
-                    <span>📂 ${catLabel}</span>
-                    ${e.giro ? `<span>📋 ${e.giro}</span>` : ''}
-                </div>
-            </div>`;
-        }).join('');
+        // Ordenar: esPropio primero, luego el resto por nombre
+        validas.sort((a, b) => {
+            if (a.esPropio && !b.esPropio) return -1;
+            if (!a.esPropio && b.esPropio) return 1;
+            return (a.empresa || '').localeCompare(b.empresa || '', 'es');
+        });
+
+        if (typeof audRenderizarTarjeta === 'function') {
+            lista.innerHTML = validas.map(e => audRenderizarTarjeta(e)).join('');
+        } else {
+            // Fallback básico si multi-cliente.js no está disponible
+            lista.innerHTML = validas.map(e => {
+                const catLabel = e.categoria === 'segunda' ? '2ª Categoría' : '1ª Categoría';
+                return `
+                <div class="emp-item" onclick="seleccionarEmpresa('${e.id}')">
+                    <div class="emp-item-top">
+                        <div class="emp-item-nombre">${e.empresa || '(Sin nombre)'}</div>
+                    </div>
+                    <div class="emp-item-meta">
+                        <span>🪪 ${e.rut || '—'}</span>
+                        <span>📂 ${catLabel}</span>
+                        ${e.giro ? `<span>📋 ${e.giro}</span>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
 
     } catch(e) {
-        lista.innerHTML = `<div class="emp-empty" style="color:var(--negative);">Error cargando empresas: ${e.message}</div>`;
+        lista.innerHTML = `<div class="emp-empty" style="color:var(--negative);">Error cargando clientes: ${e.message}</div>`;
     }
 }
 
@@ -390,15 +391,28 @@ async function seleccionarEmpresa(empresaId) {
 
         if (empDoc.exists) {
             const d = empDoc.data();
-            window.currentUser.empresaNombre = d.empresa;
-            window.currentUser.categoria     = d.categoria || 'primera';
+            window.currentUser.empresaNombre  = d.empresa;
+            window.currentUser.categoria      = d.categoria || 'primera';
+            window.currentUser.empresaColor   = d.color   || null;
+            window.currentUser.empresaEsPropio = d.esPropio || false;
 
             // Persistir config local de empresa
             const cfg = JSON.parse(localStorage.getItem('core_config') || '{}');
-            cfg.empresa = d.empresa;
-            cfg.rut     = d.rut || '';
-            cfg.giro    = d.giro || '';
+            cfg.empresa   = d.empresa;
+            cfg.rut       = d.rut       || '';
+            cfg.giro      = d.giro      || '';
+            cfg.direccion = d.direccion || '';
             localStorage.setItem('core_config', JSON.stringify(cfg));
+
+            // Aplicar módulos activos al sidebar
+            if (typeof audAplicarModulos === 'function') {
+                audAplicarModulos(d.modulosActivos || null, d.categoria || 'primera');
+            }
+
+            // Actualizar indicador de cliente en el topbar
+            if (typeof audActualizarIndicadorCliente === 'function') {
+                audActualizarIndicadorCliente(d.empresa, d.color, d.esPropio);
+            }
         }
 
         if (usrDoc.exists) {
@@ -428,7 +442,7 @@ async function seleccionarEmpresa(empresaId) {
         _fbShowApp(_fbUser);
         _fbRefrescarUI();
 
-        mostrarToast(`Empresa: ${window.currentUser.empresaNombre || empresaId}`, 'ok');
+        mostrarToast(`Cliente: ${window.currentUser.empresaNombre || empresaId}`, 'ok');
 
     } catch(e) {
         mostrarToast('Error al seleccionar empresa: ' + e.message, 'error');
