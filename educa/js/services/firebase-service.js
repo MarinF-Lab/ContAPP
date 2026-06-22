@@ -1,15 +1,15 @@
 // ─────────────────────────────────────────────────────────────
 //  FIREBASE SERVICE — Auth + Firestore sync
-//  Proyecto: cont-app-forge
+//  Proyecto: contapp-educa
 // ─────────────────────────────────────────────────────────────
 
 const FB_CONFIG = {
-    apiKey:            "AIzaSyBApMQ7lT0-3p7VjvKHDnAYIO2fyYN0yak",
-    authDomain:        "cont-app-forge.firebaseapp.com",
-    projectId:         "cont-app-forge",
-    storageBucket:     "cont-app-forge.firebasestorage.app",
-    messagingSenderId: "733024060677",
-    appId:             "1:733024060677:web:c0b89d4d7f177225f4a36c",
+    apiKey:            "AIzaSyDD3N27q4_gEo4yp7hQwaXSiIDKrZhefXI",
+    authDomain:        "contapp-educa.firebaseapp.com",
+    projectId:         "contapp-educa",
+    storageBucket:     "contapp-educa.firebasestorage.app",
+    messagingSenderId: "111098303956",
+    appId:             "1:111098303956:web:c736d16eb5d1db5f637241",
 };
 
 const FB_KEYS = [
