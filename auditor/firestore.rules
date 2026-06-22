@@ -1,0 +1,81 @@
+rules_version = '2';
+// ─────────────────────────────────────────────────────────────
+//  CONTAPP AUDITOR — Reglas Firestore
+//  Ámbito: Contadores/Auditores profesionales con clientes
+//  Características especiales:
+//    - Acceso con código (sesión anónima → vinculadoA)
+//    - Invitados leen el perfil del titular (vinculadoA)
+//    - Roles: admin | contador | asistente | lectura
+// ─────────────────────────────────────────────────────────────
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────
+    function esMiembro(empresaId) {
+      return exists(/databases/$(database)/documents/empresas/$(empresaId)/usuarios/$(request.auth.uid));
+    }
+    function rolEn(empresaId) {
+      return get(/databases/$(database)/documents/empresas/$(empresaId)/usuarios/$(request.auth.uid)).data.rol;
+    }
+    function esAdmin(empresaId) {
+      return rolEn(empresaId) == 'admin';
+    }
+    function puedeEscribir(empresaId) {
+      // lectura solo puede leer; todos los demás pueden escribir
+      return rolEn(empresaId) in ['admin', 'contador', 'asistente'];
+    }
+
+    // ── Perfiles ─────────────────────────────────────────────
+    // Cualquier usuario autenticado puede LEER perfiles:
+    // es necesario para que los invitados lean el perfil del titular (vinculadoA).
+    match /perfiles/{uid} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ── Invitaciones (acceso con código) ─────────────────────
+    // El titular escribe el código; el invitado lo lee para autenticarse.
+    match /invitaciones/{codigo} {
+      allow read:   if request.auth != null;
+      allow write:  if request.auth != null;
+    }
+
+    // ── Empresa y subcolecciones ─────────────────────────────
+    match /empresas/{empresaId} {
+
+      // Cualquier usuario autenticado puede crear una empresa nueva
+      allow create: if request.auth != null;
+
+      // Solo miembros pueden leer los datos de la empresa
+      allow read: if request.auth != null && esMiembro(empresaId);
+
+      // Solo miembros con rol distinto de 'lectura' pueden actualizar
+      allow update: if request.auth != null && esMiembro(empresaId) && puedeEscribir(empresaId);
+
+      // Solo el admin puede eliminar la empresa completa
+      allow delete: if request.auth != null && esAdmin(empresaId);
+
+      // ── Usuarios de la empresa ──────────────────────────
+      match /usuarios/{uid} {
+        // Un usuario puede registrarse en la empresa (crear su propio doc)
+        allow create: if request.auth != null && request.auth.uid == uid;
+
+        // Puede leer su propio doc de usuario
+        allow read: if request.auth != null && request.auth.uid == uid;
+
+        // Cualquier miembro puede leer la lista de usuarios (para UI de equipo)
+        allow read: if request.auth != null && esMiembro(empresaId);
+
+        // Solo admin puede modificar o eliminar usuarios
+        allow update, delete: if request.auth != null && esAdmin(empresaId);
+      }
+
+      // ── Log de auditoría ────────────────────────────────
+      // Solo admin puede leer el log; cualquier miembro puede registrar eventos
+      match /audit_log/{logId} {
+        allow read:   if request.auth != null && esAdmin(empresaId);
+        allow create: if request.auth != null && esMiembro(empresaId);
+      }
+    }
+  }
+}
