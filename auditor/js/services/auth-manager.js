@@ -433,7 +433,6 @@ async function cambiarRolUsuario(uid, email) {
     const user = window.currentUser;
     try {
         await _fbDb.collection('empresas').doc(user.empresaId).collection('usuarios').doc(uid).update({ rol: nuevoRol });
-        await _fbDb.collection('perfiles').doc(uid).update({ rol: nuevoRol });
         if (typeof audit === 'function') audit('cambiar_rol', 'usuarios', { uid, email, nuevoRol });
         mostrarToast('Rol actualizado.', 'ok');
         cargarUsuariosEmpresa();

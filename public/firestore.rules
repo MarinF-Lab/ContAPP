@@ -1,15 +1,12 @@
 rules_version = '2';
 // ─────────────────────────────────────────────────────────────
-//  CONTAPP PUBLIC — Reglas Firestore
-//  Ámbito: Organismos públicos (municipios, servicios del Estado)
-//  Características:
-//    - Sin acceso anónimo (funcionarios con cuenta institucional)
-//    - Sin acceso público de lectura (los datos no son de transparencia activa)
-//    - RBAC estricto acorde a Ley N°18.575 (LOCBGAE)
-//    - Roles: admin | contador | asistente | lectura
-//    - Auditoría accesible por admin y contador
-//      (requerido para control de Contraloría)
-//    - Sin módulo de segunda categoría
+//  CONTAPP AUDITOR — Reglas Firestore v2
+//  Cambios respecto a v1:
+//    - perfiles: lectura restringida (solo propio + titular del invitado)
+//    - perfiles: escritura de otro uid limitada a campos de canje de invitación
+//    - invitaciones: list bloqueado; create solo a usuarios no-anónimos
+//      con titularUid == propio; update separado por titular vs invitado
+//    - empresas/create: bloqueado para sesiones anónimas
 // ─────────────────────────────────────────────────────────────
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -24,65 +21,107 @@ service cloud.firestore {
     function esAdmin(empresaId) {
       return rolEn(empresaId) == 'admin';
     }
-    function esAdminOContador(empresaId) {
-      return rolEn(empresaId) in ['admin', 'contador'];
-    }
     function puedeEscribir(empresaId) {
       return rolEn(empresaId) in ['admin', 'contador', 'asistente'];
     }
-    function noEsAnonimo() {
-      return !request.auth.token.firebase.sign_in_provider.matches('anonymous');
+    function esAnonimo() {
+      return request.auth.token.email == null;
     }
 
     // ── Perfiles ─────────────────────────────────────────────
-    // Los funcionarios gestionan solo su propio perfil
     match /perfiles/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid && noEsAnonimo();
+
+      // Lectura de un perfil específico:
+      //   - Siempre puede leer el propio
+      //   - Invitado puede leer el perfil del titular si su uid está en invitados[]
+      //     (necesario para que _fbCargarPerfil cargue las empresas del titular)
+      allow get:  if request.auth != null && (
+        request.auth.uid == uid ||
+        request.auth.uid in resource.data.invitados
+      );
+
+      // Nadie puede listar todos los perfiles
+      allow list: if false;
+
+      // El usuario solo puede escribir su propio perfil
+      allow write: if request.auth != null && request.auth.uid == uid;
+
+      // Canje de invitación: cuando un invitado acepta, escribe en el perfil
+      // del TITULAR para mover el código y agregar su uid.
+      // Solo se permiten cambios en codigosActivos e invitados; no se puede
+      // quitar elementos de invitados ni agregar campos nuevos.
+      allow update: if request.auth != null &&
+        request.auth.uid != uid &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['codigosActivos', 'invitados']) &&
+        request.resource.data.invitados.hasAll(resource.data.invitados) &&
+        resource.data.codigosActivos.hasAll(request.resource.data.codigosActivos);
     }
 
     // ── Invitaciones ─────────────────────────────────────────
-    // Solo funcionarios con cuenta propia (no anónimos)
     match /invitaciones/{codigo} {
-      allow read:  if request.auth != null && noEsAnonimo();
-      allow write: if request.auth != null && noEsAnonimo();
+
+      // Cualquier usuario autenticado (incluye anónimos) puede leer
+      // una invitación específica por su código — el código es el secreto.
+      allow get:  if request.auth != null;
+
+      // Nadie puede enumerar todas las invitaciones
+      allow list: if false;
+
+      // Solo usuarios registrados (no anónimos) pueden crear invitaciones,
+      // y únicamente con su propio uid como titularUid.
+      allow create: if request.auth != null &&
+        !esAnonimo() &&
+        request.resource.data.titularUid == request.auth.uid;
+
+      // Titular puede revocar o modificar su propia invitación.
+      // Invitado puede únicamente marcar como usada (campos fijos).
+      allow update: if request.auth != null && (
+        resource.data.titularUid == request.auth.uid ||
+        (resource.data.usada == false &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['usada', 'usadaPor', 'usadaEn']))
+      );
+
+      // Solo el titular puede eliminar sus invitaciones
+      allow delete: if request.auth != null &&
+        resource.data.titularUid == request.auth.uid;
     }
 
-    // ── Organismo y subcolecciones ───────────────────────────
-    // El "organismo público" es la unidad equivalente a "empresa"
+    // ── Empresas y subcolecciones ─────────────────────────────
     match /empresas/{empresaId} {
 
-      // Solo funcionarios con cuenta institucional pueden crear organismos
-      allow create: if request.auth != null && noEsAnonimo();
+      // Las sesiones anónimas (acceso por código) no pueden crear empresas
+      allow create: if request.auth != null && !esAnonimo();
 
-      // Lectura: solo funcionarios miembros del organismo
-      allow read: if request.auth != null && esMiembro(empresaId);
+      // Solo miembros registrados pueden leer datos de la empresa
+      allow read:   if request.auth != null && esMiembro(empresaId);
 
-      // Escritura: miembros con rol operativo (no lectura)
-      allow update: if request.auth != null && esMiembro(empresaId) && puedeEscribir(empresaId);
+      // Solo miembros con rol distinto de 'lectura' pueden escribir
+      allow update: if request.auth != null &&
+        esMiembro(empresaId) && puedeEscribir(empresaId);
 
-      // Eliminación: solo administrador del sistema (jefe de finanzas)
+      // Solo el admin puede eliminar la empresa
       allow delete: if request.auth != null && esAdmin(empresaId);
 
-      // ── Funcionarios del organismo ───────────────────────
+      // ── Usuarios de la empresa ──────────────────────────
       match /usuarios/{uid} {
-        // Auto-registro al incorporarse al organismo
-        allow create: if request.auth != null && request.auth.uid == uid && noEsAnonimo();
 
-        // Cada funcionario lee su propio registro
-        allow read: if request.auth != null && request.auth.uid == uid;
+        // Cualquier usuario puede registrarse en la empresa (crear su propio doc)
+        allow create: if request.auth != null && request.auth.uid == uid;
 
-        // Cualquier miembro puede ver el directorio de funcionarios
-        allow read: if request.auth != null && esMiembro(empresaId);
+        // Cada usuario lee su propio doc; cualquier miembro ve la lista del equipo
+        allow read:   if request.auth != null && (
+          request.auth.uid == uid || esMiembro(empresaId)
+        );
 
-        // Solo admin gestiona roles y accesos
+        // Solo admin puede cambiar roles o eliminar usuarios
         allow update, delete: if request.auth != null && esAdmin(empresaId);
       }
 
       // ── Log de auditoría ────────────────────────────────
-      // Admin y contador pueden leer el log (requerido para Contraloría)
-      // Cualquier miembro registra sus acciones
       match /audit_log/{logId} {
-        allow read:   if request.auth != null && esAdminOContador(empresaId);
+        allow read:   if request.auth != null && esAdmin(empresaId);
         allow create: if request.auth != null && esMiembro(empresaId);
       }
     }
