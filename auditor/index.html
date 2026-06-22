@@ -52,15 +52,15 @@
         <div class="nav-group" id="nav-grupo-contabilidad">
             <div class="nav-group-title"><span class="nav-group-cat">ERP</span>CONTABILIDAD</div>
             <div class="nav-group-items">
-                <div id="nav-diario" class="nav-item" onclick="navegar('diario', this)">
+                <div id="nav-diario" class="nav-item" data-modulo="diario" onclick="navegar('diario', this)">
                     <span class="nav-icon">📝</span>
                     <span class="nav-text">Libro Diario</span>
                 </div>
-                <div id="nav-mayor" class="nav-item" onclick="navegar('mayor', this)">
+                <div id="nav-mayor" class="nav-item" data-modulo="mayor" onclick="navegar('mayor', this)">
                     <span class="nav-icon">📚</span>
                     <span class="nav-text">Libro Mayor</span>
                 </div>
-                <div id="nav-plan-cuentas" class="nav-item" onclick="navegar('plan-cuentas', this)">
+                <div id="nav-plan-cuentas" class="nav-item" data-modulo="plan-cuentas" onclick="navegar('plan-cuentas', this)">
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">Plan de Cuentas</span>
                 </div>
@@ -71,19 +71,19 @@
         <div class="nav-group" id="nav-grupo-informes">
             <div class="nav-group-title"><span class="nav-group-cat">BI</span>REPORTES</div>
             <div class="nav-group-items">
-                <div id="nav-balance" class="nav-item" onclick="navegar('balance', this)">
+                <div id="nav-balance" class="nav-item" data-modulo="balance" onclick="navegar('balance', this)">
                     <span class="nav-icon">⚖️</span>
                     <span class="nav-text">Balance</span>
                 </div>
-                <div id="nav-balance-clasificado" class="nav-item" onclick="navegar('balance-clasificado', this)">
+                <div id="nav-balance-clasificado" class="nav-item" data-modulo="balance-clasificado" onclick="navegar('balance-clasificado', this)">
                     <span class="nav-icon">🏦</span>
                     <span class="nav-text">Bal. Clasificado</span>
                 </div>
-                <div id="nav-estado-resultados" class="nav-item" onclick="navegar('estado-resultados', this)">
+                <div id="nav-estado-resultados" class="nav-item" data-modulo="estado-resultados" onclick="navegar('estado-resultados', this)">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Est. Resultados</span>
                 </div>
-                <div id="nav-flujo-caja" class="nav-item" onclick="navegar('flujo-caja', this)">
+                <div id="nav-flujo-caja" class="nav-item" data-modulo="flujo-caja" onclick="navegar('flujo-caja', this)">
                     <span class="nav-icon">💵</span>
                     <span class="nav-text">Flujo de Caja</span>
                 </div>
@@ -94,15 +94,15 @@
         <div class="nav-group" id="nav-grupo-comercial">
             <div class="nav-group-title"><span class="nav-group-cat">SCM</span>COMERCIAL</div>
             <div class="nav-group-items">
-                <div id="nav-compras" class="nav-item" onclick="navegar('compras', this)">
+                <div id="nav-compras" class="nav-item" data-modulo="compras" onclick="navegar('compras', this)">
                     <span class="nav-icon">🛒</span>
                     <span class="nav-text">Compras</span>
                 </div>
-                <div id="nav-ventas" class="nav-item" onclick="navegar('ventas', this)">
+                <div id="nav-ventas" class="nav-item" data-modulo="ventas" onclick="navegar('ventas', this)">
                     <span class="nav-icon">💰</span>
                     <span class="nav-text">Ventas</span>
                 </div>
-                <div id="nav-documentos" class="nav-item" onclick="navegar('documentos', this)">
+                <div id="nav-documentos" class="nav-item" data-modulo="documentos" onclick="navegar('documentos', this)">
                     <span class="nav-icon">📁</span>
                     <span class="nav-text">Documentación</span>
                 </div>
@@ -113,7 +113,7 @@
         <div class="nav-group" id="nav-grupo-crm">
             <div class="nav-group-title"><span class="nav-group-cat">CRM</span>CLIENTES</div>
             <div class="nav-group-items">
-                <div class="nav-item" onclick="navegar('clientes', this)">
+                <div id="nav-clientes" class="nav-item" data-modulo="clientes" onclick="navegar('clientes', this)">
                     <span class="nav-icon">🤝</span>
                     <span class="nav-text">Clientes / Prov.</span>
                 </div>
@@ -124,7 +124,7 @@
         <div class="nav-group" id="nav-grupo-rrhh">
             <div class="nav-group-title"><span class="nav-group-cat">HRM</span>RRHH</div>
             <div class="nav-group-items">
-                <div id="nav-remuneraciones" class="nav-item" onclick="navegar('remuneraciones', this)">
+                <div id="nav-remuneraciones" class="nav-item" data-modulo="remuneraciones" onclick="navegar('remuneraciones', this)">
                     <span class="nav-icon">👷</span>
                     <span class="nav-text">Remuneraciones</span>
                 </div>
@@ -135,11 +135,11 @@
         <div class="nav-group" id="nav-grupo-tributario">
             <div class="nav-group-title"><span class="nav-group-cat">TAX</span>TRIBUTARIO</div>
             <div class="nav-group-items">
-                <div class="nav-item" onclick="navegar('indicadores', this)">
+                <div id="nav-indicadores" class="nav-item" data-modulo="indicadores" onclick="navegar('indicadores', this)">
                     <span class="nav-icon">📈</span>
                     <span class="nav-text">Indicadores</span>
                 </div>
-                <div id="nav-iva-resumen" class="nav-item" onclick="navegar('iva-resumen', this)">
+                <div id="nav-iva-resumen" class="nav-item" data-modulo="iva-resumen" onclick="navegar('iva-resumen', this)">
                     <span class="nav-icon">🧾</span>
                     <span class="nav-text">Resumen IVA / F29</span>
                 </div>
@@ -152,15 +152,15 @@
         <div class="nav-group" id="nav-grupo-contabilidad-hon" style="display:none;">
             <div class="nav-group-title">CONTABILIDAD</div>
             <div class="nav-group-items">
-                <div class="nav-item" onclick="navegar('libro-honorarios', this)">
+                <div id="nav-libro-honorarios" class="nav-item" data-modulo="libro-honorarios" onclick="navegar('libro-honorarios', this)">
                     <span class="nav-icon">📒</span>
                     <span class="nav-text">Libro de Honorarios</span>
                 </div>
-                <div class="nav-item" onclick="navegar('libro-egresos-hon', this)">
+                <div id="nav-libro-egresos-hon" class="nav-item" data-modulo="libro-egresos-hon" onclick="navegar('libro-egresos-hon', this)">
                     <span class="nav-icon">📤</span>
                     <span class="nav-text">Libro de Egresos</span>
                 </div>
-                <div class="nav-item" onclick="navegar('libro-ingresos-hon', this)">
+                <div id="nav-libro-ingresos-hon" class="nav-item" data-modulo="libro-ingresos-hon" onclick="navegar('libro-ingresos-hon', this)">
                     <span class="nav-icon">📥</span>
                     <span class="nav-text">Libro de Ingresos</span>
                 </div>
@@ -171,11 +171,11 @@
         <div class="nav-group" id="nav-grupo-comercial-hon" style="display:none;">
             <div class="nav-group-title">COMERCIAL</div>
             <div class="nav-group-items">
-                <div class="nav-item" onclick="navegar('clientes', this)">
+                <div id="nav-clientes-hon" class="nav-item" data-modulo="clientes" onclick="navegar('clientes', this)">
                     <span class="nav-icon">🤝</span>
                     <span class="nav-text">Clientes / Prov.</span>
                 </div>
-                <div class="nav-item" onclick="navegar('prestadores', this)">
+                <div id="nav-prestadores" class="nav-item" data-modulo="prestadores" onclick="navegar('prestadores', this)">
                     <span class="nav-icon">👤</span>
                     <span class="nav-text">Prestadores</span>
                 </div>
@@ -186,15 +186,15 @@
         <div class="nav-group" id="nav-grupo-tributario-hon" style="display:none;">
             <div class="nav-group-title">TRIBUTARIO</div>
             <div class="nav-group-items">
-                <div class="nav-item" onclick="navegar('f29-hon', this)">
+                <div id="nav-f29-hon" class="nav-item" data-modulo="f29-hon" onclick="navegar('f29-hon', this)">
                     <span class="nav-icon">🧾</span>
                     <span class="nav-text">Formulario 29</span>
                 </div>
-                <div class="nav-item" onclick="navegar('f22-hon', this)">
+                <div id="nav-f22-hon" class="nav-item" data-modulo="f22-hon" onclick="navegar('f22-hon', this)">
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">Formulario 22</span>
                 </div>
-                <div class="nav-item" onclick="navegar('indicadores', this)">
+                <div id="nav-indicadores-hon" class="nav-item" data-modulo="indicadores" onclick="navegar('indicadores', this)">
                     <span class="nav-icon">📈</span>
                     <span class="nav-text">Indicadores</span>
                 </div>
@@ -209,7 +209,7 @@
                     <span class="nav-icon">⚙️</span>
                     <span class="nav-text">Configuración</span>
                 </div>
-                <div id="nav-auditoria" class="nav-item" data-requiere-rol="admin" onclick="navegar('auditoria', this)">
+                <div id="nav-auditoria" class="nav-item" data-modulo="auditoria" data-requiere-rol="admin" onclick="navegar('auditoria', this)">
                     <span class="nav-icon">🛡️</span>
                     <span class="nav-text">Auditoría</span>
                 </div>
@@ -2039,30 +2039,69 @@
                     <button class="emp-btn-codigo" onclick="empAbrirCodigo()">🔑 Código de invitación</button>
                 </div>
 
-                <!-- Formulario: crear empresa -->
+                <!-- Formulario: crear cliente -->
                 <div id="empCrearForm" class="emp-subform" style="display:none;">
                     <div class="emp-subform-titulo">Nuevo Cliente</div>
 
+                    <!-- Categoría tributaria -->
                     <label class="wiz-label">Categoría tributaria</label>
-                    <div style="display:flex;gap:10px;margin-bottom:12px;">
+                    <div style="display:flex;gap:10px;margin-bottom:14px;">
                         <label class="wiz-radio-card" style="flex:1;font-size:13px;">
-                            <input type="radio" name="empCategoria" value="primera" checked>
+                            <input type="radio" name="empCategoria" value="primera" checked
+                                   onchange="audOnCategoriaChange('primera')">
                             <div><strong>1ª Categoría</strong><p>Empresas con contabilidad completa.</p></div>
                         </label>
                         <label class="wiz-radio-card" style="flex:1;font-size:13px;">
-                            <input type="radio" name="empCategoria" value="segunda">
+                            <input type="radio" name="empCategoria" value="segunda"
+                                   onchange="audOnCategoriaChange('segunda')">
                             <div><strong>2ª Categoría</strong><p>Honorarios, sin IVA.</p></div>
                         </label>
                     </div>
 
-                    <label class="wiz-label">RUT del cliente</label>
-                    <input id="empRut" class="wiz-input" type="text" placeholder="12.345.678-9" oninput="fmtRut(this)" style="margin-bottom:10px;">
+                    <!-- Datos básicos -->
+                    <label class="wiz-label">RUT del cliente <span style="color:var(--negative);">*</span></label>
+                    <input id="empRut" class="wiz-input" type="text" placeholder="12.345.678-9"
+                           oninput="fmtRut(this)" style="margin-bottom:10px;">
 
-                    <label class="wiz-label">Nombre o razón social del cliente</label>
-                    <input id="empNombre" class="wiz-input" type="text" placeholder="Ej: Comercial López Ltda." style="margin-bottom:10px;">
+                    <label class="wiz-label">Nombre o razón social <span style="color:var(--negative);">*</span></label>
+                    <input id="empNombre" class="wiz-input" type="text" placeholder="Ej: Comercial López Ltda."
+                           style="margin-bottom:10px;">
 
-                    <label class="wiz-label">Giro comercial <span style="font-weight:400;">(opcional)</span></label>
-                    <input id="empGiro" class="wiz-input" type="text" placeholder="Ej: Comercio al por menor">
+                    <!-- Contacto (2 columnas) -->
+                    <div class="aud-contacto-grid">
+                        <div>
+                            <label class="wiz-label">Giro comercial <span style="font-weight:400;color:var(--text-muted);">(opcional)</span></label>
+                            <input id="empGiro" class="wiz-input" type="text" placeholder="Ej: Comercio al por menor"
+                                   style="margin-bottom:10px;">
+                        </div>
+                        <div>
+                            <label class="wiz-label">Dirección <span style="font-weight:400;color:var(--text-muted);">(opcional)</span></label>
+                            <input id="empDireccion" class="wiz-input" type="text" placeholder="Av. Ejemplo 123"
+                                   style="margin-bottom:10px;">
+                        </div>
+                        <div>
+                            <label class="wiz-label">Teléfono <span style="font-weight:400;color:var(--text-muted);">(opcional)</span></label>
+                            <input id="empTelefono" class="wiz-input" type="text" placeholder="+56 9 1234 5678"
+                                   style="margin-bottom:10px;">
+                        </div>
+                        <div>
+                            <label class="wiz-label">Email <span style="font-weight:400;color:var(--text-muted);">(opcional)</span></label>
+                            <input id="empEmail" class="wiz-input" type="email" placeholder="contacto@empresa.cl"
+                                   style="margin-bottom:10px;">
+                        </div>
+                    </div>
+
+                    <label class="wiz-label">Notas internas <span style="font-weight:400;color:var(--text-muted);">(solo tú las ves)</span></label>
+                    <textarea id="empNotas" class="wiz-input" rows="2"
+                              placeholder="Observaciones, acuerdos, recordatorios…"
+                              style="resize:vertical;margin-bottom:10px;"></textarea>
+
+                    <!-- Color de etiqueta -->
+                    <label class="wiz-label">Color de etiqueta</label>
+                    <div id="empColorPicker" class="aud-color-picker"></div>
+
+                    <!-- Módulos activos -->
+                    <div id="empModulosContainer"></div>
 
                     <div id="empCrearError" class="emp-subform-error"></div>
 
@@ -2184,6 +2223,9 @@
         <!-- Paso 1: Credenciales -->
         <div class="wiz-step" id="wizStep1">
             <h3 class="wiz-step-titulo">Datos de acceso</h3>
+            <label class="wiz-label">Nombre de la oficina / estudio contable <span style="color:var(--negative);">*</span></label>
+            <input id="wizNombreOficina" class="wiz-input" type="text" placeholder="Ej: Estudio Contable López"
+                style="margin-bottom:10px;">
             <label class="wiz-label">Correo electrónico</label>
             <input id="wizEmail" class="wiz-input" type="email" placeholder="correo@empresa.cl"
                 onkeydown="if(event.key==='Enter') wizardSiguiente()">

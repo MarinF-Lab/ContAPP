@@ -47,18 +47,22 @@ function wizardSiguiente() {
     if (err) err.textContent = '';
 
     if (_wizPaso === 1) {
-        const email = document.getElementById('wizEmail').value.trim();
-        const pass  = document.getElementById('wizPass').value;
-        const pass2 = document.getElementById('wizPass2').value;
+        const oficina = document.getElementById('wizNombreOficina').value.trim();
+        const email   = document.getElementById('wizEmail').value.trim();
+        const pass    = document.getElementById('wizPass').value;
+        const pass2   = document.getElementById('wizPass2').value;
+        if (!oficina) { if (err) err.textContent = 'Ingresa el nombre de tu oficina o estudio contable.'; return; }
         if (!email || !pass) { if (err) err.textContent = 'Ingresa correo y contraseña.'; return; }
         if (pass.length < 6) { if (err) err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return; }
         if (pass !== pass2)  { if (err) err.textContent = 'Las contraseñas no coinciden.'; return; }
-        _wizData.email = email;
-        _wizData.pass  = pass;
+        _wizData.email         = email;
+        _wizData.pass          = pass;
+        _wizData.nombreOficina = oficina;
         _wizPaso = 2;
         // Mostrar resumen
         const cont = document.getElementById('wizResumenCont');
         if (cont) cont.innerHTML = `
+            <div class="wiz-resumen-fila"><span>Oficina</span><strong>${oficina}</strong></div>
             <div class="wiz-resumen-fila"><span>Correo titular</span><strong>${email}</strong></div>`;
         _wizMostrarPaso(2);
     }
@@ -85,14 +89,15 @@ async function wizardFinalizar() {
         //    estado de pago: 'pendiente_pago' hasta que el webhook del gateway
         //    lo marque 'activo' (integración futura).
         await _fbDb.collection('perfiles').doc(uid).set({
-            email:     _wizData.email,
-            empresas:  [],
-            plan:      'auditor',
-            estado:    'pendiente_pago',
-            canInvite: true,
+            email:          _wizData.email,
+            nombreOficina:  _wizData.nombreOficina || '',
+            empresas:       [],
+            plan:           'auditor',
+            estado:         'pendiente_pago',
+            canInvite:      true,
             codigosActivos: [],
-            invitados: [],
-            creadoEn:  firebase.firestore.FieldValue.serverTimestamp(),
+            invitados:      [],
+            creadoEn:       firebase.firestore.FieldValue.serverTimestamp(),
         });
 
         // onAuthStateChanged → _fbCargarPerfil → _fbShowEmpresaSelector
@@ -113,6 +118,21 @@ function empAbrirCrear() {
     document.getElementById('empRut').value    = '';
     document.getElementById('empNombre').value = '';
     document.getElementById('empGiro').value   = '';
+
+    // Reset campos extendidos
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    setVal('empDireccion', '');
+    setVal('empTelefono',  '');
+    setVal('empEmail',     '');
+    setVal('empNotas',     '');
+
+    // Categoría por defecto: primera
+    const radPrimera = document.querySelector('input[name="empCategoria"][value="primera"]');
+    if (radPrimera) radPrimera.checked = true;
+
+    // Inicializar color picker y toggles de módulos
+    if (typeof audRenderizarColorPicker   === 'function') audRenderizarColorPicker('empColorPicker', null);
+    if (typeof audRenderizarToggleModulos === 'function') audRenderizarToggleModulos('empModulosContainer', 'primera', null);
 }
 
 function empAbrirCodigo() {
@@ -136,6 +156,14 @@ async function empGuardarNueva() {
     const rut       = document.getElementById('empRut').value.trim();
     const giro      = document.getElementById('empGiro').value.trim();
     const categoria = document.querySelector('input[name="empCategoria"]:checked')?.value || 'primera';
+    const direccion = document.getElementById('empDireccion')?.value.trim() || '';
+    const telefono  = document.getElementById('empTelefono')?.value.trim()  || '';
+    const email     = document.getElementById('empEmail')?.value.trim()     || '';
+    const notas     = document.getElementById('empNotas')?.value.trim()     || '';
+    const color     = window._empColorSeleccionado || '#3b82f6';
+    const modulosActivos = (typeof audLeerModulosFormulario === 'function')
+        ? audLeerModulosFormulario(categoria)
+        : null;
 
     err.textContent = '';
 
@@ -159,13 +187,21 @@ async function empGuardarNueva() {
         const uid       = user.uid;
         const empresaId = `${uid}_${Date.now()}`; // id único por empresa
 
-        // Crear documento empresa
+        // Crear documento empresa con todos los campos extendidos
         await _fbDb.collection('empresas').doc(empresaId).set({
-            empresa:  nombre,
+            empresa:       nombre,
             rut,
-            giro:     giro || '',
+            giro:          giro || '',
             categoria,
-            creadoEn: firebase.firestore.FieldValue.serverTimestamp(),
+            direccion,
+            telefono,
+            email,
+            notas,
+            color,
+            modulosActivos: modulosActivos || {},
+            esPropio:      false,
+            estado:        'activo',
+            creadoEn:      firebase.firestore.FieldValue.serverTimestamp(),
         });
 
         // Registrar al usuario como admin de esta empresa
@@ -185,7 +221,7 @@ async function empGuardarNueva() {
 
         if (typeof audit === 'function') audit('crear_empresa', 'empresa', { nombre, rut, empresaId });
 
-        mostrarToast(`Empresa "${nombre}" creada.`, 'ok');
+        mostrarToast(`Cliente "${nombre}" creado.`, 'ok');
         empCerrarForms();
 
         // Seleccionar directamente la empresa recién creada
@@ -194,7 +230,7 @@ async function empGuardarNueva() {
     } catch(e) {
         err.textContent = 'Error: ' + e.message;
     } finally {
-        if (btn) { btn.disabled = false; btn.textContent = 'Crear empresa'; }
+        if (btn) { btn.disabled = false; btn.textContent = 'Crear cliente'; }
     }
 }
 
