@@ -405,6 +405,7 @@ async function seleccionarEmpresa(empresaId) {
             localStorage.setItem('core_config', JSON.stringify(cfg));
 
             // Aplicar módulos activos al sidebar
+            window.currentUser.modulosActivos = d.modulosActivos || null;
             if (typeof audAplicarModulos === 'function') {
                 audAplicarModulos(d.modulosActivos || null, d.categoria || 'primera');
             }

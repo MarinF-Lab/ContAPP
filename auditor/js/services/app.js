@@ -106,6 +106,7 @@ function navegar(modulo, elNav) {
     if (modulo === 'calendario-hon')     honRenderCalendario();
     if (modulo === 'configuracion') {
         cargarConfiguracionForm();
+        cargarModulosConfig();
         if (typeof aplicarPermisos === 'function') aplicarPermisos();
         if (typeof aplicarNavegacionPorCategoria === 'function') aplicarNavegacionPorCategoria();
         if (typeof iaVerificarKeyAlCargar === 'function') iaVerificarKeyAlCargar();
@@ -152,6 +153,39 @@ function cargarConfiguracion() {
     const cfg = JSON.parse(localStorage.getItem('core_config')) || {};
     aplicarConfiguracion(cfg);
 }
+
+function cargarModulosConfig() {
+    if (typeof audRenderizarToggleModulos !== 'function') return;
+    const categoria    = window.currentUser?.categoria || 'primera';
+    const modulosActivos = window.currentUser?.modulosActivos || null;
+    audRenderizarToggleModulos('cfgModulosContainer', categoria, modulosActivos);
+}
+
+async function guardarModulosConfig() {
+    if (typeof audLeerModulosFormulario !== 'function') return;
+    const categoria = window.currentUser?.categoria || 'primera';
+    const modulos   = audLeerModulosFormulario(categoria);
+
+    if (window._fbDb && window.currentUser?.empresaId) {
+        try {
+            await window._fbDb.collection('empresas')
+                .doc(window.currentUser.empresaId)
+                .update({ modulosActivos: modulos });
+            if (window.currentUser) window.currentUser.modulosActivos = modulos;
+        } catch (e) {
+            mostrarToast('Error al guardar módulos.', 'err');
+            return;
+        }
+    }
+
+    if (typeof audAplicarModulos === 'function') {
+        audAplicarModulos(modulos, categoria);
+    }
+    mostrarToast('Módulos actualizados.', 'ok');
+}
+
+window.cargarModulosConfig  = cargarModulosConfig;
+window.guardarModulosConfig = guardarModulosConfig;
 
 function cargarConfiguracionForm() {
     const cfg = JSON.parse(localStorage.getItem('core_config')) || {};

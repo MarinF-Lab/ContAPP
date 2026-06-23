@@ -871,6 +871,17 @@
                 <button class="btn btn-primary" data-requiere-rol="contador" onclick="guardarConfiguracion()">💾 Guardar Configuración</button>
             </div>
 
+            <!-- Módulos activos -->
+            <div class="card" style="padding:24px;" data-requiere-rol="admin">
+                <h2 style="margin-bottom:4px;">🧩 Módulos activos</h2>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
+                    Activa o desactiva módulos del menú para este cliente. Los cambios aplican de inmediato.
+                </p>
+                <div id="cfgModulosContainer"></div>
+                <br>
+                <button class="btn btn-primary" data-requiere-rol="admin" onclick="guardarModulosConfig()">💾 Guardar módulos</button>
+            </div>
+
             <!-- Certificado Digital (4.4) -->
             <div class="card" style="padding:24px;" data-requiere-rol="admin">
                 <h2 style="margin-bottom:4px;">🔐 Certificado Digital</h2>
