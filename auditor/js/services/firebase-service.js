@@ -431,6 +431,8 @@ async function seleccionarEmpresa(empresaId) {
                     categoria: catPerfil,
                     creadoEn: firebase.firestore.FieldValue.serverTimestamp(),
                 });
+            window.currentUser.rol      = rolPerfil;
+            window.currentUser.categoria = catPerfil;
         }
 
         window.currentUser.empresaId = empresaId;
