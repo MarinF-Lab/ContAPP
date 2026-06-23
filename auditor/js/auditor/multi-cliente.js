@@ -21,21 +21,22 @@ const AUD_COLORES = [
 // ── Catálogo de módulos por categoría tributaria ──────────────
 const AUD_MODULOS = {
     primera: [
-        { id: 'diario',              label: 'Libro Diario',       grupo: 'Contabilidad', defecto: true  },
-        { id: 'mayor',               label: 'Libro Mayor',        grupo: 'Contabilidad', defecto: true  },
-        { id: 'plan-cuentas',        label: 'Plan de Cuentas',    grupo: 'Contabilidad', defecto: true  },
-        { id: 'balance',             label: 'Balance',            grupo: 'Reportes',     defecto: true  },
-        { id: 'balance-clasificado', label: 'Bal. Clasificado',   grupo: 'Reportes',     defecto: true  },
-        { id: 'estado-resultados',   label: 'Est. Resultados',    grupo: 'Reportes',     defecto: true  },
-        { id: 'flujo-caja',          label: 'Flujo de Caja',      grupo: 'Reportes',     defecto: true  },
-        { id: 'compras',             label: 'Compras',            grupo: 'Comercial',    defecto: true  },
-        { id: 'ventas',              label: 'Ventas',             grupo: 'Comercial',    defecto: true  },
-        { id: 'documentos',          label: 'Documentación',      grupo: 'Comercial',    defecto: true  },
-        { id: 'clientes',            label: 'Clientes / Prov.',   grupo: 'Comercial',    defecto: true  },
-        { id: 'remuneraciones',      label: 'Remuneraciones',     grupo: 'RRHH',         defecto: false },
-        { id: 'indicadores',         label: 'Indicadores',        grupo: 'Tributario',   defecto: true  },
-        { id: 'iva-resumen',         label: 'Resumen IVA / F29',  grupo: 'Tributario',   defecto: true  },
-        { id: 'auditoria',           label: 'Auditoría',          grupo: 'Sistema',      defecto: false },
+        { id: 'diario',              label: 'Libro Diario',         grupo: 'Contabilidad', defecto: true  },
+        { id: 'mayor',               label: 'Libro Mayor',          grupo: 'Contabilidad', defecto: true  },
+        { id: 'plan-cuentas',        label: 'Plan de Cuentas',      grupo: 'Contabilidad', defecto: true  },
+        { id: 'reconciliacion',      label: 'Conciliación Bancaria',grupo: 'Contabilidad', defecto: true  },
+        { id: 'balance',             label: 'Balance',              grupo: 'Reportes',     defecto: true  },
+        { id: 'balance-clasificado', label: 'Bal. Clasificado',     grupo: 'Reportes',     defecto: true  },
+        { id: 'estado-resultados',   label: 'Est. Resultados',      grupo: 'Reportes',     defecto: true  },
+        { id: 'flujo-caja',          label: 'Flujo de Caja',        grupo: 'Reportes',     defecto: true  },
+        { id: 'compras',             label: 'Compras',              grupo: 'Comercial',    defecto: true  },
+        { id: 'ventas',              label: 'Ventas',               grupo: 'Comercial',    defecto: true  },
+        { id: 'documentos',          label: 'Documentación',        grupo: 'Comercial',    defecto: true  },
+        { id: 'clientes',            label: 'Clientes / Prov.',     grupo: 'Comercial',    defecto: true  },
+        { id: 'remuneraciones',      label: 'Remuneraciones',       grupo: 'RRHH',         defecto: false },
+        { id: 'indicadores',         label: 'Indicadores',          grupo: 'Tributario',   defecto: true  },
+        { id: 'iva-resumen',         label: 'Resumen IVA / F29',    grupo: 'Tributario',   defecto: true  },
+        { id: 'auditoria',           label: 'Auditoría',            grupo: 'Sistema',      defecto: false },
     ],
     segunda: [
         { id: 'libro-honorarios',   label: 'Libro de Honorarios', grupo: 'Contabilidad', defecto: true  },
@@ -89,10 +90,16 @@ function audAplicarModulos(modulosActivos, categoria) {
         if (el) el.style.display = esPrimera ? 'none' : '';
     });
 
-    // Aplicar toggle por módulo individual
-    Object.entries(modulosActivos).forEach(([modulo, activo]) => {
-        const navEl = document.querySelector(`[data-modulo="${modulo}"]`);
-        if (navEl) navEl.style.display = activo ? '' : 'none';
+    // Aplicar toggle por módulo individual.
+    // Módulos conocidos en el catálogo pero ausentes en modulosActivos
+    // (agregados después de que se creó la empresa) se muestran según defecto.
+    const categoria2 = categoria || 'primera';
+    const catalogo   = AUD_MODULOS[categoria2] || AUD_MODULOS.primera;
+    catalogo.forEach(m => {
+        const navEl = document.querySelector(`[data-modulo="${m.id}"]`);
+        if (!navEl) return;
+        const activo = m.id in modulosActivos ? modulosActivos[m.id] : m.defecto;
+        navEl.style.display = activo ? '' : 'none';
     });
 
     // Ocultar grupos que queden completamente vacíos
