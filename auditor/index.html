@@ -64,6 +64,10 @@
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">Plan de Cuentas</span>
                 </div>
+                <div id="nav-reconciliacion" class="nav-item" data-modulo="reconciliacion" onclick="navegar('reconciliacion', this)">
+                    <span class="nav-icon">🏦</span>
+                    <span class="nav-text">Conciliación Bancaria</span>
+                </div>
             </div>
         </div>
 
@@ -473,6 +477,13 @@
                 <button class="btn-export btn-export-print" onclick="imprimirMayor()">🖨 Imprimir</button>
             </div>
             <div class="mayor-grid" id="contenedorMayor"></div>
+        </div>
+
+        <!-- ════════════════════
+             CONCILIACIÓN BANCARIA
+        ═════════════════════ -->
+        <div id="view-reconciliacion" class="view">
+            <div id="rec-root"></div>
         </div>
 
         <!-- ════════════════════
@@ -2801,6 +2812,7 @@
 <script src="js/services/estado-resultados.js"></script>
 <script src="js/services/indicadores.js"></script>
 <script src="js/services/iva-resumen.js"></script>
+<script src="js/services/reconciliacion.js"></script>
 
 <script src="js/modules/compras.js"></script>
 <script src="js/modules/ventas.js"></script>

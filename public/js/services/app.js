@@ -53,6 +53,7 @@ function navegar(modulo, elNav) {
         'balance-clasificado': ['Balance Clasificado',          'Activo, Pasivo y Patrimonio ordenados por liquidez'],
         'estado-resultados':   ['Estado de Resultados',         'Ingresos, costos y resultado del ejercicio'],
         'plan-cuentas':        ['Plan de Cuentas',              'Administración del catálogo contable'],
+        reconciliacion:        ['Conciliación Bancaria',        'Cruce de movimientos del extracto bancario contra el diario'],
         configuracion:         ['Configuración',                'Ajustes de la empresa y del sistema'],
         indicadores:           ['Indicadores Económicos',       'UF, UTM, Dólar, Euro y otros indicadores del día'],
         'iva-resumen':         ['Resumen IVA — F29',            'Cruce de débito y crédito fiscal del período'],
@@ -81,7 +82,8 @@ function navegar(modulo, elNav) {
     if (modulo === 'inicio')        calcularKPIs();
     if (modulo === 'mayor')         generarLibroMayor();
     if (modulo === 'balance')       generarBalanceGeneral();
-    if (modulo === 'plan-cuentas')  renderPlanCuentas();
+    if (modulo === 'plan-cuentas')    renderPlanCuentas();
+    if (modulo === 'reconciliacion')  renderReconciliacion();
     if (modulo === 'compras')               renderCompras();
     if (modulo === 'ventas')                renderVentas();
     if (modulo === 'documentos')            renderDocumentos();
