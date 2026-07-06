@@ -220,11 +220,12 @@ function guardarContacto() {
 function eliminarContacto(id) {
     const c = dbContactos.find(x => x.id === id);
     if (!c) return;
-    if (!confirm(`¿Eliminar "${c.nombre}"?`)) return;
-    c.activo = false;
-    guardarContactos();
-    renderContactos();
-    mostrarToast('Contacto eliminado.', 'ok');
+    mostrarConfirm(`¿Eliminar "${c.nombre}"?`, () => {
+        c.activo = false;
+        guardarContactos();
+        renderContactos();
+        mostrarToast('Contacto eliminado.', 'ok');
+    });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -578,12 +579,13 @@ function _cGetVal(id)     { return document.getElementById(id)?.value?.trim() ||
 function _setTxt(id, v)   { const e = document.getElementById(id); if (e) e.textContent = v; }
 
 function vaciarContactos() {
-    if (!confirm('¿Vaciar TODO el directorio de contactos? Esta acción no se puede deshacer.')) return;
-    dbContactos.length = 0;
-    localStorage.setItem('core_contactos', JSON.stringify(dbContactos));
-    window.dbContactos = dbContactos;
-    renderContactos();
-    mostrarToast('Directorio de contactos vaciado.', 'ok');
+    mostrarConfirm('¿Vaciar TODO el directorio de contactos? Esta acción no se puede deshacer.', () => {
+        dbContactos.length = 0;
+        localStorage.setItem('core_contactos', JSON.stringify(dbContactos));
+        window.dbContactos = dbContactos;
+        renderContactos();
+        mostrarToast('Directorio de contactos vaciado.', 'ok');
+    });
 }
 
 window.dbContactos = dbContactos;
@@ -609,11 +611,24 @@ async function consultarSII() {
     const dv   = raw.slice(-1);
     const body = raw.slice(0, -1);
 
+    // Sin proxy configurado → guiar al usuario directamente al SII
+    const proxyUrl = localStorage.getItem('sii_proxy_url');
+    if (!proxyUrl) {
+        const siiUrl = `https://zeus.sii.cl/cvc/stc/stc.html`;
+        if (elSII) {
+            elSII.style.color = 'var(--text-muted)';
+            elSII.innerHTML = `La consulta automática requiere un proxy configurado. ` +
+                `<a href="${siiUrl}" target="_blank" rel="noopener" ` +
+                `style="color:var(--accent);text-decoration:underline;">Buscar RUT en SII ↗</a>`;
+        }
+        return;
+    }
+
     if (elSII)  { elSII.style.color = 'var(--accent)'; elSII.textContent = '⟳ Consultando SII…'; }
     if (btnSII) btnSII.disabled = true;
 
     try {
-        const url = `https://zeus.sii.cl/cvc_cgi/stc/getstc?RUT=${body}&DV=${dv}`;
+        const url = `${proxyUrl}?url=${encodeURIComponent(`https://zeus.sii.cl/cvc_cgi/stc/getstc?RUT=${body}&DV=${dv}`)}`;
         const res = await fetch(url, { cache: 'no-cache' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const html  = await res.text();

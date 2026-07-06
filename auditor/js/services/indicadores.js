@@ -606,15 +606,16 @@ function previredGuardarTasas() {
 }
 
 function previredRestaurarTasas() {
-    if (!confirm('¿Restaurar todas las tasas y tramos a los valores predeterminados?')) return;
-    localStorage.removeItem(PV_TASAS_KEY);
-    localStorage.removeItem(PV_TASAS_IND_KEY);
-    localStorage.removeItem(PV_ASIG_KEY);
-    localStorage.removeItem(PV_IMM_KEY);
-    _pvCargarTasasUI();
-    _sincronizarTasasConREM();
-    renderPreviredTablas();
-    _pvSetTasasEstado('Valores restaurados a predeterminados.', 'info');
+    mostrarConfirm('¿Restaurar todas las tasas y tramos a los valores predeterminados?', () => {
+        localStorage.removeItem(PV_TASAS_KEY);
+        localStorage.removeItem(PV_TASAS_IND_KEY);
+        localStorage.removeItem(PV_ASIG_KEY);
+        localStorage.removeItem(PV_IMM_KEY);
+        _pvCargarTasasUI();
+        _sincronizarTasasConREM();
+        renderPreviredTablas();
+        _pvSetTasasEstado('Valores restaurados a predeterminados.', 'info');
+    });
 }
 
 function _sincronizarTasasConREM() {

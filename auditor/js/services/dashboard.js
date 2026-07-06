@@ -32,6 +32,44 @@ function calcularKPIs() {
     // Calcular liquidez
     const _liq = _calcularLiquidezDash(cuentas);
 
+    // Panel de onboarding si no hay datos
+    const sinDatos = (!dbAsientos || dbAsientos.length === 0) && (!window.dbCompras || window.dbCompras.length === 0);
+    const onbEl = document.getElementById('dash-onboarding');
+    const chartsEl = document.getElementById('dash-charts-area');
+    if (sinDatos) {
+        if (onbEl) {
+            onbEl.style.display = 'block';
+            onbEl.innerHTML = `
+            <div class="card" style="padding:28px 32px;text-align:center;max-width:520px;margin:32px auto;">
+                <div style="font-size:36px;margin-bottom:12px;">👋</div>
+                <h3 style="margin:0 0 8px;">Empieza aquí</h3>
+                <p style="color:var(--text-muted);margin:0 0 20px;">Sigue estos pasos para configurar tu empresa.</p>
+                <div style="text-align:left;display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span style="font-size:18px;">1.</span>
+                        <button class="btn btn-secondary" style="flex:1;" onclick="navegar('plan-cuentas', null)">Ingresa el plan de cuentas</button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span style="font-size:18px;">2.</span>
+                        <button class="btn btn-secondary" style="flex:1;" onclick="navegar('compras', null)">Registra tus primeras compras</button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span style="font-size:18px;">3.</span>
+                        <button class="btn btn-secondary" style="flex:1;" onclick="navegar('ventas', null)">Registra tus primeras ventas</button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span style="font-size:18px;">4.</span>
+                        <button class="btn btn-primary" style="flex:1;" onclick="navegar('diario', null)">Genera tu primer asiento</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+        if (chartsEl) chartsEl.style.display = 'none';
+        return;
+    }
+    if (onbEl) onbEl.style.display = 'none';
+    if (chartsEl) chartsEl.style.display = '';
+
     // Renderizar gráficos del dashboard
     _renderDashboardCharts(cuentas, ingresos, gastos, activos, pasivos, patrimonio, resultado);
     _renderUltimosAsientos();

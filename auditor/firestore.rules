@@ -119,6 +119,14 @@ service cloud.firestore {
         allow update, delete: if request.auth != null && esAdmin(empresaId);
       }
 
+      // ── Datos de módulos (estructura nueva) ─────────────
+      // Cada módulo tiene su propio documento: modulos/asientos, modulos/compras, etc.
+      match /modulos/{moduloId} {
+        allow read:   if request.auth != null && esMiembro(empresaId);
+        allow write:  if request.auth != null &&
+          esMiembro(empresaId) && puedeEscribir(empresaId);
+      }
+
       // ── Log de auditoría ────────────────────────────────
       match /audit_log/{logId} {
         allow read:   if request.auth != null && esAdmin(empresaId);

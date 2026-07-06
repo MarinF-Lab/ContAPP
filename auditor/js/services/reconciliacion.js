@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 
 const REC_KEY = 'core_reconciliacion';
+const REC_FB_DOC = 'reconciliacion';
 
 // Formatos conocidos de bancos chilenos (detección por cabeceras)
 const REC_FORMATOS = [
@@ -55,6 +56,7 @@ let _recState = {
 // ── Persistencia ──────────────────────────────────────────────
 
 function _recGuardar() {
+    // El interceptor de localStorage en firebase-service dispara el sync automáticamente
     localStorage.setItem(REC_KEY, JSON.stringify(_recState));
 }
 
@@ -62,6 +64,19 @@ function _recCargar() {
     try {
         const s = JSON.parse(localStorage.getItem(REC_KEY) || 'null');
         if (s) _recState = { ..._recState, ...s };
+    } catch { /* ignorar */ }
+}
+
+/**
+ * Llamado desde firebase-service al recibir datos de la nube.
+ * Reemplaza el estado en memoria y re-renderiza si la vista está activa.
+ */
+function recCargarDesdeFirebase(data) {
+    if (!data) return;
+    try {
+        _recState = { ..._recState, ...data };
+        localStorage.setItem(REC_KEY, JSON.stringify(_recState));
+        if (document.getElementById('rec-root')) renderReconciliacion();
     } catch { /* ignorar */ }
 }
 
@@ -592,20 +607,22 @@ function recActualizarSaldo(val) {
 }
 
 function recNuevaPeriodo() {
-    if (!confirm('¿Limpiar los datos actuales e iniciar una nueva conciliación?')) return;
-    _recState.transacciones = [];
-    _recState.conciliados   = {};
-    _recState.saldoExtracto = null;
-    _recGuardar();
-    renderReconciliacion();
+    mostrarConfirm('¿Limpiar los datos actuales e iniciar una nueva conciliación?', () => {
+        _recState.transacciones = [];
+        _recState.conciliados   = {};
+        _recState.saldoExtracto = null;
+        _recGuardar();
+        renderReconciliacion();
+    });
 }
 
 function recLimpiar() {
-    if (!confirm('¿Eliminar todos los movimientos importados y las conciliaciones?')) return;
-    _recState.transacciones = [];
-    _recState.conciliados   = {};
-    _recGuardar();
-    renderReconciliacion();
+    mostrarConfirm('¿Eliminar todos los movimientos importados y las conciliaciones?', () => {
+        _recState.transacciones = [];
+        _recState.conciliados   = {};
+        _recGuardar();
+        renderReconciliacion();
+    });
 }
 
 // ── Helpers de datos ──────────────────────────────────────────
@@ -711,6 +728,7 @@ function _recParseNum(val) {
 // ── Exports ───────────────────────────────────────────────────
 
 window.renderReconciliacion    = renderReconciliacion;
+window.recCargarDesdeFirebase  = recCargarDesdeFirebase;
 window.recOnDrop               = recOnDrop;
 window.recOnFile               = recOnFile;
 window.recAplicarMapeoManual   = recAplicarMapeoManual;

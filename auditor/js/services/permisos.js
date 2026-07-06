@@ -41,24 +41,23 @@ function aplicarNavegacionPorCategoria() {
     const cat      = window.currentUser?.categoria || 'primera';
     const esSegunda = cat === 'segunda';
 
-    // Módulos exclusivos de PRIMERA categoría (ocultar en segunda)
-    const soloPrimera = [
-        'nav-diario', 'nav-mayor', 'nav-balance', 'nav-balance-clasificado',
-        'nav-compras', 'nav-ventas', 'nav-estado-resultados',
-        'nav-plan-cuentas', 'nav-remuneraciones', 'nav-iva-resumen',
-        'nav-grupo-contabilidad', 'nav-grupo-informes',
-        'nav-grupo-comercial', 'nav-grupo-rrhh', 'nav-grupo-tributario',
+    // Solo gestiona los GRUPOS — los ítems individuales los controla audAplicarModulos.
+    // Grupos exclusivos de PRIMERA categoría (G1-G5 del rediseño de arquitectura)
+    const gruposPrimera = [
+        'nav-grupo-contabilidad', 'nav-grupo-comercial', 'nav-grupo-datos',
+        'nav-grupo-rrhh', 'nav-grupo-empresa',
     ];
-    soloPrimera.forEach(id => {
+    gruposPrimera.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = esSegunda ? 'none' : '';
     });
 
     // Grupos exclusivos de SEGUNDA categoría
-    const soloSegunda = [
+    const gruposSegunda = [
         'nav-grupo-contabilidad-hon', 'nav-grupo-comercial-hon', 'nav-grupo-tributario-hon',
+        'nav-grupo-empresa-hon',
     ];
-    soloSegunda.forEach(id => {
+    gruposSegunda.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = esSegunda ? '' : 'none';
     });
@@ -68,6 +67,12 @@ function aplicarNavegacionPorCategoria() {
     if (catBadge) {
         catBadge.textContent = esSegunda ? 'Segunda Categoría' : 'Primera Categoría';
         catBadge.className   = esSegunda ? 'badge badge-segunda' : 'badge badge-primera';
+    }
+
+    // Delegar visibilidad de ítems individuales a audAplicarModulos (si está disponible)
+    if (typeof audAplicarModulos === 'function') {
+        const modulosActivos = window.currentUser?.modulosActivos || null;
+        audAplicarModulos(modulosActivos, cat);
     }
 }
 

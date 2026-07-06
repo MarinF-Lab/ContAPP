@@ -24,11 +24,19 @@ function generarIvaResumen() {
     };
 
     const ventas  = (window.dbVentas  || []).filter(_enPeriodo);
-    const ivaDebito = ventas.reduce((s, v) => s + (parseFloat(v.iva) || 0), 0);
+    const ncVentas = ventas.filter(v => v.tipo_doc === 'nota_credito');
+    const ivaDebito = ventas.reduce((s, v) => {
+        const iva = parseFloat(v.iva) || 0;
+        return v.tipo_doc === 'nota_credito' ? s - iva : s + iva;
+    }, 0);
 
     // ── 2. IVA Crédito desde Libro de Compras ─────────────────
     const compras = (window.dbCompras || []).filter(_enPeriodo);
-    const ivaCredito = compras.reduce((s, c) => s + (parseFloat(c.iva) || 0), 0);
+    const ncCompras = compras.filter(c => c.tipo_doc === 'nota_credito');
+    const ivaCredito = compras.reduce((s, c) => {
+        const iva = parseFloat(c.iva) || 0;
+        return c.tipo_doc === 'nota_credito' ? s - iva : s + iva;
+    }, 0);
 
     // ── 3. Remanente mes anterior reajustado con UTM ──────────
     const remData  = _cargarRemanente();
@@ -56,6 +64,9 @@ function generarIvaResumen() {
         remanente, reajuste, reajusteDetalle, remanenteReajustado,
         creditoTotal, ivaAPagar, nuevoRemanente,
         totalVentas: ventas.length, totalCompras: compras.length,
+        ncVentas: ncVentas.length, ncCompras: ncCompras.length,
+        ajusteNcVentas: ncVentas.reduce((s, v) => s + (parseFloat(v.iva) || 0), 0),
+        ajusteNcCompras: ncCompras.reduce((s, c) => s + (parseFloat(c.iva) || 0), 0),
     });
 
     // Actualizar KPIs de cabecera
@@ -171,9 +182,15 @@ function _renderIvaResumen(d) {
 
     html += divider('IVA Débito Fiscal — Libro de Ventas');
     html += fila('IVA Débito del período', d.ivaDebito, `${d.totalVentas} documentos`, 'var(--negative)');
+    if (d.ncVentas > 0) {
+        html += fila(`Ajuste por ${d.ncVentas} NC de ventas`, -d.ajusteNcVentas, 'Notas de crédito restan el débito fiscal', 'var(--positive)');
+    }
 
     html += divider('IVA Crédito Fiscal — Libro de Compras');
     html += fila('IVA Crédito del período', d.ivaCredito, `${d.totalCompras} documentos`, 'var(--positive)');
+    if (d.ncCompras > 0) {
+        html += fila(`Ajuste por ${d.ncCompras} NC de compras`, -d.ajusteNcCompras, 'Notas de crédito restan el crédito fiscal', 'var(--negative)');
+    }
 
     if (d.remanente > 0) {
         html += fila(

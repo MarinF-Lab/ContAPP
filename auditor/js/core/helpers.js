@@ -1,3 +1,8 @@
+// LOGGER CONDICIONAL — solo activo en localhost o ?debug=1
+const _DEBUG = window.location.hostname === 'localhost' || window.location.search.includes('debug=1');
+const log  = (...a) => _DEBUG && console.log('[ContApp]',  ...a);
+const warn = (...a) => _DEBUG && console.warn('[ContApp]', ...a);
+
 // FORMATOS MATEMÁTICOS
 function fmt(num) { return num === 0 ? '-' : new Intl.NumberFormat('es-CL').format(Math.round(num)); }
 function limpiarNum(str) { return parseFloat(String(str).replace(/[$]/g, '').replace(/\./g, '').replace(/,/g, '')) || 0; }
@@ -168,13 +173,7 @@ function importarERP(event){
                 return;
             }
 
-            if(
-                !confirm(
-                    "Esto reemplazará toda la información actual. ¿Continuar?"
-                )
-            ){
-                return;
-            }
+            mostrarConfirm("Esto reemplazará toda la información actual. ¿Continuar?", () => {
 
             dbAsientos =
                 datos.asientos || [];
@@ -224,9 +223,8 @@ function importarERP(event){
                 generarBalanceGeneral();
             }
 
-            alert(
-                "Respaldo restaurado correctamente."
-            );
+            mostrarToast("Respaldo restaurado correctamente.", "ok");
+            });
 
         }
 

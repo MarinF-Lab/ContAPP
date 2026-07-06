@@ -14,8 +14,27 @@ const FB_CONFIG = {
 
 const FB_KEYS = [
     'core_asientos', 'core_compras', 'core_ventas',
-    'core_contactos', 'core_plan_cuentas', 'core_config'
+    'core_contactos', 'core_plan_cuentas', 'core_config',
+    'core_reconciliacion', 'core_documentos',
+    'rem_trabajadores', 'rem_liquidaciones', 'rem_vacaciones',
+    'core_productos',
 ];
+
+// Mapeo localStorage key → ID del documento en la subcollección modulos/
+const FB_KEY_TO_DOC = {
+    'core_asientos':       'asientos',
+    'core_compras':        'compras',
+    'core_ventas':         'ventas',
+    'core_contactos':      'contactos',
+    'core_plan_cuentas':   'plan_cuentas',
+    'core_config':         'config',
+    'core_reconciliacion': 'reconciliacion',
+    'core_documentos':     'documentos',
+    'rem_trabajadores':    'rem_trabajadores',
+    'rem_liquidaciones':   'rem_liquidaciones',
+    'rem_vacaciones':      'rem_vacaciones',
+    'core_productos':      'productos',
+};
 
 let _fbAuth    = null;
 let _fbDb      = null;
@@ -38,6 +57,11 @@ function _fbEntrarModoOffline() {
             uid: 'local', email: 'local@offline', rol: 'admin',
             categoria: 'primera', empresaId: 'local',
         };
+        // Si el perfil no tenía modulosActivos, intentar desde la clave dedicada
+        if (!window.currentUser.modulosActivos) {
+            const loc = JSON.parse(localStorage.getItem('_modulosActivos') || 'null');
+            if (loc?.modulos) window.currentUser.modulosActivos = loc.modulos;
+        }
     } catch { window.currentUser = { uid: 'local', email: 'local@offline', rol: 'admin', categoria: 'primera', empresaId: 'local' }; }
 
     // Mostrar app con banner offline (saltar el selector de empresa)
@@ -73,6 +97,25 @@ function fbInit() {
         if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
         _fbAuth = firebase.auth();
         _fbDb   = firebase.firestore();
+        window._fbDb = _fbDb;
+
+        // Persistencia offline con IndexedDB — los datos sobreviven recargas sin conexión.
+        // synchronizeTabs permite múltiples pestañas del mismo usuario.
+        _fbDb.enablePersistence({ synchronizeTabs: true }).catch(err => {
+            if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
+                console.warn('Firestore persistence error:', err.code);
+            }
+        });
+
+        // Sync inmediato al cerrar o cambiar pestaña — evita perder el último cambio
+        window.addEventListener('beforeunload', () => {
+            if (_fbUser && window.currentUser?.empresaId) _fbAutoSync();
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && _fbUser && window.currentUser?.empresaId) {
+                _fbAutoSync();
+            }
+        });
 
         // Timeout: si Firebase no responde en FB_OFFLINE_TIMEOUT ms,
         // comprobar si hay datos locales y entrar en modo offline
@@ -122,12 +165,12 @@ async function _fbAutoSync() {
     _syncBusy = true;
     const empresaId = window.currentUser?.empresaId || _fbUser.uid;
     try {
-        const data = {};
-        FB_KEYS.forEach(k => {
-            const v = localStorage.getItem(k);
-            if (v) data[k] = v;
-        });
-        await _fbDb.collection('empresas').doc(empresaId).set(data, { merge: true });
+        const modulosRef = _fbDb.collection('empresas').doc(empresaId).collection('modulos');
+        const writes = FB_KEYS
+            .map(k => ({ k, v: localStorage.getItem(k) }))
+            .filter(({ v }) => v !== null)
+            .map(({ k, v }) => modulosRef.doc(FB_KEY_TO_DOC[k]).set({ data: v }));
+        await Promise.all(writes);
         _fbSetSyncIcon('✅');
     } catch(e) {
         console.warn('Auto-sync error:', e.message);
@@ -263,6 +306,7 @@ async function _fbCargarPerfil(user) {
 
 function _fbRefrescarUI() {
     if (typeof calcularKPIs          === 'function') calcularKPIs();
+    if (typeof renderIndicadores     === 'function') renderIndicadores();
     if (typeof renderHistorialDiario === 'function') renderHistorialDiario();
     if (typeof renderCompras         === 'function') renderCompras();
     if (typeof renderVentas          === 'function') renderVentas();
@@ -280,6 +324,14 @@ function _fbShowApp(user) {
     if (empView?.classList.contains('active')) {
         empView.classList.remove('active');
         document.getElementById('view-inicio')?.classList.add('active');
+    }
+    // El login normal aterriza en Inicio (vista activa por HTML por defecto),
+    // pero navegar() nunca se dispara — el título quedaba con el texto estático.
+    if (document.getElementById('view-inicio')?.classList.contains('active')) {
+        const t = document.getElementById('txt-modulo-titulo');
+        const d = document.getElementById('txt-modulo-desc');
+        if (t) t.innerText = 'Panel de Inicio';
+        if (d) d.innerText = 'Resumen financiero consolidado en tiempo real';
     }
     if (typeof verificarCertificadoGuardado === 'function') verificarCertificadoGuardado();
     if (typeof aplicarPermisos               === 'function') aplicarPermisos();
@@ -352,10 +404,14 @@ async function _fbCargarListaEmpresas() {
             return (a.empresa || '').localeCompare(b.empresa || '', 'es');
         });
 
-        if (typeof audRenderizarTarjeta === 'function') {
+        // Panel estudio enriquecido (F2.1/F2.2/F2.3)
+        if (typeof panelEstudioInicializar === 'function') {
+            panelEstudioInicializar(validas);
+        } else if (typeof audRenderizarTarjeta === 'function') {
+            lista.style.display = '';
             lista.innerHTML = validas.map(e => audRenderizarTarjeta(e)).join('');
         } else {
-            // Fallback básico si multi-cliente.js no está disponible
+            lista.style.display = '';
             lista.innerHTML = validas.map(e => {
                 const catLabel = e.categoria === 'segunda' ? '2ª Categoría' : '1ª Categoría';
                 return `
@@ -404,10 +460,40 @@ async function seleccionarEmpresa(empresaId) {
             cfg.direccion = d.direccion || '';
             localStorage.setItem('core_config', JSON.stringify(cfg));
 
-            // Aplicar módulos activos al sidebar
-            window.currentUser.modulosActivos = d.modulosActivos || null;
+            // Aplicar módulos activos al sidebar.
+            // Verificar que las claves pertenezcan a la categoría actual; si no coinciden
+            // (objeto de otra categoría o vacío), usar null → defaults.
+            const categoriaEmpresa = d.categoria || 'primera';
+            let modulosActivos = d.modulosActivos || null;
+
+            // Fallback: si Firestore no tiene modulosActivos, intentar desde localStorage
+            if (!modulosActivos) {
+                try {
+                    const loc = JSON.parse(localStorage.getItem('_modulosActivos') || 'null');
+                    if (loc?.modulos && loc.categoria === (d.categoria || 'primera')) {
+                        modulosActivos = loc.modulos;
+                    }
+                } catch {}
+            }
+
+            if (modulosActivos && typeof modulosActivos === 'object') {
+                // Migrar claves antiguas de segunda categoría (antes del renombre)
+                if (categoriaEmpresa === 'segunda') {
+                    if ('clientes'    in modulosActivos && !('clientes-hon'    in modulosActivos))
+                        modulosActivos['clientes-hon']    = modulosActivos['clientes'];
+                    if ('indicadores' in modulosActivos && !('indicadores-hon' in modulosActivos))
+                        modulosActivos['indicadores-hon'] = modulosActivos['indicadores'];
+                }
+                // Verificar que al menos una clave corresponda al catálogo actual
+                if (typeof AUD_MODULOS !== 'undefined') {
+                    const catalogoIds = (AUD_MODULOS[categoriaEmpresa] || AUD_MODULOS.primera)
+                        .map(m => m.id);
+                    if (!catalogoIds.some(id => id in modulosActivos)) modulosActivos = null;
+                }
+            }
+            window.currentUser.modulosActivos = modulosActivos;
             if (typeof audAplicarModulos === 'function') {
-                audAplicarModulos(d.modulosActivos || null, d.categoria || 'primera');
+                audAplicarModulos(modulosActivos, categoriaEmpresa);
             }
 
             // Actualizar indicador de cliente en el topbar
@@ -417,22 +503,19 @@ async function seleccionarEmpresa(empresaId) {
         }
 
         if (usrDoc.exists) {
-            window.currentUser.rol       = usrDoc.data().rol       || 'asistente';
-            window.currentUser.categoria = usrDoc.data().categoria || window.currentUser.categoria || 'primera';
+            // Solo leer el rol del user sub-doc. La categoría es del cliente (empresa),
+            // no del usuario — ya fue asignada desde el empDoc arriba y no debe sobreescribirse.
+            window.currentUser.rol = usrDoc.data().rol || 'asistente';
         } else {
             // El doc de usuario no existe en esta empresa → crearlo con el rol del perfil
-            // (ocurre en cuentas creadas antes del refactor multi-empresa)
             const rolPerfil = window.currentUser.rol || 'admin';
-            const catPerfil = window.currentUser.categoria || 'primera';
             await _fbDb.collection('empresas').doc(empresaId)
                 .collection('usuarios').doc(window.currentUser.uid).set({
                     email:    window.currentUser.email,
                     rol:      rolPerfil,
-                    categoria: catPerfil,
                     creadoEn: firebase.firestore.FieldValue.serverTimestamp(),
                 });
-            window.currentUser.rol      = rolPerfil;
-            window.currentUser.categoria = catPerfil;
+            window.currentUser.rol = rolPerfil;
         }
 
         window.currentUser.empresaId = empresaId;
@@ -526,9 +609,8 @@ async function eliminarEmpresaActual() {
 
     if (!empresaId) { mostrarToast('No hay empresa activa.', 'error'); return; }
 
-    if (!confirm(`¿Eliminar "${nombre}"?\n\nEsta acción eliminará todos los datos de la empresa y no se puede deshacer.`)) return;
-    if (!confirm(`Confirma nuevamente: ¿eliminar permanentemente "${nombre}"?`)) return;
-
+    mostrarConfirm(`¿Eliminar "${nombre}"?\n\nEsta acción eliminará todos los datos de la empresa y no se puede deshacer.`, () => {
+    mostrarConfirm(`Confirma nuevamente: ¿eliminar permanentemente "${nombre}"?`, async () => {
     try {
         if (_fbDb && _fbUser) {
             // Quitar empresaId del array del perfil
@@ -558,6 +640,8 @@ async function eliminarEmpresaActual() {
     } catch(e) {
         mostrarToast('Error al eliminar: ' + e.message, 'error');
     }
+    });
+    });
 }
 
 // ── Login / Register / Logout ─────────────────────────────────
@@ -632,13 +716,14 @@ async function fbRegister() {
 }
 
 async function fbLogout() {
-    if (!confirm('¿Cerrar sesión?')) return;
-    // Sync final antes de salir
-    await fbSyncToCloud();
-    await _fbAuth.signOut();
-    // Limpiar datos locales de la sesión
-    FB_KEYS.forEach(k => localStorage.removeItem(k));
-    location.reload();
+    mostrarConfirm('¿Cerrar sesión?', async () => {
+        // Sync final antes de salir
+        await fbSyncToCloud();
+        await _fbAuth.signOut();
+        // Limpiar datos locales de la sesión
+        FB_KEYS.forEach(k => localStorage.removeItem(k));
+        location.reload();
+    });
 }
 
 // ── Sync manual ───────────────────────────────────────────────
@@ -651,16 +736,43 @@ async function fbSyncToCloud() {
 async function fbLoadFromCloud() {
     if (!_fbUser || !_fbDb) return;
     const empresaId = window.currentUser?.empresaId || _fbUser.uid;
+    const _orig = Object.getPrototypeOf(localStorage).setItem;
     try {
-        const doc = await _fbDb.collection('empresas').doc(empresaId).get();
-        if (!doc.exists) return;
-        const data = doc.data();
-        // Guardar en localStorage sin disparar el interceptor de sync
-        const _orig = Object.getPrototypeOf(localStorage).setItem;
-        FB_KEYS.forEach(k => {
-            if (data[k]) _orig.call(localStorage, k, data[k]);
+        const modulosRef = _fbDb.collection('empresas').doc(empresaId).collection('modulos');
+
+        // Leer todos los documentos de la subcollección en paralelo
+        const snaps = await Promise.all(
+            FB_KEYS.map(k => modulosRef.doc(FB_KEY_TO_DOC[k]).get())
+        );
+
+        let cargadoDesdeSubcoleccion = false;
+        snaps.forEach((snap, i) => {
+            if (snap.exists && snap.data().data) {
+                _orig.call(localStorage, FB_KEYS[i], snap.data().data);
+                cargadoDesdeSubcoleccion = true;
+            }
         });
-        // Recargar arrays en memoria
+
+        // Migración: si no había datos en subcollección, buscar en el doc raíz (estructura antigua)
+        if (!cargadoDesdeSubcoleccion) {
+            const rootDoc = await _fbDb.collection('empresas').doc(empresaId).get();
+            if (rootDoc.exists) {
+                const rootData = rootDoc.data();
+                const hayDatosViejos = FB_KEYS.some(k => rootData[k]);
+                if (hayDatosViejos) {
+                    FB_KEYS.forEach(k => {
+                        if (rootData[k]) _orig.call(localStorage, k, rootData[k]);
+                    });
+                    // Migrar al nuevo formato y limpiar campos del doc raíz
+                    _fbAutoSync().then(() => {
+                        const removeOldFields = {};
+                        FB_KEYS.forEach(k => { removeOldFields[k] = firebase.firestore.FieldValue.delete(); });
+                        _fbDb.collection('empresas').doc(empresaId).update(removeOldFields).catch(() => {});
+                    });
+                }
+            }
+        }
+
         _fbRecargarMemoria();
     } catch(e) {
         console.error('Error cargando desde la nube:', e);
@@ -692,9 +804,10 @@ function _fbRecargarMemoria() {
 
 // ── Cambiar cuenta (logout sin limpiar datos locales de empresa) ──
 async function fbCambiarCuenta() {
-    if (!confirm('¿Cambiar de cuenta? Se cerrará la sesión actual. Los datos locales se conservan.')) return;
-    await _fbAuth.signOut();
-    location.reload();
+    mostrarConfirm('¿Cambiar de cuenta? Se cerrará la sesión actual. Los datos locales se conservan.', async () => {
+        await _fbAuth.signOut();
+        location.reload();
+    });
 }
 
 // ── Toggle registro/login ────────────────────────────────────

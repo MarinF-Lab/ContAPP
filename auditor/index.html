@@ -14,11 +14,14 @@
     <script src="js/web-adapter.js"></script>
     <!-- SheetJS para exportar Excel en el navegador -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF para exportar PDF (boletas honorarios e informes) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>window.jsPDF = window.jspdf?.jsPDF;</script>
 
     <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/main.css?v=4">
     <link rel="stylesheet" href="css/remuneraciones.css">
-    <link rel="stylesheet" href="css/auditor.css">
+    <link rel="stylesheet" href="css/auditor.css?v=2">
     <script>
         // Restaurar tema guardado antes de que el DOM pinte (evita flash)
         (function() {
@@ -48,75 +51,48 @@
             </div>
         </div>
 
-        <!-- ERP · CONTABILIDAD — solo primera categoría -->
+        <!-- GRUPO 1 · CONTABILIDAD — solo primera categoría -->
         <div class="nav-group" id="nav-grupo-contabilidad">
-            <div class="nav-group-title"><span class="nav-group-cat">ERP</span>CONTABILIDAD</div>
+            <div class="nav-group-title"><span class="nav-group-cat">G1</span>CONTABILIDAD</div>
             <div class="nav-group-items">
-                <div id="nav-diario" class="nav-item" data-modulo="diario" onclick="navegar('diario', this)">
+                <div id="nav-estructura-contable" class="nav-item" data-modulo="estructura-contable" onclick="navegar('estructura-contable', this)">
                     <span class="nav-icon">📝</span>
-                    <span class="nav-text">Libro Diario</span>
+                    <span class="nav-text">Estructura Contable</span>
                 </div>
-                <div id="nav-mayor" class="nav-item" data-modulo="mayor" onclick="navegar('mayor', this)">
-                    <span class="nav-icon">📚</span>
-                    <span class="nav-text">Libro Mayor</span>
-                </div>
-                <div id="nav-plan-cuentas" class="nav-item" data-modulo="plan-cuentas" onclick="navegar('plan-cuentas', this)">
-                    <span class="nav-icon">📋</span>
-                    <span class="nav-text">Plan de Cuentas</span>
-                </div>
-                <div id="nav-reconciliacion" class="nav-item" data-modulo="reconciliacion" onclick="navegar('reconciliacion', this)">
-                    <span class="nav-icon">🏦</span>
-                    <span class="nav-text">Conciliación Bancaria</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- BI · REPORTES — solo primera categoría -->
-        <div class="nav-group" id="nav-grupo-informes">
-            <div class="nav-group-title"><span class="nav-group-cat">BI</span>REPORTES</div>
-            <div class="nav-group-items">
-                <div id="nav-balance" class="nav-item" data-modulo="balance" onclick="navegar('balance', this)">
-                    <span class="nav-icon">⚖️</span>
-                    <span class="nav-text">Balance</span>
-                </div>
-                <div id="nav-balance-clasificado" class="nav-item" data-modulo="balance-clasificado" onclick="navegar('balance-clasificado', this)">
-                    <span class="nav-icon">🏦</span>
-                    <span class="nav-text">Bal. Clasificado</span>
-                </div>
-                <div id="nav-estado-resultados" class="nav-item" data-modulo="estado-resultados" onclick="navegar('estado-resultados', this)">
+                <div id="nav-reportes-financieros" class="nav-item" data-modulo="reportes-financieros" onclick="navegar('reportes-financieros', this)">
                     <span class="nav-icon">📊</span>
-                    <span class="nav-text">Est. Resultados</span>
-                </div>
-                <div id="nav-flujo-caja" class="nav-item" data-modulo="flujo-caja" onclick="navegar('flujo-caja', this)">
-                    <span class="nav-icon">💵</span>
-                    <span class="nav-text">Flujo de Caja</span>
+                    <span class="nav-text">Reportes Financieros</span>
                 </div>
             </div>
         </div>
 
-        <!-- SCM · COMERCIAL — solo primera categoría -->
+        <!-- G2 · COMERCIAL — solo primera categoría -->
         <div class="nav-group" id="nav-grupo-comercial">
-            <div class="nav-group-title"><span class="nav-group-cat">SCM</span>COMERCIAL</div>
+            <div class="nav-group-title"><span class="nav-group-cat">G2</span>COMERCIAL</div>
             <div class="nav-group-items">
-                <div id="nav-compras" class="nav-item" data-modulo="compras" onclick="navegar('compras', this)">
-                    <span class="nav-icon">🛒</span>
-                    <span class="nav-text">Compras</span>
+                <div id="nav-egresos-ingresos" class="nav-item" data-modulo="egresos-ingresos" onclick="navegar('egresos-ingresos', this)">
+                    <span class="nav-icon">🔁</span>
+                    <span class="nav-text">Egresos e Ingresos</span>
                 </div>
-                <div id="nav-ventas" class="nav-item" data-modulo="ventas" onclick="navegar('ventas', this)">
-                    <span class="nav-icon">💰</span>
-                    <span class="nav-text">Ventas</span>
+                <div id="nav-tributario-1cat" class="nav-item" data-modulo="tributario-1cat" onclick="navegar('tributario-1cat', this)">
+                    <span class="nav-icon">🧾</span>
+                    <span class="nav-text">Tributario</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- G3 · DATOS — solo primera categoría -->
+        <div class="nav-group" id="nav-grupo-datos">
+            <div class="nav-group-title"><span class="nav-group-cat">G3</span>DATOS</div>
+            <div class="nav-group-items">
                 <div id="nav-documentos" class="nav-item" data-modulo="documentos" onclick="navegar('documentos', this)">
                     <span class="nav-icon">📁</span>
                     <span class="nav-text">Documentación</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- CRM · CLIENTES — solo primera categoría -->
-        <div class="nav-group" id="nav-grupo-crm">
-            <div class="nav-group-title"><span class="nav-group-cat">CRM</span>CLIENTES</div>
-            <div class="nav-group-items">
+                <div id="nav-conciliacion-cartolas" class="nav-item" data-modulo="conciliacion-cartolas" onclick="navegar('conciliacion-cartolas', this)">
+                    <span class="nav-icon">🏦</span>
+                    <span class="nav-text">Conciliación y Cartolas</span>
+                </div>
                 <div id="nav-clientes" class="nav-item" data-modulo="clientes" onclick="navegar('clientes', this)">
                     <span class="nav-icon">🤝</span>
                     <span class="nav-text">Clientes / Prov.</span>
@@ -124,9 +100,9 @@
             </div>
         </div>
 
-        <!-- HRM · RRHH — solo primera categoría -->
+        <!-- G4 · RRHH — solo primera categoría -->
         <div class="nav-group" id="nav-grupo-rrhh">
-            <div class="nav-group-title"><span class="nav-group-cat">HRM</span>RRHH</div>
+            <div class="nav-group-title"><span class="nav-group-cat">G4</span>RRHH</div>
             <div class="nav-group-items">
                 <div id="nav-remuneraciones" class="nav-item" data-modulo="remuneraciones" onclick="navegar('remuneraciones', this)">
                     <span class="nav-icon">👷</span>
@@ -135,17 +111,17 @@
             </div>
         </div>
 
-        <!-- TAX · TRIBUTARIO — solo primera categoría -->
-        <div class="nav-group" id="nav-grupo-tributario">
-            <div class="nav-group-title"><span class="nav-group-cat">TAX</span>TRIBUTARIO</div>
+        <!-- G5 · EMPRESA — solo primera categoría -->
+        <div class="nav-group" id="nav-grupo-empresa">
+            <div class="nav-group-title"><span class="nav-group-cat">G5</span>EMPRESA</div>
             <div class="nav-group-items">
-                <div id="nav-indicadores" class="nav-item" data-modulo="indicadores" onclick="navegar('indicadores', this)">
-                    <span class="nav-icon">📈</span>
-                    <span class="nav-text">Indicadores</span>
+                <div id="nav-activos-produccion" class="nav-item" data-modulo="activos-produccion" onclick="navegar('activos-produccion', this)">
+                    <span class="nav-icon">🏷</span>
+                    <span class="nav-text">Activos y Producción</span>
                 </div>
-                <div id="nav-iva-resumen" class="nav-item" data-modulo="iva-resumen" onclick="navegar('iva-resumen', this)">
-                    <span class="nav-icon">🧾</span>
-                    <span class="nav-text">Resumen IVA / F29</span>
+                <div id="nav-auditoria" class="nav-item" data-modulo="auditoria" onclick="navegar('auditoria', this)">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Auditoría</span>
                 </div>
             </div>
         </div>
@@ -175,7 +151,7 @@
         <div class="nav-group" id="nav-grupo-comercial-hon" style="display:none;">
             <div class="nav-group-title">COMERCIAL</div>
             <div class="nav-group-items">
-                <div id="nav-clientes-hon" class="nav-item" data-modulo="clientes" onclick="navegar('clientes', this)">
+                <div id="nav-clientes-hon" class="nav-item" data-modulo="clientes-hon" onclick="navegar('clientes', this)">
                     <span class="nav-icon">🤝</span>
                     <span class="nav-text">Clientes / Prov.</span>
                 </div>
@@ -198,9 +174,16 @@
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">Formulario 22</span>
                 </div>
-                <div id="nav-indicadores-hon" class="nav-item" data-modulo="indicadores" onclick="navegar('indicadores', this)">
-                    <span class="nav-icon">📈</span>
-                    <span class="nav-text">Indicadores</span>
+            </div>
+        </div>
+
+        <!-- Empresa segunda categoría -->
+        <div class="nav-group" id="nav-grupo-empresa-hon" style="display:none;">
+            <div class="nav-group-title">EMPRESA</div>
+            <div class="nav-group-items">
+                <div id="nav-auditoria-hon" class="nav-item" data-modulo="auditoria-hon" onclick="navegar('auditoria', this)">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Auditoría</span>
                 </div>
             </div>
         </div>
@@ -212,10 +195,6 @@
                 <div class="nav-item" onclick="navegar('configuracion', this)">
                     <span class="nav-icon">⚙️</span>
                     <span class="nav-text">Configuración</span>
-                </div>
-                <div id="nav-auditoria" class="nav-item" data-modulo="auditoria" data-requiere-rol="admin" onclick="navegar('auditoria', this)">
-                    <span class="nav-icon">🛡️</span>
-                    <span class="nav-text">Auditoría</span>
                 </div>
             </div>
         </div>
@@ -271,6 +250,10 @@
                 <!-- Empresa/período (se mantiene oculto, se actualiza por JS pero ya no se muestra) -->
                 <span id="headerEmpresa" style="display:none;"></span>
                 <span id="headerPeriodo" style="display:none;"></span>
+                <button onclick="busquedaGlobalAbrir()" title="Búsqueda global (Ctrl+K)"
+                    style="background:var(--surface);border:1px solid var(--divider);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                    🔍 <span style="display:none;" class="kbd-hint">Ctrl+K</span>
+                </button>
                 <button id="btnThemeToggle" onclick="toggleTheme()" title="Cambiar tema claro/oscuro">
                     <span id="themeIcon">🌙</span>
                 </button>
@@ -334,6 +317,53 @@
                 </div>
             </div>
 
+            <!-- Widget: Indicadores Económicos (colapsable) -->
+            <div class="card" id="widgetIndicadores" style="padding:18px;margin-bottom:16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;cursor:pointer;" onclick="toggleIndicadoresWidget()">
+                    <div style="font-weight:700;font-size:13px;color:var(--text-main);">📈 Indicadores Económicos</div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span id="indFechaActualizacion" style="font-size:12px;color:var(--text-muted);">Sin datos cargados</span>
+                        <button class="btn btn-secondary" style="font-size:11px;padding:4px 10px;" onclick="event.stopPropagation(); actualizarIndicadores(true)">↻ Actualizar</button>
+                        <span id="widgetIndicadoresChevron" style="font-size:12px;color:var(--text-muted);transition:transform .15s;">▾</span>
+                    </div>
+                </div>
+                <div id="indEstadoConexion" style="font-size:12px;margin-top:6px;"></div>
+                <div id="widgetIndicadoresBody" style="margin-top:14px;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;">
+                        <div class="card ind-card" id="cardUF" style="padding:12px;">
+                            <div class="ind-card-label">UF</div>
+                            <div class="ind-card-valor" id="indValUF">—</div>
+                            <div class="ind-card-fecha" id="indFecUF"></div>
+                        </div>
+                        <div class="card ind-card" id="cardUTM" style="padding:12px;">
+                            <div class="ind-card-label">UTM</div>
+                            <div class="ind-card-valor" id="indValUTM">—</div>
+                            <div class="ind-card-fecha" id="indFecUTM"></div>
+                        </div>
+                        <div class="card ind-card" id="cardIPC" style="padding:12px;">
+                            <div class="ind-card-label">IPC</div>
+                            <div class="ind-card-valor" id="indValIPC">—</div>
+                            <div class="ind-card-fecha" id="indFecIPC"></div>
+                        </div>
+                        <div class="card ind-card" id="cardTasa" style="padding:12px;">
+                            <div class="ind-card-label">TPM</div>
+                            <div class="ind-card-valor" id="indValTasa">—</div>
+                            <div class="ind-card-fecha" id="indFecTasa"></div>
+                        </div>
+                        <div class="card ind-card" id="cardDolar" style="padding:12px;">
+                            <div class="ind-card-label">USD</div>
+                            <div class="ind-card-valor" id="indValDolar">—</div>
+                            <div class="ind-card-fecha" id="indFecDolar"></div>
+                        </div>
+                        <div class="card ind-card" id="cardEuro" style="padding:12px;">
+                            <div class="ind-card-label">EUR</div>
+                            <div class="ind-card-valor" id="indValEuro">—</div>
+                            <div class="ind-card-fecha" id="indFecEuro"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- KPIs con icono y acento de color -->
             <div class="kpi-grid">
                 <div class="kpi-card kpi-card-activos">
@@ -358,7 +388,11 @@
                 </div>
             </div>
 
+            <!-- Panel onboarding (visible solo cuando no hay datos) -->
+            <div id="dash-onboarding" style="display:none;"></div>
+
             <!-- Gráficos: barra mensual (2/3) + donuts apilados (1/3) -->
+            <div id="dash-charts-area">
             <div style="display:grid;grid-template-columns:1fr 220px;gap:16px;align-items:start;margin-bottom:16px;">
                 <div class="card" style="padding:18px;">
                     <div style="font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text-main);">📊 Ingresos vs Gastos — Año Actual</div>
@@ -403,17 +437,50 @@
                 <div id="iaAlertasTribuCont" style="font-size:13px;color:var(--text-main);line-height:1.7;"></div>
             </div>
 
+            </div><!-- /dash-charts-area -->
         </div>
 
-        <!-- ════════════════════
-             LIBRO DIARIO
-        ═════════════════════ -->
-        <div id="view-diario" class="view">
+        <!-- ════════════════════════════════
+             GRUPO 1 · ESTRUCTURA CONTABLE
+             (Libro Diario / Libro Mayor / Balance General)
+        ════════════════════════════════ -->
+        <div id="view-estructura-contable" class="view">
+            <div class="mod-header">
+                <span class="mod-header-title">Estructura Contable</span>
+                <span class="mod-header-badge">G1 · Contabilidad</span>
+            </div>
+            <div class="mod-tabs">
+                <button class="mod-tab-btn active" data-tab="tab-diario"  onclick="modTab('view-estructura-contable','tab-diario')">📝 Libro Diario</button>
+                <button class="mod-tab-btn"        data-tab="tab-mayor"   onclick="modTab('view-estructura-contable','tab-mayor')">📚 Libro Mayor</button>
+                <button class="mod-tab-btn"        data-tab="tab-balance" onclick="modTab('view-estructura-contable','tab-balance')">⚖️ Balance General</button>
+            </div>
 
+            <!-- ── TAB: Libro Diario ── -->
+            <div id="tab-diario" class="mod-tab-panel active">
             <div class="card">
                 <div class="glosa-area">
                     <textarea id="glosaInput" class="glosa-input" rows="2"
                         placeholder="Ej: Venta de mercadería por $120.000 con transferencia"></textarea>
+
+                    <details id="glosaAyuda" style="margin:6px 0;font-size:13px;color:var(--text-muted);">
+                        <summary style="cursor:pointer;font-weight:500;color:var(--accent);">¿Cómo escribir la glosa?</summary>
+                        <div style="padding:8px 12px;line-height:1.8;">
+                            <strong>Ejemplos reconocidos:</strong><br>
+                            • Venta de mercadería por $200.000 al contado<br>
+                            • Compra de mercadería por $300.000 a crédito<br>
+                            • Depósito de $500.000 en banco desde caja<br>
+                            • Retiro de $100.000 desde banco a caja<br>
+                            • Cobro a cliente por $150.000 con transferencia<br>
+                            • Pago a proveedor por $80.000 con cheque<br>
+                            • Gasto de arriendo por $200.000 con transferencia<br>
+                            • Recibimos préstamo bancario por $1.000.000<br>
+                            • Pago cuota préstamo $50.000 intereses $5.000<br>
+                            • Pago de remuneraciones por $800.000<br>
+                            • Nota de crédito de proveedor por $100.000<br>
+                            • Devolución de venta cliente por $50.000<br>
+                            • Traspaso de caja a banco por $300.000
+                        </div>
+                    </details>
 
                     <div class="controls-row">
                         <div>
@@ -425,6 +492,7 @@
                             <button class="btn btn-primary"   onclick="procesarGlosa()">Generar Asiento →</button>
                             <button class="btn btn-ia" id="btnIaGlosa" onclick="iaTentarGlosa()">✨ Intentar con IA</button>
                             <button class="btn btn-secondary" onclick="abrirAsientoManual()">✏ Nuevo Asiento</button>
+                            <button class="btn btn-secondary" onclick="audAbrirCrearHallazgo('diario')">📋 Agregar Hallazgo</button>
                             <button class="btn btn-danger"    onclick="vaciarDiario()">🗑 Vaciar Diario</button>
                         </div>
                     </div>
@@ -464,32 +532,20 @@
 
             <h3 style="margin-bottom:16px;">📚 Registros Históricos del Diario</h3>
             <div id="historialDiarioLista"></div>
+            </div><!-- /tab-diario -->
 
-        </div>
-
-        <!-- ════════════════════
-             LIBRO MAYOR
-        ═════════════════════ -->
-        <div id="view-mayor" class="view">
+            <!-- ── TAB: Libro Mayor ── -->
+            <div id="tab-mayor" class="mod-tab-panel">
             <div class="export-bar">
                 <button class="btn-export btn-export-pdf"   onclick="exportarPDFMayor()">⬇ PDF</button>
                 <button class="btn-export btn-export-excel" onclick="exportarExcelMayor()">⬇ Excel</button>
                 <button class="btn-export btn-export-print" onclick="imprimirMayor()">🖨 Imprimir</button>
             </div>
             <div class="mayor-grid" id="contenedorMayor"></div>
-        </div>
+            </div><!-- /tab-mayor -->
 
-        <!-- ════════════════════
-             CONCILIACIÓN BANCARIA
-        ═════════════════════ -->
-        <div id="view-reconciliacion" class="view">
-            <div id="rec-root"></div>
-        </div>
-
-        <!-- ════════════════════
-             BALANCE
-        ═════════════════════ -->
-        <div id="view-balance" class="view">
+            <!-- ── TAB: Balance General ── -->
+            <div id="tab-balance" class="mod-tab-panel">
             <div class="export-bar">
                 <button class="btn-export btn-export-pdf"   onclick="exportarPDFBalance()">⬇ PDF</button>
                 <button class="btn-export btn-export-excel" onclick="exportarExcelBalance()">⬇ Excel</button>
@@ -525,10 +581,81 @@
                     </table>
                 </div>
             </div>
-        </div>
+            </div><!-- /tab-balance -->
+        </div><!-- /view-estructura-contable -->
+
+        <!-- VISTAS LEGACY (redirigen vía JS a tabs, contenido movido) -->
+        <div id="view-diario" class="view"><!-- movido a view-estructura-contable tab-diario --></div>
 
         <!-- ════════════════════
-             LIBRO DE COMPRAS
+             LIBRO MAYOR
+        ═════════════════════ -->
+        <div id="view-mayor" class="view"><!-- movido a view-estructura-contable tab-mayor --></div>
+
+        <!-- ════════════════════
+             CONCILIACIÓN BANCARIA
+        ═════════════════════ -->
+        <!-- ════════════════════
+             G3 · DATOS — Conciliación y Cartolas (tabs)
+             Paneles poblados por _initModulosDatos() en app.js
+        ═════════════════════ -->
+        <div id="view-conciliacion-cartolas" class="view">
+            <div class="mod-header">
+                <span class="mod-header-title">Conciliación y Cartolas</span>
+                <span class="mod-header-badge">G3 · Datos</span>
+            </div>
+            <div class="mod-tabs">
+                <button class="mod-tab-btn active" data-tab="tab-cc-cartolas"     onclick="modTab('view-conciliacion-cartolas','tab-cc-cartolas')">🏦 Cartolas Bancarias</button>
+                <button class="mod-tab-btn"        data-tab="tab-cc-conciliacion" onclick="modTab('view-conciliacion-cartolas','tab-cc-conciliacion')">🔗 Conciliación Bancaria</button>
+            </div>
+            <div id="tab-cc-cartolas"     class="mod-tab-panel active"></div>
+            <div id="tab-cc-conciliacion" class="mod-tab-panel"></div>
+        </div><!-- /view-conciliacion-cartolas -->
+
+        <!-- view-reconciliacion (legacy — rec-root reubicado a tab-cc-conciliacion) -->
+        <div id="view-reconciliacion" class="view">
+            <div id="rec-root"></div>
+        </div>
+
+        <!-- view-balance movido a view-estructura-contable tab-balance -->
+        <div id="view-balance" class="view"></div>
+
+        <!-- ════════════════════
+             G2 · COMERCIAL — Egresos e Ingresos (tabs)
+             Paneles poblados por _initModulosComerciales() en app.js
+        ═════════════════════ -->
+        <div id="view-egresos-ingresos" class="view">
+            <div class="mod-header">
+                <span class="mod-header-title">Egresos e Ingresos</span>
+                <span class="mod-header-badge">G2 · Comercial</span>
+            </div>
+            <div class="mod-tabs">
+                <button class="mod-tab-btn active" data-tab="tab-ei-compras"    onclick="modTab('view-egresos-ingresos','tab-ei-compras')">🛒 Libro de Compras</button>
+                <button class="mod-tab-btn"        data-tab="tab-ei-ventas"     onclick="modTab('view-egresos-ingresos','tab-ei-ventas')">💰 Libro de Ventas</button>
+                <button class="mod-tab-btn"        data-tab="tab-ei-honorarios" onclick="modTab('view-egresos-ingresos','tab-ei-honorarios')">🧾 Boletas de Honorarios</button>
+            </div>
+            <div id="tab-ei-compras"    class="mod-tab-panel active"></div>
+            <div id="tab-ei-ventas"     class="mod-tab-panel"></div>
+            <div id="tab-ei-honorarios" class="mod-tab-panel"></div>
+        </div><!-- /view-egresos-ingresos -->
+
+        <!-- ════════════════════
+             G2 · COMERCIAL — Tributario (tabs)
+             Panel poblado por _initModulosComerciales() en app.js
+        ═════════════════════ -->
+        <div id="view-tributario-1cat" class="view">
+            <div class="mod-header">
+                <span class="mod-header-title">Tributario</span>
+                <span class="mod-header-badge">G2 · Comercial</span>
+            </div>
+            <div class="mod-tabs">
+                <button class="mod-tab-btn active" data-tab="tab-trib-iva" onclick="modTab('view-tributario-1cat','tab-trib-iva')">🧾 Declaración de Impuestos (F29)</button>
+            </div>
+            <div id="tab-trib-iva" class="mod-tab-panel active"></div>
+        </div><!-- /view-tributario-1cat -->
+
+        <!-- ════════════════════
+             LIBRO DE COMPRAS (legacy — contenido reubicado a tab-ei-compras)
         ═════════════════════ -->
         <div id="view-compras" class="view">
 
@@ -536,6 +663,8 @@
                 <button class="btn-export btn-export-pdf"   onclick="exportarPDFCompras()">⬇ PDF</button>
                 <button class="btn-export btn-export-excel" onclick="exportarExcelCompras()">⬇ Excel</button>
                 <button class="btn-export btn-export-print" onclick="imprimirCompras()">🖨 Imprimir</button>
+                <button class="btn-export" style="background:var(--accent);color:#fff;font-weight:600;" onclick="siiAbrirImportador('compras')">⬆ XML SII</button>
+                <button class="btn-export" style="background:#0f766e;color:#fff;font-weight:600;" onclick="siiAbrirRCV()">☁ Descargar RCV</button>
             </div>
 
             <!-- Barra superior: filtros + resumen + acciones -->
@@ -556,6 +685,7 @@
                         <option value="2025">2025</option><option value="2026">2026</option>
                     </select>
                     <button class="btn btn-primary"   onclick="abrirNuevaCompra()">+ Registrar Compra</button>
+                    <button class="btn btn-secondary" onclick="audAbrirCrearHallazgo('compras')">📋 Agregar Hallazgo</button>
                     <button class="btn btn-danger"    onclick="vaciarLibroCompras()">🗑 Vaciar Libro</button>
                 </div>
                 <div class="libro-kpis">
@@ -631,6 +761,8 @@
                 <button class="btn-export btn-export-pdf"   onclick="exportarPDFVentas()">⬇ PDF</button>
                 <button class="btn-export btn-export-excel" onclick="exportarExcelVentas()">⬇ Excel</button>
                 <button class="btn-export btn-export-print" onclick="imprimirVentas()">🖨 Imprimir</button>
+                <button class="btn-export" style="background:var(--accent);color:#fff;font-weight:600;" onclick="siiAbrirImportador('ventas')">⬆ XML SII</button>
+                <button class="btn-export" style="background:#0f766e;color:#fff;font-weight:600;" onclick="siiAbrirRCV()">☁ Descargar RCV</button>
             </div>
 
             <!-- Barra superior -->
@@ -651,6 +783,7 @@
                         <option value="2025">2025</option><option value="2026">2026</option>
                     </select>
                     <button class="btn btn-primary" onclick="abrirNuevaVenta()">+ Registrar Venta</button>
+                    <button class="btn btn-secondary" onclick="audAbrirCrearHallazgo('ventas')">📋 Agregar Hallazgo</button>
                     <button class="btn btn-danger"  onclick="vaciarLibroVentas()">🗑 Vaciar Libro</button>
                 </div>
                 <div class="libro-kpis">
@@ -778,6 +911,38 @@
         </div>
 
         <!-- ════════════════════
+             G5 · EMPRESA — Activos y Producción (tabs)
+             Paneles poblados por _initModulosEmpresa() en app.js
+        ═════════════════════ -->
+        <div id="view-activos-produccion" class="view">
+            <div class="mod-header">
+                <span class="mod-header-title">Activos y Producción</span>
+                <span class="mod-header-badge">G5 · Empresa</span>
+            </div>
+            <div class="mod-tabs">
+                <button class="mod-tab-btn active" data-tab="tab-ap-activos"   onclick="modTab('view-activos-produccion','tab-ap-activos')">🏦 Activos Fijos</button>
+                <button class="mod-tab-btn"        data-tab="tab-ap-productos" onclick="modTab('view-activos-produccion','tab-ap-productos')">🏷 Productos / Servicios</button>
+            </div>
+            <div id="tab-ap-activos"   class="mod-tab-panel active"></div>
+            <div id="tab-ap-productos" class="mod-tab-panel"></div>
+        </div><!-- /view-activos-produccion -->
+
+        <!-- ════════════════════
+             PRODUCTOS Y SERVICIOS (legacy — reubicado a tab-ap-productos)
+        ═════════════════════ -->
+        <div id="view-productos" class="view"></div>
+
+        <!-- ════════════════════
+             ACTIVOS FIJOS (legacy — reubicado a tab-ap-activos)
+        ═════════════════════ -->
+        <div id="view-activos" class="view"></div>
+
+        <!-- ════════════════════
+             CARTOLAS BANCARIAS
+        ═════════════════════ -->
+        <div id="view-cartolas" class="view"></div>
+
+        <!-- ════════════════════
              CLIENTES / PROVEEDORES
         ═════════════════════ -->
         <div id="view-clientes" class="view">
@@ -845,11 +1010,39 @@
         </div>
 
         <!-- ════════════════════
+             G5 · EMPRESA — Auditoría (tabs)
+             Paneles poblados por _initModulosEmpresa() en app.js
+        ═════════════════════ -->
+        <div id="view-auditoria" class="view">
+            <div class="mod-header">
+                <span class="mod-header-title">Auditoría</span>
+                <span class="mod-header-badge">G5 · Empresa</span>
+            </div>
+            <div class="mod-tabs">
+                <button class="mod-tab-btn active" data-tab="tab-aud-informe"    onclick="modTab('view-auditoria','tab-aud-informe')">📄 Informe</button>
+                <button class="mod-tab-btn"        data-tab="tab-aud-hallazgos" onclick="modTab('view-auditoria','tab-aud-hallazgos')">📋 Hallazgos</button>
+            </div>
+            <div id="tab-aud-informe"    class="mod-tab-panel active"></div>
+            <div id="tab-aud-hallazgos"  class="mod-tab-panel"></div>
+        </div><!-- /view-auditoria -->
+
+        <!-- ════════════════════
+             HALLAZGOS (legacy — reubicado a tab-aud-hallazgos)
+        ═════════════════════ -->
+        <div id="view-hallazgos" class="view"></div>
+
+        <!-- ════════════════════
+             INFORME DE AUDITORÍA (legacy — reubicado a tab-aud-informe)
+        ═════════════════════ -->
+        <div id="view-informe" class="view"></div>
+
+
+        <!-- ════════════════════
              CONFIGURACIÓN
         ═════════════════════ -->
         <div id="view-configuracion" class="view">
             <!-- Empresa -->
-            <div class="card">
+            <div class="card" style="padding:24px;">
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
                     <h2 style="margin:0;">Configuración Empresa</h2>
                     <span id="cfgCategoriaBadge" class="badge"></span>
@@ -862,13 +1055,14 @@
                     <label>Giro</label>           <input id="cfgGiro">
                     <label>Dirección</label>      <input id="cfgDireccion">
                     <label>Categoría tributaria</label>
-                    <select id="cfgCategoria">
+                    <select id="cfgCategoria" onchange="if(typeof audRenderizarToggleModulos==='function') audRenderizarToggleModulos('cfgModulosContainer', this.value, null)">
                         <option value="primera">1ª Categoría — Contabilidad completa</option>
                         <option value="segunda">2ª Categoría — Honorarios / Freelance</option>
                     </select>
                 </div>
-                <br>
-                <button class="btn btn-primary" data-requiere-rol="contador" onclick="guardarConfiguracion()">💾 Guardar Configuración</button>
+                <div style="margin-top:20px;">
+                    <button class="btn btn-primary" data-requiere-rol="contador" onclick="guardarConfiguracion()">💾 Guardar Configuración</button>
+                </div>
             </div>
 
             <!-- Módulos activos -->
@@ -878,8 +1072,10 @@
                     Activa o desactiva módulos del menú para este cliente. Los cambios aplican de inmediato.
                 </p>
                 <div id="cfgModulosContainer"></div>
-                <br>
-                <button class="btn btn-primary" data-requiere-rol="contador" onclick="guardarModulosConfig()">💾 Guardar módulos</button>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;">
+                    <button class="btn btn-primary" data-requiere-rol="contador" onclick="guardarModulosConfig()">💾 Guardar módulos</button>
+                    <button class="btn btn-secondary" data-requiere-rol="contador" onclick="resetearModulosConfig()" style="font-size:12px;">↺ Restablecer por defecto</button>
+                </div>
             </div>
 
             <!-- Certificado Digital (4.4) -->
@@ -889,7 +1085,7 @@
                     Carga tu certificado digital (.pfx / .p12) para firma electrónica de documentos SII.
                     Se almacena de forma segura en este equipo.
                 </p>
-                <div id="certEstadoBox" style="display:none;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;margin-bottom:14px;"></div>
+                <div id="certEstadoBox" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;margin-bottom:14px;"></div>
                 <input type="file" id="certFileInput" accept=".pfx,.p12" style="display:none;" onchange="procesarCertificado(this)">
                 <div style="display:flex;gap:10px;">
                     <button class="btn btn-primary" onclick="cargarCertificado()">📂 Cargar Certificado</button>
@@ -924,7 +1120,7 @@
                         </div>
                         <button class="btn btn-primary" onclick="crearInvitacion()">Generar Código</button>
                     </div>
-                    <div id="invCodigoBox" style="display:none;margin-top:16px;background:var(--card-bg);border:2px solid var(--accent);border-radius:10px;padding:16px;text-align:center;">
+                    <div id="invCodigoBox" style="display:none;margin-top:16px;background:var(--card);border:2px solid var(--accent);border-radius:10px;padding:16px;text-align:center;">
                         <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Código de invitación (válido 48h) — comparte este código manualmente</div>
                         <div id="invCodigoGen" style="font-size:32px;font-weight:800;letter-spacing:.3em;color:var(--accent);font-family:'JetBrains Mono',monospace;"></div>
                         <button class="btn btn-secondary" style="margin-top:10px;" onclick="copiarCodigoInvitacion()">📋 Copiar</button>
@@ -958,16 +1154,16 @@
                 </div>
             </div>
 
-            <!-- IA — API Key (Fase 6) -->
+            <!-- IA — API Key Gemini (Fase 6) -->
             <div class="card" style="padding:24px;">
-                <h2 style="margin-bottom:4px;">✨ Inteligencia Artificial — Claude API</h2>
+                <h2 style="margin-bottom:4px;">✨ Inteligencia Artificial — Google Gemini</h2>
                 <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
-                    Ingresa tu API key de Anthropic para activar las funciones de IA. Se almacena cifrada en este equipo y nunca se envía a terceros.
-                    Obtén tu key en <strong>console.anthropic.com</strong>.
+                    Ingresa tu API key de Google AI Studio para activar las funciones de IA. Se almacena localmente en este equipo y solo se envía a Google.
+                    Obtén tu key gratis en <strong>aistudio.google.com/app/apikey</strong>.
                 </p>
                 <div id="iaKeyEstado" style="font-size:13px;margin-bottom:14px;color:var(--text-muted);">Verificando…</div>
                 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                    <input type="password" id="iaApiKeyInput" placeholder="sk-ant-…"
+                    <input type="password" id="iaApiKeyInput" placeholder="AIza…"
                         style="flex:1;min-width:260px;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--input-bg);color:var(--text);">
                     <button class="btn btn-primary" onclick="iaGuardarApiKey()">💾 Guardar Key</button>
                     <button class="btn btn-secondary" onclick="iaBorrarApiKey()">🗑 Eliminar</button>
@@ -991,11 +1187,66 @@
             </div>
         </div>
 
-        <!-- ════════════════════
-             FLUJO DE CAJA
-        ═════════════════════ -->
-        <div id="view-flujo-caja" class="view">
+        <!-- ════════════════════════════════
+             GRUPO 1 · REPORTES FINANCIEROS
+             (Balance Clasificado / Estado de Resultados / Flujo de Caja)
+        ════════════════════════════════ -->
+        <div id="view-reportes-financieros" class="view">
+            <div class="mod-header">
+                <span class="mod-header-title">Reportes Financieros</span>
+                <span class="mod-header-badge">G1 · Contabilidad</span>
+            </div>
+            <div class="mod-tabs">
+                <button class="mod-tab-btn active" data-tab="tab-balance-clasificado" onclick="modTab('view-reportes-financieros','tab-balance-clasificado')">🏦 Balance Clasificado</button>
+                <button class="mod-tab-btn"        data-tab="tab-estado-resultados"   onclick="modTab('view-reportes-financieros','tab-estado-resultados')">📊 Estado de Resultados</button>
+                <button class="mod-tab-btn"        data-tab="tab-flujo-caja"          onclick="modTab('view-reportes-financieros','tab-flujo-caja')">💵 Flujo de Caja</button>
+            </div>
 
+            <!-- ── TAB: Balance Clasificado ── -->
+            <div id="tab-balance-clasificado" class="mod-tab-panel active">
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFBalanceClasificado()">⬇ PDF</button>
+                <button class="btn-export btn-export-ia"    onclick="iaAnalizarBalanceClasificado()">✨ Analizar con IA</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelBalanceClasificado()">⬇ Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirBalanceClasificado()">🖨 Imprimir</button>
+            </div>
+            <div id="balanceClasificadoCont"></div>
+            </div><!-- /tab-balance-clasificado -->
+
+            <!-- ── TAB: Estado de Resultados ── -->
+            <div id="tab-estado-resultados" class="mod-tab-panel">
+            <div class="export-bar">
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFEstadoResultados()">⬇ PDF</button>
+                <button class="btn-export btn-export-ia"    onclick="iaAnalizarEstadoResultados()">✨ Analizar con IA</button>
+                <button class="btn-export btn-export-ia"    onclick="iaCompararPeriodos('Estado de Resultados')" title="Comparar dos períodos">⚖ Comparar períodos</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelEstadoResultados()">⬇ Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirEstadoResultados()">🖨 Imprimir</button>
+            </div>
+            <div class="libro-toolbar card">
+                <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
+                    <div class="libro-kpi"><span class="libro-kpi-label">Ingresos</span><span class="libro-kpi-val" id="erKpiIngresos" style="color:var(--positive);">$0</span></div>
+                    <div class="libro-kpi"><span class="libro-kpi-label">Costo Ventas</span><span class="libro-kpi-val" id="erKpiCostos" style="color:var(--negative);">$0</span></div>
+                    <div class="libro-kpi"><span class="libro-kpi-label">Gastos Op.</span><span class="libro-kpi-val" id="erKpiGastos" style="color:var(--warning);">$0</span></div>
+                    <div class="libro-kpi"><span class="libro-kpi-label">Ut. antes Impuesto</span><span class="libro-kpi-val" id="erKpiAntesImp">$0</span></div>
+                    <div class="libro-kpi libro-kpi-total"><span class="libro-kpi-label">Utilidad Neta</span><span class="libro-kpi-val" id="erKpiResultado">$0</span></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Régimen tributario:</label>
+                    <select id="erTasaImpuesto" onchange="generarEstadoResultados()"
+                        style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--input-bg);color:var(--text);">
+                        <option value="0.27">27% — Régimen General (S.A.)</option>
+                        <option value="0.25">25% — Propyme (14D)</option>
+                        <option value="0.10">10% — Propyme Transparente</option>
+                        <option value="0">0% — Segunda Categoría / Exento</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="generarEstadoResultados()">Generar</button>
+                </div>
+            </div>
+            <div class="card"><div id="estadoResultadosCont" style="padding:8px 0;"></div></div>
+            </div><!-- /tab-estado-resultados -->
+
+            <!-- ── TAB: Flujo de Caja ── -->
+            <div id="tab-flujo-caja" class="mod-tab-panel">
             <div class="export-bar">
                 <button class="btn-export btn-export-pdf"   onclick="exportarPDFFlujoCaja()">⬇ PDF</button>
                 <button class="btn-export btn-export-ia"    onclick="iaAnalizarFlujoCaja()">✨ Analizar con IA</button>
@@ -1004,46 +1255,26 @@
             </div>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
-                    <select id="selFlujoCajaAnio" class="sel-periodo"
-                        onchange="generarFlujoCaja()">
+                    <select id="selFlujoCajaAnio" class="sel-periodo" onchange="generarFlujoCaja()">
                         <option value="2023">2023</option><option value="2024">2024</option>
                         <option value="2025">2025</option><option value="2026">2026</option>
                     </select>
                     <button class="btn btn-primary" onclick="generarFlujoCaja()">Generar</button>
+                    <button class="btn btn-secondary" onclick="fcAbrirOverrides()" style="font-size:12px;">⚙️ Clasificación</button>
                 </div>
                 <div style="display:flex;gap:16px;flex-wrap:wrap;">
-                    <div class="libro-kpi">
-                        <span class="libro-kpi-label">Entradas</span>
-                        <span class="libro-kpi-val" id="fcEntradas">$0</span>
-                    </div>
-                    <div class="libro-kpi">
-                        <span class="libro-kpi-label">Salidas</span>
-                        <span class="libro-kpi-val" id="fcSalidas">$0</span>
-                    </div>
-                    <div class="libro-kpi">
-                        <span class="libro-kpi-label">Operacional</span>
-                        <span class="libro-kpi-val" id="fcOperacional">$0</span>
-                    </div>
-                    <div class="libro-kpi">
-                        <span class="libro-kpi-label">Inversión</span>
-                        <span class="libro-kpi-val" id="fcInversion">$0</span>
-                    </div>
-                    <div class="libro-kpi">
-                        <span class="libro-kpi-label">Financiamiento</span>
-                        <span class="libro-kpi-val" id="fcFinanciamiento">$0</span>
-                    </div>
-                    <div class="libro-kpi libro-kpi-total">
-                        <span class="libro-kpi-label">Flujo Neto</span>
-                        <span class="libro-kpi-val" id="fcNeto">$0</span>
-                    </div>
+                    <div class="libro-kpi"><span class="libro-kpi-label">Entradas</span><span class="libro-kpi-val" id="fcEntradas">$0</span></div>
+                    <div class="libro-kpi"><span class="libro-kpi-label">Salidas</span><span class="libro-kpi-val" id="fcSalidas">$0</span></div>
+                    <div class="libro-kpi"><span class="libro-kpi-label">Operacional</span><span class="libro-kpi-val" id="fcOperacional">$0</span></div>
+                    <div class="libro-kpi"><span class="libro-kpi-label">Inversión</span><span class="libro-kpi-val" id="fcInversion">$0</span></div>
+                    <div class="libro-kpi"><span class="libro-kpi-label">Financiamiento</span><span class="libro-kpi-val" id="fcFinanciamiento">$0</span></div>
+                    <div class="libro-kpi libro-kpi-total"><span class="libro-kpi-label">Flujo Neto</span><span class="libro-kpi-val" id="fcNeto">$0</span></div>
                 </div>
             </div>
-
             <div class="card" style="padding:16px;">
                 <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📉 Movimientos Mensuales de Efectivo</div>
                 <div id="graficoFlujoCaja"></div>
             </div>
-
             <div class="card">
                 <div class="table-wrapper">
                     <table class="cont-table" style="font-size:13px;">
@@ -1060,221 +1291,17 @@
                     </table>
                 </div>
             </div>
+            </div><!-- /tab-flujo-caja -->
+        </div><!-- /view-reportes-financieros -->
 
-        </div>
-
-        <!-- ════════════════════
-             BALANCE CLASIFICADO
-        ═════════════════════ -->
-        <div id="view-balance-clasificado" class="view">
-            <div class="export-bar">
-                <button class="btn-export btn-export-pdf"   onclick="exportarPDFBalanceClasificado()">⬇ PDF</button>
-                <button class="btn-export btn-export-ia"    onclick="iaAnalizarBalanceClasificado()">✨ Analizar con IA</button>
-                <button class="btn-export btn-export-excel" onclick="exportarExcelBalanceClasificado()">⬇ Excel</button>
-                <button class="btn-export btn-export-print" onclick="imprimirBalanceClasificado()">🖨 Imprimir</button>
-            </div>
-            <div id="balanceClasificadoCont"></div>
-        </div>
-
-        <!-- ════════════════════
-             ESTADO DE RESULTADOS
-        ═════════════════════ -->
-        <div id="view-estado-resultados" class="view">
-
-            <div class="export-bar">
-                <button class="btn-export btn-export-pdf"   onclick="exportarPDFEstadoResultados()">⬇ PDF</button>
-                <button class="btn-export btn-export-ia"    onclick="iaAnalizarEstadoResultados()">✨ Analizar con IA</button>
-                <button class="btn-export btn-export-ia"    onclick="iaCompararPeriodos('Estado de Resultados')" title="Comparar dos períodos">⚖ Comparar períodos</button>
-                <button class="btn-export btn-export-excel" onclick="exportarExcelEstadoResultados()">⬇ Excel</button>
-                <button class="btn-export btn-export-print" onclick="imprimirEstadoResultados()">🖨 Imprimir</button>
-            </div>
-            <div class="libro-toolbar card">
-                <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
-                    <div class="libro-kpi">
-                        <span class="libro-kpi-label">Ingresos</span>
-                        <span class="libro-kpi-val" id="erKpiIngresos" style="color:var(--positive);">$0</span>
-                    </div>
-                    <div class="libro-kpi">
-                        <span class="libro-kpi-label">Costo Ventas</span>
-                        <span class="libro-kpi-val" id="erKpiCostos" style="color:var(--negative);">$0</span>
-                    </div>
-                    <div class="libro-kpi">
-                        <span class="libro-kpi-label">Gastos Op.</span>
-                        <span class="libro-kpi-val" id="erKpiGastos" style="color:var(--warning);">$0</span>
-                    </div>
-                    <div class="libro-kpi">
-                        <span class="libro-kpi-label">Ut. antes Impuesto</span>
-                        <span class="libro-kpi-val" id="erKpiAntesImp">$0</span>
-                    </div>
-                    <div class="libro-kpi libro-kpi-total">
-                        <span class="libro-kpi-label">Utilidad Neta</span>
-                        <span class="libro-kpi-val" id="erKpiResultado">$0</span>
-                    </div>
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                    <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Régimen tributario:</label>
-                    <select id="erTasaImpuesto" onchange="generarEstadoResultados()"
-                        style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--input-bg);color:var(--text);">
-                        <option value="0.27">27% — Régimen General (S.A.)</option>
-                        <option value="0.25">25% — Propyme (14D)</option>
-                        <option value="0.10">10% — Propyme Transparente</option>
-                        <option value="0">0% — Segunda Categoría / Exento</option>
-                    </select>
-                    <button class="btn btn-primary" onclick="generarEstadoResultados()">Generar</button>
-                </div>
-            </div>
-
-            <div class="card" style="max-width:700px;">
-                <div id="estadoResultadosCont" style="padding:8px 0;"></div>
-            </div>
-
-        </div>
+        <!-- vistas legacy — contenido movido a view-reportes-financieros -->
+        <div id="view-flujo-caja" class="view"></div>
+        <div id="view-balance-clasificado" class="view"></div>
+        <div id="view-estado-resultados" class="view"></div>
 
         <!-- ════════════════════
              INDICADORES
         ═════════════════════ -->
-        <div id="view-indicadores" class="view">
-
-            <!-- Toolbar -->
-            <div class="libro-toolbar card" style="justify-content:space-between;flex-wrap:wrap;gap:12px;">
-                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                    <button class="btn btn-primary" onclick="actualizarIndicadores(true)">
-                        ↻ Actualizar ahora
-                    </button>
-                    <span id="indFechaActualizacion" style="font-size:12px;color:var(--text-muted);">
-                        Sin datos cargados
-                    </span>
-                </div>
-                <div id="indEstadoConexion" style="font-size:12px;"></div>
-            </div>
-
-            <!-- Cards: Indicadores Tributarios -->
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
-                        color:var(--text-muted);margin-bottom:10px;">Indicadores Tributarios</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
-
-                <div class="card ind-card" id="cardUF">
-                    <div class="ind-card-label">UF</div>
-                    <div class="ind-card-nombre">Unidad de Fomento</div>
-                    <div class="ind-card-valor" id="indValUF">—</div>
-                    <div class="ind-card-fecha" id="indFecUF"></div>
-                </div>
-
-                <div class="card ind-card" id="cardUTM">
-                    <div class="ind-card-label">UTM</div>
-                    <div class="ind-card-nombre">Unidad Tributaria Mensual</div>
-                    <div class="ind-card-valor" id="indValUTM">—</div>
-                    <div class="ind-card-fecha" id="indFecUTM"></div>
-                </div>
-
-                <div class="card ind-card" id="cardIPC">
-                    <div class="ind-card-label">IPC</div>
-                    <div class="ind-card-nombre">Índice de Precios al Consumidor</div>
-                    <div class="ind-card-valor" id="indValIPC">—</div>
-                    <div class="ind-card-fecha" id="indFecIPC"></div>
-                </div>
-
-                <div class="card ind-card" id="cardTasa">
-                    <div class="ind-card-label">TPM</div>
-                    <div class="ind-card-nombre">Tasa Política Monetaria (BCCh)</div>
-                    <div class="ind-card-valor" id="indValTasa">—</div>
-                    <div class="ind-card-fecha" id="indFecTasa"></div>
-                </div>
-
-            </div>
-
-
-            <!-- Cards: Tipo de Cambio -->
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
-                        color:var(--text-muted);margin-bottom:10px;">Tipo de Cambio</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px;">
-
-                <div class="card ind-card" id="cardDolar">
-                    <div class="ind-card-label">USD</div>
-                    <div class="ind-card-nombre">Dólar Observado</div>
-                    <div class="ind-card-valor" id="indValDolar">—</div>
-                    <div class="ind-card-fecha" id="indFecDolar"></div>
-                </div>
-
-                <div class="card ind-card" id="cardEuro">
-                    <div class="ind-card-label">EUR</div>
-                    <div class="ind-card-nombre">Euro</div>
-                    <div class="ind-card-valor" id="indValEuro">—</div>
-                    <div class="ind-card-fecha" id="indFecEuro"></div>
-                </div>
-
-            </div>
-
-            <!-- Previred — Tasas y Tramos (renderizados dinámicamente desde indicadores.js) -->
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
-                        color:var(--text-muted);margin-bottom:10px;">
-                Previred — Tasas y Tramos
-                <span id="previredFechaRef" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);margin-left:8px;"></span>
-            </div>
-            <div id="previred-tablas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:24px;">
-                <div style="color:var(--text-muted);font-size:13px;padding:20px;grid-column:1/-1;">
-                    Cargando… presiona <strong>Actualizar ahora</strong> si los datos no aparecen.
-                </div>
-            </div>
-
-            <!-- Previred — Panel de configuración -->
-            <div class="pv-panel">
-
-                <!-- Cabecera + credenciales -->
-                <div class="card pv-card">
-                    <div class="pv-card-header">
-                        <div style="display:flex;align-items:center;gap:10px;">
-                            <img src="https://www.previred.com/favicon.ico" class="pv-logo" onerror="this.style.display='none'">
-                            <div>
-                                <div style="font-weight:700;font-size:15px;line-height:1.2;">Configuración Previred
-                                    <span id="previredBadge" style="display:none;" class="pv-badge pv-badge--ok">Conectado</span>
-                                </div>
-                                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
-                                    Tasas, topes e indicadores laborales vigentes
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn" style="font-size:12px;white-space:nowrap;"
-                            onclick="electronAPI.shell.openExternal('https://www.previred.com/web/previred/indicadores-previsionales')">
-                            🔗 previred.com
-                        </button>
-                    </div>
-
-                    <div class="pv-section-label">Credenciales empresa</div>
-                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
-                        Conecta tu empresa para sincronizar tasas automáticamente. Sin conexión, edítalas manualmente abajo.
-                    </div>
-                    <div class="pv-creds-grid">
-                        <label class="pv-label">RUT empresa</label>
-                        <input id="pvRut" type="text" placeholder="12.345.678-9" oninput="fmtRut(this)" class="pv-input" style="font-family:'Courier New',monospace;">
-                        <label class="pv-label">Contraseña</label>
-                        <input id="pvPass" type="password" placeholder="••••••••" class="pv-input">
-                    </div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-                        <button class="btn btn-primary" onclick="previredConectar()">Conectar</button>
-                        <button class="btn" onclick="previredBorrar()" style="color:var(--negative);">Borrar credenciales</button>
-                    </div>
-                    <div id="pvEstado" style="margin-top:8px;font-size:12px;min-height:18px;"></div>
-                </div>
-
-                <!-- inputs ocultos para compatibilidad con indicadores.js -->
-                <div style="display:none;">
-                    <input id="pvSis"><input id="pvMutual"><input id="pvCesTrab"><input id="pvCesEmpl">
-                    <input id="pvTopeAfp"><input id="pvTopeSal"><input id="pvTopeCes"><input id="pvTopeInp">
-                    <div id="pvAfpGrid"></div>
-                    <input id="pvImmMayor"><input id="pvImmMenor"><input id="pvImmNoRem"><span id="pvImmRef"></span>
-                    <input id="pvAfHastaA"><input id="pvAfMontoA">
-                    <input id="pvAfHastaB"><input id="pvAfMontoB">
-                    <input id="pvAfHastaC"><input id="pvAfMontoC">
-                    <div id="pvTasasEstado"></div>
-                </div>
-
-            </div>
-            </div>
-
-
-        </div>
-
         <!-- ════════════════════
              IVA RESUMEN — F29
         ═════════════════════ -->
@@ -1318,12 +1345,12 @@
             </div>
 
             <!-- Detalle del cálculo -->
-            <div class="card" style="max-width:680px;">
+            <div class="card">
                 <div id="ivaResumenCont" style="padding:8px 0;"></div>
             </div>
 
             <!-- Panel remanente manual -->
-            <div class="card" style="max-width:480px;">
+            <div class="card" style="max-width:560px;">
                 <div style="font-weight:700;font-size:14px;margin-bottom:4px;">
                     📥 Remanente mes anterior (ingreso manual)
                 </div>
@@ -1373,24 +1400,91 @@
              AUDITORÍA
         ═════════════════════ -->
         <!-- ═══ REMUNERACIONES ════════════════════════════════════ -->
-        <div id="view-remuneraciones" class="view"></div>
+        <!-- ════════════════════
+             G4 · RRHH — Remuneraciones (tabs)
+             tab-rem-liquidaciones poblado por remRender() vía id
+             tab-rem-previsional: tasas Previred (movidas desde view-indicadores)
+        ═════════════════════ -->
+        <div id="view-remuneraciones" class="view">
+            <div class="mod-header">
+                <span class="mod-header-title">Remuneraciones</span>
+                <span class="mod-header-badge">G4 · RRHH</span>
+            </div>
+            <div class="mod-tabs">
+                <button class="mod-tab-btn active" data-tab="tab-rem-liquidaciones" onclick="modTab('view-remuneraciones','tab-rem-liquidaciones')">👷 Liquidaciones</button>
+                <button class="mod-tab-btn"        data-tab="tab-rem-previsional"   onclick="modTab('view-remuneraciones','tab-rem-previsional')">📋 Indicadores Previsionales</button>
+            </div>
+            <div id="tab-rem-liquidaciones" class="mod-tab-panel active"></div>
+            <div id="tab-rem-previsional" class="mod-tab-panel">
 
-        <div id="view-auditoria" class="view">
-            <div class="card">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                    <div>
-                        <h2 style="margin:0;">Log de Auditoría</h2>
-                        <p style="color:var(--text-muted);font-size:13px;margin:4px 0 0;">
-                            Registro de todas las acciones importantes — solo visible para administradores.
-                        </p>
-                    </div>
-                    <button class="btn btn-primary" onclick="cargarAuditLog()">🔄 Cargar registros</button>
+                <!-- Previred — Tasas y Tramos (renderizados dinámicamente desde indicadores.js) -->
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+                            color:var(--text-muted);margin-bottom:10px;">
+                    Previred — Tasas y Tramos
+                    <span id="previredFechaRef" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);margin-left:8px;"></span>
                 </div>
-                <div id="auditLogCont">
-                    <p style="color:var(--text-muted);font-size:13px;">Presiona "Cargar registros" para ver el historial de auditoría.</p>
+                <div id="previred-tablas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:24px;">
+                    <div style="color:var(--text-muted);font-size:13px;padding:20px;grid-column:1/-1;">
+                        Cargando… presiona <strong>Actualizar ahora</strong> si los datos no aparecen.
+                    </div>
+                </div>
+
+                <!-- Previred — Panel de configuración -->
+                <div class="pv-panel">
+
+                    <!-- Cabecera + credenciales -->
+                    <div class="card pv-card">
+                        <div class="pv-card-header">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <img src="https://www.previred.com/favicon.ico" class="pv-logo" onerror="this.style.display='none'">
+                                <div>
+                                    <div style="font-weight:700;font-size:15px;line-height:1.2;">Configuración Previred
+                                        <span id="previredBadge" style="display:none;" class="pv-badge pv-badge--ok">Conectado</span>
+                                    </div>
+                                    <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+                                        Tasas, topes e indicadores laborales vigentes
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn" style="font-size:12px;white-space:nowrap;"
+                                onclick="electronAPI.shell.openExternal('https://www.previred.com/web/previred/indicadores-previsionales')">
+                                🔗 previred.com
+                            </button>
+                        </div>
+
+                        <div class="pv-section-label">Credenciales empresa</div>
+                        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+                            Conecta tu empresa para sincronizar tasas automáticamente. Sin conexión, edítalas manualmente abajo.
+                        </div>
+                        <div class="pv-creds-grid">
+                            <label class="pv-label">RUT empresa</label>
+                            <input id="pvRut" type="text" placeholder="12.345.678-9" oninput="fmtRut(this)" class="pv-input" style="font-family:'Courier New',monospace;">
+                            <label class="pv-label">Contraseña</label>
+                            <input id="pvPass" type="password" placeholder="••••••••" class="pv-input">
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                            <button class="btn btn-primary" onclick="previredConectar()">Conectar</button>
+                            <button class="btn" onclick="previredBorrar()" style="color:var(--negative);">Borrar credenciales</button>
+                        </div>
+                        <div id="pvEstado" style="margin-top:8px;font-size:12px;min-height:18px;"></div>
+                    </div>
+
+                    <!-- inputs ocultos para compatibilidad con indicadores.js -->
+                    <div style="display:none;">
+                        <input id="pvSis"><input id="pvMutual"><input id="pvCesTrab"><input id="pvCesEmpl">
+                        <input id="pvTopeAfp"><input id="pvTopeSal"><input id="pvTopeCes"><input id="pvTopeInp">
+                        <div id="pvAfpGrid"></div>
+                        <input id="pvImmMayor"><input id="pvImmMenor"><input id="pvImmNoRem"><span id="pvImmRef"></span>
+                        <input id="pvAfHastaA"><input id="pvAfMontoA">
+                        <input id="pvAfHastaB"><input id="pvAfMontoB">
+                        <input id="pvAfHastaC"><input id="pvAfMontoC">
+                        <div id="pvTasasEstado"></div>
+                    </div>
+
                 </div>
             </div>
-        </div>
+        </div><!-- /view-remuneraciones -->
+
 
         <!-- ══════════════════════════════════════════════
              VISTAS SEGUNDA CATEGORÍA
@@ -1948,6 +2042,7 @@
         <div id="view-dj1879" class="view">
             <div class="export-bar">
                 <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('dj1879Body','DJ 1879')">⬇ PDF</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelGenerico('dj1879Body','DJ_1879')">⬇ Excel</button>
             </div>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
@@ -2034,8 +2129,11 @@
                     </div>
                 </div>
 
-                <!-- Lista dinámica de empresas -->
-                <div class="emp-lista" id="empLista">
+                <!-- Panel estudio (F2.1/F2.2/F2.3) -->
+                <div id="panelEstudioContainer"></div>
+
+                <!-- Lista dinámica de empresas (fallback / formularios) -->
+                <div class="emp-lista" id="empLista" style="display:none;">
                     <div class="emp-empty">
                         <div class="emp-empty-icon">🏢</div>
                         <div>Cargando empresas…</div>
@@ -2333,8 +2431,14 @@
             </div>
             <div>
                 <label style="font-size:13px;font-weight:600;">Glosa / Descripción</label>
-                <input type="text" id="glosaManual" placeholder="Descripción del asiento"
-                    style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);">
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="text" id="glosaManual" placeholder="Descripción del asiento"
+                        style="flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);">
+                    <button type="button" id="btnIaGlosa" class="btn btn-secondary" title="Sugerir cuenta con IA"
+                        onclick="iaSugerirCuentaGlosa()"
+                        style="white-space:nowrap;font-size:12px;padding:8px 12px;display:none;">✨ Sugerir cuenta</button>
+                </div>
+                <div id="iaGlosaSugerencia" style="display:none;margin-top:6px;font-size:12px;padding:8px 12px;background:var(--accent-soft,#f0f4ff);border-radius:6px;color:var(--accent);"></div>
             </div>
             <div>
                 <label style="font-size:13px;font-weight:600;">Contacto <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
@@ -2409,7 +2513,10 @@
                         oninput="fmtRut(this)" maxlength="12">
                 </div>
                 <div style="grid-column:span 2;">
-                    <label>Razón Social / Proveedor</label>
+                    <label style="display:flex;justify-content:space-between;align-items:center;">
+                        Razón Social / Proveedor
+                        <button type="button" class="btn btn-secondary" style="padding:2px 10px;font-size:11px;height:auto;" onclick="prodAbrirSelector(_onProductoSeleccionadoCompra)">📦 Autocomplete producto</button>
+                    </label>
                     <input type="text" id="compraNombre" placeholder="Escriba para buscar o ingrese manualmente">
                 </div>
             </div>
@@ -2521,7 +2628,10 @@
                         oninput="fmtRut(this)" maxlength="12">
                 </div>
                 <div style="grid-column:span 2;">
-                    <label>Razón Social / Cliente</label>
+                    <label style="display:flex;justify-content:space-between;align-items:center;">
+                        Razón Social / Cliente
+                        <button type="button" class="btn btn-secondary" style="padding:2px 10px;font-size:11px;height:auto;" onclick="prodAbrirSelector(_onProductoSeleccionadoVenta)">📦 Autocomplete producto</button>
+                    </label>
                     <input type="text" id="ventaNombre" placeholder="Escriba para buscar o ingrese manualmente">
                 </div>
             </div>
@@ -2811,11 +2921,12 @@
 <script src="js/core/autocomplete.js"></script>
 <script src="js/core/helpers.js"></script>
 <script src="js/core/parser.js"></script>
+<script src="js/core/parser-sii.js"></script>
 <script src="js/core/plan-cuentas.js"></script>
 <script src="js/core/contabilidad.js"></script>
 
 <script src="js/services/diario.js"></script>
-<script src="js/services/mayor.js"></script>
+<script src="js/services/mayor.js?v=2"></script>
 <script src="js/services/balance.js"></script>
 <script src="js/services/dashboard.js"></script>
 <script src="js/services/flujo-caja.js"></script>
@@ -2824,15 +2935,19 @@
 <script src="js/services/indicadores.js"></script>
 <script src="js/services/iva-resumen.js"></script>
 <script src="js/services/reconciliacion.js"></script>
+<script src="js/services/sii-rcv.js"></script>
 
 <script src="js/modules/compras.js"></script>
 <script src="js/modules/ventas.js"></script>
 <script src="js/modules/documentos.js"></script>
 <script src="js/modules/clientes.js"></script>
+<script src="js/modules/productos.js"></script>
+<script src="js/modules/activos.js"></script>
+<script src="js/modules/cartolas.js"></script>
 <script src="js/modules/remuneraciones.js"></script>
 <script src="js/modules/segunda-categoria.js"></script>
 
-<script src="js/services/app.js"></script>
+<script src="js/services/app.js?v=2"></script>
 
 <!-- Firebase SDK (compat) — cargado después de app.js -->
 <!-- ═══════════════════════════════════════════════════════
@@ -2904,11 +3019,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="js/services/permisos.js"></script>
-<script src="js/services/audit.js"></script>
 <script src="js/services/auth-manager.js"></script>
 <script src="js/services/exportar.js"></script>
 <script src="js/services/ia.js"></script>
-<script src="js/services/firebase-service.js"></script>
+<script src="js/services/firebase-service.js?v=2"></script>
 <script>
     // Firebase siempre activo — config hardcodeada en firebase-service.js
     fbInit();
@@ -2931,8 +3045,12 @@
     })();
 </script>
 
+<script src="js/core/busqueda-global.js"></script>
 <script src="js/auditor/licencia.js"></script>
+<script src="js/categorias/primera.js"></script>
+<script src="js/categorias/segunda.js"></script>
 <script src="js/auditor/multi-cliente.js"></script>
+<script src="js/auditor/panel-estudio.js"></script>
 <script src="js/auditor/hallazgos.js"></script>
 <script src="js/auditor/informe-auditoria.js"></script>
 

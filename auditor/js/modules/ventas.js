@@ -111,10 +111,12 @@ function renderVentas() {
                 <td class="monto">$${fmt(v.neto   || 0)}</td>
                 <td class="monto">$${fmt(v.iva    || 0)}</td>
                 <td class="monto" style="font-weight:700;">$${fmt(v.total || 0)}</td>
-                <td>
+                <td style="white-space:nowrap;">
                     ${anulada
                         ? `<span class="badge-inactivo">Anulada</span>`
-                        : `<button class="btn-plan btn-plan-eliminar"
+                        : `<button class="btn-plan" style="margin-right:4px;"
+                                onclick="editarVenta(${v.id})">✏️ Editar</button>
+                           <button class="btn-plan btn-plan-eliminar"
                                 onclick="anularVenta(${v.id})">Anular</button>`
                     }
                 </td>
@@ -188,13 +190,47 @@ function abrirNuevaVenta() {
 }
 
 function cerrarModalVenta() {
+    _ventaEditandoId = null;
     document.getElementById('modalVenta').style.display = 'none';
 }
 
 // Adjunto temporal mientras el modal está abierto
 let _ventaAdjuntoTemp = null;
+let _ventaEditandoId  = null;
+
+function editarVenta(id) {
+    const v = dbVentas.find(x => x.id === id);
+    if (!v) return;
+    _ventaEditandoId = id;
+
+    const partes = (v.fecha || '').split('/');
+    const fechaInput = partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : '';
+
+    _vSetVal('ventaFecha',     fechaInput);
+    _vSetVal('ventaTipoDoc',   v.tipo_doc     || 'factura');
+    _vSetVal('ventaNumDoc',    v.numero_doc   || '');
+    _vSetVal('ventaRut',       v.rut_cliente  || '');
+    _vSetVal('ventaNombre',    v.nombre_cliente || '');
+    _vSetVal('ventaMedioPago', v.medio_pago   || 'credito');
+    _vSetVal('ventaExento',    v.exento  || '');
+    _vSetVal('ventaNeto',      v.neto    || '');
+    _vSetVal('ventaIva',       v.iva     || '');
+    _vSetVal('ventaTotal',     v.total   || '');
+    _vSetVal('ventaGlosa',     v.glosa   || '');
+    _vSetVal('ventaEstado',    v.estado  || 'pendiente');
+    _ventaAdjuntoTemp = v.adjunto || null;
+    _actualizarBadgeAdjuntoVenta();
+
+    const h2 = document.querySelector('#modalVenta h2');
+    if (h2) h2.textContent = '✏️ Editar Venta';
+
+    document.getElementById('modalVenta').style.display = 'flex';
+}
 
 function _limpiarFormVenta() {
+    _ventaEditandoId = null;
+    const h2 = document.querySelector('#modalVenta h2');
+    if (h2) h2.textContent = '💰 Registrar Venta';
     _vSetVal('ventaFecha',      _vHoy());
     _vSetVal('ventaTipoDoc',    'factura');
     _vSetVal('ventaNumDoc',     '');
@@ -312,19 +348,25 @@ function guardarVenta() {
     const rut    = _vGetVal('ventaRut');
     if (numDoc) {
         const dup = dbVentas.find(v =>
+            v.id !== _ventaEditandoId &&
             v.estado !== 'anulada' &&
             v.numero_doc === numDoc &&
             v.tipo_doc   === tipoDoc &&
             (rut ? v.rut_cliente === rut : v.nombre_cliente === nombre)
         );
         if (dup) {
-            const continuar = confirm(
-                `⚠️ Ya existe un documento ${tipoDoc} N°${numDoc} para este cliente (registrado el ${dup.fecha}).\n\n¿Desea registrarlo de todas formas?`
+            mostrarConfirm(
+                `⚠️ Ya existe un documento ${tipoDoc} N°${numDoc} para este cliente (registrado el ${dup.fecha}).\n\n¿Desea registrarlo de todas formas?`,
+                () => _finalizarGuardarVenta(fecha, tipoDoc, nombre, total, neto, iva, exento)
             );
-            if (!continuar) return;
+            return;
         }
     }
 
+    _finalizarGuardarVenta(fecha, tipoDoc, nombre, total, neto, iva, exento);
+}
+
+function _finalizarGuardarVenta(fecha, tipoDoc, nombre, total, neto, iva, exento) {
     const fd = fecha.split('-');
     const fechaFmt = fd.length === 3 ? `${fd[2]}/${fd[1]}/${fd[0]}` : fecha;
     const mesNum   = fd.length === 3 ? parseInt(fd[1], 10) : ventasMes;
@@ -350,22 +392,34 @@ function guardarVenta() {
         asiento_id:     null,
     };
 
-    dbVentas.push(venta);
+    if (_ventaEditandoId) {
+        const idx = dbVentas.findIndex(x => x.id === _ventaEditandoId);
+        if (idx >= 0) {
+            venta.id = _ventaEditandoId;
+            dbVentas[idx] = venta;
+        }
+        mostrarToast('Venta actualizada correctamente.', 'ok');
+        if (typeof audit === 'function') audit('editar', 'ventas', { folio: venta.numero_doc, cliente: nombre, total });
+    } else {
+        dbVentas.push(venta);
+        mostrarToast('Venta registrada correctamente.', 'ok');
+        if (typeof audit === 'function') audit('crear', 'ventas', { folio: venta.numero_doc, cliente: nombre, total });
+    }
+    _ventaEditandoId = null;
     guardarVentas();
     cerrarModalVenta();
     renderVentas();
-    if (typeof audit === 'function') audit('crear', 'ventas', { folio: venta.numero_doc, cliente: nombre, total });
-    mostrarToast('Venta registrada correctamente.', 'ok');
 }
 
 function anularVenta(id) {
     const v = dbVentas.find(x => x.id === id);
     if (!v) return;
-    if (!confirm(`¿Anular ${v.tipo_doc} N°${v.numero_doc || '?'} de ${v.nombre_cliente || 'sin nombre'}?`)) return;
-    v.estado = 'anulada';
-    guardarVentas();
-    renderVentas();
-    mostrarToast('Documento anulado.', 'ok');
+    mostrarConfirm(`¿Anular ${v.tipo_doc} N°${v.numero_doc || '?'} de ${v.nombre_cliente || 'sin nombre'}?`, () => {
+        v.estado = 'anulada';
+        guardarVentas();
+        renderVentas();
+        mostrarToast('Documento anulado.', 'ok');
+    });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -484,12 +538,24 @@ function _vGetVal(id)           { return document.getElementById(id)?.value?.tri
 function _vSetTxt(id, v)        { const e = document.getElementById(id); if (e) e.textContent = v; }
 
 function vaciarLibroVentas() {
-    if (!confirm('¿Vaciar TODO el libro de ventas? Esta acción no se puede deshacer.')) return;
-    dbVentas.length = 0;
-    localStorage.setItem('core_ventas', JSON.stringify(dbVentas));
-    window.dbVentas = dbVentas;
-    renderVentas();
-    mostrarToast('Libro de ventas vaciado.', 'ok');
+    mostrarConfirm('¿Vaciar TODO el libro de ventas? Esta acción no se puede deshacer.', () => {
+        dbVentas.length = 0;
+        localStorage.setItem('core_ventas', JSON.stringify(dbVentas));
+        window.dbVentas = dbVentas;
+        renderVentas();
+        mostrarToast('Libro de ventas vaciado.', 'ok');
+    });
+}
+
+function _onProductoSeleccionadoVenta(prod) {
+    if (!prod) return;
+    if (prod.precio_venta > 0) {
+        _vSetVal('ventaNeto', prod.precio_venta);
+        calcularDesdeNetoVenta();
+    }
+    if (prod.nombre) _vSetVal('ventaGlosa', prod.nombre);
+    mostrarToast(`Producto "${prod.nombre}" seleccionado`, 'ok');
 }
 
 window.dbVentas = dbVentas;
+window._onProductoSeleccionadoVenta = _onProductoSeleccionadoVenta;

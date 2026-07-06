@@ -27,6 +27,7 @@ const DOC_ESTADOS = [
 //  ESTADO
 // ─────────────────────────────────────────────────────────────
 let dbDocumentos = JSON.parse(localStorage.getItem('core_documentos') || '[]');
+let _docEditandoId = null;
 
 let docState = {
     filtroCategoria: 'todos',
@@ -99,6 +100,7 @@ function _docFiltrados() {
 //  RENDER PRINCIPAL
 // ─────────────────────────────────────────────────────────────
 function renderDocumentos() {
+    dbDocumentos = JSON.parse(localStorage.getItem('core_documentos') || '[]');
     const cont = document.getElementById('view-documentos');
     if (!cont) return;
     cont.innerHTML = _docHtml();
@@ -205,6 +207,10 @@ function _docHtml() {
                         style="border:1px solid var(--divider);background:var(--input-bg);
                                border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;"
                         title="Ver adjunto">📄</button>` : ''}
+                    <button onclick="editarDocumento(${d.id})"
+                        style="border:1px solid var(--divider);background:var(--input-bg);color:var(--text);
+                               border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;">
+                        ✏️ Editar</button>
                     ${d.estado === 'pendiente' ? `
                     <button onclick="docMarcarPagada(${d.id})"
                         style="border:1px solid #10b98155;background:#10b98111;color:#10b981;
@@ -278,7 +284,7 @@ function _docHtml() {
         <div style="padding:16px 22px;border-bottom:1px solid var(--divider);
                     display:flex;justify-content:space-between;align-items:center;
                     font-size:15px;font-weight:700;">
-            <span>Nuevo documento</span>
+            <span id="docModalTitulo">Nuevo documento</span>
             <button onclick="cerrarModalDocumento()"
                 style="border:1px solid var(--divider);background:var(--input-bg);
                        border-radius:6px;padding:4px 12px;cursor:pointer;font-family:inherit;">✕</button>
@@ -394,7 +400,36 @@ function abrirNuevoDocumento() {
     document.getElementById('modalDocumento').style.display = 'flex';
 }
 
+function editarDocumento(id) {
+    dbDocumentos = JSON.parse(localStorage.getItem('core_documentos') || '[]');
+    const d = dbDocumentos.find(x => x.id === id);
+    if (!d) return;
+    _docEditandoId = id;
+
+    // Convertir fecha DD/MM/AAAA → AAAA-MM-DD para input[type=date]
+    const partes = (d.fecha || '').split('/');
+    const fechaInput = partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : d.fecha || '';
+
+    _docSetVal('docCategoria',  d.categoria);
+    _docSetVal('docFecha',      fechaInput);
+    _docSetVal('docNumeroDoc',  d.numero_doc || '');
+    _docSetVal('docRut',        d.rut || '');
+    _docSetVal('docNombre',     d.nombre || '');
+    _docSetVal('docNeto',       d.neto || 0);
+    _docSetVal('docIva',        d.iva  || 0);
+    _docSetVal('docTotal',      d.total || 0);
+    _docSetVal('docEstado',     d.estado || 'pendiente');
+    _docSetVal('docGlosa',      d.glosa || '');
+    docState.adjuntoTemp = d.adjunto || null;
+    _docActualizarBadge();
+    docActualizarFormulario();
+    _docSetTxt('docModalTitulo', 'Editar documento');
+    document.getElementById('modalDocumento').style.display = 'flex';
+}
+
 function cerrarModalDocumento() {
+    _docEditandoId = null;
+    _docSetTxt('docModalTitulo', 'Nuevo documento');
     document.getElementById('modalDocumento').style.display = 'none';
 }
 
@@ -472,6 +507,25 @@ function guardarDocumento() {
     const neto  = parseFloat(_docGetVal('docNeto')) || 0;
     const iva   = parseFloat(_docGetVal('docIva'))  || 0;
 
+    if (_docEditandoId) {
+        const idx = dbDocumentos.findIndex(x => x.id === _docEditandoId);
+        if (idx !== -1) {
+            const orig = dbDocumentos[idx];
+            dbDocumentos[idx] = { ...orig, categoria, fecha: _docFechaStr(fecha),
+                numero_doc: _docGetVal('docNumeroDoc'), rut: _docGetVal('docRut'),
+                nombre, neto, iva, total,
+                estado: _docGetVal('docEstado') || orig.estado,
+                glosa: _docGetVal('docGlosa'),
+                adjunto: docState.adjuntoTemp || orig.adjunto,
+            };
+        }
+        guardarDocumentos();
+        cerrarModalDocumento();
+        renderDocumentos();
+        mostrarToast('Documento actualizado.', 'ok');
+        return;
+    }
+
     const doc = {
         id:         Date.now(),
         categoria,
@@ -511,11 +565,12 @@ function docMarcarPagada(id) {
 function docAnular(id) {
     const d = dbDocumentos.find(x => x.id === id);
     if (!d) return;
-    if (!confirm(`¿Anular documento N°${d.numero_doc || '?'} de ${d.nombre}?`)) return;
-    d.estado = 'anulada';
-    guardarDocumentos();
-    renderDocumentos();
-    mostrarToast('Documento anulado.', 'ok');
+    mostrarConfirm(`¿Anular documento N°${d.numero_doc || '?'} de ${d.nombre}?`, () => {
+        d.estado = 'anulada';
+        guardarDocumentos();
+        renderDocumentos();
+        mostrarToast('Documento anulado.', 'ok');
+    }, { titulo: 'Anular documento', textoBtn: 'Sí, anular' });
 }
 
 function docAbrirAdjunto(id) {
@@ -537,3 +592,11 @@ function docSetCategoria(v) { docState.filtroCategoria = v; renderDocumentos(); 
 function docBuscar(v)       { docState.buscar = v; renderDocumentos(); }
 function docSetMes(v)       { docState.mesFiltro  = parseInt(v) || 0; renderDocumentos(); }
 function docSetAnio(v)      { docState.anioFiltro = parseInt(v) || 0; renderDocumentos(); }
+
+window.editarDocumento      = editarDocumento;
+window.renderDocumentos     = renderDocumentos;
+window.abrirNuevoDocumento  = abrirNuevoDocumento;
+window.cerrarModalDocumento = cerrarModalDocumento;
+window.guardarDocumento     = guardarDocumento;
+window.docAnular            = docAnular;
+window.docMarcarPagada      = docMarcarPagada;

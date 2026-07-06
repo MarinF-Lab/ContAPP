@@ -188,7 +188,7 @@ function existeCuenta(nombre) { return !!PLAN_CUENTAS[nombre]; }
 function obtenerCuenta(nombre) { return PLAN_CUENTAS[nombre] || null; }
 
 function crearCuenta(nombre, tipo, grupo, orden) {
-    if (PLAN_CUENTAS[nombre]) { alert('La cuenta ya existe.'); return false; }
+    if (PLAN_CUENTAS[nombre]) { mostrarToast('Ya existe una cuenta con ese nombre.', 'error'); return false; }
     PLAN_CUENTAS[nombre] = {
         tipo, grupo, orden,
         codigo: '',
@@ -414,18 +414,19 @@ function _cuentaTieneMovimientos(nombre) {
 
 function eliminarCuentaUI(nombre) {
     if (_cuentaTieneMovimientos(nombre)) {
-        alert(`No se puede eliminar "${nombre}" porque tiene movimientos registrados en el Libro Diario.`);
+        mostrarToast(`No se puede eliminar "${nombre}": tiene movimientos registrados.`, 'error');
         return;
     }
     const esSistema = CUENTAS_SISTEMA.has(nombre);
     const msg = esSistema
         ? `"${nombre}" es una cuenta del sistema.\n¿Confirma que desea eliminarla de todas formas?`
         : `¿Eliminar la cuenta "${nombre}"?\nEsta acción no se puede deshacer.`;
-    if (!confirm(msg)) return;
-    delete PLAN_CUENTAS[nombre];
-    guardarPlanCuentas();
-    renderPlanCuentas();
-    mostrarToast(`Cuenta "${nombre}" eliminada.`, 'ok');
+    mostrarConfirm(msg, () => {
+        delete PLAN_CUENTAS[nombre];
+        guardarPlanCuentas();
+        renderPlanCuentas();
+        mostrarToast(`Cuenta "${nombre}" eliminada.`, 'ok');
+    });
 }
 
 function cerrarModalCuenta() {
@@ -439,7 +440,7 @@ function guardarCuentaModal() {
     const grupo  = document.getElementById('cuentaGrupo').value;
     const estado = document.getElementById('cuentaEstado').value;
 
-    if (!nombre) { alert('Ingrese el nombre de la cuenta.'); return; }
+    if (!nombre) { mostrarToast('El nombre de la cuenta es obligatorio.', 'error'); return; }
 
     // Código duplicado (solo si se ingresó código)
     if (codigo) {
@@ -447,14 +448,14 @@ function guardarCuentaModal() {
             n !== cuentaEditando && c.codigo && c.codigo === codigo
         );
         if (duplicado) {
-            alert(`El código "${codigo}" ya está asignado a "${duplicado[0]}".`);
+            mostrarToast(`El código "${codigo}" ya pertenece a "${duplicado[0]}".`, 'error');
             return;
         }
     }
 
     // Nombre duplicado en nueva cuenta
     if (!cuentaEditando && PLAN_CUENTAS[nombre]) {
-        alert(`Ya existe una cuenta con el nombre "${nombre}".`);
+        mostrarToast('Ya existe una cuenta con ese nombre.', 'error');
         return;
     }
 
