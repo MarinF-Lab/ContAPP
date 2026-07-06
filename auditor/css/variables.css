@@ -1,0 +1,130 @@
+/* ─────────────────────────────────────────────────────────────
+   CONTAPP FORGE — Design System Variables
+   Light mode (default) + Dark mode via [data-theme="dark"]
+   Paleta navy/teal + acento magenta-pink (D-8)
+───────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ══════════════════════════════════════════
+   LIGHT MODE (default)
+══════════════════════════════════════════ */
+:root {
+    /* Core palette — alineada con ID Workshop */
+    --bg:             #e4e8ed;
+    --sidebar:        #FFFFFF;
+    --card:           #f4f6f8;
+    --card-border:    #bdc8d0;
+    --text:           #0A1922;
+    --text-muted:     #566779;
+    --text-subtle:    #9aadb8;
+    --accent:         #AC406D;
+    --accent-soft:    #F7E8EF;
+    --accent-grad:    linear-gradient(135deg, #AC406D 0%, #722652 100%);
+    --accent-glow:    0 4px 16px rgba(172,64,109,.28);
+    --accent-glow-lg: 0 8px 28px rgba(172,64,109,.42);
+    --positive:       #0FA86E;
+    --positive-soft:  #E8F8F2;
+    --negative:       #E53E5A;
+    --negative-soft:  #FEF0F2;
+    --warning:        #F59E0B;
+    --warning-soft:   #FEF9EC;
+    --info:           #3B7DD8;
+    --info-soft:      #EBF2FD;
+    --divider:        #bdc8d0;
+    --table-stripe:   #eaeef2;
+    --input-bg:       #edf0f4;
+    --shadow:         0 4px 24px rgba(0,0,0,.12);
+    --shadow-lg:      0 8px 40px rgba(0,0,0,.20);
+    --shadow-card:    0 2px 12px rgba(10,25,34,.06);
+    --nav-active:     #F7E8EF;
+    --glow-pink:      rgba(172,64,109,.06);
+    --glow-blue:      rgba(145,166,178,.18);
+
+    /* Sidebar-specific */
+    --sidebar-text:          #233443;
+    --sidebar-text-hover:    #0A1922;
+    --sidebar-icon-color:    #5A6E7A;
+    --sidebar-group-clr:     rgba(10,25,34,0.38);
+    --sidebar-item-hover:    #F0F3F6;
+    --sidebar-item-active-bg:  #F7E8EF;
+    --sidebar-item-active-txt: #AC406D;
+    --sidebar-border-clr:    rgba(10,25,34,0.08);
+    --sidebar-logo-border:   rgba(10,25,34,0.10);
+    --sidebar-divider:       1px solid rgba(10,25,34,0.08);
+
+    /* ── Legacy aliases ── */
+    --primary:        #AC406D;
+    --primary-hover:  #8F3059;
+    --sidebar-bg:     var(--sidebar);
+    --sidebar-hover:  var(--sidebar-item-hover);
+    --surface:        var(--card);
+    --background:     var(--bg);
+    --text-main:      var(--text);
+    --border:         var(--divider);
+    --success-bg:     var(--positive-soft);
+    --success-text:   var(--positive);
+    --error-bg:       var(--negative-soft);
+    --error-text:     var(--negative);
+}
+
+/* ══════════════════════════════════════════
+   DARK MODE
+══════════════════════════════════════════ */
+[data-theme="dark"] {
+    /* Core palette — alineada con ID Workshop dark */
+    --bg:             #0d1929;
+    --sidebar:        #0C1A27;
+    --card:           #152235;
+    --card-border:    #1e3349;
+    --text:           #D6E0E8;
+    --text-muted:     #8DA1AF;
+    --text-subtle:    #3a5060;
+    --accent:         #F95A8A;
+    --accent-soft:    #2B0F1F;
+    --accent-grad:    linear-gradient(135deg, #F95A8A 0%, #843B5B 100%);
+    --accent-glow:    0 4px 16px rgba(249,90,138,.32);
+    --accent-glow-lg: 0 8px 28px rgba(249,90,138,.50);
+    --positive:       #1ACC8A;
+    --positive-soft:  #0D2B20;
+    --negative:       #FF4D6A;
+    --negative-soft:  #2B0F17;
+    --warning:        #FBBF24;
+    --warning-soft:   #2B1F07;
+    --info:           #60A5FA;
+    --info-soft:      #0D1E35;
+    --divider:        #1e3349;
+    --table-stripe:   #142131;
+    --input-bg:       #0E1A28;
+    --shadow:         0 4px 24px rgba(0,0,0,.45);
+    --shadow-lg:      0 24px 60px rgba(0,0,0,.50);
+    --shadow-card:    0 2px 12px rgba(0,0,0,.25);
+    --nav-active:     #1C2939;
+    --glow-pink:      rgba(249,90,138,.07);
+    --glow-blue:      rgba(21,34,53,.45);
+
+    /* Sidebar-specific */
+    --sidebar-text:          #9CB0BD;
+    --sidebar-text-hover:    #CAD8E2;
+    --sidebar-icon-color:    #717E8B;
+    --sidebar-group-clr:     rgba(202,216,226,0.35);
+    --sidebar-item-hover:    rgba(255,255,255,0.05);
+    --sidebar-item-active-bg:  #1C2939;
+    --sidebar-item-active-txt: #F95A8A;
+    --sidebar-border-clr:    rgba(255,255,255,0.07);
+    --sidebar-logo-border:   rgba(255,255,255,0.08);
+    --sidebar-divider:       1px solid rgba(255,255,255,0.07);
+
+    /* ── Legacy overrides ── */
+    --primary:        #F95A8A;
+    --primary-hover:  #D94070;
+    --sidebar-bg:     var(--sidebar);
+    --sidebar-hover:  var(--sidebar-item-hover);
+    --surface:        var(--card);
+    --background:     var(--bg);
+    --text-main:      var(--text);
+    --border:         var(--divider);
+    --success-bg:     var(--positive-soft);
+    --success-text:   var(--positive);
+    --error-bg:       var(--negative-soft);
+    --error-text:     var(--negative);
+}

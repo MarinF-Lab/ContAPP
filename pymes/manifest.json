@@ -1,0 +1,14 @@
+{
+  "name": "ContAPP PYMES",
+  "short_name": "PYMES",
+  "description": "Contabilidad para pequeñas y medianas empresas",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0D1117",
+  "theme_color": "#b45309",
+  "lang": "es-CL",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

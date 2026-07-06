@@ -1,0 +1,14 @@
+{
+  "name": "ContAPP Empresa",
+  "short_name": "Empresa",
+  "description": "Contabilidad para empresas medianas y grandes",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0D1117",
+  "theme_color": "#047857",
+  "lang": "es-CL",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

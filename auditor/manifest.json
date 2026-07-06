@@ -1,0 +1,19 @@
+{
+  "name": "ContAPP Auditor",
+  "short_name": "Auditor",
+  "description": "Contabilidad multi-cliente para contadores y oficinas contables",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0D1117",
+  "theme_color": "#1e3a8a",
+  "lang": "es-CL",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

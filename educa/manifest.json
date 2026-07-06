@@ -1,0 +1,14 @@
+{
+  "name": "ContAPP Educa",
+  "short_name": "Educa",
+  "description": "Contabilidad para entidades educativas",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0D1117",
+  "theme_color": "#6d28d9",
+  "lang": "es-CL",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
