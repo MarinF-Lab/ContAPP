@@ -7,20 +7,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CAT2_MODULOS = [
-    { id: 'libro-honorarios',   label: 'Libro de Honorarios', grupo: 'Contabilidad', defecto: true  },
-    { id: 'libro-egresos-hon',  label: 'Libro de Egresos',    grupo: 'Contabilidad', defecto: true  },
-    { id: 'libro-ingresos-hon', label: 'Libro de Ingresos',   grupo: 'Contabilidad', defecto: true  },
-    { id: 'clientes-hon',       label: 'Clientes / Prov.',    grupo: 'Comercial',    defecto: true  },
-    { id: 'prestadores',        label: 'Prestadores',         grupo: 'Comercial',    defecto: true  },
-    { id: 'f29-hon',            label: 'Formulario 29',       grupo: 'Tributario',   defecto: true  },
-    { id: 'f22-hon',            label: 'Formulario 22',       grupo: 'Tributario',   defecto: true  },
-    { id: 'auditoria-hon',      label: 'Auditoría',           grupo: 'Empresa',      defecto: true  },
+    { id: 'libros-contables-hon',        label: 'Libros Contables (Honorarios/Ingresos/Egresos)', grupo: 'G1 · Contabilidad', defecto: true },
+    { id: 'documentos-hon',              label: 'Documentación',            grupo: 'G2 · Datos', defecto: true },
+    { id: 'conciliacion-cartolas-hon',   label: 'Conciliación y Cartolas',  grupo: 'G2 · Datos', defecto: true },
+    { id: 'clientes-hon',                label: 'Clientes / Prov.',         grupo: 'G2 · Datos', defecto: true },
+    { id: 'prestadores',                 label: 'Prestadores',              grupo: 'G2 · Datos', defecto: true },
+    { id: 'declaracion-impuestos-hon',   label: 'Declaración de Impuestos (F29/F22)', grupo: 'G3 · Tributario', defecto: true },
+    { id: 'auditoria-hon',               label: 'Auditoría',                grupo: 'G4 · Empresa', defecto: true },
 ];
 
 // IDs de grupos de nav de segunda categoría
 const CAT2_IDS_MOSTRAR = [
     'nav-grupo-contabilidad-hon',
-    'nav-grupo-comercial-hon',
+    'nav-grupo-datos-hon',
     'nav-grupo-tributario-hon',
     'nav-grupo-empresa-hon',
 ];

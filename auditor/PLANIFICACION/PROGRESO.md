@@ -8,9 +8,20 @@
 ## 🎯 PRÓXIMO PASO (actualizar tras cada tarea)
 
 **Sprint activo:** Arquitectura de Módulos — Sprint refactor sidebar
-**Estado:** ✅ Primera Categoría 100% completa y revisada (Inicio + G1-G5 + Configuración). `verificar.js`: 26/26 ✅.
-**Próxima tarea sugerida:** Segunda Categoría (mismo patrón de consolidación de módulos)
+**Estado:** ✅ Primera Y Segunda Categoría 100% completas. `verificar.js`: 26/26 ✅.
+**Próxima tarea sugerida:** Ninguna pendiente del sprint de arquitectura — definir siguiente prioridad de producto
 **Referencia:** `PLANIFICACION/ARQUITECTURA_MODULOS.md`
+
+**Segunda Categoría completada (2026-07-06):**
+- ✅ Sidebar reestructurado: G1 CONTABILIDAD · G2 DATOS · G3 TRIBUTARIO · G4 EMPRESA (antes: CONTABILIDAD/COMERCIAL/TRIBUTARIO sin badges ni consolidación)
+- ✅ `view-libros-contables-hon` con 3 tabs: Libro de Honorarios | Libro de Ingresos | Libro de Egresos
+- ✅ `view-declaracion-impuestos-hon` con 2 tabs: Formulario 29 | Formulario 22
+- ✅ G2 Datos reutiliza módulos compartidos con primera categoría (Documentación, Conciliación y Cartolas, Clientes/Prov. — vistas category-agnostic) + Prestadores (propio de 2ª cat., no cubierto por el doc de arquitectura pero mantenido por ser funcionalidad real en uso, base de DJ1879)
+- ✅ Los paneles de tabs reutilizan los ids legacy (`view-libro-honorarios`, `view-f29-hon`, etc.) en vez de ids nuevos tipo `tab-x`, porque `segunda-categoria.js::_honEnLibro()` depende de `getElementById('view-libro-honorarios').classList.contains('active')` — verificado que sigue funcionando tras el refactor
+- ✅ Catálogo de módulos por cliente (`CAT2_MODULOS`) y grupos de nav (`CAT2_IDS_MOSTRAR/OCULTAR`, `gruposSegunda` en permisos.js) actualizados a los 7 módulos consolidados — aplicando la lección aprendida en primera categoría, se corrigió esto en el mismo cambio en vez de después
+- ✅ Verificado: toggle por categoría (primera↔segunda) sin regresión, redirects legacy (`libro-honorarios`, `f22-hon`, etc.) funcionan, catálogo de activación por cliente funciona, 0 errores JS
+- ⚠️ Fuera de scope (huérfanos preexistentes, no parte del doc de arquitectura): DJ1879, Calendario Tributario, Cotizaciones Previsionales, Gastos Presuntos, Retenciones — sin ítem de sidebar, no tocados
+- ✅ `verificar.js`: 26/26 ✅
 
 **Limpieza + Revisión completa de Primera Categoría (2026-07-06):**
 - ✅ Eliminado "Hon. Estudio" de SISTEMA (nav item + `view-honorarios-estudio` + modal + script `honorarios-estudio.js` + referencias en app.js) — feature confirmada como no utilizada

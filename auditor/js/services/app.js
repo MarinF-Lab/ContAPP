@@ -50,6 +50,13 @@ function modTab(viewId, tabId) {
         'tab-ap-productos':        () => renderProductos(),
         'tab-aud-informe':         () => renderInforme(),
         'tab-aud-hallazgos':       () => renderHallazgos(),
+        // Segunda categoría — G1 Libros Contables
+        'view-libro-honorarios':   () => honRenderLibro(),
+        'view-libro-ingresos-hon':() => honRenderLibroIngresos(),
+        'view-libro-egresos-hon': () => honRenderLibroEgresos(),
+        // Segunda categoría — G3 Declaración de Impuestos
+        'view-f29-hon':            () => { honGenerarF29(); honRenderPPM(); },
+        'view-f22-hon':            () => {},   // formulario estático, cálculo por botón
     };
     if (renderMap[tabId]) renderMap[tabId]();
 }
@@ -99,6 +106,12 @@ function navegar(modulo, elNav) {
         'productos':           ['activos-produccion', 'tab-ap-productos'],
         'informe':             ['auditoria', 'tab-aud-informe'],
         'hallazgos':           ['auditoria', 'tab-aud-hallazgos'],
+        // Segunda categoría
+        'libro-honorarios':    ['libros-contables-hon', 'view-libro-honorarios'],
+        'libro-ingresos-hon':  ['libros-contables-hon', 'view-libro-ingresos-hon'],
+        'libro-egresos-hon':   ['libros-contables-hon', 'view-libro-egresos-hon'],
+        'f29-hon':             ['declaracion-impuestos-hon', 'view-f29-hon'],
+        'f22-hon':             ['declaracion-impuestos-hon', 'view-f22-hon'],
     };
 
     // Indicadores económicos: absorbidos como widget en Inicio (sin tabs)
@@ -156,6 +169,8 @@ function navegar(modulo, elNav) {
         indicadores:           ['Indicadores Económicos',       'UF, UTM, Dólar, Euro y otros indicadores del día'],
         'iva-resumen':         ['Resumen IVA — F29',            'Cruce de débito y crédito fiscal del período'],
         // Segunda categoría
+        'libros-contables-hon':      ['Contabilidad — Libros Contables', 'Libro de Honorarios, Libro de Ingresos y Libro de Egresos'],
+        'declaracion-impuestos-hon': ['Tributario — Declaración de Impuestos', 'Formulario 29 y Formulario 22'],
         'libro-ingresos-hon':  ['Libro de Ingresos',            'Registro de todos los ingresos del año: boletas BHE y otros'],
         'libro-egresos-hon':   ['Libro de Egresos',             'Registro de gastos deducibles — alimenta el F22 como gastos efectivos'],
         'libro-honorarios':    ['Libro de Honorarios',          'Registro de boletas BHE emitidas con estado de pago y retenciones'],
@@ -190,11 +205,9 @@ function navegar(modulo, elNav) {
     if (modulo === 'clientes')              renderContactos();
     if (modulo === 'remuneraciones') _fireActiveTab('view-remuneraciones');
     // Segunda categoría
-    if (modulo === 'libro-ingresos-hon') honRenderLibroIngresos();
-    if (modulo === 'libro-egresos-hon')  honRenderLibroEgresos();
-    if (modulo === 'libro-honorarios')   honRenderLibro();
+    if (modulo === 'libros-contables-hon')      _fireActiveTab('view-libros-contables-hon');
+    if (modulo === 'declaracion-impuestos-hon') _fireActiveTab('view-declaracion-impuestos-hon');
     if (modulo === 'retenciones-hon')    honRenderRetenciones();
-    if (modulo === 'f29-hon')            { honGenerarF29(); honRenderPPM(); }
     if (modulo === 'prestadores')        honRenderPrestadores();
     if (modulo === 'dj1879')             honRenderDJ1879();
     if (modulo === 'calendario-hon')     honRenderCalendario();
@@ -539,10 +552,36 @@ function _initModulosEmpresa() {
     mover('view-hallazgos', 'tab-aud-hallazgos');
 }
 
+// ─────────────────────────────────────────────────────────────
+//  SEGUNDA CATEGORÍA — reubicar contenido legacy dentro de tabs
+//  A diferencia de G1-G5, los paneles conservan el id original
+//  (view-libro-honorarios, view-f29-hon, etc.) porque el código de
+//  segunda-categoria.js chequea `.classList.contains('active')`
+//  sobre esos ids exactos (ej. _honEnLibro()).
+// ─────────────────────────────────────────────────────────────
+function _initModulosSegunda() {
+    const moverPanel = (nodeId, wrapperId, activo) => {
+        const node    = document.getElementById(nodeId);
+        const wrapper = document.getElementById(wrapperId);
+        if (node && wrapper && node.parentElement !== wrapper) {
+            node.classList.remove('view');
+            node.classList.add('mod-tab-panel');
+            if (activo) node.classList.add('active');
+            wrapper.appendChild(node);
+        }
+    };
+    moverPanel('view-libro-honorarios',    'view-libros-contables-hon',        true);
+    moverPanel('view-libro-ingresos-hon',  'view-libros-contables-hon',        false);
+    moverPanel('view-libro-egresos-hon',   'view-libros-contables-hon',        false);
+    moverPanel('view-f29-hon',             'view-declaracion-impuestos-hon',   true);
+    moverPanel('view-f22-hon',             'view-declaracion-impuestos-hon',   false);
+}
+
 function _initModulosTabs() {
     _initModulosComerciales();
     _initModulosDatos();
     _initModulosEmpresa();
+    _initModulosSegunda();
 }
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', _initModulosTabs);

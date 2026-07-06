@@ -54,7 +54,7 @@ function aplicarNavegacionPorCategoria() {
 
     // Grupos exclusivos de SEGUNDA categoría
     const gruposSegunda = [
-        'nav-grupo-contabilidad-hon', 'nav-grupo-comercial-hon', 'nav-grupo-tributario-hon',
+        'nav-grupo-contabilidad-hon', 'nav-grupo-datos-hon', 'nav-grupo-tributario-hon',
         'nav-grupo-empresa-hon',
     ];
     gruposSegunda.forEach(id => {

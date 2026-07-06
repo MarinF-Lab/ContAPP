@@ -128,29 +128,29 @@
 
         <!-- ══ SEGUNDA CATEGORÍA — grupos ocultos hasta que categoria='segunda' ══ -->
 
-        <!-- Contabilidad segunda categoría -->
+        <!-- G1 · Contabilidad segunda categoría -->
         <div class="nav-group" id="nav-grupo-contabilidad-hon" style="display:none;">
-            <div class="nav-group-title">CONTABILIDAD</div>
+            <div class="nav-group-title"><span class="nav-group-cat">G1</span>CONTABILIDAD</div>
             <div class="nav-group-items">
-                <div id="nav-libro-honorarios" class="nav-item" data-modulo="libro-honorarios" onclick="navegar('libro-honorarios', this)">
+                <div id="nav-libros-contables-hon" class="nav-item" data-modulo="libros-contables-hon" onclick="navegar('libros-contables-hon', this)">
                     <span class="nav-icon">📒</span>
-                    <span class="nav-text">Libro de Honorarios</span>
-                </div>
-                <div id="nav-libro-egresos-hon" class="nav-item" data-modulo="libro-egresos-hon" onclick="navegar('libro-egresos-hon', this)">
-                    <span class="nav-icon">📤</span>
-                    <span class="nav-text">Libro de Egresos</span>
-                </div>
-                <div id="nav-libro-ingresos-hon" class="nav-item" data-modulo="libro-ingresos-hon" onclick="navegar('libro-ingresos-hon', this)">
-                    <span class="nav-icon">📥</span>
-                    <span class="nav-text">Libro de Ingresos</span>
+                    <span class="nav-text">Libros Contables</span>
                 </div>
             </div>
         </div>
 
-        <!-- Comercial segunda categoría -->
-        <div class="nav-group" id="nav-grupo-comercial-hon" style="display:none;">
-            <div class="nav-group-title">COMERCIAL</div>
+        <!-- G2 · Datos segunda categoría -->
+        <div class="nav-group" id="nav-grupo-datos-hon" style="display:none;">
+            <div class="nav-group-title"><span class="nav-group-cat">G2</span>DATOS</div>
             <div class="nav-group-items">
+                <div id="nav-documentos-hon" class="nav-item" data-modulo="documentos-hon" onclick="navegar('documentos', this)">
+                    <span class="nav-icon">📁</span>
+                    <span class="nav-text">Documentación</span>
+                </div>
+                <div id="nav-conciliacion-cartolas-hon" class="nav-item" data-modulo="conciliacion-cartolas-hon" onclick="navegar('conciliacion-cartolas', this)">
+                    <span class="nav-icon">🏦</span>
+                    <span class="nav-text">Conciliación y Cartolas</span>
+                </div>
                 <div id="nav-clientes-hon" class="nav-item" data-modulo="clientes-hon" onclick="navegar('clientes', this)">
                     <span class="nav-icon">🤝</span>
                     <span class="nav-text">Clientes / Prov.</span>
@@ -162,24 +162,20 @@
             </div>
         </div>
 
-        <!-- Tributario segunda categoría -->
+        <!-- G3 · Tributario segunda categoría -->
         <div class="nav-group" id="nav-grupo-tributario-hon" style="display:none;">
-            <div class="nav-group-title">TRIBUTARIO</div>
+            <div class="nav-group-title"><span class="nav-group-cat">G3</span>TRIBUTARIO</div>
             <div class="nav-group-items">
-                <div id="nav-f29-hon" class="nav-item" data-modulo="f29-hon" onclick="navegar('f29-hon', this)">
+                <div id="nav-declaracion-impuestos-hon" class="nav-item" data-modulo="declaracion-impuestos-hon" onclick="navegar('declaracion-impuestos-hon', this)">
                     <span class="nav-icon">🧾</span>
-                    <span class="nav-text">Formulario 29</span>
-                </div>
-                <div id="nav-f22-hon" class="nav-item" data-modulo="f22-hon" onclick="navegar('f22-hon', this)">
-                    <span class="nav-icon">📋</span>
-                    <span class="nav-text">Formulario 22</span>
+                    <span class="nav-text">Declaración de Impuestos</span>
                 </div>
             </div>
         </div>
 
-        <!-- Empresa segunda categoría -->
+        <!-- G4 · Empresa segunda categoría -->
         <div class="nav-group" id="nav-grupo-empresa-hon" style="display:none;">
-            <div class="nav-group-title">EMPRESA</div>
+            <div class="nav-group-title"><span class="nav-group-cat">G4</span>EMPRESA</div>
             <div class="nav-group-items">
                 <div id="nav-auditoria-hon" class="nav-item" data-modulo="auditoria-hon" onclick="navegar('auditoria', this)">
                     <span class="nav-icon">📋</span>
@@ -1529,7 +1525,24 @@
             </div>
         </div>
 
-        <!-- ── Libro de Ingresos (segunda categoría) ── -->
+        <!-- ════════════════════
+             G1 · SEGUNDA CATEGORÍA — Libros Contables (tabs)
+             Paneles reutilizan los ids legacy (view-libro-*) para preservar
+             el chequeo _honEnLibro() en segunda-categoria.js
+        ═════════════════════ -->
+        <div id="view-libros-contables-hon" class="view">
+            <div class="mod-header">
+                <span class="mod-header-title">Libros Contables</span>
+                <span class="mod-header-badge">G1 · Contabilidad</span>
+            </div>
+            <div class="mod-tabs">
+                <button class="mod-tab-btn active" data-tab="view-libro-honorarios"   onclick="modTab('view-libros-contables-hon','view-libro-honorarios')">📒 Libro de Honorarios</button>
+                <button class="mod-tab-btn"        data-tab="view-libro-ingresos-hon" onclick="modTab('view-libros-contables-hon','view-libro-ingresos-hon')">📥 Libro de Ingresos</button>
+                <button class="mod-tab-btn"        data-tab="view-libro-egresos-hon"  onclick="modTab('view-libros-contables-hon','view-libro-egresos-hon')">📤 Libro de Egresos</button>
+            </div>
+        </div><!-- /view-libros-contables-hon -->
+
+        <!-- ── Libro de Ingresos (segunda categoría) — reubicado a tab vía JS ── -->
         <div id="view-libro-ingresos-hon" class="view">
             <div class="export-bar">
                 <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('ingBody','Libro de Ingresos')">⬇ PDF</button>
@@ -1893,7 +1906,22 @@
             </div>
         </div>
 
-        <!-- ── F29 Segunda Categoría ──────────────── -->
+        <!-- ════════════════════
+             G3 · SEGUNDA CATEGORÍA — Declaración de Impuestos (tabs)
+             Paneles reutilizan los ids legacy (view-f29-hon, view-f22-hon)
+        ═════════════════════ -->
+        <div id="view-declaracion-impuestos-hon" class="view">
+            <div class="mod-header">
+                <span class="mod-header-title">Declaración de Impuestos</span>
+                <span class="mod-header-badge">G3 · Tributario</span>
+            </div>
+            <div class="mod-tabs">
+                <button class="mod-tab-btn active" data-tab="view-f29-hon" onclick="modTab('view-declaracion-impuestos-hon','view-f29-hon')">🧾 Formulario 29</button>
+                <button class="mod-tab-btn"        data-tab="view-f22-hon" onclick="modTab('view-declaracion-impuestos-hon','view-f22-hon')">📋 Formulario 22</button>
+            </div>
+        </div><!-- /view-declaracion-impuestos-hon -->
+
+        <!-- ── F29 Segunda Categoría — reubicado a tab vía JS ──────────────── -->
         <div id="view-f29-hon" class="view">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
                 <!-- PPM voluntario -->
