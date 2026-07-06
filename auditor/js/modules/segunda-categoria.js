@@ -144,9 +144,10 @@ function honCambiarEstado(id) {
 }
 
 function honEliminarBoleta(id) {
-    if (!confirm('¿Eliminar esta boleta?')) return;
-    _honSet('hon_boletas', _honGet('hon_boletas').filter(x => x.id !== id));
-    honRenderLibro();
+    mostrarConfirm('¿Eliminar esta boleta?', () => {
+        _honSet('hon_boletas', _honGet('hon_boletas').filter(x => x.id !== id));
+        honRenderLibro();
+    });
 }
 
 // ── Libro de Ingresos ─────────────────────────────────────────
@@ -236,9 +237,10 @@ function honRenderLibroIngresos() {
 }
 
 function honEliminarIngreso(id) {
-    if (!confirm('¿Eliminar este ingreso?')) return;
-    _honSet('hon_ingresos_extra', _honGet('hon_ingresos_extra').filter(x => x.id !== id));
-    honRenderLibroIngresos();
+    mostrarConfirm('¿Eliminar este ingreso?', () => {
+        _honSet('hon_ingresos_extra', _honGet('hon_ingresos_extra').filter(x => x.id !== id));
+        honRenderLibroIngresos();
+    });
 }
 
 // ── Libro de Egresos ──────────────────────────────────────────
@@ -332,9 +334,10 @@ function honRenderLibroEgresos() {
 }
 
 function honEliminarEgreso(id) {
-    if (!confirm('¿Eliminar este egreso?')) return;
-    _honSet('hon_egresos', _honGet('hon_egresos').filter(x => x.id !== id));
-    honRenderLibroEgresos();
+    mostrarConfirm('¿Eliminar este egreso?', () => {
+        _honSet('hon_egresos', _honGet('hon_egresos').filter(x => x.id !== id));
+        honRenderLibroEgresos();
+    });
 }
 
 // ── Cotizaciones estimadas ────────────────────────────────────
@@ -447,9 +450,10 @@ function honRenderRetenciones() {
 }
 
 function honEliminarRetencion(id) {
-    if (!confirm('¿Eliminar esta retención?')) return;
-    _honSet('hon_retenciones', _honGet('hon_retenciones').filter(x => x.id !== id));
-    honRenderRetenciones();
+    mostrarConfirm('¿Eliminar esta retención?', () => {
+        _honSet('hon_retenciones', _honGet('hon_retenciones').filter(x => x.id !== id));
+        honRenderRetenciones();
+    });
 }
 
 // ── PPM Mensual ───────────────────────────────────────────────
@@ -496,25 +500,6 @@ function honRenderPPM() {
 function honEliminarPPM(id) {
     _honSet('hon_ppm', _honGet('hon_ppm').filter(x => x.id !== id));
     honRenderPPM();
-}
-
-// ── F29 Segunda Categoría ─────────────────────────────────────
-function honGenerarF29() {
-    const mes  = parseInt(document.getElementById('f29honMes')?.value  || new Date().getMonth() + 1);
-    const anio = parseInt(document.getElementById('f29honAnio')?.value || _anioActual());
-
-    const ret = _honGet('hon_retenciones').filter(r => {
-        const d = new Date(r.fecha + 'T00:00:00');
-        return d.getFullYear() === anio && d.getMonth() + 1 === mes;
-    });
-    const totRet = ret.reduce((s, r) => s + r.retencion, 0);
-    const ppm    = _honGet('hon_ppm').find(p => p.mes === mes && p.anio === anio);
-    const totPPM = ppm?.monto || 0;
-
-    _honSet2('f29honRetenciones', fmt(totRet));
-    _honSet2('f29honPPM',         fmt(totPPM));
-    _honSet2('f29honTotal',       fmt(totRet + totPPM));
-    document.getElementById('f29honResultado')?.removeAttribute('hidden');
 }
 
 // ── F29 Segunda Categoría ─────────────────────────────────────
@@ -737,9 +722,10 @@ function honRenderPrestadores() {
 }
 
 function honEliminarPrestador(id) {
-    if (!confirm('¿Eliminar este prestador?')) return;
-    _honSet('hon_prestadores', _honGet('hon_prestadores').filter(x => x.id !== id));
-    honRenderPrestadores();
+    mostrarConfirm('¿Eliminar este prestador?', () => {
+        _honSet('hon_prestadores', _honGet('hon_prestadores').filter(x => x.id !== id));
+        honRenderPrestadores();
+    });
 }
 
 // ── DJ 1879 ───────────────────────────────────────────────────

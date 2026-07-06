@@ -1,10 +1,16 @@
 'use strict';
-// ─────────────────────────────────────────────────────────────
-//  MULTI-CLIENTE — Sistema de gestión de clientes del auditor
+// ─────────────────────────────────────────────────────────────────────────────
+//  MULTI-CLIENTE — Gestión de clientes + despachador de categorías
 //  ContAPP Auditor
-// ─────────────────────────────────────────────────────────────
+//
+//  La lógica de módulos vive en:
+//    js/categorias/primera.js  →  CAT1_*, cat1*
+//    js/categorias/segunda.js  →  CAT2_*, cat2*
+//  Este archivo solo enruta llamadas al archivo correcto según la categoría
+//  y contiene los elementos de UI compartidos (color picker, tarjeta, topbar).
+// ─────────────────────────────────────────────────────────────────────────────
 
-// ── Paleta de colores para etiquetas de cliente ──────────────
+// ── Paleta de colores para etiquetas de cliente ───────────────────────────────
 const AUD_COLORES = [
     { valor: '#3b82f6', nombre: 'Azul'    },
     { valor: '#10b981', nombre: 'Verde'   },
@@ -18,107 +24,50 @@ const AUD_COLORES = [
     { valor: '#6b7280', nombre: 'Gris'    },
 ];
 
-// ── Catálogo de módulos por categoría tributaria ──────────────
+// ── AUD_MODULOS — proxy de compatibilidad hacia los catálogos separados ───────
+// Los archivos externos (firebase-service.js) acceden a AUD_MODULOS[categoria].
+// Aquí lo exponemos como objeto simple que delega a cada catálogo.
 const AUD_MODULOS = {
-    primera: [
-        { id: 'diario',              label: 'Libro Diario',         grupo: 'Contabilidad', defecto: true  },
-        { id: 'mayor',               label: 'Libro Mayor',          grupo: 'Contabilidad', defecto: true  },
-        { id: 'plan-cuentas',        label: 'Plan de Cuentas',      grupo: 'Contabilidad', defecto: true  },
-        { id: 'reconciliacion',      label: 'Conciliación Bancaria',grupo: 'Contabilidad', defecto: true  },
-        { id: 'balance',             label: 'Balance',              grupo: 'Reportes',     defecto: true  },
-        { id: 'balance-clasificado', label: 'Bal. Clasificado',     grupo: 'Reportes',     defecto: true  },
-        { id: 'estado-resultados',   label: 'Est. Resultados',      grupo: 'Reportes',     defecto: true  },
-        { id: 'flujo-caja',          label: 'Flujo de Caja',        grupo: 'Reportes',     defecto: true  },
-        { id: 'compras',             label: 'Compras',              grupo: 'Comercial',    defecto: true  },
-        { id: 'ventas',              label: 'Ventas',               grupo: 'Comercial',    defecto: true  },
-        { id: 'documentos',          label: 'Documentación',        grupo: 'Comercial',    defecto: true  },
-        { id: 'clientes',            label: 'Clientes / Prov.',     grupo: 'Comercial',    defecto: true  },
-        { id: 'remuneraciones',      label: 'Remuneraciones',       grupo: 'RRHH',         defecto: false },
-        { id: 'indicadores',         label: 'Indicadores',          grupo: 'Tributario',   defecto: true  },
-        { id: 'iva-resumen',         label: 'Resumen IVA / F29',    grupo: 'Tributario',   defecto: true  },
-        { id: 'auditoria',           label: 'Auditoría',            grupo: 'Sistema',      defecto: false },
-    ],
-    segunda: [
-        { id: 'libro-honorarios',   label: 'Libro de Honorarios', grupo: 'Contabilidad', defecto: true  },
-        { id: 'libro-egresos-hon',  label: 'Libro de Egresos',    grupo: 'Contabilidad', defecto: true  },
-        { id: 'libro-ingresos-hon', label: 'Libro de Ingresos',   grupo: 'Contabilidad', defecto: true  },
-        { id: 'clientes',           label: 'Clientes / Prov.',    grupo: 'Comercial',    defecto: true  },
-        { id: 'prestadores',        label: 'Prestadores',         grupo: 'Comercial',    defecto: true  },
-        { id: 'indicadores',        label: 'Indicadores',         grupo: 'Tributario',   defecto: true  },
-        { id: 'f29-hon',            label: 'Formulario 29',       grupo: 'Tributario',   defecto: true  },
-        { id: 'f22-hon',            label: 'Formulario 22',       grupo: 'Tributario',   defecto: true  },
-        { id: 'auditoria',          label: 'Auditoría',           grupo: 'Sistema',      defecto: false },
-    ],
+    get primera() { return typeof CAT1_MODULOS !== 'undefined' ? CAT1_MODULOS : []; },
+    get segunda()  { return typeof CAT2_MODULOS !== 'undefined' ? CAT2_MODULOS : []; },
 };
 
-// ── Módulos por defecto para una categoría ───────────────────
+// ── Despachador: defaults ─────────────────────────────────────────────────────
 function audModulosDefecto(categoria) {
-    const lista = AUD_MODULOS[categoria] || AUD_MODULOS.primera;
-    return Object.fromEntries(lista.map(m => [m.id, m.defecto]));
+    if (categoria === 'segunda') return cat2ModulosDefecto();
+    return cat1ModulosDefecto();
 }
 
-// ── Aplicar módulos activos al sidebar ───────────────────────
-// Llama a esto después de seleccionarEmpresa() para ajustar
-// qué ítems del menú son visibles según la config del cliente.
+// ── Despachador: aplicar al sidebar ──────────────────────────────────────────
 function audAplicarModulos(modulosActivos, categoria) {
-    // Si no hay config, mostrar todo según categoría (comportamiento legacy)
-    if (!modulosActivos) {
-        if (typeof aplicarNavegacionPorCategoria === 'function') {
-            aplicarNavegacionPorCategoria();
-        }
-        return;
+    if (categoria === 'segunda') {
+        cat2AplicarModulos(modulosActivos);
+    } else {
+        cat1AplicarModulos(modulosActivos);
     }
-
-    // Ocultar/mostrar grupos de primera y segunda categoría
-    const esPrimera = (categoria || 'primera') === 'primera';
-    const gruposPrimera = [
-        '#nav-grupo-contabilidad', '#nav-grupo-informes',
-        '#nav-grupo-comercial',    '#nav-grupo-crm',
-        '#nav-grupo-rrhh',         '#nav-grupo-tributario',
-    ];
-    const gruposSegunda = [
-        '#nav-grupo-contabilidad-hon',
-        '#nav-grupo-comercial-hon',
-        '#nav-grupo-tributario-hon',
-    ];
-    gruposPrimera.forEach(sel => {
-        const el = document.querySelector(sel);
-        if (el) el.style.display = esPrimera ? '' : 'none';
-    });
-    gruposSegunda.forEach(sel => {
-        const el = document.querySelector(sel);
-        if (el) el.style.display = esPrimera ? 'none' : '';
-    });
-
-    // Aplicar toggle por módulo individual.
-    // Módulos conocidos en el catálogo pero ausentes en modulosActivos
-    // (agregados después de que se creó la empresa) se muestran según defecto.
-    const categoria2 = categoria || 'primera';
-    const catalogo   = AUD_MODULOS[categoria2] || AUD_MODULOS.primera;
-    catalogo.forEach(m => {
-        const navEl = document.querySelector(`[data-modulo="${m.id}"]`);
-        if (!navEl) return;
-        const activo = m.id in modulosActivos ? modulosActivos[m.id] : m.defecto;
-        navEl.style.display = activo ? '' : 'none';
-    });
-
-    // Ocultar grupos que queden completamente vacíos
-    document.querySelectorAll('.nav-group').forEach(grupo => {
-        const items = grupo.querySelectorAll('.nav-item');
-        const hayVisible = [...items].some(el => el.style.display !== 'none');
-        // Mantener el grupo visible solo si tiene ítems visibles
-        // (no ocultamos el grupo Inicio ni Sistema)
-        const esSistema  = grupo.querySelector('.nav-group-title')?.textContent?.includes('SISTEMA');
-        const esInicio   = grupo.classList.contains('nav-group-solo');
-        if (!hayVisible && !esSistema && !esInicio) {
-            grupo.style.display = 'none';
-        } else {
-            grupo.style.display = '';
-        }
-    });
 }
 
-// ── Color picker ─────────────────────────────────────────────
+// ── Despachador: renderizar checkboxes ───────────────────────────────────────
+function audRenderizarToggleModulos(containerId, categoria, modulosActivos) {
+    if (categoria === 'segunda') {
+        cat2RenderizarToggles(containerId, modulosActivos);
+    } else {
+        cat1RenderizarToggles(containerId, modulosActivos);
+    }
+}
+
+// ── Despachador: leer formulario ──────────────────────────────────────────────
+function audLeerModulosFormulario(categoria, containerId) {
+    if (categoria === 'segunda') return cat2LeerFormulario(containerId);
+    return cat1LeerFormulario(containerId);
+}
+
+// ── Actualiza los toggles al cambiar categoría en el formulario de empresa ───
+function audOnCategoriaChange(categoria) {
+    audRenderizarToggleModulos('empModulosContainer', categoria, null);
+}
+
+// ── Color picker ──────────────────────────────────────────────────────────────
 function audRenderizarColorPicker(containerId, colorSeleccionado) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -140,57 +89,7 @@ function audSeleccionarColor(el, color) {
     window._empColorSeleccionado = color;
 }
 
-// ── Toggles de módulos ───────────────────────────────────────
-function audRenderizarToggleModulos(containerId, categoria, modulosActivos) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    const lista    = AUD_MODULOS[categoria] || AUD_MODULOS.primera;
-    const defaults = modulosActivos || audModulosDefecto(categoria);
-
-    // Agrupar por grupo
-    const grupos = {};
-    lista.forEach(m => {
-        if (!grupos[m.grupo]) grupos[m.grupo] = [];
-        grupos[m.grupo].push(m);
-    });
-
-    container.innerHTML = `
-        <div class="aud-modulos-header">Módulos activos para este cliente</div>
-        <div class="aud-modulos-grid">
-            ${Object.entries(grupos).map(([grupo, modulos]) => `
-                <div class="aud-mod-grupo">
-                    <div class="aud-mod-grupo-titulo">${grupo}</div>
-                    ${modulos.map(m => `
-                        <label class="aud-mod-toggle">
-                            <input type="checkbox" name="modulo_${m.id}" value="${m.id}"
-                                   ${defaults[m.id] ? 'checked' : ''}>
-                            <span>${m.label}</span>
-                        </label>
-                    `).join('')}
-                </div>
-            `).join('')}
-        </div>
-        <div class="aud-modulos-hint">Puedes cambiar estos ajustes en cualquier momento.</div>
-    `;
-}
-
-function audLeerModulosFormulario(categoria) {
-    const lista = AUD_MODULOS[categoria] || AUD_MODULOS.primera;
-    const result = {};
-    lista.forEach(m => {
-        const cb = document.querySelector(`input[name="modulo_${m.id}"]`);
-        result[m.id] = cb ? cb.checked : false;
-    });
-    return result;
-}
-
-// Actualiza los toggles cuando el usuario cambia la categoría
-function audOnCategoriaChange(categoria) {
-    audRenderizarToggleModulos('empModulosContainer', categoria, null);
-}
-
-// ── Tarjeta de cliente para el selector ─────────────────────
+// ── Tarjeta de cliente para el selector ──────────────────────────────────────
 function audRenderizarTarjeta(cliente) {
     const color   = cliente.color || '#3b82f6';
     const inicial = ((cliente.empresa || cliente.nombre || '?')[0] || '?').toUpperCase();
@@ -217,7 +116,7 @@ function audRenderizarTarjeta(cliente) {
     `;
 }
 
-// ── Indicador de cliente activo en el topbar ─────────────────
+// ── Indicador de cliente activo en el topbar ──────────────────────────────────
 function audActualizarIndicadorCliente(nombreCliente, color, esPropio) {
     let ind = document.getElementById('audClienteIndicador');
     if (!ind) {
@@ -235,15 +134,15 @@ function audActualizarIndicadorCliente(nombreCliente, color, esPropio) {
     ind.innerHTML = `${dot}<span style="font-size:12px;font-weight:600;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${label}</span><span style="font-size:10px;color:var(--text-muted);">▾</span>`;
 }
 
-// Expose
-window.AUD_COLORES                  = AUD_COLORES;
-window.AUD_MODULOS                  = AUD_MODULOS;
-window.audModulosDefecto            = audModulosDefecto;
-window.audAplicarModulos            = audAplicarModulos;
-window.audRenderizarColorPicker     = audRenderizarColorPicker;
-window.audSeleccionarColor          = audSeleccionarColor;
-window.audRenderizarToggleModulos   = audRenderizarToggleModulos;
-window.audLeerModulosFormulario     = audLeerModulosFormulario;
-window.audOnCategoriaChange         = audOnCategoriaChange;
-window.audRenderizarTarjeta         = audRenderizarTarjeta;
+// ── Expose ────────────────────────────────────────────────────────────────────
+window.AUD_COLORES                   = AUD_COLORES;
+window.AUD_MODULOS                   = AUD_MODULOS;
+window.audModulosDefecto             = audModulosDefecto;
+window.audAplicarModulos             = audAplicarModulos;
+window.audRenderizarToggleModulos    = audRenderizarToggleModulos;
+window.audLeerModulosFormulario      = audLeerModulosFormulario;
+window.audOnCategoriaChange          = audOnCategoriaChange;
+window.audRenderizarColorPicker      = audRenderizarColorPicker;
+window.audSeleccionarColor           = audSeleccionarColor;
+window.audRenderizarTarjeta          = audRenderizarTarjeta;
 window.audActualizarIndicadorCliente = audActualizarIndicadorCliente;

@@ -198,12 +198,12 @@ function procesarGlosa() {
         .trim();
 
     if (!glosa)
-        return alert("Ingrese glosa válida comercial");
+        return mostrarToast('Ingresa una glosa válida.', 'error');
 
     let montoTotal = extraerMontoTotal(glosa);
 
     if (!montoTotal)
-        return alert("Monto comercial no detectado");
+        return mostrarToast('No se detectó monto. Ej: "compré 50.000 en oficina".', 'error');
 
     let tipo = "desconocido";
 
@@ -255,24 +255,12 @@ function procesarGlosa() {
     else if (/traspaso|transferencia.*entre.*cuenta|de.*caja.*a.*banco|de.*banco.*a.*caja/i.test(g))
         tipo = "traspaso";
 
-    if (tipo === "desconocido")
-        return alert(
-            "No se reconoció el tipo de operación contable.\n\n" +
-            "Ejemplos reconocidos:\n" +
-            "• Venta de mercadería por $200.000 al contado\n" +
-            "• Compra de mercadería por $300.000 a crédito\n" +
-            "• Depósito de $500.000 en banco desde caja\n" +
-            "• Retiro de $100.000 desde banco a caja\n" +
-            "• Cobro a cliente por $150.000 con transferencia\n" +
-            "• Pago a proveedor por $80.000 con cheque\n" +
-            "• Gasto de arriendo por $200.000 con transferencia\n" +
-            "• Recibimos préstamo bancario por $1.000.000\n" +
-            "• Pago cuota préstamo $50.000 intereses $5.000\n" +
-            "• Pago de remuneraciones por $800.000\n" +
-            "• Nota de crédito de proveedor por $100.000\n" +
-            "• Devolución de venta cliente por $50.000\n" +
-            "• Traspaso de caja a banco por $300.000"
-        );
+    if (tipo === "desconocido") {
+        mostrarToast('Tipo de operación no reconocido. Revisa el acordeón de ayuda debajo del campo.', 'error');
+        const ayuda = document.getElementById('glosaAyuda');
+        if (ayuda) ayuda.open = true;
+        return;
+    }
 
     let debe = [];
     let haber = [];
@@ -703,7 +691,7 @@ function renderPreasiento() {
 function guardarAsiento() {
 
     if (!preasientoActual) {
-        alert("Debe generar un asiento primero.");
+        mostrarToast('Primero genera el asiento desde la glosa.', 'error');
         return;
     }
 
@@ -713,7 +701,7 @@ function guardarAsiento() {
         ).value;
 
     if (!fecha) {
-        alert("Debe ingresar una fecha.");
+        mostrarToast('Selecciona la fecha del asiento.', 'error');
         return;
     }
 
@@ -878,30 +866,24 @@ function anularAsiento(id){
         return;
     }
 
-    if(
-        !confirm(
-            `¿Desea anular el asiento N°${asiento.numero}?`
-        )
-    ){
-        return;
-    }
+    mostrarConfirm(`¿Desea anular el asiento N°${asiento.numero}?`, () => {
+        asiento.estado = "ANULADO";
 
-    asiento.estado = "ANULADO";
+        localStorage.setItem(
+            "core_asientos",
+            JSON.stringify(dbAsientos)
+        );
 
-    localStorage.setItem(
-        "core_asientos",
-        JSON.stringify(dbAsientos)
-    );
+        renderHistorialDiario();
 
-    renderHistorialDiario();
+        if(typeof generarLibroMayor === "function"){
+            generarLibroMayor();
+        }
 
-    if(typeof generarLibroMayor === "function"){
-        generarLibroMayor();
-    }
-
-    if(typeof generarBalanceGeneral === "function"){
-        generarBalanceGeneral();
-    }
+        if(typeof generarBalanceGeneral === "function"){
+            generarBalanceGeneral();
+        }
+    });
 }
 function renderHistorialDiario() {
 
@@ -1134,15 +1116,15 @@ function guardarAsientoManual() {
     const glosa = document.getElementById('glosaManual').value.trim();
     const fecha = document.getElementById('fechaManual').value;
 
-    if (!glosa) return alert('Ingrese una glosa para el asiento.');
-    if (!fecha) return alert('Ingrese la fecha del asiento.');
+    if (!glosa) return mostrarToast('La glosa es obligatoria.', 'error');
+    if (!fecha) return mostrarToast('La fecha es obligatoria.', 'error');
 
     const filasFiltradas = filasManual.filter(f => f.cuenta && (f.debe > 0 || f.haber > 0));
-    if (filasFiltradas.length < 2) return alert('El asiento debe tener al menos 2 líneas con cuenta y monto.');
+    if (filasFiltradas.length < 2) return mostrarToast('Mínimo 2 líneas: una cuenta débito y una crédito.', 'error');
 
     const totD = filasFiltradas.reduce((s, f) => s + (f.debe  || 0), 0);
     const totH = filasFiltradas.reduce((s, f) => s + (f.haber || 0), 0);
-    if (Math.abs(totD - totH) >= 1) return alert('El asiento no cuadra. Verifique Debe y Haber.');
+    if (Math.abs(totD - totH) >= 1) return mostrarToast('El asiento no cuadra. Debe = $' + fmt(totD) + ' / Haber = $' + fmt(totH), 'error');
 
     const f = fecha.split('-');
     const _contactoManualVal = (document.getElementById('contactoManual')?.value || '').trim();

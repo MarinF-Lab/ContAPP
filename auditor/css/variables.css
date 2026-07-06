@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    CONTAPP FORGE — Design System Variables
    Light mode (default) + Dark mode via [data-theme="dark"]
+   Paleta navy/teal + acento magenta-pink (D-8)
 ───────────────────────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -8,45 +9,52 @@
    LIGHT MODE (default)
 ══════════════════════════════════════════ */
 :root {
-    /* Core palette */
-    --bg:             #F0F2F7;
+    /* Core palette — alineada con ID Workshop */
+    --bg:             #e4e8ed;
     --sidebar:        #FFFFFF;
-    --card:           #FFFFFF;
-    --card-border:    #E4E8F0;
-    --text:           #0F1623;
-    --text-muted:     #6B7A99;
-    --text-subtle:    #9AA3BC;
-    --accent:         #2B5BF6;
-    --accent-soft:    #EEF2FF;
-    --accent-grad:    linear-gradient(135deg, #2B5BF6 0%, #7B3FF2 100%);
+    --card:           #f4f6f8;
+    --card-border:    #bdc8d0;
+    --text:           #0A1922;
+    --text-muted:     #566779;
+    --text-subtle:    #9aadb8;
+    --accent:         #AC406D;
+    --accent-soft:    #F7E8EF;
+    --accent-grad:    linear-gradient(135deg, #AC406D 0%, #722652 100%);
+    --accent-glow:    0 4px 16px rgba(172,64,109,.28);
+    --accent-glow-lg: 0 8px 28px rgba(172,64,109,.42);
     --positive:       #0FA86E;
     --positive-soft:  #E8F8F2;
     --negative:       #E53E5A;
     --negative-soft:  #FEF0F2;
     --warning:        #F59E0B;
     --warning-soft:   #FEF9EC;
-    --divider:        #E4E8F0;
-    --table-stripe:   #F7F9FC;
-    --input-bg:       #F4F6FA;
-    --shadow:         0 2px 12px rgba(15,22,35,0.07);
-    --shadow-lg:      0 8px 32px rgba(15,22,35,0.10);
-    --nav-active:     #EEF2FF;
+    --info:           #3B7DD8;
+    --info-soft:      #EBF2FD;
+    --divider:        #bdc8d0;
+    --table-stripe:   #eaeef2;
+    --input-bg:       #edf0f4;
+    --shadow:         0 4px 24px rgba(0,0,0,.12);
+    --shadow-lg:      0 8px 40px rgba(0,0,0,.20);
+    --shadow-card:    0 2px 12px rgba(10,25,34,.06);
+    --nav-active:     #F7E8EF;
+    --glow-pink:      rgba(172,64,109,.06);
+    --glow-blue:      rgba(145,166,178,.18);
 
-    /* Sidebar-specific (white sidebar en light mode) */
-    --sidebar-text:          #2C3654;
-    --sidebar-text-hover:    #0F1623;
-    --sidebar-icon-color:    #6B7A99;
-    --sidebar-group-clr:     rgba(15,22,35,0.38);
-    --sidebar-item-hover:    #F4F6FA;
-    --sidebar-item-active-bg:  #EEF2FF;
-    --sidebar-item-active-txt: #2B5BF6;
-    --sidebar-border-clr:    rgba(15,22,35,0.08);
-    --sidebar-logo-border:   rgba(15,22,35,0.10);
-    --sidebar-divider:       1px solid rgba(15,22,35,0.08);
+    /* Sidebar-specific */
+    --sidebar-text:          #233443;
+    --sidebar-text-hover:    #0A1922;
+    --sidebar-icon-color:    #5A6E7A;
+    --sidebar-group-clr:     rgba(10,25,34,0.38);
+    --sidebar-item-hover:    #F0F3F6;
+    --sidebar-item-active-bg:  #F7E8EF;
+    --sidebar-item-active-txt: #AC406D;
+    --sidebar-border-clr:    rgba(10,25,34,0.08);
+    --sidebar-logo-border:   rgba(10,25,34,0.10);
+    --sidebar-divider:       1px solid rgba(10,25,34,0.08);
 
-    /* ── Legacy aliases — mantiene el CSS existente funcionando ── */
-    --primary:        var(--accent);
-    --primary-hover:  #1A4AE8;
+    /* ── Legacy aliases ── */
+    --primary:        #AC406D;
+    --primary-hover:  #8F3059;
     --sidebar-bg:     var(--sidebar);
     --sidebar-hover:  var(--sidebar-item-hover);
     --surface:        var(--card);
@@ -63,44 +71,52 @@
    DARK MODE
 ══════════════════════════════════════════ */
 [data-theme="dark"] {
-    /* Core palette */
-    --bg:             #0D1117;
-    --sidebar:        #161B27;
-    --card:           #1C2333;
-    --card-border:    #262F45;
-    --text:           #E8EDF8;
-    --text-muted:     #8A95B0;
-    --text-subtle:    #4A5470;
-    --accent:         #4F7BFF;
-    --accent-soft:    #1A2547;
-    --accent-grad:    linear-gradient(135deg, #4F7BFF 0%, #9B6FFF 100%);
+    /* Core palette — alineada con ID Workshop dark */
+    --bg:             #0d1929;
+    --sidebar:        #0C1A27;
+    --card:           #152235;
+    --card-border:    #1e3349;
+    --text:           #D6E0E8;
+    --text-muted:     #8DA1AF;
+    --text-subtle:    #3a5060;
+    --accent:         #F95A8A;
+    --accent-soft:    #2B0F1F;
+    --accent-grad:    linear-gradient(135deg, #F95A8A 0%, #843B5B 100%);
+    --accent-glow:    0 4px 16px rgba(249,90,138,.32);
+    --accent-glow-lg: 0 8px 28px rgba(249,90,138,.50);
     --positive:       #1ACC8A;
     --positive-soft:  #0D2B20;
     --negative:       #FF4D6A;
     --negative-soft:  #2B0F17;
     --warning:        #FBBF24;
     --warning-soft:   #2B1F07;
-    --divider:        #262F45;
-    --table-stripe:   #1A2030;
-    --input-bg:       #141924;
-    --shadow:         0 2px 12px rgba(0,0,0,0.3);
-    --shadow-lg:      0 8px 32px rgba(0,0,0,0.4);
-    --nav-active:     #1A2547;
+    --info:           #60A5FA;
+    --info-soft:      #0D1E35;
+    --divider:        #1e3349;
+    --table-stripe:   #142131;
+    --input-bg:       #0E1A28;
+    --shadow:         0 4px 24px rgba(0,0,0,.45);
+    --shadow-lg:      0 24px 60px rgba(0,0,0,.50);
+    --shadow-card:    0 2px 12px rgba(0,0,0,.25);
+    --nav-active:     #1C2939;
+    --glow-pink:      rgba(249,90,138,.07);
+    --glow-blue:      rgba(21,34,53,.45);
 
-    /* Sidebar-specific (dark sidebar en dark mode) */
-    --sidebar-text:          #CBD5E1;
-    --sidebar-text-hover:    #FFFFFF;
-    --sidebar-icon-color:    #8A95B0;
-    --sidebar-group-clr:     rgba(255,255,255,0.35);
-    --sidebar-item-hover:    rgba(255,255,255,0.06);
-    --sidebar-item-active-bg:  #1A2547;
-    --sidebar-item-active-txt: #FFFFFF;
-    --sidebar-border-clr:    rgba(255,255,255,0.08);
-    --sidebar-logo-border:   rgba(255,255,255,0.10);
-    --sidebar-divider:       1px solid rgba(255,255,255,0.08);
+    /* Sidebar-specific */
+    --sidebar-text:          #9CB0BD;
+    --sidebar-text-hover:    #CAD8E2;
+    --sidebar-icon-color:    #717E8B;
+    --sidebar-group-clr:     rgba(202,216,226,0.35);
+    --sidebar-item-hover:    rgba(255,255,255,0.05);
+    --sidebar-item-active-bg:  #1C2939;
+    --sidebar-item-active-txt: #F95A8A;
+    --sidebar-border-clr:    rgba(255,255,255,0.07);
+    --sidebar-logo-border:   rgba(255,255,255,0.08);
+    --sidebar-divider:       1px solid rgba(255,255,255,0.07);
 
     /* ── Legacy overrides ── */
-    --primary-hover:  #3A65E8;
+    --primary:        #F95A8A;
+    --primary-hover:  #D94070;
     --sidebar-bg:     var(--sidebar);
     --sidebar-hover:  var(--sidebar-item-hover);
     --surface:        var(--card);

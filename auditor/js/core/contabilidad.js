@@ -7,7 +7,7 @@
                     if (!cuentas[m.cuenta]) cuentas[m.cuenta] = { debe: 0, haber: 0, historial: [] };
                     cuentas[m.cuenta].debe  += (m.debe  || 0);
                     cuentas[m.cuenta].haber += (m.haber || 0);
-                    cuentas[m.cuenta].historial.push({ fecha: as.fecha, debe: m.debe || 0, haber: m.haber || 0 });
+                    cuentas[m.cuenta].historial.push({ fecha: as.fecha, debe: m.debe || 0, haber: m.haber || 0, numero: as.numero || '', glosa: as.glosa || '' });
                 });
             });
             return cuentas;

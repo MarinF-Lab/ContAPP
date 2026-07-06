@@ -1,0 +1,8 @@
+node_modules/
+.gstack/
+.claude/
+playwright-report/
+test-results/
+/gstack/
+package.json
+package-lock.json

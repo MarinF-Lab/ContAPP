@@ -130,7 +130,8 @@ function empAbrirCrear() {
     const radPrimera = document.querySelector('input[name="empCategoria"][value="primera"]');
     if (radPrimera) radPrimera.checked = true;
 
-    // Inicializar color picker y toggles de módulos
+    // Reset color para que no herede el de un cliente anterior
+    window._empColorSeleccionado = null;
     if (typeof audRenderizarColorPicker   === 'function') audRenderizarColorPicker('empColorPicker', null);
     if (typeof audRenderizarToggleModulos === 'function') audRenderizarToggleModulos('empModulosContainer', 'primera', null);
 }
@@ -162,7 +163,7 @@ async function empGuardarNueva() {
     const notas     = document.getElementById('empNotas')?.value.trim()     || '';
     const color     = window._empColorSeleccionado || '#3b82f6';
     const modulosActivos = (typeof audLeerModulosFormulario === 'function')
-        ? audLeerModulosFormulario(categoria)
+        ? audLeerModulosFormulario(categoria, 'empModulosContainer')
         : null;
 
     err.textContent = '';
@@ -484,12 +485,13 @@ function _actualizarEstadoCertificado(nombre, valido) {
 }
 
 function eliminarCertificado() {
-    if (!confirm('¿Eliminar el certificado digital almacenado?')) return;
-    localStorage.removeItem('core_certificado_b64');
-    localStorage.removeItem('core_certificado_nombre');
-    if (window.electronAPI?.eliminarCertificado) window.electronAPI.eliminarCertificado();
-    _actualizarEstadoCertificado('', false);
-    mostrarToast('Certificado eliminado.', 'ok');
+    mostrarConfirm('¿Eliminar el certificado digital almacenado?', () => {
+        localStorage.removeItem('core_certificado_b64');
+        localStorage.removeItem('core_certificado_nombre');
+        if (window.electronAPI?.eliminarCertificado) window.electronAPI.eliminarCertificado();
+        _actualizarEstadoCertificado('', false);
+        mostrarToast('Certificado eliminado.', 'ok');
+    });
 }
 
 function verificarCertificadoGuardado() {

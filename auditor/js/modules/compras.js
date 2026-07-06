@@ -108,10 +108,12 @@ function renderCompras() {
                 <td class="monto">$${fmt(c.neto   || 0)}</td>
                 <td class="monto">$${fmt(c.iva    || 0)}</td>
                 <td class="monto" style="font-weight:700;">$${fmt(c.total || 0)}</td>
-                <td>
+                <td style="white-space:nowrap;">
                     ${anulada
                         ? `<span class="badge-inactivo">Anulada</span>`
-                        : `<button class="btn-plan btn-plan-eliminar"
+                        : `<button class="btn-plan" style="margin-right:4px;"
+                                onclick="editarCompra(${c.id})">✏️ Editar</button>
+                           <button class="btn-plan btn-plan-eliminar"
                                 onclick="anularCompra(${c.id})">Anular</button>`
                     }
                 </td>
@@ -185,13 +187,50 @@ function abrirNuevaCompra() {
 }
 
 function cerrarModalCompra() {
+    _compraEditandoId = null;
     document.getElementById('modalCompra').style.display = 'none';
 }
 
 // Adjunto temporal mientras el modal está abierto
 let _compraAdjuntoTemp = null;
+let _compraEditandoId  = null;
+
+function editarCompra(id) {
+    const c = dbCompras.find(x => x.id === id);
+    if (!c) return;
+    _compraEditandoId = id;
+
+    // Convertir fecha DD/MM/AAAA → AAAA-MM-DD para el input date
+    const partes = (c.fecha || '').split('/');
+    const fechaInput = partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : '';
+
+    _setVal('compraFecha',     fechaInput);
+    _setVal('compraTipoDoc',   c.tipo_doc    || 'factura');
+    _setVal('compraNumDoc',    c.numero_doc  || '');
+    _setVal('compraRut',       c.rut_proveedor   || '');
+    _setVal('compraNombre',    c.nombre_proveedor || '');
+    _setVal('compraMedioPago', c.medio_pago  || 'credito');
+    _setVal('compraExento',    c.exento  || '');
+    _setVal('compraNeto',      c.neto    || '');
+    _setVal('compraIva',       c.iva     || '');
+    _setVal('compraTotal',     c.total   || '');
+    _setVal('compraGlosa',     c.glosa   || '');
+    _setVal('compraEstado',    c.estado  || 'pendiente');
+    _compraAdjuntoTemp = c.adjunto || null;
+    _actualizarBadgeAdjuntoCompra();
+    _actualizarEtiquetaIva();
+
+    // Cambiar título del modal
+    const h2 = document.querySelector('#modalCompra h2');
+    if (h2) h2.textContent = '✏️ Editar Compra';
+
+    document.getElementById('modalCompra').style.display = 'flex';
+}
 
 function _limpiarFormCompra() {
+    _compraEditandoId = null;
+    const h2 = document.querySelector('#modalCompra h2');
+    if (h2) h2.textContent = '🛒 Registrar Compra';
     _setVal('compraFecha',      _hoy());
     _setVal('compraTipoDoc',    'factura');
     _setVal('compraNumDoc',     '');
@@ -319,19 +358,25 @@ function guardarCompra() {
     const rut    = _getVal('compraRut');
     if (numDoc) {
         const dup = dbCompras.find(c =>
+            c.id !== _compraEditandoId &&
             c.estado !== 'anulada' &&
             c.numero_doc === numDoc &&
             c.tipo_doc   === tipoDoc &&
             (rut ? c.rut_proveedor === rut : c.nombre_proveedor === nombre)
         );
         if (dup) {
-            const continuar = confirm(
-                `⚠️ Ya existe un documento ${tipoDoc} N°${numDoc} para este proveedor (registrado el ${dup.fecha}).\n\n¿Desea registrarlo de todas formas?`
+            mostrarConfirm(
+                `⚠️ Ya existe un documento ${tipoDoc} N°${numDoc} para este proveedor (registrado el ${dup.fecha}).\n\n¿Desea registrarlo de todas formas?`,
+                () => _finalizarGuardarCompra(fecha, tipoDoc, nombre, total, neto, iva, exento)
             );
-            if (!continuar) return;
+            return;
         }
     }
 
+    _finalizarGuardarCompra(fecha, tipoDoc, nombre, total, neto, iva, exento);
+}
+
+function _finalizarGuardarCompra(fecha, tipoDoc, nombre, total, neto, iva, exento) {
     const fd = fecha.split('-');
     const fechaFmt = fd.length === 3 ? `${fd[2]}/${fd[1]}/${fd[0]}` : fecha;
     const mesNum   = fd.length === 3 ? parseInt(fd[1], 10) : comprasMes;
@@ -357,22 +402,34 @@ function guardarCompra() {
         asiento_id:       null,
     };
 
-    dbCompras.push(compra);
+    if (_compraEditandoId) {
+        const idx = dbCompras.findIndex(x => x.id === _compraEditandoId);
+        if (idx >= 0) {
+            compra.id = _compraEditandoId;
+            dbCompras[idx] = compra;
+        }
+        mostrarToast('Compra actualizada correctamente.', 'ok');
+        if (typeof audit === 'function') audit('editar', 'compras', { folio: compra.numero_doc, proveedor: nombre, total });
+    } else {
+        dbCompras.push(compra);
+        mostrarToast('Compra registrada correctamente.', 'ok');
+        if (typeof audit === 'function') audit('crear', 'compras', { folio: compra.numero_doc, proveedor: nombre, total });
+    }
+    _compraEditandoId = null;
     guardarCompras();
     cerrarModalCompra();
     renderCompras();
-    mostrarToast('Compra registrada correctamente.', 'ok');
-    if (typeof audit === 'function') audit('crear', 'compras', { folio: compra.numero_doc, proveedor: nombre, total });
 }
 
 function anularCompra(id) {
     const c = dbCompras.find(x => x.id === id);
     if (!c) return;
-    if (!confirm(`¿Anular ${c.tipo_doc} N°${c.numero_doc || '?'} de ${c.nombre_proveedor}?`)) return;
-    c.estado = 'anulada';
-    guardarCompras();
-    renderCompras();
-    mostrarToast('Documento anulado.', 'ok');
+    mostrarConfirm(`¿Anular ${c.tipo_doc} N°${c.numero_doc || '?'} de ${c.nombre_proveedor}?`, () => {
+        c.estado = 'anulada';
+        guardarCompras();
+        renderCompras();
+        mostrarToast('Documento anulado.', 'ok');
+    });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -492,12 +549,27 @@ function _getVal(id)    { return document.getElementById(id)?.value?.trim() || '
 function _setTxt(id, v) { const e = document.getElementById(id); if (e) e.textContent = v; }
 
 function vaciarLibroCompras() {
-    if (!confirm('¿Vaciar TODO el libro de compras? Esta acción no se puede deshacer.')) return;
-    dbCompras.length = 0;
-    localStorage.setItem('core_compras', JSON.stringify(dbCompras));
-    window.dbCompras = dbCompras;
-    renderCompras();
-    mostrarToast('Libro de compras vaciado.', 'ok');
+    mostrarConfirm('¿Vaciar TODO el libro de compras? Esta acción no se puede deshacer.', () => {
+        dbCompras.length = 0;
+        localStorage.setItem('core_compras', JSON.stringify(dbCompras));
+        window.dbCompras = dbCompras;
+        renderCompras();
+        mostrarToast('Libro de compras vaciado.', 'ok');
+    });
+}
+
+function _onProductoSeleccionadoCompra(prod) {
+    if (!prod) return;
+    const prov = (window.dbContactos || []).find(c => String(c.id) === String(prod.proveedor_id));
+    _setVal('compraRut',    prov?.rut || '');
+    _setVal('compraNombre', prod.proveedor_nombre || prov?.nombre || '');
+    if (prod.precio_costo > 0) {
+        _setVal('compraNeto', prod.precio_costo);
+        calcularDesdeNetoCompra();
+    }
+    if (prod.nombre) _setVal('compraGlosa', prod.nombre);
+    mostrarToast(`Producto "${prod.nombre}" seleccionado`, 'ok');
 }
 
 window.dbCompras = dbCompras;
+window._onProductoSeleccionadoCompra = _onProductoSeleccionadoCompra;

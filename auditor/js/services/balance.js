@@ -31,6 +31,20 @@
             // ── Renderizado de la tabla ───────────────────────────────
             const tbody = document.getElementById("balanceBody");
             tbody.innerHTML = "";
+
+            // Estado vacío
+            if (!dbAsientos || dbAsientos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9">
+                    <div class="empty-state" style="text-align:center;padding:40px 20px;">
+                        <div style="font-size:40px;margin-bottom:12px;">📒</div>
+                        <h3 style="margin:0 0 8px;">Sin movimientos registrados</h3>
+                        <p style="color:var(--text-muted);margin:0 0 16px;">El balance se genera automáticamente desde el Libro Diario.</p>
+                        <button class="btn btn-primary" onclick="navegar('diario', null)">Ir al Libro Diario</button>
+                    </div>
+                </td></tr>`;
+                return;
+            }
+
             const cuentas = recopilarMovimientosPorCuenta();
 
             let tDebe = 0, tHaber = 0, tDeudor = 0, tAcreedor = 0;

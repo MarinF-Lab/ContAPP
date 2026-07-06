@@ -2,6 +2,16 @@
 //  FLUJO DE CAJA — clasificado en 3 actividades
 // ─────────────────────────────────────────────────────────────
 const CUENTAS_EFECTIVO = ['Caja', 'Banco', 'Caja Chica'];
+const FC_OVERRIDES_KEY = 'core_fc_overrides';
+
+function _cargarFcOverrides() {
+    try { return JSON.parse(localStorage.getItem(FC_OVERRIDES_KEY) || '[]'); }
+    catch { return []; }
+}
+
+function _guardarFcOverrides(overrides) {
+    localStorage.setItem(FC_OVERRIDES_KEY, JSON.stringify(overrides));
+}
 
 // Cuentas contraparte que determinan la categoría del movimiento
 const CUENTAS_INVERSION = new Set([
@@ -17,13 +27,15 @@ const CUENTAS_FINANCIAMIENTO = new Set([
 ]);
 
 function _clasificarAsiento(asiento) {
-    // Determina categoría según las cuentas NO-efectivo del asiento
     const contrapartes = asiento.movimientos
         .map(m => m.cuenta)
         .filter(c => !CUENTAS_EFECTIVO.includes(c));
 
+    const overrides = _cargarFcOverrides();
     for (const c of contrapartes) {
-        if (CUENTAS_INVERSION.has(c))     return 'inversion';
+        const ov = overrides.find(o => o.cuenta === c);
+        if (ov) return ov.categoria;
+        if (CUENTAS_INVERSION.has(c))      return 'inversion';
         if (CUENTAS_FINANCIAMIENTO.has(c)) return 'financiamiento';
     }
     return 'operacional';
@@ -186,3 +198,98 @@ function _renderGraficoFlujoCaja(meses) {
     const cont = document.getElementById('graficoFlujoCaja');
     if (cont) cont.innerHTML = svg;
 }
+
+// ─────────────────────────────────────────────────────────────
+//  OVERRIDES DE CLASIFICACIÓN
+// ─────────────────────────────────────────────────────────────
+
+function fcAbrirOverrides() {
+    let modal = document.getElementById('fcOverridesModal');
+    if (modal) { modal.style.display = 'flex'; _fcRenderOverridesTabla(); return; }
+
+    modal = document.createElement('div');
+    modal.id        = 'fcOverridesModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+    <div class="modal-box" style="width:600px;max-height:80vh;display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="margin:0;">⚙️ Clasificación de cuentas — Flujo de Caja</h3>
+            <button class="btn btn-secondary" onclick="fcCerrarOverrides()">✕</button>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
+            Sobreescribe la categoría automática de cualquier cuenta en el flujo de caja.
+        </p>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input id="fcOvCuenta" class="input" placeholder="Nombre exacto de la cuenta" style="flex:1;">
+            <select id="fcOvCategoria" class="input" style="width:180px;">
+                <option value="operacional">⚙️ Operacional</option>
+                <option value="inversion">🏗️ Inversión</option>
+                <option value="financiamiento">🏦 Financiamiento</option>
+            </select>
+            <button class="btn btn-primary" onclick="fcAgregarOverride()">+ Agregar</button>
+        </div>
+        <div style="overflow-y:auto;flex:1;" id="fcOvTablaWrap"></div>
+        <div style="text-align:right;margin-top:16px;">
+            <button class="btn btn-primary" onclick="fcCerrarOverrides();generarFlujoCaja();">Aplicar y cerrar</button>
+        </div>
+    </div>`;
+    document.body.appendChild(modal);
+    _fcRenderOverridesTabla();
+}
+
+function fcCerrarOverrides() {
+    const m = document.getElementById('fcOverridesModal');
+    if (m) m.style.display = 'none';
+}
+
+function _fcRenderOverridesTabla() {
+    const wrap = document.getElementById('fcOvTablaWrap');
+    if (!wrap) return;
+    const overrides = _cargarFcOverrides();
+    if (!overrides.length) {
+        wrap.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-muted);">Sin overrides configurados — la clasificación automática aplica a todas las cuentas.</p>';
+        return;
+    }
+    const icons = { operacional: '⚙️', inversion: '🏗️', financiamiento: '🏦' };
+    wrap.innerHTML = `<table class="cont-table" style="font-size:13px;table-layout:fixed;width:100%;">
+        <thead><tr>
+            <th>Cuenta</th>
+            <th style="width:160px;">Categoría</th>
+            <th style="width:60px;"></th>
+        </tr></thead>
+        <tbody>
+            ${overrides.map((o, i) => `<tr>
+                <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.cuenta}</td>
+                <td>${icons[o.categoria] || ''} ${o.categoria}</td>
+                <td><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="fcEliminarOverride(${i})">🗑</button></td>
+            </tr>`).join('')}
+        </tbody>
+    </table>`;
+}
+
+function fcAgregarOverride() {
+    const cuenta = document.getElementById('fcOvCuenta')?.value?.trim();
+    const categoria = document.getElementById('fcOvCategoria')?.value;
+    if (!cuenta) return mostrarToast('Ingrese el nombre de la cuenta', 'error');
+    const overrides = _cargarFcOverrides();
+    const idx = overrides.findIndex(o => o.cuenta === cuenta);
+    if (idx >= 0) overrides[idx].categoria = categoria;
+    else overrides.push({ cuenta, categoria });
+    _guardarFcOverrides(overrides);
+    document.getElementById('fcOvCuenta').value = '';
+    _fcRenderOverridesTabla();
+    mostrarToast(`Override guardado para "${cuenta}"`, 'ok');
+}
+
+function fcEliminarOverride(idx) {
+    const overrides = _cargarFcOverrides();
+    overrides.splice(idx, 1);
+    _guardarFcOverrides(overrides);
+    _fcRenderOverridesTabla();
+    mostrarToast('Override eliminado', 'ok');
+}
+
+window.fcAbrirOverrides    = fcAbrirOverrides;
+window.fcCerrarOverrides   = fcCerrarOverrides;
+window.fcAgregarOverride   = fcAgregarOverride;
+window.fcEliminarOverride  = fcEliminarOverride;

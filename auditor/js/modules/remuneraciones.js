@@ -266,7 +266,7 @@ function remInit() {
 }
 
 function remRender() {
-    const el = document.getElementById('view-remuneraciones');
+    const el = document.getElementById('tab-rem-liquidaciones') || document.getElementById('view-remuneraciones');
     if (!el) return;
     el.innerHTML = remHtmlShell();
 }
@@ -313,7 +313,7 @@ function remHtmlShell() {
 
   <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;">
     <div class="rem-tabs">
-      ${[['trabajadores','👤 Trabajadores'],['liquidar','💵 Liquidar'],['libro','📋 Libro'],['ia','✨ Auditoría IA']]
+      ${[['trabajadores','👤 Trabajadores'],['liquidar','💵 Liquidar'],['libro','📋 Libro'],['vacaciones','🏖 Vacaciones'],['finiquito','📄 Finiquito'],['ia','✨ Auditoría IA']]
         .map(([id,lbl]) => `<button class="rem-tab${s.tab===id?' active':''}" onclick="remSetTab('${id}')">${lbl}</button>`).join('')}
     </div>
     <div style="display:flex;gap:10px;align-items:center;padding-bottom:2px;">
@@ -354,6 +354,8 @@ function remHtmlTab() {
         case 'trabajadores': return remHtmlTrabajadores();
         case 'liquidar':     return remHtmlLiquidar();
         case 'libro':        return remHtmlLibro();
+        case 'vacaciones':   return remHtmlVacaciones();
+        case 'finiquito':    return remHtmlFiniquito();
         case 'ia':           return remHtmlIA();
         default: return '';
     }
@@ -1183,7 +1185,7 @@ function remQuitarContrato() {
 function remAdjuntarContrato(inp) {
     const file = inp.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('El archivo no debe superar 5 MB.'); return; }
+    if (file.size > 5 * 1024 * 1024) { mostrarToast('El archivo no debe superar 5 MB.', 'error'); return; }
     const reader = new FileReader();
     reader.onload = ev => {
         remState.modalData.contrato = ev.target.result;
@@ -1214,9 +1216,9 @@ function _recogerFormulario() {
 function remGuardarTrab() {
     _recogerFormulario();
     const t = remState.modalData;
-    if (!t.nombre?.trim())  { alert('Ingrese el nombre.'); return; }
-    if (!t.rut?.trim())     { alert('Ingrese el RUT.'); return; }
-    if (!t.sueldoBruto || t.sueldoBruto <= 0) { alert('Ingrese el sueldo bruto en la pestaña Contrato.'); return; }
+    if (!t.nombre?.trim())  { mostrarToast('Ingresa el nombre del trabajador.', 'error'); return; }
+    if (!t.rut?.trim())     { mostrarToast('Ingresa el RUT del trabajador.', 'error'); return; }
+    if (!t.sueldoBruto || t.sueldoBruto <= 0) { mostrarToast('Ingresa el sueldo bruto en la pestaña Contrato.', 'error'); return; }
 
     let arr = remState.trabajadores;
     if (t.id && arr.some(x => x.id === t.id)) {
@@ -1231,11 +1233,12 @@ function remGuardarTrab() {
 }
 
 function remEliminar(id) {
-    if (!confirm('¿Eliminar este trabajador?')) return;
-    remState.trabajadores = remState.trabajadores.filter(t => t.id !== id);
-    if (remState.trabSelId === id) remState.trabSelId = null;
-    saveTrab(remState.trabajadores);
-    remRefreshBody();
+    mostrarConfirm('¿Eliminar este trabajador? Esta acción no se puede deshacer.', () => {
+        remState.trabajadores = remState.trabajadores.filter(t => t.id !== id);
+        if (remState.trabSelId === id) remState.trabSelId = null;
+        saveTrab(remState.trabajadores);
+        remRefreshBody();
+    }, { titulo: 'Eliminar trabajador', textoBtn: 'Sí, eliminar' });
 }
 
 function remGuardarLiquidacion(trabId) {
@@ -1257,7 +1260,7 @@ function remLiquidarTodos() {
     const nuevas = remState.trabajadores
         .filter(t => !yaExisten.has(t.id))
         .map(t => calcularLiquidacion(t, remState.periodo, getBorrador(t.id)));
-    if (!nuevas.length) { alert('Todos los trabajadores ya fueron liquidados en este período.'); return; }
+    if (!nuevas.length) { mostrarToast('Todos los trabajadores ya fueron liquidados en este período.', 'error'); return; }
     remState.liquidaciones = [...remState.liquidaciones, ...nuevas];
     saveLiqs(remState.liquidaciones);
     remRefreshBody();
@@ -1427,7 +1430,11 @@ function remVerificarPrevired() {
         if (!l.rut) issues.push(`${l.nombre}: falta RUT`);
         if (l.totalImponible <= 0) issues.push(`${l.nombre}: sueldo imponible inválido`);
     });
-    alert(issues.length ? '⚠️ Problemas:\n\n'+issues.join('\n') : '✔ Planilla Previred verificada — sin errores.');
+    if (issues.length) {
+        mostrarToast('Problemas: ' + issues.join(' | '), 'error');
+    } else {
+        mostrarToast('Planilla Previred verificada — sin errores.', 'ok');
+    }
 }
 
 function remPreviredCSV(periodo) {
@@ -1557,4 +1564,621 @@ tr.sub td{background:#f8fafc;font-weight:700;border-top:1px solid #e2e8f0;border
 </table>
 <div class="footer">CONTAPP ERP FORGE · IMM: ${fmt$(REM.IMM)} · Generado: ${new Date().toLocaleDateString('es-CL')}</div>
 </div></body></html>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// VACACIONES
+// ══════════════════════════════════════════════════════════════
+
+// Persistencia vacaciones: array de { id, trabId, tipo:'tomada'|'pendiente', dias, desde, hasta, obs }
+function getVacaciones()   { try { return JSON.parse(localStorage.getItem('rem_vacaciones') || '[]'); } catch { return []; } }
+function saveVacaciones(a) { localStorage.setItem('rem_vacaciones', JSON.stringify(a)); }
+
+// Días legales acumulados desde fecha de ingreso hasta hoy
+// Base legal: 15 días hábiles por año trabajado (art. 67 Código del Trabajo)
+function vacDiasAcumulados(t) {
+    if (!t.fechaIngreso) return 0;
+    const ingreso = new Date(t.fechaIngreso);
+    const hoy     = new Date();
+    const meses   = (hoy.getFullYear() - ingreso.getFullYear()) * 12
+                  + (hoy.getMonth() - ingreso.getMonth());
+    const diasBase = Number(t.diasVacaciones || 15); // puede ser 20 para trabajadores con 10+ años continuos
+    return Math.floor(meses * diasBase / 12);
+}
+
+// Días tomados por trabajador
+function vacDiasTomados(trabId) {
+    return getVacaciones()
+        .filter(v => v.trabId === trabId && v.tipo === 'tomada')
+        .reduce((s, v) => s + (v.dias || 0), 0);
+}
+
+function vacSaldoPendiente(t) {
+    return Math.max(0, vacDiasAcumulados(t) - vacDiasTomados(t.id));
+}
+
+// Calcular días hábiles entre dos fechas (excluye sábado y domingo)
+function vacDiasHabiles(desde, hasta) {
+    let count = 0;
+    const d = new Date(desde);
+    const h = new Date(hasta);
+    while (d <= h) {
+        const dow = d.getDay();
+        if (dow !== 0 && dow !== 6) count++;
+        d.setDate(d.getDate() + 1);
+    }
+    return count;
+}
+
+function remHtmlVacaciones() {
+    const trabajadores = remState.trabajadores;
+    if (!trabajadores.length) return `
+      <div class="rem-empty">
+        <div class="rem-empty-icon">🏖</div>
+        <p>Primero registra trabajadores en la pestaña "Trabajadores".</p>
+      </div>`;
+
+    const vacaciones = getVacaciones();
+    const sel = remState.vacTrabId || trabajadores[0]?.id;
+
+    const lista = trabajadores.map(t => {
+        const saldo = vacSaldoPendiente(t);
+        const activo = t.id === sel;
+        return `<div class="rem-worker-item${activo ? ' sel' : ''}" onclick="remVacSelTrab('${t.id}')">
+          ${avatarHtml(t.nombre, 34)}
+          <div style="flex:1;min-width:0;">
+            <div class="rem-worker-nombre">${t.nombre}</div>
+            <div class="rem-worker-sub">${saldo} días disponibles</div>
+          </div>
+          <span class="rem-badge ${saldo > 0 ? 'rem-badge-ok' : 'rem-badge-gray'}">${saldo}d</span>
+        </div>`;
+    }).join('');
+
+    const t = trabajadores.find(x => x.id === sel);
+    const panel = t ? remHtmlVacPanel(t, vacaciones) : '';
+
+    return `
+    <div class="rem-liq-layout">
+      <div class="rem-worker-list">${lista}</div>
+      <div id="rem-vac-panel">${panel}</div>
+    </div>`;
+}
+
+function remHtmlVacPanel(t, vacaciones) {
+    const acum   = vacDiasAcumulados(t);
+    const tomados= vacDiasTomados(t.id);
+    const saldo  = Math.max(0, acum - tomados);
+    const historial = vacaciones.filter(v => v.trabId === t.id).sort((a,b) => b.desde.localeCompare(a.desde));
+
+    const pct = acum > 0 ? Math.min(100, Math.round((tomados / acum) * 100)) : 0;
+
+    return `
+    <div style="flex:1;min-width:0;">
+
+      <!-- Resumen -->
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+          ${avatarHtml(t.nombre, 44)}
+          <div>
+            <div style="font-size:15px;font-weight:700;">${t.nombre}</div>
+            <div style="font-size:12px;color:var(--text-muted);">
+              Ingreso: ${t.fechaIngreso || '—'} · ${t.diasVacaciones || 15} días/año
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+          <div style="background:var(--table-stripe);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:24px;font-weight:800;color:var(--text);">${acum}</div>
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:600;">Acumulados</div>
+          </div>
+          <div style="background:var(--table-stripe);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:24px;font-weight:800;color:var(--negative);">${tomados}</div>
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:600;">Tomados</div>
+          </div>
+          <div style="background:var(--positive-soft,#d1fae5);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:24px;font-weight:800;color:var(--positive);">${saldo}</div>
+            <div style="font-size:11px;color:var(--positive);text-transform:uppercase;font-weight:600;">Disponibles</div>
+          </div>
+        </div>
+        <!-- Barra de progreso -->
+        <div style="background:var(--divider);border-radius:999px;height:8px;overflow:hidden;">
+          <div style="background:var(--accent);height:100%;width:${pct}%;border-radius:999px;transition:.3s;"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${pct}% de días acumulados utilizados</div>
+      </div>
+
+      <!-- Registrar período de vacaciones -->
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px;">Registrar período de vacaciones</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;display:block;margin-bottom:4px;">Desde</label>
+            <input type="date" id="vacDesde"
+              style="width:100%;padding:9px 12px;border:1px solid var(--divider);border-radius:8px;
+                     background:var(--input-bg);color:var(--text);font-size:13px;box-sizing:border-box;"
+              oninput="remVacCalcDias()">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;display:block;margin-bottom:4px;">Hasta</label>
+            <input type="date" id="vacHasta"
+              style="width:100%;padding:9px 12px;border:1px solid var(--divider);border-radius:8px;
+                     background:var(--input-bg);color:var(--text);font-size:13px;box-sizing:border-box;"
+              oninput="remVacCalcDias()">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <div id="vacDiasCalc" style="font-size:13px;color:var(--text-muted);">Selecciona las fechas para calcular días hábiles</div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;display:block;margin-bottom:4px;">Observación</label>
+          <input type="text" id="vacObs" placeholder="Opcional…"
+            style="width:100%;padding:9px 12px;border:1px solid var(--divider);border-radius:8px;
+                   background:var(--input-bg);color:var(--text);font-size:13px;box-sizing:border-box;">
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:11px;" onclick="remVacGuardar('${t.id}')">
+          + Registrar vacaciones
+        </button>
+      </div>
+
+      <!-- Historial -->
+      ${historial.length ? `
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--divider);font-size:14px;font-weight:700;">
+          Historial
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--table-stripe);">
+              <th style="padding:9px 14px;text-align:left;color:var(--text-muted);font-weight:600;font-size:11px;text-transform:uppercase;">Desde</th>
+              <th style="padding:9px 14px;text-align:left;color:var(--text-muted);font-weight:600;font-size:11px;text-transform:uppercase;">Hasta</th>
+              <th style="padding:9px 14px;text-align:right;color:var(--text-muted);font-weight:600;font-size:11px;text-transform:uppercase;">Días</th>
+              <th style="padding:9px 14px;text-align:left;color:var(--text-muted);font-weight:600;font-size:11px;text-transform:uppercase;">Obs.</th>
+              <th style="padding:9px 14px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${historial.map(v => `
+            <tr style="border-top:1px solid var(--divider);">
+              <td style="padding:9px 14px;">${v.desde}</td>
+              <td style="padding:9px 14px;">${v.hasta}</td>
+              <td style="padding:9px 14px;text-align:right;font-weight:600;">${v.dias}d</td>
+              <td style="padding:9px 14px;color:var(--text-muted);">${v.obs || '—'}</td>
+              <td style="padding:9px 14px;text-align:right;">
+                <button onclick="remVacEliminar('${v.id}')"
+                  style="border:1px solid #fca5a5;background:var(--negative-soft);border-radius:6px;
+                         padding:3px 9px;cursor:pointer;font-size:12px;color:var(--negative);">Eliminar</button>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>` : ''}
+    </div>`;
+}
+
+function remVacSelTrab(id) {
+    remState.vacTrabId = id;
+    const t = remState.trabajadores.find(x => x.id === id);
+    const panel = document.getElementById('rem-vac-panel');
+    if (panel && t) panel.innerHTML = remHtmlVacPanel(t, getVacaciones());
+    document.querySelectorAll('.rem-worker-item').forEach(el => el.classList.remove('sel'));
+    event?.currentTarget?.classList?.add('sel');
+}
+
+function remVacCalcDias() {
+    const desde = document.getElementById('vacDesde')?.value;
+    const hasta = document.getElementById('vacHasta')?.value;
+    const el    = document.getElementById('vacDiasCalc');
+    if (!el) return;
+    if (!desde || !hasta || desde > hasta) { el.textContent = 'Selecciona las fechas para calcular días hábiles'; return; }
+    const dias = vacDiasHabiles(desde, hasta);
+    el.innerHTML = `<strong style="font-size:16px;color:var(--accent);">${dias}</strong> días hábiles`;
+}
+
+function remVacGuardar(trabId) {
+    const desde = document.getElementById('vacDesde')?.value;
+    const hasta = document.getElementById('vacHasta')?.value;
+    if (!desde || !hasta || desde > hasta) { mostrarToast('Ingresa fechas válidas.', 'error'); return; }
+
+    const dias = vacDiasHabiles(desde, hasta);
+    const t    = remState.trabajadores.find(x => x.id === trabId);
+    if (!t) return;
+
+    const saldo = vacSaldoPendiente(t);
+    const _doRegistrar = () => {
+        const arr = getVacaciones();
+        arr.push({
+            id:     Date.now().toString(),
+            trabId,
+            tipo:   'tomada',
+            desde,
+            hasta,
+            dias,
+            obs:    document.getElementById('vacObs')?.value || '',
+        });
+        saveVacaciones(arr);
+        mostrarToast(`${dias} días registrados.`, 'ok');
+        const panel = document.getElementById('rem-vac-panel');
+        if (panel) panel.innerHTML = remHtmlVacPanel(t, arr);
+    };
+    if (dias > saldo) {
+        mostrarConfirm(`⚠️ El trabajador solo tiene ${saldo} días disponibles y estás registrando ${dias}. ¿Continuar?`, _doRegistrar);
+        return;
+    }
+    _doRegistrar();
+}
+
+function remVacEliminar(id) {
+    mostrarConfirm('¿Eliminar este registro de vacaciones?', () => {
+        const arr = getVacaciones().filter(v => v.id !== id);
+        saveVacaciones(arr);
+        remRefreshBody();
+    });
+}
+
+// ══════════════════════════════════════════════════════════════
+// FINIQUITO
+// ══════════════════════════════════════════════════════════════
+
+const CAUSALES = [
+    { value: '159_1', label: 'Art. 159 N°1 — Mutuo acuerdo',                          indem: false },
+    { value: '159_2', label: 'Art. 159 N°2 — Vencimiento del plazo',                  indem: false },
+    { value: '159_4', label: 'Art. 159 N°4 — Renuncia voluntaria',                    indem: false },
+    { value: '159_5', label: 'Art. 159 N°5 — Conclusión del trabajo o servicio',      indem: false },
+    { value: '161',   label: 'Art. 161 — Necesidades de la empresa',                  indem: true  },
+    { value: '161_d', label: 'Art. 161 — Desahucio (cargo de confianza)',              indem: true  },
+    { value: '160',   label: 'Art. 160 — Despido culpa trabajador (sin indemnización)',indem: false },
+];
+
+function remHtmlFiniquito() {
+    const trabajadores = remState.trabajadores;
+    if (!trabajadores.length) return `
+      <div class="rem-empty">
+        <div class="rem-empty-icon">📄</div>
+        <p>Primero registra trabajadores en la pestaña "Trabajadores".</p>
+      </div>`;
+
+    const trabOpts = trabajadores.map(t =>
+        `<option value="${t.id}">${t.nombre} — ${t.rut || 'sin RUT'}</option>`
+    ).join('');
+
+    const hoy = new Date().toISOString().slice(0, 10);
+
+    return `
+    <div style="max-width:680px;">
+
+      <!-- Selector -->
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px;">Datos del finiquito</div>
+        <div style="display:grid;gap:12px;">
+
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;display:block;margin-bottom:4px;">Trabajador</label>
+            <select id="fiqTrabId" onchange="remFiqRecalcular()"
+              style="width:100%;padding:9px 12px;border:1px solid var(--divider);border-radius:8px;
+                     background:var(--input-bg);color:var(--text);font-size:13px;box-sizing:border-box;">
+              <option value="">— Seleccionar —</option>
+              ${trabOpts}
+            </select>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;display:block;margin-bottom:4px;">Fecha de término</label>
+              <input type="date" id="fiqFechaTermino" value="${hoy}" onchange="remFiqRecalcular()"
+                style="width:100%;padding:9px 12px;border:1px solid var(--divider);border-radius:8px;
+                       background:var(--input-bg);color:var(--text);font-size:13px;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;display:block;margin-bottom:4px;">Causal de término</label>
+              <select id="fiqCausal" onchange="remFiqRecalcular()"
+                style="width:100%;padding:9px 12px;border:1px solid var(--divider);border-radius:8px;
+                       background:var(--input-bg);color:var(--text);font-size:13px;box-sizing:border-box;">
+                ${CAUSALES.map(c => `<option value="${c.value}">${c.label}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;display:block;margin-bottom:4px;">¿Se dio aviso previo (30 días)?</label>
+            <div style="display:flex;gap:10px;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                <input type="radio" name="fiqAviso" value="si" checked onchange="remFiqRecalcular()"> Sí
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                <input type="radio" name="fiqAviso" value="no" onchange="remFiqRecalcular()"> No (pagar indemnización sustitutiva)
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Resultado -->
+      <div id="fiq-resultado"></div>
+    </div>`;
+}
+
+function remFiqRecalcular() {
+    const trabId  = document.getElementById('fiqTrabId')?.value;
+    const fechaT  = document.getElementById('fiqFechaTermino')?.value;
+    const causal  = document.getElementById('fiqCausal')?.value;
+    const aviso   = document.querySelector('input[name="fiqAviso"]:checked')?.value === 'si';
+    const cont    = document.getElementById('fiq-resultado');
+    if (!cont) return;
+    if (!trabId || !fechaT) { cont.innerHTML = ''; return; }
+
+    const t = remState.trabajadores.find(x => x.id === trabId);
+    if (!t) return;
+
+    const calc  = remCalcularFiniquito(t, fechaT, causal, aviso);
+    cont.innerHTML = remHtmlFiqResultado(t, calc, fechaT, causal, aviso);
+}
+
+function remCalcularFiniquito(t, fechaTermino, causal, avisoPrevio) {
+    const ingreso  = new Date(t.fechaIngreso || fechaTermino);
+    const termino  = new Date(fechaTermino);
+
+    // Años y meses de servicio
+    let anios  = termino.getFullYear() - ingreso.getFullYear();
+    let meses  = termino.getMonth()    - ingreso.getMonth();
+    let dias   = termino.getDate()     - ingreso.getDate();
+    if (dias  < 0) { meses--; }
+    if (meses < 0) { anios--; meses += 12; }
+    const aniosFrac = anios + meses / 12; // fracción para vacaciones proporcionales
+
+    // Última remuneración base (promedio últimos 3 meses si hay liquidaciones)
+    const liqs3 = remState.liquidaciones
+        .filter(l => l.trabajadorId === t.id)
+        .sort((a,b) => b.periodo.localeCompare(a.periodo))
+        .slice(0, 3);
+    const baseCalc = liqs3.length
+        ? Math.round(liqs3.reduce((s,l) => s + l.totalImponible, 0) / liqs3.length)
+        : Number(t.sueldoBruto || 0);
+
+    // ── Indemnización por años de servicio ─────────────────────
+    const infoCausal = CAUSALES.find(c => c.value === causal) || CAUSALES[0];
+    const correspondeIndem = infoCausal.indem && t.tipoContrato === 'indefinido';
+    const aniosIndem = Math.min(11, Math.floor(aniosFrac)); // tope legal 11 años
+    const indemAnios = correspondeIndem ? Math.round(baseCalc * aniosIndem) : 0;
+
+    // ── Indemnización sustitutiva de aviso previo ───────────────
+    // Art. 161: si no se da aviso con 30 días, pagar 1 mes adicional
+    const indemAviso = (!avisoPrevio && infoCausal.indem)
+        ? Math.round(baseCalc) : 0;
+
+    // ── Vacaciones proporcionales ───────────────────────────────
+    // Días acumulados desde último período completo pagado
+    const diasVacBase   = Number(t.diasVacaciones || 15);
+    const diasAcumTotal = vacDiasAcumulados(t);
+    const diasTomados   = vacDiasTomados(t.id);
+    const diasPendientes= Math.max(0, diasAcumTotal - diasTomados);
+    // Valor día hábil = sueldo mensual / 30
+    const valorDia      = Math.round(baseCalc / 30);
+    const vacProporcional = Math.round(diasPendientes * valorDia);
+
+    // ── Feriado proporcional ────────────────────────────────────
+    // Meses trabajados en el año en curso × (diasVacBase/12) días
+    const inicioAnio    = new Date(termino.getFullYear(), 0, 1);
+    const mesesAnio     = termino.getMonth() + (termino.getDate() > 0 ? 1 : 0);
+    const diasFeriado   = Math.round(mesesAnio * diasVacBase / 12);
+    const feriadoProp   = Math.round(diasFeriado * valorDia);
+
+    // ── Sueldo proporcional al mes (si no terminó en fin de mes) ─
+    const diaTermino    = termino.getDate();
+    const diasDelMes    = new Date(termino.getFullYear(), termino.getMonth() + 1, 0).getDate();
+    const sueldoProp    = diaTermino < diasDelMes
+        ? Math.round(baseCalc * diaTermino / diasDelMes) : baseCalc;
+
+    const totalFiniquito = indemAnios + indemAviso + vacProporcional + feriadoProp + sueldoProp;
+
+    return {
+        anios, meses, aniosFrac, aniosIndem,
+        baseCalc, valorDia,
+        correspondeIndem, indemAnios,
+        indemAviso, avisoPrevio,
+        diasPendientes, vacProporcional,
+        diasFeriado, feriadoProp,
+        diaTermino, diasDelMes, sueldoProp,
+        totalFiniquito,
+    };
+}
+
+function remHtmlFiqResultado(t, c, fechaTermino, causal, avisoPrevio) {
+    const infoCausal = CAUSALES.find(x => x.value === causal) || CAUSALES[0];
+    const fila = (lbl, monto, hint = '') => `
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  padding:10px 0;border-bottom:1px solid var(--divider);">
+        <div>
+          <div style="font-size:13px;color:var(--text);">${lbl}</div>
+          ${hint ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${hint}</div>` : ''}
+        </div>
+        <div style="font-size:14px;font-weight:700;font-family:monospace;
+                    color:${monto > 0 ? 'var(--positive)' : 'var(--text-muted)'};">
+          ${monto > 0 ? fmt$(monto) : '$ 0'}
+        </div>
+      </div>`;
+
+    return `
+    <div class="card" style="padding:20px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;
+                  padding-bottom:14px;border-bottom:2px solid var(--divider);">
+        <div>
+          <div style="font-size:15px;font-weight:800;">${t.nombre}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
+            ${t.rut || ''} · ${c.anios} año(s) y ${c.meses} mes(es) de servicio
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+            Causal: ${infoCausal.label}
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:600;">Base de cálculo</div>
+          <div style="font-size:18px;font-weight:800;color:var(--accent);">${fmt$(c.baseCalc)}</div>
+          <div style="font-size:10px;color:var(--text-muted);">${remState.liquidaciones.filter(l=>l.trabajadorId===t.id).length >= 3 ? 'Prom. últimas 3 liq.' : 'Sueldo bruto'}</div>
+        </div>
+      </div>
+
+      <!-- Desglose -->
+      ${fila(
+          `Sueldo proporcional al mes${c.diaTermino < c.diasDelMes ? ` (${c.diaTermino} de ${c.diasDelMes} días)` : ' (mes completo)'}`,
+          c.sueldoProp,
+          `${c.baseCalc.toLocaleString('es-CL')} / ${c.diasDelMes} × ${c.diaTermino} días`
+      )}
+      ${fila(
+          `Vacaciones proporcionales (${c.diasPendientes} días pendientes)`,
+          c.vacProporcional,
+          `Valor día: ${fmt$(c.valorDia)}`
+      )}
+      ${fila(
+          `Feriado proporcional (${c.diasFeriado} días del año en curso)`,
+          c.feriadoProp,
+          `${new Date().getMonth() + 1} meses trabajados en ${new Date().getFullYear()}`
+      )}
+      ${c.correspondeIndem ? fila(
+          `Indemnización por años de servicio (${c.aniosIndem} año${c.aniosIndem !== 1 ? 's' : ''}, tope 11)`,
+          c.indemAnios,
+          `${fmt$(c.baseCalc)} × ${c.aniosIndem} año(s)`
+      ) : `<div style="padding:10px 0;border-bottom:1px solid var(--divider);font-size:13px;color:var(--text-muted);">
+        Indemnización por años de servicio — no aplica (${infoCausal.indem ? 'contrato no indefinido' : 'causal sin indemnización'})
+      </div>`}
+      ${!avisoPrevio && infoCausal.indem ? fila(
+          'Indemnización sustitutiva de aviso previo (1 mes)',
+          c.indemAviso,
+          'Art. 161 — sin aviso de 30 días'
+      ) : ''}
+
+      <!-- Total -->
+      <div style="background:var(--accent);border-radius:12px;padding:16px 20px;margin-top:16px;
+                  display:flex;justify-content:space-between;align-items:center;">
+        <div style="color:#fff;font-size:14px;font-weight:700;">TOTAL FINIQUITO</div>
+        <div style="color:#fff;font-size:22px;font-weight:800;font-family:monospace;">${fmt$(c.totalFiniquito)}</div>
+      </div>
+
+      <!-- Acciones -->
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+        <button onclick="remImprimirFiniquito('${t.id}','${fechaTermino}','${causal}',${avisoPrevio})"
+          style="padding:10px 20px;border:1px solid var(--divider);background:var(--input-bg);
+                 color:var(--text);border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;">
+          🖨️ Imprimir finiquito
+        </button>
+        <button class="btn btn-primary" style="padding:10px 22px;font-size:13px;"
+          onclick="remFiqAsiento('${t.id}','${fechaTermino}','${causal}',${avisoPrevio})">
+          📒 Generar asiento contable
+        </button>
+      </div>
+    </div>`;
+}
+
+function remImprimirFiniquito(trabId, fechaTermino, causal, avisoPrevio) {
+    const t = remState.trabajadores.find(x => x.id === trabId);
+    if (!t) return;
+    const c = remCalcularFiniquito(t, fechaTermino, causal, avisoPrevio === 'true' || avisoPrevio === true);
+    const infoCausal = CAUSALES.find(x => x.value === causal) || CAUSALES[0];
+    const empresa = JSON.parse(localStorage.getItem('core_config') || '{}').empresa || 'Empresa';
+    const hoy = new Date().toLocaleDateString('es-CL');
+
+    const fila = (lbl, monto) => monto > 0
+        ? `<tr><td>${lbl}</td><td style="text-align:right;font-weight:600;">${fmt$(monto)}</td></tr>` : '';
+
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<title>Finiquito ${t.nombre}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:11px;color:#111;padding:32px}
+.head{margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #0f172a}
+h1{font-size:18px;font-weight:800;color:#0f172a}
+.sub{color:#64748b;font-size:11px;margin-top:3px}
+table{width:100%;border-collapse:collapse;margin-bottom:16px}
+td{padding:7px 10px;border-bottom:1px solid #f1f5f9}
+th{background:#f8fafc;padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0}
+.total td{background:#0f172a;color:#fff;font-size:14px;font-weight:800;padding:12px 10px}
+.firma{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px}
+.firma-box{border-top:1px solid #111;padding-top:8px;text-align:center;font-size:10px;color:#64748b}
+.legal{font-size:9px;color:#94a3b8;margin-top:24px;line-height:1.5}
+</style>
+</head><body>
+<div class="head">
+  <h1>Finiquito de Trabajo</h1>
+  <div class="sub">${empresa} · Fecha: ${fechaTermino} · Generado: ${hoy}</div>
+</div>
+<p style="margin-bottom:16px;font-size:12px;line-height:1.6;">
+  Por medio del presente instrumento, <strong>${empresa}</strong> y don/doña <strong>${t.nombre}</strong>,
+  RUT <strong>${t.rut || '—'}</strong>, acuerdan poner término a la relación laboral con fecha
+  <strong>${fechaTermino}</strong>, en virtud de la causal contemplada en el <strong>${infoCausal.label}</strong>.
+</p>
+<p style="margin-bottom:16px;font-size:11px;line-height:1.6;color:#64748b;">
+  El trabajador prestó servicios desde el <strong>${t.fechaIngreso || '—'}</strong>, con una antigüedad de
+  <strong>${c.anios} año(s) y ${c.meses} mes(es)</strong>. Remuneración base de cálculo: <strong>${fmt$(c.baseCalc)}</strong>.
+</p>
+<table>
+  <thead><tr><th>Concepto</th><th style="text-align:right;">Monto</th></tr></thead>
+  <tbody>
+    ${fila(`Sueldo proporcional al mes (${c.diaTermino} de ${c.diasDelMes} días)`, c.sueldoProp)}
+    ${fila(`Vacaciones proporcionales (${c.diasPendientes} días)`, c.vacProporcional)}
+    ${fila(`Feriado proporcional (${c.diasFeriado} días)`, c.feriadoProp)}
+    ${fila(`Indemnización por años de servicio (${c.aniosIndem} año${c.aniosIndem!==1?'s':''})`, c.indemAnios)}
+    ${fila('Indemnización sustitutiva de aviso previo', c.indemAviso)}
+  </tbody>
+  <tfoot class="total">
+    <tr><td>TOTAL A PAGAR</td><td style="text-align:right;">${fmt$(c.totalFiniquito)}</td></tr>
+  </tfoot>
+</table>
+<p style="font-size:11px;margin-bottom:16px;line-height:1.6;">
+  Con el pago de la suma indicada, el trabajador declara no tener más acción ni reclamo que ejercer
+  en contra del empleador por concepto alguno derivado de la relación laboral que por este instrumento
+  se pone término.
+</p>
+<div class="firma">
+  <div class="firma-box">Firma trabajador<br><br>${t.nombre}<br>RUT: ${t.rut || '—'}</div>
+  <div class="firma-box">Firma empleador<br><br>${empresa}<br>Representante Legal</div>
+</div>
+<div class="legal">
+  Este documento tiene carácter de finiquito laboral de conformidad con el artículo 177 del Código del Trabajo.
+  Para que sea válido, debe ser firmado por ambas partes ante ministro de fe (notario, inspector del trabajo, etc.).
+</div>
+</body></html>`;
+
+    const w = window.open('', '_blank', 'width=800,height=960');
+    if (w) { w.document.write(html); w.document.close(); w.print(); }
+}
+
+function remFiqAsiento(trabId, fechaTermino, causal, avisoPrevio) {
+    const t = remState.trabajadores.find(x => x.id === trabId);
+    if (!t) return;
+    const c = remCalcularFiniquito(t, fechaTermino, causal, avisoPrevio === 'true' || avisoPrevio === true);
+
+    const [y, m, d] = fechaTermino.split('-');
+    const fecha = `${d}/${m}/${y}`;
+
+    const asientos = JSON.parse(localStorage.getItem('core_asientos') || '[]');
+    const nextNum  = asientos.length ? Math.max(...asientos.map(a => a.numero || 0)) + 1 : 1;
+
+    const movs = [];
+    const deb = (cuenta, monto) => movs.push({ cuenta, debe: Math.round(monto), haber: 0 });
+    const hab = (cuenta, monto) => movs.push({ cuenta, debe: 0, haber: Math.round(monto) });
+
+    _remEnsureCuenta('Gasto Finiquito',                   'Pérdida', 'Pérdidas', 530);
+    _remEnsureCuenta('Indemnización por años por pagar',  'Pasivo',  'Pasivo Circulante', 240);
+    _remEnsureCuenta('Vacaciones por pagar',              'Pasivo',  'Pasivo Circulante', 241);
+
+    const gastoTotal = c.totalFiniquito;
+    deb('Gasto Finiquito', gastoTotal);
+    if (c.indemAnios > 0)   hab('Indemnización por años por pagar', c.indemAnios);
+    if (c.indemAviso > 0)   hab('Indemnización por años por pagar', c.indemAviso);
+    if (c.vacProporcional + c.feriadoProp > 0) hab('Vacaciones por pagar', c.vacProporcional + c.feriadoProp);
+    hab('Banco', c.sueldoProp + (c.vacProporcional + c.feriadoProp) * 0); // sueldo se paga directo
+    // Ajuste: todo lo que no va a cuentas específicas va a Banco
+    const habTotal = movs.filter(m=>m.haber>0).reduce((s,m)=>s+m.haber,0);
+    if (gastoTotal > habTotal) hab('Banco', gastoTotal - habTotal);
+
+    asientos.push({
+        id: Date.now(), numero: nextNum, fecha,
+        tipo: 'finiquito',
+        glosa: `Finiquito ${t.nombre} — ${CAUSALES.find(c=>c.value===causal)?.label || causal}`,
+        movimientos: movs, estado: 'ACTIVO',
+    });
+    localStorage.setItem('core_asientos', JSON.stringify(asientos));
+    if (window.dbAsientos) { window.dbAsientos.length = 0; asientos.forEach(a => window.dbAsientos.push(a)); }
+    if (typeof renderHistorialDiario === 'function') renderHistorialDiario();
+    mostrarToast('Asiento de finiquito generado.', 'ok');
 }
