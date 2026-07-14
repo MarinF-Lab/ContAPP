@@ -31,6 +31,7 @@ function modTab(viewId, tabId) {
         'tab-diario':              () => {},
         'tab-mayor':               () => generarLibroMayor(),
         'tab-balance':             () => generarBalanceGeneral(),
+        'tab-plan-cuentas':        () => renderPlanCuentas(),
         'tab-balance-clasificado': () => generarBalanceClasificado(),
         'tab-estado-resultados':   () => generarEstadoResultados(),
         'tab-flujo-caja':          () => { _initSelFlujoCajaAnio(); generarFlujoCaja(); },
@@ -83,6 +84,7 @@ function navegar(modulo, elNav) {
         'diario':              ['estructura-contable',  'tab-diario'],
         'mayor':               ['estructura-contable',  'tab-mayor'],
         'balance':             ['estructura-contable',  'tab-balance'],
+        'plan-cuentas':        ['estructura-contable',  'tab-plan-cuentas'],
         'balance-clasificado': ['reportes-financieros', 'tab-balance-clasificado'],
         'estado-resultados':   ['reportes-financieros', 'tab-estado-resultados'],
         'flujo-caja':          ['reportes-financieros', 'tab-flujo-caja'],
@@ -129,7 +131,7 @@ function navegar(modulo, elNav) {
 
     const titulos = {
         inicio:                ['Panel de Inicio',              'Resumen financiero consolidado en tiempo real'],
-        'estructura-contable': ['Contabilidad — Estructura Contable', 'Libro Diario, Libro Mayor y Balance General'],
+        'estructura-contable': ['Contabilidad — Estructura Contable', 'Libro Diario, Libro Mayor, Balance General y Plan de Cuentas'],
         'reportes-financieros':['Contabilidad — Reportes Financieros','Balance Clasificado, Estado de Resultados y Flujo de Caja'],
         'egresos-ingresos':    ['Comercial — Egresos e Ingresos','Libro de Compras, Libro de Ventas y Boletas de Honorarios'],
         'tributario-1cat':     ['Comercial — Tributario',        'Declaración de impuestos F29 e IVA del período'],
@@ -185,7 +187,6 @@ function navegar(modulo, elNav) {
     if (modulo === 'conciliacion-cartolas')_fireActiveTab('view-conciliacion-cartolas');
     if (modulo === 'activos-produccion')   _fireActiveTab('view-activos-produccion');
     if (modulo === 'auditoria')            _fireActiveTab('view-auditoria');
-    if (modulo === 'plan-cuentas')    renderPlanCuentas();
     if (modulo === 'documentos')            renderDocumentos();
     if (modulo === 'clientes')              renderContactos();
     if (modulo === 'remuneraciones') _fireActiveTab('view-remuneraciones');

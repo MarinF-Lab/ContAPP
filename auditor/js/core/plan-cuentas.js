@@ -338,12 +338,16 @@ window._detectarCuentasNoRegistradas = _detectarCuentasNoRegistradas;
 // Muestra un mostrarConfirm() listando las cuentas nuevas detectadas (con su tipo/grupo
 // inferido); si el usuario acepta, las crea y persiste, refresca la UI si está visible,
 // y recién ahí invoca onListo(). Si no hay nombres, invoca onListo() directo sin diálogo.
-function _confirmarYCrearCuentasFaltantes(nombres, onListo) {
+// `hints` (opcional) es un mapa { nombreCuenta: {tipo, grupo, subgrupo} } con clasificaciones
+// ya conocidas por el llamador (ej. el parser de glosas sabe que dedujo una cuenta de gasto),
+// que se usan en vez de adivinar por el nombre — más preciso que _inferirTipoGrupoCuenta().
+function _confirmarYCrearCuentasFaltantes(nombres, onListo, hints = {}) {
     if (!nombres || !nombres.length) { onListo(); return; }
 
     const inferencias = nombres.map(n => {
-        const { tipo, grupo } = _inferirTipoGrupoCuenta(n);
-        return { nombre: n, tipo, grupo, subgrupo: _inferirSubgrupo(n, tipo, grupo) };
+        const hint = hints[n];
+        const { tipo, grupo } = hint || _inferirTipoGrupoCuenta(n);
+        return { nombre: n, tipo, grupo, subgrupo: hint?.subgrupo || _inferirSubgrupo(n, tipo, grupo) };
     });
 
     const detalle = inferencias.map(i => `• <strong>${i.nombre}</strong> — ${i.tipo} / ${i.grupo}`).join('<br>');
@@ -427,7 +431,7 @@ const PLAN_TAB_GRUPOS = {
 
 function planSetTab(tab) {
     planTabActual = tab;
-    document.querySelectorAll('.rem-tab[id^="planTab-"]').forEach(btn => {
+    document.querySelectorAll('.plan-tab[id^="planTab-"]').forEach(btn => {
         btn.classList.toggle('active', btn.id === 'planTab-' + tab);
     });
     renderPlanCuentas();
@@ -524,6 +528,7 @@ function renderPlanCuentas() {
                 ">${entradas.length} cuenta${entradas.length !== 1 ? 's' : ''}</span>
             </div>
 
+            <div class="table-wrapper">
             <table class="cont-table" style="border-radius:0 0 8px 8px;overflow:hidden;">
                 <thead>
                     <tr>
@@ -539,6 +544,7 @@ function renderPlanCuentas() {
                     ${filas || `<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">Sin cuentas en este grupo</td></tr>`}
                 </tbody>
             </table>
+            </div>
         </div>`;
     });
 
