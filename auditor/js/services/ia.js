@@ -43,9 +43,11 @@ function iaVerificarKeyAlCargar() {
             el.textContent = '⚠️ Sin API key — ingresa tu key de Google AI Studio para activar las funciones de IA.';
         }
     }
-    // Mostrar/ocultar botón IA en modal de Diario
-    const btnGlosa = document.getElementById('btnIaGlosa');
-    if (btnGlosa) btnGlosa.style.display = key ? '' : 'none';
+    // Mostrar/ocultar botones IA de glosa (tab principal del Diario y modal de Asiento Manual)
+    ['btnIaGlosaPrincipal', 'btnIaGlosaManual'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = key ? '' : 'none';
+    });
 }
 
 // ── Llamada base ──────────────────────────────────────────────────────────────
@@ -151,12 +153,12 @@ async function iaGenerarTextoInforme(hallazgos) {
 
 // ── Integración Libro Diario ──────────────────────────────────────────────────
 
-async function iaSugerirCuentaGlosa() {
-    const glosa = document.getElementById('glosaManual')?.value?.trim();
+async function iaSugerirCuentaGlosa(inputId = 'glosaManual', btnId = 'btnIaGlosaManual', divId = 'iaGlosaSugerencia') {
+    const glosa = document.getElementById(inputId)?.value?.trim();
     if (!glosa) { mostrarToast('Escribe una glosa primero.', 'error'); return; }
 
-    const btn = document.getElementById('btnIaGlosa');
-    const div = document.getElementById('iaGlosaSugerencia');
+    const btn = document.getElementById(btnId);
+    const div = document.getElementById(divId);
     if (btn) btn.disabled = true;
 
     const resultado = await iaAnalizarGlosa(glosa);
@@ -168,6 +170,10 @@ async function iaSugerirCuentaGlosa() {
         div.style.display = '';
         div.innerHTML = `✨ Sugerencia: <strong>${resultado.codigo}</strong> — ${resultado.nombre} <em style="opacity:.7">(${resultado.tipo})</em>`;
     }
+}
+
+async function iaSugerirCuentaGlosaPrincipal() {
+    return iaSugerirCuentaGlosa('glosaInput', 'btnIaGlosaPrincipal', 'iaGlosaSugerenciaPrincipal');
 }
 
 // ── Modal de resultado ────────────────────────────────────────────────────────

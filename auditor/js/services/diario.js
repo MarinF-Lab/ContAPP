@@ -31,6 +31,7 @@ const _CUENTA_KEYWORDS = [
     { re: /iva\s+d[eé]bito\s+fiscal/i,                                                cuenta: 'IVA Débito Fiscal'            },
     { re: /remuneraciones?\s+por\s+pagar|sueldos?\s+por\s+pagar/i,                   cuenta: 'Remuneraciones por Pagar'    },
     { re: /impuestos?\s+por\s+pagar/i,                                                cuenta: 'Impuestos por Pagar'         },
+    { re: /pr[eé]stamo\s+bancario.*(corto\s+plazo|\bcp\b)|cr[eé]dito.*(corto\s+plazo|\bcp\b)/i, cuenta: 'Préstamos Bancarios CP' },
     { re: /pr[eé]stamo\s+bancario|cr[eé]dito\s+bancario|hipoteca/i,                  cuenta: 'Préstamos Bancarios LP'      },
 
     // ── Activos circulantes ──
@@ -74,6 +75,8 @@ const _NATURALEZA_DEFAULT = {
     'Depreciación Acumulada Maquinarias': 'Haber',
     'Depreciación Acumulada Equipos': 'Haber',
     'Amortización Acumulada': 'Haber',
+    'Previsión Social por Pagar': 'Haber',
+    'Préstamos Bancarios CP': 'Haber',
 };
 
 function _naturalezaCuenta(nombre) {
@@ -224,6 +227,10 @@ function procesarGlosa() {
 
     else if (/venta|vendemos/i.test(g))
         tipo = "venta";
+
+    else if (/(compra|compramos|adquisici[oó]n)/i.test(g) &&
+             /internet|tel[eé]fono|luz|electricidad|agua|servicios?\s+b[aá]sicos?|seguro|mantenimiento|reparaci[oó]n|comisi[oó]n|publicidad|marketing|arriendo|alquiler|data\s*show|proyector/i.test(g))
+        tipo = "gasto";
 
     else if (/compra|compramos|adquisici[oó]n/i.test(g))
         tipo = "compra";
@@ -526,7 +533,7 @@ else if(tipo === "apertura_cuenta_corriente"){
             cuentaGasto = "Gastos de Mantenimiento";
 
         else if (/comisi[oó]n/i.test(g))
-            cuentaGasto = "Comisiones";
+            cuentaGasto = "Comisiones Pagadas";
 
         if (/factura|iva/i.test(g)) {
 
@@ -581,7 +588,7 @@ else if(tipo === "apertura_cuenta_corriente"){
         }
         const capital = Math.max(montoTotal - intereses, 0);
         if (capital > 0) debe.push({ cuenta: "Préstamos Bancarios LP", monto: capital });
-        if (intereses > 0) debe.push({ cuenta: "Intereses y Gastos Financieros", monto: intereses });
+        if (intereses > 0) debe.push({ cuenta: "Intereses Pagados", monto: intereses });
         haber.push({ cuenta: "Banco", monto: montoTotal });
     }
 
@@ -746,6 +753,16 @@ const asiento = {
             }))
         ]
     };
+
+    const faltantes = _detectarCuentasNoRegistradas(asiento.movimientos);
+    if (faltantes.length) {
+        _confirmarYCrearCuentasFaltantes(faltantes, () => _persistirAsientoDiario(asiento));
+    } else {
+        _persistirAsientoDiario(asiento);
+    }
+}
+
+function _persistirAsientoDiario(asiento) {
 
     if (asientoEditando) {
 
@@ -1142,6 +1159,15 @@ function guardarAsientoManual() {
         })),
     };
 
+    const faltantes = _detectarCuentasNoRegistradas(asiento.movimientos);
+    if (faltantes.length) {
+        _confirmarYCrearCuentasFaltantes(faltantes, () => _persistirAsientoManual(asiento));
+    } else {
+        _persistirAsientoManual(asiento);
+    }
+}
+
+function _persistirAsientoManual(asiento) {
     dbAsientos.push(asiento);
     localStorage.setItem('core_asientos', JSON.stringify(dbAsientos));
 
