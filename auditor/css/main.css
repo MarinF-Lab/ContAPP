@@ -3862,6 +3862,38 @@ body[data-imprimiendo] .ia-chat-panel { display: none !important; }
 .mod-tab-panel { display: none; }
 .mod-tab-panel.active { display: block; }
 
+/* ── Plan de Cuentas — sub-tabs (Activos/Pasivos/Patrimonio/Resultados) ──
+   Clases propias para no colisionar con .rem-tab (main.css + remuneraciones.css
+   definen esa clase con reglas que se pisan y dejan texto ilegible). */
+.plan-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+.plan-tab {
+    padding: 9px 16px;
+    border: 1px solid var(--divider);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, color .15s, border-color .15s;
+}
+.plan-tab:hover { background: var(--table-stripe); color: var(--text); }
+.plan-tab.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+@media (max-width: 768px) {
+    .plan-tab { padding: 8px 12px; font-size: 12px; }
+}
+
 /* Nombre del módulo sobre las tabs */
 .mod-header {
     display: flex;

@@ -31,6 +31,7 @@ const _CUENTA_KEYWORDS = [
     { re: /iva\s+d[eé]bito\s+fiscal/i,                                                cuenta: 'IVA Débito Fiscal'            },
     { re: /remuneraciones?\s+por\s+pagar|sueldos?\s+por\s+pagar/i,                   cuenta: 'Remuneraciones por Pagar'    },
     { re: /impuestos?\s+por\s+pagar/i,                                                cuenta: 'Impuestos por Pagar'         },
+    { re: /pr[eé]stamo\s+bancario.*(corto\s+plazo|\bcp\b)|cr[eé]dito.*(corto\s+plazo|\bcp\b)/i, cuenta: 'Préstamos Bancarios CP' },
     { re: /pr[eé]stamo\s+bancario|cr[eé]dito\s+bancario|hipoteca/i,                  cuenta: 'Préstamos Bancarios LP'      },
 
     // ── Activos circulantes ──
@@ -74,6 +75,8 @@ const _NATURALEZA_DEFAULT = {
     'Depreciación Acumulada Maquinarias': 'Haber',
     'Depreciación Acumulada Equipos': 'Haber',
     'Amortización Acumulada': 'Haber',
+    'Previsión Social por Pagar': 'Haber',
+    'Préstamos Bancarios CP': 'Haber',
 };
 
 function _naturalezaCuenta(nombre) {
@@ -107,6 +110,40 @@ function _clasificarCuentaInicial(texto) {
 // Mantener alias para compatibilidad con código existente
 const _ACTIVO_KEYWORDS = _CUENTA_KEYWORDS;
 function _clasificarActivoInicial(texto) { return _clasificarCuentaInicial(texto) || 'Caja'; }
+
+// ── Deducción de cuenta de gasto no catalogada ──────────────────
+// Cuando la glosa dice "gasto de X por $..." y X no calza con ninguna
+// categoría conocida (Publicidad, Arriendos, Seguros, etc.), en vez de
+// agruparla bajo "Gastos Generales" se deduce el nombre específico desde
+// el propio texto de la glosa. La cuenta resultante no existe todavía en
+// el Plan de Cuentas, así que _detectarCuentasNoRegistradas() la atrapa
+// automáticamente al guardar el asiento — sin pasos manuales adicionales.
+const _SIGLAS_CUENTA = new Set(['sii', 'iva', 'ppm', 'f29', 'f22', 'uf', 'utm', 'dj']);
+const _CONECTORES_CUENTA = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'y', 'en', 'por', 'a', 'un', 'una']);
+
+function _tituloCuenta(texto) {
+    return texto
+        .trim()
+        .split(/\s+/)
+        .map((palabra, i) => {
+            const lower = palabra.toLowerCase();
+            if (_SIGLAS_CUENTA.has(lower)) return lower.toUpperCase();
+            if (i > 0 && _CONECTORES_CUENTA.has(lower)) return lower;
+            return lower.charAt(0).toUpperCase() + lower.slice(1);
+        })
+        .join(' ');
+}
+
+function _extraerConceptoGasto(glosa) {
+    const m = glosa.match(/gastos?\s+(?:de|en)\s+([a-záéíóúñ][a-záéíóúñ0-9\s]{2,40}?)\s+por\s+\$/i)
+           || glosa.match(/pago\s+(?:de|por)\s+([a-záéíóúñ][a-záéíóúñ0-9\s]{2,40}?)\s+por\s+\$/i);
+    if (!m) return null;
+
+    const concepto = m[1].trim().replace(/^(la|el|los|las|un|una|del)\s+/i, '');
+    if (concepto.length < 3) return null;
+
+    return _tituloCuenta(concepto);
+}
 
 function _limpiarNumStr(s) {
     return parseInt(String(s).replace(/\./g, '').replace(/,/g, ''), 10) || 0;
@@ -225,6 +262,10 @@ function procesarGlosa() {
     else if (/venta|vendemos/i.test(g))
         tipo = "venta";
 
+    else if (/(compra|compramos|adquisici[oó]n)/i.test(g) &&
+             /internet|tel[eé]fono|luz|electricidad|agua|servicios?\s+b[aá]sicos?|seguro|mantenimiento|reparaci[oó]n|comisi[oó]n|publicidad|marketing|arriendo|alquiler|data\s*show|proyector/i.test(g))
+        tipo = "gasto";
+
     else if (/compra|compramos|adquisici[oó]n/i.test(g))
         tipo = "compra";
 
@@ -264,6 +305,7 @@ function procesarGlosa() {
 
     let debe = [];
     let haber = [];
+    let cuentasHint = {}; // clasificación conocida de cuentas deducidas dinámicamente (ver tipo "gasto")
 
     let flujos =
         extraerFlujoDinero(
@@ -526,7 +568,15 @@ else if(tipo === "apertura_cuenta_corriente"){
             cuentaGasto = "Gastos de Mantenimiento";
 
         else if (/comisi[oó]n/i.test(g))
-            cuentaGasto = "Comisiones";
+            cuentaGasto = "Comisiones Pagadas";
+
+        else {
+            const concepto = _extraerConceptoGasto(glosa);
+            if (concepto) {
+                cuentaGasto = concepto;
+                cuentasHint[cuentaGasto] = { tipo: 'Pérdida', grupo: 'Pérdidas', subgrupo: 'Costos y Gastos Operacionales' };
+            }
+        }
 
         if (/factura|iva/i.test(g)) {
 
@@ -581,7 +631,7 @@ else if(tipo === "apertura_cuenta_corriente"){
         }
         const capital = Math.max(montoTotal - intereses, 0);
         if (capital > 0) debe.push({ cuenta: "Préstamos Bancarios LP", monto: capital });
-        if (intereses > 0) debe.push({ cuenta: "Intereses y Gastos Financieros", monto: intereses });
+        if (intereses > 0) debe.push({ cuenta: "Intereses Pagados", monto: intereses });
         haber.push({ cuenta: "Banco", monto: montoTotal });
     }
 
@@ -624,7 +674,8 @@ else if(tipo === "apertura_cuenta_corriente"){
     preasientoActual = {
         glosa,
         debe,
-        haber
+        haber,
+        cuentasHint
     };
 
     renderPreasiento();
@@ -746,6 +797,16 @@ const asiento = {
             }))
         ]
     };
+
+    const faltantes = _detectarCuentasNoRegistradas(asiento.movimientos);
+    if (faltantes.length) {
+        _confirmarYCrearCuentasFaltantes(faltantes, () => _persistirAsientoDiario(asiento), preasientoActual.cuentasHint || {});
+    } else {
+        _persistirAsientoDiario(asiento);
+    }
+}
+
+function _persistirAsientoDiario(asiento) {
 
     if (asientoEditando) {
 
@@ -1142,6 +1203,15 @@ function guardarAsientoManual() {
         })),
     };
 
+    const faltantes = _detectarCuentasNoRegistradas(asiento.movimientos);
+    if (faltantes.length) {
+        _confirmarYCrearCuentasFaltantes(faltantes, () => _persistirAsientoManual(asiento));
+    } else {
+        _persistirAsientoManual(asiento);
+    }
+}
+
+function _persistirAsientoManual(asiento) {
     dbAsientos.push(asiento);
     localStorage.setItem('core_asientos', JSON.stringify(dbAsientos));
 
