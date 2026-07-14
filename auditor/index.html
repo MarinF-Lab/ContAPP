@@ -490,12 +490,13 @@
                         </div>
                         <div style="display:flex;gap:10px;flex-wrap:wrap;">
                             <button class="btn btn-primary"   onclick="procesarGlosa()">Generar Asiento →</button>
-                            <button class="btn btn-ia" id="btnIaGlosa" onclick="iaTentarGlosa()">✨ Intentar con IA</button>
+                            <button class="btn btn-ia" id="btnIaGlosaPrincipal" onclick="iaSugerirCuentaGlosaPrincipal()" style="display:none;">✨ Intentar con IA</button>
                             <button class="btn btn-secondary" onclick="abrirAsientoManual()">✏ Nuevo Asiento</button>
                             <button class="btn btn-secondary" onclick="audAbrirCrearHallazgo('diario')">📋 Agregar Hallazgo</button>
                             <button class="btn btn-danger"    onclick="vaciarDiario()">🗑 Vaciar Diario</button>
                         </div>
                     </div>
+                    <div id="iaGlosaSugerenciaPrincipal" style="display:none;margin-top:6px;font-size:12px;padding:8px 12px;background:var(--accent-soft,#f0f4ff);border-radius:6px;color:var(--accent);"></div>
                 </div>
 
                 <div class="table-wrapper">
@@ -871,6 +872,7 @@
                             oninput="busquedaPlan=this.value; renderPlanCuentas()"
                             style="padding:9px 14px;border:1px solid var(--border);border-radius:8px;
                                    font-size:14px;width:260px;">
+                        <button class="btn btn-secondary" onclick="auditarCuentasFaltantes()">🔍 Auditar cuentas faltantes</button>
                         <button class="btn btn-primary" onclick="abrirNuevaCuenta()">+ Nueva Cuenta</button>
                     </div>
                 </div>
@@ -2401,12 +2403,14 @@
                 <option>Contra Activo</option><option>Contra Pasivo</option><option>Contra Patrimonio</option>
             </select>
             <label>Grupo</label>
-            <select id="cuentaGrupo">
+            <select id="cuentaGrupo" onchange="_actualizarSubgruposModal()">
                 <option>Activo Circulante</option><option>Activo No Circulante</option>
                 <option>Pasivo Circulante</option><option>Pasivo No Circulante</option>
                 <option>Patrimonio</option><option>Pérdidas</option><option>Ganancias</option>
                 <option>Contra Activo</option><option>Contra Pasivo</option><option>Contra Patrimonio</option>
             </select>
+            <label>Subgrupo</label>
+            <select id="cuentaSubgrupo"></select>
             <label>Estado</label>
             <select id="cuentaEstado"><option>ACTIVA</option><option>INACTIVA</option></select>
         </div>
@@ -2434,7 +2438,7 @@
                 <div style="display:flex;gap:8px;align-items:center;">
                     <input type="text" id="glosaManual" placeholder="Descripción del asiento"
                         style="flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);">
-                    <button type="button" id="btnIaGlosa" class="btn btn-secondary" title="Sugerir cuenta con IA"
+                    <button type="button" id="btnIaGlosaManual" class="btn btn-secondary" title="Sugerir cuenta con IA"
                         onclick="iaSugerirCuentaGlosa()"
                         style="white-space:nowrap;font-size:12px;padding:8px 12px;display:none;">✨ Sugerir cuenta</button>
                 </div>
