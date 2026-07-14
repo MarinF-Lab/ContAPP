@@ -111,6 +111,40 @@ function _clasificarCuentaInicial(texto) {
 const _ACTIVO_KEYWORDS = _CUENTA_KEYWORDS;
 function _clasificarActivoInicial(texto) { return _clasificarCuentaInicial(texto) || 'Caja'; }
 
+// ── Deducción de cuenta de gasto no catalogada ──────────────────
+// Cuando la glosa dice "gasto de X por $..." y X no calza con ninguna
+// categoría conocida (Publicidad, Arriendos, Seguros, etc.), en vez de
+// agruparla bajo "Gastos Generales" se deduce el nombre específico desde
+// el propio texto de la glosa. La cuenta resultante no existe todavía en
+// el Plan de Cuentas, así que _detectarCuentasNoRegistradas() la atrapa
+// automáticamente al guardar el asiento — sin pasos manuales adicionales.
+const _SIGLAS_CUENTA = new Set(['sii', 'iva', 'ppm', 'f29', 'f22', 'uf', 'utm', 'dj']);
+const _CONECTORES_CUENTA = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'y', 'en', 'por', 'a', 'un', 'una']);
+
+function _tituloCuenta(texto) {
+    return texto
+        .trim()
+        .split(/\s+/)
+        .map((palabra, i) => {
+            const lower = palabra.toLowerCase();
+            if (_SIGLAS_CUENTA.has(lower)) return lower.toUpperCase();
+            if (i > 0 && _CONECTORES_CUENTA.has(lower)) return lower;
+            return lower.charAt(0).toUpperCase() + lower.slice(1);
+        })
+        .join(' ');
+}
+
+function _extraerConceptoGasto(glosa) {
+    const m = glosa.match(/gastos?\s+(?:de|en)\s+([a-záéíóúñ][a-záéíóúñ0-9\s]{2,40}?)\s+por\s+\$/i)
+           || glosa.match(/pago\s+(?:de|por)\s+([a-záéíóúñ][a-záéíóúñ0-9\s]{2,40}?)\s+por\s+\$/i);
+    if (!m) return null;
+
+    const concepto = m[1].trim().replace(/^(la|el|los|las|un|una|del)\s+/i, '');
+    if (concepto.length < 3) return null;
+
+    return _tituloCuenta(concepto);
+}
+
 function _limpiarNumStr(s) {
     return parseInt(String(s).replace(/\./g, '').replace(/,/g, ''), 10) || 0;
 }
@@ -271,6 +305,7 @@ function procesarGlosa() {
 
     let debe = [];
     let haber = [];
+    let cuentasHint = {}; // clasificación conocida de cuentas deducidas dinámicamente (ver tipo "gasto")
 
     let flujos =
         extraerFlujoDinero(
@@ -535,6 +570,14 @@ else if(tipo === "apertura_cuenta_corriente"){
         else if (/comisi[oó]n/i.test(g))
             cuentaGasto = "Comisiones Pagadas";
 
+        else {
+            const concepto = _extraerConceptoGasto(glosa);
+            if (concepto) {
+                cuentaGasto = concepto;
+                cuentasHint[cuentaGasto] = { tipo: 'Pérdida', grupo: 'Pérdidas', subgrupo: 'Costos y Gastos Operacionales' };
+            }
+        }
+
         if (/factura|iva/i.test(g)) {
 
             let neto =
@@ -631,7 +674,8 @@ else if(tipo === "apertura_cuenta_corriente"){
     preasientoActual = {
         glosa,
         debe,
-        haber
+        haber,
+        cuentasHint
     };
 
     renderPreasiento();
@@ -756,7 +800,7 @@ const asiento = {
 
     const faltantes = _detectarCuentasNoRegistradas(asiento.movimientos);
     if (faltantes.length) {
-        _confirmarYCrearCuentasFaltantes(faltantes, () => _persistirAsientoDiario(asiento));
+        _confirmarYCrearCuentasFaltantes(faltantes, () => _persistirAsientoDiario(asiento), preasientoActual.cuentasHint || {});
     } else {
         _persistirAsientoDiario(asiento);
     }
