@@ -90,7 +90,7 @@
 .rem-search:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(43,91,246,.1);
+    box-shadow: 0 0 0 3px rgba(255,134,146,.1);
 }
 
 /* ── Tabla ────────────────────────────────────────────────── */
@@ -431,7 +431,7 @@
 .rem-input:focus, .rem-select:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(43,91,246,.1);
+    box-shadow: 0 0 0 3px rgba(255,134,146,.1);
 }
 .rem-input.rem-input-warn { border-color: var(--warning); }
 .rem-fg-hint { font-size: 12px; color: var(--text-muted); line-height: 1.4; }

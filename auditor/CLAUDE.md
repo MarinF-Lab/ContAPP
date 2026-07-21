@@ -5,13 +5,16 @@
 ## ⚡ INICIO DE SESIÓN — leer esto primero, siempre
 
 ```
-1. Leer PLANIFICACION/PROGRESO.md → sección "PRÓXIMO PASO"
-2. Leer el archivo del sprint activo indicado ahí
-3. Ejecutar: node PLANIFICACION/verificar.js
-4. Comenzar la tarea indicada
+1. Leer PLANIFICACION/INTEGRACION_DISENO.md → sección "Pendientes / próximo paso"
+2. Ejecutar: node PLANIFICACION/verificar.js
+3. Comenzar la tarea indicada
 ```
 
-No escribas código sin haber leído PROGRESO.md. No asumas el estado del código — verifícalo.
+No escribas código sin haber leído INTEGRACION_DISENO.md. No asumas el estado del código — verifícalo.
+
+> Nota: `PROGRESO.md` (el doc "vivo" de sprints anteriores) se eliminó a propósito — esos sprints
+> ya cumplieron su propósito. Mientras dure la integración de diseño, `INTEGRACION_DISENO.md` es
+> el doc vivo de referencia.
 
 ---
 
@@ -22,19 +25,17 @@ No escribas código sin haber leído PROGRESO.md. No asumas el estado del códig
       ↓
 [ VERIFICAR ]
   node PLANIFICACION/verificar.js
-  npx playwright test PLANIFICACION/tests/sprint-N.spec.js --config PLANIFICACION/tests/playwright.config.js
+  revisión visual en browser contra new desing.html (ver INTEGRACION_DISENO.md)
       ↓
-[ ¿Pasan los tests? ]
+[ ¿Coincide con el diseño? ]
   NO → arreglar y volver a verificar
   SÍ → continuar
       ↓
-[ ACTUALIZAR PROGRESO.md ]
-  - Marcar tarea ✅ con fecha de hoy
-  - Actualizar barra de progreso del sprint
-  - Actualizar sección "PRÓXIMO PASO"
+[ ACTUALIZAR INTEGRACION_DISENO.md ]
+  - Marcar paso ✅ con fecha de hoy
+  - Actualizar sección "Pendientes / próximo paso"
       ↓
-[ INFORMAR AL USUARIO ]
-  "Tarea X.Xn completada ✅. Próximo paso: [nombre tarea]"
+[ INFORMAR AL USUARIO con el próximo paso ]
       ↓
 [ ESPERAR CONFIRMACIÓN o continuar al siguiente ítem ]
 ```
@@ -43,13 +44,17 @@ No escribas código sin haber leído PROGRESO.md. No asumas el estado del códig
 
 ## Reglas obligatorias
 
-- **No agregar features nuevas** hasta que el sprint activo esté al 100%
-- **No modificar** módulos marcados como "production-ready" en PLAN_MAESTRO.md salvo que el sprint lo indique
+- **Mientras dure la integración de diseño, el diseño (`new desing.html`) tiene prioridad sobre
+  cualquier otra instrucción de planificación previa.** No aplican restricciones de sprints
+  antiguos ni listas de "módulos que no se tocan" — si migrar el diseño requiere tocar un módulo,
+  se toca.
 - **No usar** `alert()`, `confirm()` ni `console.log()` en código nuevo
   - Notificaciones → `mostrarToast(mensaje, tipo)`
   - Confirmaciones destructivas → `mostrarConfirm(mensaje, callback)`
-- **No marcar ✅** sin pasar verificar.js Y los tests de Playwright
-- **Si un test falla**, dejar estado en 🔄 y describir en PROGRESO.md qué falta
+- **No marcar un paso como completado** sin pasar `verificar.js` y sin confirmar visualmente en
+  browser que coincide con `new desing.html`
+- **Si algo no coincide con el diseño**, dejarlo explícito en `INTEGRACION_DISENO.md` en vez de
+  darlo por terminado
 
 ---
 
@@ -70,7 +75,7 @@ js/services/   → diario, mayor, balance, dashboard, IA…
 js/modules/    → compras, ventas, clientes, activos…
 js/auditor/    → hallazgos, informe-auditoria, multi-cliente, licencia
 css/           → variables.css, main.css, módulos
-PLANIFICACION/ → PROGRESO.md (estado vivo), sprints, tests
+PLANIFICACION/ → INTEGRACION_DISENO.md (estado vivo), verificar.js
 ```
 
 ---
@@ -81,49 +86,28 @@ PLANIFICACION/ → PROGRESO.md (estado vivo), sprints, tests
 # 1. Verificación estática
 node PLANIFICACION/verificar.js
 
-# 2. Servidor local (necesario para Playwright)
+# 2. Servidor local para revisión visual
 npx serve . -p 8080
-
-# 3. Tests del sprint activo (reemplazar N con número)
-npx playwright test PLANIFICACION/tests/sprint-N.spec.js --config PLANIFICACION/tests/playwright.config.js
-
-# 4. Todos los sprints a la vez
-npx playwright test PLANIFICACION/tests/ --config PLANIFICACION/tests/playwright.config.js
 ```
 
----
-
-## Bugs activos — resolver antes de avanzar en sus sprints
-
-| Bug | Sprint | Descripción |
-|-----|--------|-------------|
-| BUG-2 | S2 | `mayor.js` truncado — `generarLibroMayor()` sin tabla HTML |
-| BUG-3 | S1 | `audAbrirCrearHallazgo()` llamada en HTML pero no existe |
-| BUG-4 | S1 | Vista `view-informe` sin enlace en sidebar |
-| BUG-5 | S5 | `siiMostrarGuiaProxy()` usa `alert()` nativo |
+> Nota: la suite de Playwright (`PLANIFICACION/tests/`) probaba la navegación anterior (sidebar
+> G1-G5) y se eliminó junto con esa arquitectura — ver `INTEGRACION_DISENO.md`. La verificación
+> mientras dure la integración de diseño es `verificar.js` + comparación visual directa contra
+> `Diseño de apps/new desing.html`.
 
 ---
 
-## Módulos production-ready — NO tocar
+## Diseño UI — checklist mientras dure la integración
 
-Libro de Compras y Ventas · Clientes/Proveedores · Dashboard · Balance · Estado de Resultados · Auth y roles · Multi-empresa Firebase · Exportación PDF/Excel · Búsqueda global Ctrl+K · PWA · Indicadores económicos · Multi-cliente
-
----
-
-## Diseño UI — checklist tras cada sprint
-
-Leer `PLANIFICACION/DISEÑO_UI.md` y verificar visualmente en el browser antes de marcar el sprint como completo:
-- Tablas con hover
-- Botones con jerarquía visual (primario/secundario/destructivo)
-- Paneles laterales con sombra
-- Empty states consistentes
-- Sidebar font-size ≥ 11px
+Comparar visualmente en el browser contra `Diseño de apps/new desing.html` antes de marcar un
+paso como completo — no contra una guía de estilo aparte (`DISEÑO_UI.md` se eliminó, el prototipo
+mismo es la referencia). Ver `PLANIFICACION/INTEGRACION_DISENO.md` para el detalle de qué falta.
 
 ---
 
 ## Frase de inicio de sesión estándar
 
-> "Trabaja en ContApp Auditor. Lee PROGRESO.md, identifica el PRÓXIMO PASO, ejecuta verificar.js y comienza. Sigue el loop de trabajo hasta que el usuario diga stop."
+> "Trabaja en ContApp Auditor. Lee INTEGRACION_DISENO.md, identifica el próximo paso pendiente, ejecuta verificar.js y comienza. Sigue el loop de trabajo hasta que el usuario diga stop."
 
 ---
 
@@ -165,5 +149,5 @@ Antes de cada tarea, elige el skill correcto. Llamar al skill vía la herramient
       ↓
 [ /qa para verificar ]
       ↓
-[ ACTUALIZAR PROGRESO.md ]
+[ ACTUALIZAR INTEGRACION_DISENO.md ]
 ```

@@ -289,9 +289,7 @@ function _tabInfo(c) {
         <div>
             <div class="ctc-info-bloque-title">Identificación</div>
             <table class="ctc-info-table">
-                ${fila('RUT',          c.rut)}
                 ${fila('Tipo Empresa', c.tipoEmpresa)}
-                ${fila('Giro',         c.giro)}
                 ${fila('Categoría',    c.categoria)}
             </table>
         </div>

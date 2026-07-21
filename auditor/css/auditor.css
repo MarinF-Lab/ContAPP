@@ -4,17 +4,17 @@
 ══════════════════════════════════════════════ */
 
 :root {
-    --accent:        #AC406D;
-    --accent-hover:  #8F3059;
-    --accent-soft:   #F7E8EF;
-    --accent-border: #E8B4C8;
+    --accent:        var(--coral);
+    --accent-hover:  var(--coral-deep);
+    --accent-soft:   #FFE9EC;
+    --accent-border: #F7C1C7;
 }
 
 [data-theme="dark"] {
-    --accent:        #F95A8A;
-    --accent-hover:  #D94070;
-    --accent-soft:   #2B0F1F;
-    --accent-border: #5C1F35;
+    --accent:        var(--coral);
+    --accent-hover:  var(--coral-deep);
+    --accent-soft:   #3A1F24;
+    --accent-border: #5A2E33;
 }
 
 /* Logo y título de la edición */
@@ -212,7 +212,7 @@
     min-width: 180px;
     padding: 8px 12px;
     border: 1px solid var(--divider);
-    border-radius: 8px;
+    border-radius: var(--radius-s, 8px);
     background: var(--input-bg);
     color: var(--text);
     font-size: 13px;
@@ -272,7 +272,7 @@
 .panel-kanban-select {
     padding: 5px 8px;
     border: 1px solid var(--divider);
-    border-radius: 6px;
+    border-radius: var(--radius-s, 8px);
     background: var(--input-bg);
     color: var(--text);
     font-size: 11px;
@@ -283,7 +283,7 @@
 .panel-tt-btn {
     width: 30px;
     height: 30px;
-    border-radius: 6px;
+    border-radius: var(--radius-s, 8px);
     border: 1px solid var(--divider);
     background: var(--card);
     cursor: pointer;
@@ -340,7 +340,7 @@
 .panel-kanban-card {
     background: var(--card);
     border: 1px solid var(--card-border);
-    border-radius: 8px;
+    border-radius: var(--radius-s, 8px);
     padding: 10px 12px;
     cursor: pointer;
     transition: box-shadow .12s;
@@ -359,7 +359,7 @@
 .panel-cal-mes-label { font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 16px; text-transform: capitalize; }
 .panel-cal-grid    { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .panel-cal-enc     { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); text-align: center; padding: 4px; }
-.panel-cal-cel     { min-height: 60px; border-radius: 6px; padding: 4px; border: 1px solid transparent; }
+.panel-cal-cel     { min-height: 60px; border-radius: var(--radius-s, 8px); padding: 4px; border: 1px solid transparent; }
 .panel-cal-vacia   { background: transparent; }
 .panel-cal-dia     { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; }
 .panel-cal-hoy     { background: var(--accent-soft); border-color: var(--accent); }

@@ -3,6 +3,11 @@
 //  Proyecto: contapp-auditor
 // ─────────────────────────────────────────────────────────────
 
+// Login real reactivado (2026-07-16) — mientras se probaba el nuevo diseño se
+// entraba directo en modo offline/local vía _fbEntrarModoOffline(). El flag
+// se conserva por si hace falta volver a desactivarlo puntualmente.
+const LOGIN_DESACTIVADO_TEMPORAL = false;
+
 const FB_CONFIG = {
     apiKey:            "AIzaSyCXOdGxHzccm624-p2FIYgVKsJAhwONFDk",
     authDomain:        "contapp-auditor.firebaseapp.com",
@@ -70,16 +75,16 @@ function _fbEntrarModoOffline() {
     document.body.classList.remove('empresa-mode');
     document.getElementById('view-empresa')?.classList.remove('active');
     document.getElementById('view-inicio')?.classList.add('active');
-    document.getElementById('fb-user-email').textContent   = window.currentUser.email + ' (sin conexión)';
+    document.getElementById('fb-user-email').textContent   = window.currentUser.email + (LOGIN_DESACTIVADO_TEMPORAL ? ' (login desactivado)' : ' (sin conexión)');
     document.getElementById('fb-user-bar').style.display     = 'flex';
 
-    // Badge offline en topbar
+    // Badge offline en topbar (no aplica si el login está desactivado a propósito)
     const bar = document.getElementById('fb-user-bar');
-    if (bar && !document.getElementById('offlineBadge')) {
+    if (!LOGIN_DESACTIVADO_TEMPORAL && bar && !document.getElementById('offlineBadge')) {
         const badge = document.createElement('span');
         badge.id = 'offlineBadge';
         badge.textContent = '🔴 Sin conexión';
-        badge.style.cssText = 'font-size:11px;font-weight:700;color:#dc2626;background:#fee2e2;border:1px solid #fca5a5;border-radius:20px;padding:2px 9px;';
+        badge.style.cssText = 'font-size:11px;font-weight:700;color:var(--negative);background:var(--negative-soft);border:1px solid var(--negative);border-radius:20px;padding:2px 9px;';
         bar.insertBefore(badge, bar.firstChild);
     }
 
@@ -87,12 +92,21 @@ function _fbEntrarModoOffline() {
     if (typeof aplicarNavegacionPorCategoria === 'function') aplicarNavegacionPorCategoria();
     if (typeof verificarCertificadoGuardado  === 'function') verificarCertificadoGuardado();
     if (typeof _fbRefrescarUI                === 'function') _fbRefrescarUI();
+    if (typeof actualizarTopbarModulo        === 'function') actualizarTopbarModulo('inicio');
 
-    mostrarToast('Modo sin conexión — trabajando con datos locales.', 'info');
+    if (!LOGIN_DESACTIVADO_TEMPORAL) mostrarToast('Modo sin conexión — trabajando con datos locales.', 'info');
 }
 
 // ── Inicialización ────────────────────────────────────────────
 function fbInit() {
+    if (LOGIN_DESACTIVADO_TEMPORAL) {
+        // fbInit() se llama en un <script> inline que corre ANTES de que
+        // menu.js/categorias/*.js (cargados más abajo en index.html) existan —
+        // aplicarNavegacionPorCategoria() los necesita. Diferir a DOMContentLoaded
+        // para que todo el resto de scripts ya esté cargado.
+        document.addEventListener('DOMContentLoaded', _fbEntrarModoOffline);
+        return;
+    }
     try {
         if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
         _fbAuth = firebase.auth();
@@ -336,6 +350,9 @@ function _fbShowApp(user) {
     if (typeof verificarCertificadoGuardado === 'function') verificarCertificadoGuardado();
     if (typeof aplicarPermisos               === 'function') aplicarPermisos();
     if (typeof aplicarNavegacionPorCategoria === 'function') aplicarNavegacionPorCategoria();
+    // navegar() no se dispara en el aterrizaje normal de login (ver comentario arriba),
+    // así que el header Home/topbar no se actualizaría solo — se fuerza aquí.
+    if (typeof actualizarTopbarModulo === 'function') actualizarTopbarModulo('inicio');
 }
 
 function _fbShowLogin() {
@@ -520,6 +537,8 @@ async function seleccionarEmpresa(empresaId) {
 
         window.currentUser.empresaId = empresaId;
         localStorage.setItem('_fb_perfil_local', JSON.stringify(window.currentUser));
+        _empresasRecientesRegistrar(empresaId);
+        _homeClientSwitchCargado = false; // la lista quedó desactualizada (cambió el activo/MRU)
 
         // Cargar datos de esta empresa desde Firestore
         await fbLoadFromCloud();
@@ -545,6 +564,67 @@ async function cambiarEmpresa() {
     // Volver al selector
     await _fbShowEmpresaSelector();
 }
+
+// ── Chip "cambiar de cliente" en Inicio — clientes recientes (MRU real) ──────
+const EMPRESAS_RECIENTES_KEY = 'contapp-empresas-recientes';
+const EMPRESAS_RECIENTES_MAX = 5;
+
+function _empresasRecientesRegistrar(empresaId) {
+    if (!empresaId) return;
+    let ids = [];
+    try { ids = JSON.parse(localStorage.getItem(EMPRESAS_RECIENTES_KEY)) || []; } catch {}
+    ids = [empresaId, ...ids.filter(id => id !== empresaId)].slice(0, EMPRESAS_RECIENTES_MAX);
+    localStorage.setItem(EMPRESAS_RECIENTES_KEY, JSON.stringify(ids));
+}
+
+let _homeClientSwitchCargado = false;
+
+// Puebla #homeClientList con los clientes recientes reales del usuario (orden
+// de uso más reciente primero). Se llama al abrir el dropdown la primera vez
+// (toggleHomeClientSwitch en menu.js) para no gastar lecturas de Firestore
+// de más en cada carga de Inicio.
+async function _fbRenderHomeClientSwitch() {
+    const listEl = document.getElementById('homeClientList');
+    if (!listEl || _homeClientSwitchCargado) return;
+
+    const todas = window.currentUser?.empresas || [];
+    if (!todas.length || !_fbDb) {
+        listEl.innerHTML = '<div class="hcs-empty">Sin otros clientes disponibles sin conexión.</div>';
+        return;
+    }
+
+    let recientes = [];
+    try { recientes = JSON.parse(localStorage.getItem(EMPRESAS_RECIENTES_KEY)) || []; } catch {}
+    // Orden: recientes primero (los que existan en `todas`), luego el resto de `todas`.
+    const ordenIds = [...recientes.filter(id => todas.includes(id)), ...todas.filter(id => !recientes.includes(id))]
+        .slice(0, EMPRESAS_RECIENTES_MAX);
+
+    listEl.innerHTML = '<div class="hcs-empty">Cargando…</div>';
+    try {
+        const docs = await Promise.all(ordenIds.map(id => _fbDb.collection('empresas').doc(id).get().catch(() => null)));
+        const activoId = window.currentUser?.empresaId;
+        const items = ordenIds.map((id, i) => {
+            const doc = docs[i];
+            if (!doc || !doc.exists) return null;
+            const d = doc.data();
+            return { id, nombre: d.empresa || '(Sin nombre)', rut: d.rut || '—' };
+        }).filter(Boolean);
+
+        if (!items.length) {
+            listEl.innerHTML = '<div class="hcs-empty">Sin clientes recientes todavía.</div>';
+            return;
+        }
+        listEl.innerHTML = items.map(it => `
+            <button class="hcs-item ${it.id === activoId ? 'active' : ''}" onclick="event.stopPropagation();document.getElementById('homeClientPanel').classList.remove('open');seleccionarEmpresa('${it.id}')">
+                <span class="hcs-ic">🏢</span>
+                <span class="hcs-item-meta">${it.nombre}<span class="hcs-item-rut">${it.rut}</span></span>
+            </button>`).join('');
+        _homeClientSwitchCargado = true;
+    } catch (e) {
+        listEl.innerHTML = '<div class="hcs-empty">No se pudo cargar la lista.</div>';
+    }
+}
+window._fbRenderHomeClientSwitch = _fbRenderHomeClientSwitch;
 
 // ── Editar empresa activa ─────────────────────────────────────
 function abrirEditarEmpresa() {

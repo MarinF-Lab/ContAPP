@@ -5,32 +5,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CAT1_MODULOS = [
-    { id: 'estructura-contable',   label: 'Estructura Contable (Diario/Mayor/Balance)',      grupo: 'G1 · Contabilidad', defecto: true  },
-    { id: 'reportes-financieros',  label: 'Reportes Financieros',                            grupo: 'G1 · Contabilidad', defecto: true  },
-    { id: 'egresos-ingresos',      label: 'Egresos e Ingresos (Compras/Ventas/Honorarios)',  grupo: 'G2 · Comercial',    defecto: true  },
-    { id: 'tributario-1cat',       label: 'Tributario (F29 / IVA)',                          grupo: 'G2 · Comercial',    defecto: true  },
-    { id: 'documentos',            label: 'Documentación',                                   grupo: 'G3 · Datos',        defecto: true  },
-    { id: 'conciliacion-cartolas', label: 'Conciliación y Cartolas',                          grupo: 'G3 · Datos',        defecto: true  },
-    { id: 'clientes',              label: 'Clientes / Prov.',                                 grupo: 'G3 · Datos',        defecto: true  },
-    { id: 'remuneraciones',        label: 'Remuneraciones',                                  grupo: 'G4 · RRHH',         defecto: false },
-    { id: 'activos-produccion',    label: 'Activos y Producción',                             grupo: 'G5 · Empresa',      defecto: true  },
-    { id: 'auditoria',             label: 'Auditoría',                                        grupo: 'G5 · Empresa',      defecto: true  },
-];
-
-// IDs de grupos de nav de primera categoría
-const CAT1_IDS_MOSTRAR = [
-    'nav-grupo-contabilidad',
-    'nav-grupo-comercial',
-    'nav-grupo-datos',    // clientes/proveedores + documentación + conciliación de 1ª categoría
-    'nav-grupo-rrhh',
-    'nav-grupo-empresa',
-];
-
-// IDs de grupos de nav de segunda categoría (se ocultan con primera activa)
-const CAT1_IDS_OCULTAR = [
-    'nav-grupo-contabilidad-hon',
-    'nav-grupo-comercial-hon',
-    'nav-grupo-tributario-hon',
+    { id: 'estructura-contable',   label: 'Estructura Contable (Diario/Mayor/Balance)',      grupo: 'Contabilidad', icono: '📝', defecto: true  },
+    { id: 'reportes-financieros',  label: 'Reportes Financieros',                            grupo: 'Contabilidad', icono: '📊', defecto: true  },
+    { id: 'egresos-ingresos',      label: 'Egresos e Ingresos (Compras/Ventas/Honorarios)',  grupo: 'Contabilidad', icono: '🔁', defecto: true  },
+    { id: 'tributario-1cat',       label: 'Tributario (F29 / IVA)',                          grupo: 'Contabilidad', icono: '🧾', defecto: true  },
+    { id: 'documentos',            label: 'Documentación',                                   grupo: 'Comercial',    icono: '📁', defecto: true  },
+    { id: 'conciliacion-cartolas', label: 'Conciliación y Cartolas',                          grupo: 'Comercial',    icono: '🏦', defecto: true  },
+    { id: 'clientes',              label: 'Clientes / Prov.',                                 grupo: 'Comercial',    icono: '🤝', defecto: true  },
+    { id: 'remuneraciones',        label: 'Remuneraciones',                                  grupo: 'Empresa',      icono: '👷', defecto: false },
+    { id: 'activos-produccion',    label: 'Activos y Producción',                             grupo: 'Empresa',      icono: '🏷', defecto: true  },
+    { id: 'auditoria',             label: 'Auditoría',                                        grupo: 'Empresa',      icono: '📋', defecto: true  },
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
@@ -38,42 +22,13 @@ function cat1ModulosDefecto() {
     return Object.fromEntries(CAT1_MODULOS.map(m => [m.id, m.defecto]));
 }
 
-// ── Aplicar al sidebar ────────────────────────────────────────────────────────
+// ── Aplicar módulos activos ───────────────────────────────────────────────────
+// Antes tocaba directamente el DOM del sidebar (nav-grupo-*/data-modulo); ese
+// sidebar ya no existe (reemplazado por Home abanico + selector de módulo en
+// topbar, ver menu.js). Ahora solo persiste el estado y pide un re-render del
+// menú compartido — construirMenu() en menu.js es quien filtra por activos.
 function cat1AplicarModulos(modulosActivos) {
-    const efectivos = modulosActivos || cat1ModulosDefecto();
-
-    CAT1_IDS_MOSTRAR.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = '';
-    });
-    CAT1_IDS_OCULTAR.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-    });
-
-    // Scoped a los grupos de primera para no afectar los data-modulo duplicados de segunda
-    const scopeGroups = CAT1_IDS_MOSTRAR
-        .map(id => document.getElementById(id))
-        .filter(Boolean);
-
-    CAT1_MODULOS.forEach(m => {
-        const activo = m.id in efectivos ? efectivos[m.id] : m.defecto;
-        scopeGroups.forEach(grupo => {
-            const navEl = grupo.querySelector(`[data-modulo="${m.id}"]`);
-            if (navEl) navEl.style.display = activo ? '' : 'none';
-        });
-    });
-
-    // Ocultar grupos de primera que queden sin ítems visibles
-    CAT1_IDS_MOSTRAR.forEach(id => {
-        const grupo = document.getElementById(id);
-        if (!grupo) return;
-        const items      = grupo.querySelectorAll('.nav-item');
-        const hayVisible = [...items].some(el => el.style.display !== 'none');
-        const esSistema  = grupo.querySelector('.nav-group-title')?.textContent?.includes('SISTEMA');
-        const esInicio   = grupo.classList.contains('nav-group-solo');
-        if (!hayVisible && !esSistema && !esInicio) grupo.style.display = 'none';
-    });
+    if (typeof refrescarMenuNavegacion === 'function') refrescarMenuNavegacion();
 }
 
 // ── Renderizar checkboxes en un contenedor ────────────────────────────────────
