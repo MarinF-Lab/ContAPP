@@ -17,6 +17,8 @@
     <!-- jsPDF para exportar PDF (boletas honorarios e informes) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>window.jsPDF = window.jspdf?.jsPDF;</script>
+    <!-- Chart.js para los gráficos del dashboard de Inicio (paso 6 de la integración de diseño) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/main.css?v=5">
@@ -33,228 +35,117 @@
 <body>
 
 <!-- ═══════════════════════════════════════════════════════
-     SIDEBAR
-════════════════════════════════════════════════════════ -->
-<aside class="sidebar">
-
-    <div class="logo">
-        <span class="nav-icon">🏁</span>
-        <span class="te-text logo-text">ContApp Forge</span>
-    </div>
-
-    <nav>
-        <!-- Inicio (sin grupo) -->
-        <div class="nav-group nav-group-solo">
-            <div class="nav-item active" onclick="navegar('inicio', this)">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-text">Inicio</span>
-            </div>
-        </div>
-
-        <!-- GRUPO 1 · CONTABILIDAD — solo primera categoría -->
-        <div class="nav-group" id="nav-grupo-contabilidad">
-            <div class="nav-group-title"><span class="nav-group-cat">G1</span>CONTABILIDAD</div>
-            <div class="nav-group-items">
-                <div id="nav-estructura-contable" class="nav-item" data-modulo="estructura-contable" onclick="navegar('estructura-contable', this)">
-                    <span class="nav-icon">📝</span>
-                    <span class="nav-text">Estructura Contable</span>
-                </div>
-                <div id="nav-reportes-financieros" class="nav-item" data-modulo="reportes-financieros" onclick="navegar('reportes-financieros', this)">
-                    <span class="nav-icon">📊</span>
-                    <span class="nav-text">Reportes Financieros</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- G2 · COMERCIAL — solo primera categoría -->
-        <div class="nav-group" id="nav-grupo-comercial">
-            <div class="nav-group-title"><span class="nav-group-cat">G2</span>COMERCIAL</div>
-            <div class="nav-group-items">
-                <div id="nav-egresos-ingresos" class="nav-item" data-modulo="egresos-ingresos" onclick="navegar('egresos-ingresos', this)">
-                    <span class="nav-icon">🔁</span>
-                    <span class="nav-text">Egresos e Ingresos</span>
-                </div>
-                <div id="nav-tributario-1cat" class="nav-item" data-modulo="tributario-1cat" onclick="navegar('tributario-1cat', this)">
-                    <span class="nav-icon">🧾</span>
-                    <span class="nav-text">Tributario</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- G3 · DATOS — solo primera categoría -->
-        <div class="nav-group" id="nav-grupo-datos">
-            <div class="nav-group-title"><span class="nav-group-cat">G3</span>DATOS</div>
-            <div class="nav-group-items">
-                <div id="nav-documentos" class="nav-item" data-modulo="documentos" onclick="navegar('documentos', this)">
-                    <span class="nav-icon">📁</span>
-                    <span class="nav-text">Documentación</span>
-                </div>
-                <div id="nav-conciliacion-cartolas" class="nav-item" data-modulo="conciliacion-cartolas" onclick="navegar('conciliacion-cartolas', this)">
-                    <span class="nav-icon">🏦</span>
-                    <span class="nav-text">Conciliación y Cartolas</span>
-                </div>
-                <div id="nav-clientes" class="nav-item" data-modulo="clientes" onclick="navegar('clientes', this)">
-                    <span class="nav-icon">🤝</span>
-                    <span class="nav-text">Clientes / Prov.</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- G4 · RRHH — solo primera categoría -->
-        <div class="nav-group" id="nav-grupo-rrhh">
-            <div class="nav-group-title"><span class="nav-group-cat">G4</span>RRHH</div>
-            <div class="nav-group-items">
-                <div id="nav-remuneraciones" class="nav-item" data-modulo="remuneraciones" onclick="navegar('remuneraciones', this)">
-                    <span class="nav-icon">👷</span>
-                    <span class="nav-text">Remuneraciones</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- G5 · EMPRESA — solo primera categoría -->
-        <div class="nav-group" id="nav-grupo-empresa">
-            <div class="nav-group-title"><span class="nav-group-cat">G5</span>EMPRESA</div>
-            <div class="nav-group-items">
-                <div id="nav-activos-produccion" class="nav-item" data-modulo="activos-produccion" onclick="navegar('activos-produccion', this)">
-                    <span class="nav-icon">🏷</span>
-                    <span class="nav-text">Activos y Producción</span>
-                </div>
-                <div id="nav-auditoria" class="nav-item" data-modulo="auditoria" onclick="navegar('auditoria', this)">
-                    <span class="nav-icon">📋</span>
-                    <span class="nav-text">Auditoría</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- ══ SEGUNDA CATEGORÍA — grupos ocultos hasta que categoria='segunda' ══ -->
-
-        <!-- G1 · Contabilidad segunda categoría -->
-        <div class="nav-group" id="nav-grupo-contabilidad-hon" style="display:none;">
-            <div class="nav-group-title"><span class="nav-group-cat">G1</span>CONTABILIDAD</div>
-            <div class="nav-group-items">
-                <div id="nav-libros-contables-hon" class="nav-item" data-modulo="libros-contables-hon" onclick="navegar('libros-contables-hon', this)">
-                    <span class="nav-icon">📒</span>
-                    <span class="nav-text">Libros Contables</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- G2 · Datos segunda categoría -->
-        <div class="nav-group" id="nav-grupo-datos-hon" style="display:none;">
-            <div class="nav-group-title"><span class="nav-group-cat">G2</span>DATOS</div>
-            <div class="nav-group-items">
-                <div id="nav-documentos-hon" class="nav-item" data-modulo="documentos-hon" onclick="navegar('documentos', this)">
-                    <span class="nav-icon">📁</span>
-                    <span class="nav-text">Documentación</span>
-                </div>
-                <div id="nav-conciliacion-cartolas-hon" class="nav-item" data-modulo="conciliacion-cartolas-hon" onclick="navegar('conciliacion-cartolas', this)">
-                    <span class="nav-icon">🏦</span>
-                    <span class="nav-text">Conciliación y Cartolas</span>
-                </div>
-                <div id="nav-clientes-hon" class="nav-item" data-modulo="clientes-hon" onclick="navegar('clientes', this)">
-                    <span class="nav-icon">🤝</span>
-                    <span class="nav-text">Clientes / Prov.</span>
-                </div>
-                <div id="nav-prestadores" class="nav-item" data-modulo="prestadores" onclick="navegar('prestadores', this)">
-                    <span class="nav-icon">👤</span>
-                    <span class="nav-text">Prestadores</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- G3 · Tributario segunda categoría -->
-        <div class="nav-group" id="nav-grupo-tributario-hon" style="display:none;">
-            <div class="nav-group-title"><span class="nav-group-cat">G3</span>TRIBUTARIO</div>
-            <div class="nav-group-items">
-                <div id="nav-declaracion-impuestos-hon" class="nav-item" data-modulo="declaracion-impuestos-hon" onclick="navegar('declaracion-impuestos-hon', this)">
-                    <span class="nav-icon">🧾</span>
-                    <span class="nav-text">Declaración de Impuestos</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- G4 · Empresa segunda categoría -->
-        <div class="nav-group" id="nav-grupo-empresa-hon" style="display:none;">
-            <div class="nav-group-title"><span class="nav-group-cat">G4</span>EMPRESA</div>
-            <div class="nav-group-items">
-                <div id="nav-auditoria-hon" class="nav-item" data-modulo="auditoria-hon" onclick="navegar('auditoria', this)">
-                    <span class="nav-icon">📋</span>
-                    <span class="nav-text">Auditoría</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Grupo Sistema -->
-        <div class="nav-group">
-            <div class="nav-group-title">SISTEMA</div>
-            <div class="nav-group-items">
-                <div class="nav-item" onclick="navegar('configuracion', this)">
-                    <span class="nav-icon">⚙️</span>
-                    <span class="nav-text">Configuración</span>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Modo Prueba -->
-    <div id="modoPruebaBar" class="sidebar-prueba-bar">
-        <button id="btnModoPrueba" onclick="toggleModoPrueba()" class="sidebar-prueba-btn">
-            🧪 Modo Prueba
-        </button>
-    </div>
-
-</aside>
-
-<!-- ═══════════════════════════════════════════════════════
      CONTENIDO PRINCIPAL
 ════════════════════════════════════════════════════════ -->
 <main class="main-content">
 
-    <!-- Overlay para cerrar sidebar en móvil -->
-    <div id="sidebarOverlay" onclick="cerrarSidebar()" style="
-        display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:8999;
-    "></div>
-
-    <div class="top-header">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="display:flex;align-items:center;gap:12px;">
-                <button id="btnHamburger" onclick="toggleSidebar()"
-                    title="Menú" aria-label="Abrir menú"
-                    style="display:none;background:none;border:none;cursor:pointer;
-                           padding:6px;border-radius:8px;color:var(--text);font-size:22px;
-                           line-height:1;flex-shrink:0;">
-                    ☰
-                </button>
-                <div>
-                    <h1 id="txt-modulo-titulo">Sistema Contable</h1>
-                    <p id="txt-modulo-desc">Administración contable y generación automática de libros e informes</p>
+    <!-- Header exclusivo de la pantalla Inicio (marca, saludo, acciones) — oculto en cualquier otro módulo -->
+    <div id="home-header" class="home-header" style="display:none;">
+        <div class="hbrand">
+            <span class="seal">CA</span>
+            <span class="name">ContApp</span>
+        </div>
+        <div class="home-greet">
+            <span class="hg-strong">Bienvenido de nuevo</span>
+            <span class="hg-sep">·</span>
+            <div class="home-client-switch" id="homeClientSwitch" onclick="toggleHomeClientSwitch(event)">
+                <span class="hg-sub" id="homeGreetEmpresa">Mi Empresa Ltda.</span>
+                <span class="hcs-car">▾</span>
+                <div class="hcs-panel" id="homeClientPanel" onclick="event.stopPropagation()">
+                    <div class="hcs-label">Clientes recientes</div>
+                    <div id="homeClientList" class="hcs-list"></div>
+                    <button class="hcs-all" onclick="cambiarEmpresa()">🏢 Ver todos mis clientes</button>
                 </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-                <!-- Panel de usuario en topbar -->
-                <div id="fb-user-bar" style="display:none;align-items:center;gap:8px;">
-                    <div style="text-align:right;line-height:1.3;">
-                        <div id="fb-user-email" style="font-size:12px;font-weight:600;color:var(--text);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-                        <span id="fbUserRolBadge" class="badge" style="display:none;font-size:10px;"></span>
-                    </div>
-                    <div style="display:flex;gap:6px;flex-shrink:0;">
-                        <button onclick="cambiarEmpresa()" class="topbar-user-btn" title="Cambiar empresa">🏢 Cambiar</button>
-                        <button onclick="fbSyncToCloud()" class="topbar-user-btn" title="Sincronizar con la nube"><span id="fbSyncIcon">☁</span></button>
-                        <button onclick="fbLogout()" class="topbar-user-btn topbar-user-btn--danger" title="Cerrar sesión">✕ Salir</button>
-                    </div>
-                </div>
-                <!-- Empresa/período (se mantiene oculto, se actualiza por JS pero ya no se muestra) -->
-                <span id="headerEmpresa" style="display:none;"></span>
-                <span id="headerPeriodo" style="display:none;"></span>
-                <button onclick="busquedaGlobalAbrir()" title="Búsqueda global (Ctrl+K)"
-                    style="background:var(--surface);border:1px solid var(--divider);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-                    🔍 <span style="display:none;" class="kbd-hint">Ctrl+K</span>
-                </button>
-                <button id="btnThemeToggle" onclick="toggleTheme()" title="Cambiar tema claro/oscuro">
-                    <span id="themeIcon">🌙</span>
-                </button>
             </div>
         </div>
+        <div class="home-actions">
+            <button class="icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema claro/oscuro">
+                <svg class="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>
+                <svg class="ic-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+            </button>
+            <button class="icon-btn" onclick="navegar('configuracion')" title="Configuración">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.5-2-3.4-2.4 1a7.7 7.7 0 0 0-1.7-1L15 3h-4l-.3 2.6a7.7 7.7 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7.7 7.7 0 0 0 1.7 1L11 21h4l.3-2.6a7.7 7.7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5Z"/></svg>
+            </button>
+            <button class="logout-link" onclick="fbLogout()" title="Cerrar sesión">
+                <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                Salir
+            </button>
+            <span class="avatar-seal" id="homeAvatarSeal">?</span>
+        </div>
+    </div>
+
+    <div id="app-topbar">
+        <div class="topbar-inner">
+            <!-- Volver a Inicio + selector de módulo — ocultos en la pantalla Inicio (ver actualizarTopbarModulo() en menu.js) -->
+            <button class="back-home" id="btnBackHome" onclick="navegar('inicio')" title="Volver a Inicio">
+                <svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v9h5v-5h2v5h5v-9"/></svg>
+                Inicio
+            </button>
+            <div class="module-switch" id="moduleSwitch" onclick="toggleModulePanel(event)">
+                <span class="ms-ic" id="msIcon">📁</span>
+                <span id="msLabel">Módulo</span>
+                <span class="ms-car">▾</span>
+                <div class="module-panel" id="modulePanel" onclick="event.stopPropagation()"></div>
+            </div>
+
+            <!-- Contexto real (empresa/ejercicio/período) -->
+            <div class="field"><label>Empresa</label><div class="val" id="fieldEmpresa">—</div></div>
+            <div class="field"><label>Ejercicio</label><div class="val" id="fieldEjercicio">—</div></div>
+
+            <div class="float-search" onclick="busquedaGlobalAbrir()" title="Búsqueda global (Ctrl+K)">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-3.6-3.6"/></svg>
+                Buscar en todo el sistema…
+                <kbd>Ctrl K</kbd>
+            </div>
+
+            <div class="topbar-icons">
+                <span id="headerEmpresa" style="display:none;"></span>
+                <span id="headerPeriodo" style="display:none;"></span>
+                <button class="icon-btn" onclick="toggleNotifPanel(event)" title="Notificaciones">
+                    <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+                    <span class="badge" id="notifBadge">3</span>
+                </button>
+                <button class="icon-btn" title="Ayuda">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .5c0 1.7-2.3 2-2.5 3.3"/><circle cx="12" cy="17" r=".3"/></svg>
+                </button>
+                <button id="btnThemeToggle" class="icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema claro/oscuro">
+                    <svg class="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>
+                    <svg class="ic-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+                </button>
+
+                <!-- Menú de usuario: mismo patrón click-to-open que module-switch/notificaciones -->
+                <div class="user-menu" id="userMenu">
+                    <button class="avatar-seal" id="topbarAvatarSeal" onclick="toggleUserMenu(event)" title="Cuenta">?</button>
+                    <div class="user-menu-panel" id="userMenuPanel" onclick="event.stopPropagation()">
+                        <div id="fb-user-bar" class="userbar" style="display:none;">
+                            <div class="userbar-info">
+                                <div id="fb-user-email" class="userbar-email"></div>
+                                <span id="fbUserRolBadge" class="badge" style="display:none;font-size:10px;"></span>
+                            </div>
+                            <div class="userbar-actions">
+                                <button id="btnModoPrueba" onclick="toggleModoPrueba()" class="topbar-user-btn" title="Modo Prueba — deshabilita validaciones SII">🧪 Modo Prueba</button>
+                                <button onclick="cambiarEmpresa()" class="topbar-user-btn" title="Cambiar empresa">🏢 Cambiar empresa</button>
+                                <button onclick="fbSyncToCloud()" class="topbar-user-btn" title="Sincronizar con la nube"><span id="fbSyncIcon">☁</span> Sincronizar</button>
+                                <button onclick="fbLogout()" class="topbar-user-btn topbar-user-btn--danger" title="Cerrar sesión">✕ Salir</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="notif-panel" id="notifPanel" onclick="event.stopPropagation()">
+                <div class="nh">Notificaciones</div>
+                <div class="notif-item"><span class="dot2"></span><div><b>Conciliación pendiente</b>Revisa las cartolas bancarias del período.</div></div>
+                <div class="notif-item"><span class="dot2"></span><div><b>Hallazgo de auditoría</b>Hay hallazgos abiertos sin resolver.</div></div>
+                <div class="notif-item"><span class="dot2"></span><div><b>F29 por vencer</b>Revisa la declaración de impuestos del período.</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Título de página — una sola fila limpia, texto real dinámico por módulo (ver navegar() en app.js) -->
+    <div class="page-title-bar" id="pageTitleBar">
+        <h1 id="txt-modulo-titulo">Sistema Contable</h1>
+        <p id="txt-modulo-desc">Administración contable y generación automática de libros e informes</p>
     </div>
 
     <!-- Encabezado profesional — visible solo al imprimir/exportar PDF -->
@@ -266,6 +157,16 @@
              INICIO / DASHBOARD
         ═════════════════════ -->
         <div id="view-inicio" class="view active">
+
+          <!-- Navegación abanico/pulpo — flota sobre el dashboard de fondo (ver menu.js: renderHomeGroups) -->
+          <div class="home-fan" id="homeFan">
+              <div class="fan-backdrop" id="homeFanBackdrop" onclick="cerrarGrupoHome()"></div>
+              <div class="fan-caption">Selecciona un grupo de módulos</div>
+              <div class="fan-cards" id="homeFanCards"></div>
+          </div>
+
+          <div class="home-body" id="homeBody">
+          <div class="home-bg-dash" id="homeBgDash">
 
             <!-- Hero: identificación de empresa -->
             <div class="dash-hero card">
@@ -389,19 +290,34 @@
 
             <!-- Gráficos: barra mensual (2/3) + donuts apilados (1/3) -->
             <div id="dash-charts-area">
+
+            <!-- Pendientes reales (hallazgos abiertos) + accesos rápidos (MRU real de navegación) -->
+            <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-bottom:16px;">
+                <div class="card" style="padding:18px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                        <div style="font-weight:700;font-size:13px;color:var(--text-main);">🔎 Hallazgos de Auditoría</div>
+                        <span id="dashHallazgosBadge" class="badge-doc" style="display:none;"></span>
+                    </div>
+                    <div id="dashHallazgos"></div>
+                </div>
+                <div class="card" style="padding:18px;">
+                    <div style="font-weight:700;font-size:13px;margin-bottom:14px;color:var(--text-main);">⚡ Accesos Rápidos</div>
+                    <div id="dashAccesosRapidos"></div>
+                </div>
+            </div>
             <div style="display:grid;grid-template-columns:1fr 220px;gap:16px;align-items:start;margin-bottom:16px;">
                 <div class="card" style="padding:18px;">
                     <div style="font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text-main);">📊 Ingresos vs Gastos — Año Actual</div>
-                    <div id="dashBarrasMensuales"></div>
+                    <div style="height:190px;"><canvas id="dashBarrasMensuales"></canvas></div>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:16px;">
                     <div class="card" style="padding:16px;">
                         <div style="font-weight:700;font-size:12px;margin-bottom:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;">Estructura</div>
-                        <div id="dashDonutActivos"></div>
+                        <div style="height:130px;"><canvas id="dashDonutActivos"></canvas></div>
                     </div>
                     <div class="card" style="padding:16px;">
                         <div style="font-weight:700;font-size:12px;margin-bottom:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;">Resultado</div>
-                        <div id="dashDonutResultado"></div>
+                        <div style="height:130px;"><canvas id="dashDonutResultado"></canvas></div>
                     </div>
                 </div>
             </div>
@@ -434,6 +350,9 @@
             </div>
 
             </div><!-- /dash-charts-area -->
+
+          </div><!-- /home-bg-dash -->
+          </div><!-- /home-body -->
         </div>
 
         <!-- ════════════════════════════════
@@ -441,10 +360,6 @@
              (Libro Diario / Libro Mayor / Balance General)
         ════════════════════════════════ -->
         <div id="view-estructura-contable" class="view">
-            <div class="mod-header">
-                <span class="mod-header-title">Estructura Contable</span>
-                <span class="mod-header-badge">G1 · Contabilidad</span>
-            </div>
             <div class="mod-tabs">
                 <button class="mod-tab-btn active" data-tab="tab-diario"       onclick="modTab('view-estructura-contable','tab-diario')">📝 Libro Diario</button>
                 <button class="mod-tab-btn"        data-tab="tab-mayor"        onclick="modTab('view-estructura-contable','tab-mayor')">📚 Libro Mayor</button>
@@ -483,7 +398,7 @@
                         <div>
                             <label style="font-size:13px;color:var(--text-muted);font-weight:500;">Fecha:</label>
                             <input type="date" id="fechaAsiento"
-                                style="padding:8px;border:1px solid var(--border);border-radius:6px;font-family:'JetBrains Mono';">
+                                style="padding:8px;border:1px solid var(--border);border-radius:6px;font-family:'IBM Plex Mono';">
                         </div>
                         <div style="display:flex;gap:10px;flex-wrap:wrap;">
                             <button class="btn btn-primary"   onclick="procesarGlosa()">Generar Asiento →</button>
@@ -642,10 +557,6 @@
              Paneles poblados por _initModulosDatos() en app.js
         ═════════════════════ -->
         <div id="view-conciliacion-cartolas" class="view">
-            <div class="mod-header">
-                <span class="mod-header-title">Conciliación y Cartolas</span>
-                <span class="mod-header-badge">G3 · Datos</span>
-            </div>
             <div class="mod-tabs">
                 <button class="mod-tab-btn active" data-tab="tab-cc-cartolas"     onclick="modTab('view-conciliacion-cartolas','tab-cc-cartolas')">🏦 Cartolas Bancarias</button>
                 <button class="mod-tab-btn"        data-tab="tab-cc-conciliacion" onclick="modTab('view-conciliacion-cartolas','tab-cc-conciliacion')">🔗 Conciliación Bancaria</button>
@@ -667,10 +578,6 @@
              Paneles poblados por _initModulosComerciales() en app.js
         ═════════════════════ -->
         <div id="view-egresos-ingresos" class="view">
-            <div class="mod-header">
-                <span class="mod-header-title">Egresos e Ingresos</span>
-                <span class="mod-header-badge">G2 · Comercial</span>
-            </div>
             <div class="mod-tabs">
                 <button class="mod-tab-btn active" data-tab="tab-ei-compras"    onclick="modTab('view-egresos-ingresos','tab-ei-compras')">🛒 Libro de Compras</button>
                 <button class="mod-tab-btn"        data-tab="tab-ei-ventas"     onclick="modTab('view-egresos-ingresos','tab-ei-ventas')">💰 Libro de Ventas</button>
@@ -686,10 +593,6 @@
              Panel poblado por _initModulosComerciales() en app.js
         ═════════════════════ -->
         <div id="view-tributario-1cat" class="view">
-            <div class="mod-header">
-                <span class="mod-header-title">Tributario</span>
-                <span class="mod-header-badge">G2 · Comercial</span>
-            </div>
             <div class="mod-tabs">
                 <button class="mod-tab-btn active" data-tab="tab-trib-iva" onclick="modTab('view-tributario-1cat','tab-trib-iva')">🧾 Declaración de Impuestos (F29)</button>
             </div>
@@ -915,10 +818,6 @@
              Paneles poblados por _initModulosEmpresa() en app.js
         ═════════════════════ -->
         <div id="view-activos-produccion" class="view">
-            <div class="mod-header">
-                <span class="mod-header-title">Activos y Producción</span>
-                <span class="mod-header-badge">G5 · Empresa</span>
-            </div>
             <div class="mod-tabs">
                 <button class="mod-tab-btn active" data-tab="tab-ap-activos"   onclick="modTab('view-activos-produccion','tab-ap-activos')">🏦 Activos Fijos</button>
                 <button class="mod-tab-btn"        data-tab="tab-ap-productos" onclick="modTab('view-activos-produccion','tab-ap-productos')">🏷 Productos / Servicios</button>
@@ -1014,10 +913,6 @@
              Paneles poblados por _initModulosEmpresa() en app.js
         ═════════════════════ -->
         <div id="view-auditoria" class="view">
-            <div class="mod-header">
-                <span class="mod-header-title">Auditoría</span>
-                <span class="mod-header-badge">G5 · Empresa</span>
-            </div>
             <div class="mod-tabs">
                 <button class="mod-tab-btn active" data-tab="tab-aud-informe"    onclick="modTab('view-auditoria','tab-aud-informe')">📄 Informe</button>
                 <button class="mod-tab-btn"        data-tab="tab-aud-hallazgos" onclick="modTab('view-auditoria','tab-aud-hallazgos')">📋 Hallazgos</button>
@@ -1122,7 +1017,7 @@
                     </div>
                     <div id="invCodigoBox" style="display:none;margin-top:16px;background:var(--card);border:2px solid var(--accent);border-radius:10px;padding:16px;text-align:center;">
                         <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Código de invitación (válido 48h) — comparte este código manualmente</div>
-                        <div id="invCodigoGen" style="font-size:32px;font-weight:800;letter-spacing:.3em;color:var(--accent);font-family:'JetBrains Mono',monospace;"></div>
+                        <div id="invCodigoGen" style="font-size:32px;font-weight:800;letter-spacing:.3em;color:var(--accent);font-family:'IBM Plex Mono',monospace;"></div>
                         <button class="btn btn-secondary" style="margin-top:10px;" onclick="copiarCodigoInvitacion()">📋 Copiar</button>
                     </div>
                 </div>
@@ -1137,7 +1032,7 @@
                 <div id="cfgSesionInfo" style="background:var(--table-stripe);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;margin-bottom:16px;">
                     <div style="margin-bottom:6px;"><span style="color:var(--text-muted);">Correo:</span> <strong id="cfgSesionEmail">—</strong></div>
                     <div style="margin-bottom:6px;"><span style="color:var(--text-muted);">Rol:</span> <strong id="cfgSesionRol">—</strong></div>
-                    <div><span style="color:var(--text-muted);">Empresa ID:</span> <span id="cfgSesionEmpresa" style="font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;"></span></div>
+                    <div><span style="color:var(--text-muted);">Empresa ID:</span> <span id="cfgSesionEmpresa" style="font-size:12px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;"></span></div>
                 </div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <button class="btn btn-secondary" onclick="fbSyncToCloud()" style="display:flex;align-items:center;gap:6px;">
@@ -1164,7 +1059,7 @@
                 <div id="iaKeyEstado" style="font-size:13px;margin-bottom:14px;color:var(--text-muted);">Verificando…</div>
                 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                     <input type="password" id="iaApiKeyInput" placeholder="AIza…"
-                        style="flex:1;min-width:260px;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--input-bg);color:var(--text);">
+                        style="flex:1;min-width:260px;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--input-bg);color:var(--text);">
                     <button class="btn btn-primary" onclick="iaGuardarApiKey()">💾 Guardar Key</button>
                     <button class="btn btn-secondary" onclick="iaBorrarApiKey()">🗑 Eliminar</button>
                 </div>
@@ -1192,10 +1087,6 @@
              (Balance Clasificado / Estado de Resultados / Flujo de Caja)
         ════════════════════════════════ -->
         <div id="view-reportes-financieros" class="view">
-            <div class="mod-header">
-                <span class="mod-header-title">Reportes Financieros</span>
-                <span class="mod-header-badge">G1 · Contabilidad</span>
-            </div>
             <div class="mod-tabs">
                 <button class="mod-tab-btn active" data-tab="tab-balance-clasificado" onclick="modTab('view-reportes-financieros','tab-balance-clasificado')">🏦 Balance Clasificado</button>
                 <button class="mod-tab-btn"        data-tab="tab-estado-resultados"   onclick="modTab('view-reportes-financieros','tab-estado-resultados')">📊 Estado de Resultados</button>
@@ -1406,10 +1297,6 @@
              tab-rem-previsional: tasas Previred (movidas desde view-indicadores)
         ═════════════════════ -->
         <div id="view-remuneraciones" class="view">
-            <div class="mod-header">
-                <span class="mod-header-title">Remuneraciones</span>
-                <span class="mod-header-badge">G4 · RRHH</span>
-            </div>
             <div class="mod-tabs">
                 <button class="mod-tab-btn active" data-tab="tab-rem-liquidaciones" onclick="modTab('view-remuneraciones','tab-rem-liquidaciones')">👷 Liquidaciones</button>
                 <button class="mod-tab-btn"        data-tab="tab-rem-previsional"   onclick="modTab('view-remuneraciones','tab-rem-previsional')">📋 Indicadores Previsionales</button>
@@ -1535,10 +1422,6 @@
              el chequeo _honEnLibro() en segunda-categoria.js
         ═════════════════════ -->
         <div id="view-libros-contables-hon" class="view">
-            <div class="mod-header">
-                <span class="mod-header-title">Libros Contables</span>
-                <span class="mod-header-badge">G1 · Contabilidad</span>
-            </div>
             <div class="mod-tabs">
                 <button class="mod-tab-btn active" data-tab="view-libro-honorarios"   onclick="modTab('view-libros-contables-hon','view-libro-honorarios')">📒 Libro de Honorarios</button>
                 <button class="mod-tab-btn"        data-tab="view-libro-ingresos-hon" onclick="modTab('view-libros-contables-hon','view-libro-ingresos-hon')">📥 Libro de Ingresos</button>
@@ -1915,10 +1798,6 @@
              Paneles reutilizan los ids legacy (view-f29-hon, view-f22-hon)
         ═════════════════════ -->
         <div id="view-declaracion-impuestos-hon" class="view">
-            <div class="mod-header">
-                <span class="mod-header-title">Declaración de Impuestos</span>
-                <span class="mod-header-badge">G3 · Tributario</span>
-            </div>
             <div class="mod-tabs">
                 <button class="mod-tab-btn active" data-tab="view-f29-hon" onclick="modTab('view-declaracion-impuestos-hon','view-f29-hon')">🧾 Formulario 29</button>
                 <button class="mod-tab-btn"        data-tab="view-f22-hon" onclick="modTab('view-declaracion-impuestos-hon','view-f22-hon')">📋 Formulario 22</button>
@@ -2279,10 +2158,54 @@
      LOGIN OVERLAY
 ════════════════════════════════════════════════════════ -->
 <div id="login-overlay" style="display:none;">
-    <div class="login-card">
-        <div class="login-logo">📘</div>
-        <h1 class="login-titulo">ContAPP Auditor</h1>
-        <p class="login-sub">Contabilidad multi-cliente para contadores y oficinas contables</p>
+  <div class="login-shell">
+    <button class="theme-toggle-btn login-theme-toggle" onclick="toggleTheme()" title="Cambiar tema claro/oscuro">
+        <svg class="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>
+        <svg class="ic-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+    </button>
+
+    <div class="login-left">
+        <svg class="login-blob" viewBox="0 0 240 240"><path d="M30 8 H190 A26 26 0 0 1 216 34 V150" fill="none" stroke="var(--coral)" stroke-width="2" opacity="0.55"/></svg>
+
+        <div class="lbrand">
+            <div class="seal">C</div>
+            <div class="name">Cont<span class="hi">APP</span></div>
+        </div>
+        <div class="ltag">Contabilidad · Auditoría · Multi-cliente</div>
+
+        <div class="lhead">
+            <h2>Contabilidad multi-cliente para contadores y oficinas contables.</h2>
+        </div>
+
+        <div class="login-features">
+            <div class="lfeat">
+                <div class="fic"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 19v-6"/><path d="M13 19v-10"/><path d="M18 19v-3"/></svg></div>
+                <span>Gestión financiera</span>
+            </div>
+            <div class="lfeat">
+                <div class="fic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v8l6 3"/></svg></div>
+                <span>Reportes inteligentes</span>
+            </div>
+            <div class="lfeat">
+                <div class="fic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.5" cy="9" r="2.3"/><path d="M15.7 14.6c2.6.3 4.3 2.2 4.3 5.4"/></svg></div>
+                <span>Control total del negocio</span>
+            </div>
+        </div>
+
+        <svg class="login-wave" viewBox="0 0 400 120" preserveAspectRatio="none">
+            <polyline points="0,100 60,100 120,25 200,100 260,45 400,100" fill="none" stroke="var(--periwinkle)" stroke-width="2"/>
+        </svg>
+
+        <img class="login-badge login-badge-light" src="icons/brand/isotipo-light-tone.png" alt="" aria-hidden="true">
+        <img class="login-badge login-badge-dark" src="icons/brand/isotipo-dark-tone.png" alt="" aria-hidden="true">
+
+        <div class="lfoot">© 2026 ContAPP. Todos los derechos reservados.</div>
+    </div>
+
+    <div class="login-right">
+      <div class="login-card">
+        <h1 class="login-titulo">Bienvenido de vuelta</h1>
+        <p class="login-sub">Inicia sesión para continuar</p>
 
         <!-- Selector de modo de entrada -->
         <div class="login-tabs">
@@ -2292,18 +2215,28 @@
 
         <!-- MODO: iniciar sesión (titular / cuenta propia) -->
         <div class="login-form" id="loginFormSesion">
-            <div>
-                <label class="login-label">Correo electrónico</label>
-                <input id="loginEmail" class="login-input" type="email"
-                    placeholder="correo@empresa.cl"
-                    onkeydown="if(event.key==='Enter') fbLogin()">
+            <div class="lfield">
+                <label>Correo electrónico</label>
+                <div class="linput">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+                    <input id="loginEmail" type="email" placeholder="correo@empresa.cl"
+                        onkeydown="if(event.key==='Enter') fbLogin()">
+                </div>
             </div>
 
-            <div>
-                <label class="login-label">Contraseña</label>
-                <input id="loginPass" class="login-input" type="password"
-                    placeholder="••••••••"
-                    onkeydown="if(event.key==='Enter') fbLogin()">
+            <div class="lfield">
+                <label>Contraseña</label>
+                <div class="linput">
+                    <svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+                    <input id="loginPass" type="password" placeholder="••••••••"
+                        onkeydown="if(event.key==='Enter') fbLogin()">
+                    <svg class="eye" viewBox="0 0 24 24" onclick="togglePwdLogin()"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+            </div>
+
+            <div class="lrow">
+                <label class="lremember"><input type="checkbox" checked> Recordarme</label>
+                <a href="javascript:void(0)">¿Olvidaste tu contraseña?</a>
             </div>
 
             <div id="loginError" class="login-error"></div>
@@ -2311,6 +2244,12 @@
             <button id="btnLoginSubmit" class="login-btn" onclick="fbLogin()">
                 Iniciar Sesión
             </button>
+
+            <div class="ldivider">o continúa con</div>
+            <div class="lsocial">
+                <button><svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.4-1.1 2.6-2.4 3.5v2.9h3.9c2.3-2.1 3.5-5.2 3.5-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.9-2.9c-1.1.7-2.4 1.1-4 1.1-3.1 0-5.7-2.1-6.6-4.9H1.4v3C3.4 21.3 7.4 24 12 24z"/><path fill="#FBBC05" d="M5.4 14.4c-.2-.7-.4-1.4-.4-2.4s.1-1.6.4-2.4v-3H1.4C.5 8.3 0 10.1 0 12s.5 3.7 1.4 5.4l4-3z"/><path fill="#EA4335" d="M12 4.7c1.7 0 3.3.6 4.5 1.8l3.4-3.4C17.9 1.2 15.2 0 12 0 7.4 0 3.4 2.7 1.4 6.6l4 3C6.3 6.8 8.9 4.7 12 4.7z"/></svg>Google</button>
+                <button><svg width="15" height="15" viewBox="0 0 24 24"><rect x="1" y="1" width="10" height="10" fill="#F35325"/><rect x="13" y="1" width="10" height="10" fill="#81BC06"/><rect x="1" y="13" width="10" height="10" fill="#05A6F0"/><rect x="13" y="13" width="10" height="10" fill="#FFBA08"/></svg>Microsoft</button>
+            </div>
 
             <p class="login-toggle">
                 <a href="#" onclick="wizardAbrir();return false;">
@@ -2321,13 +2260,13 @@
 
         <!-- MODO: ingresar con código (acceso directo al perfil del titular) -->
         <div class="login-form" id="loginFormCodigo" style="display:none;">
-            <div>
-                <label class="login-label">Código de invitación</label>
+            <div class="lfield">
+                <label>Código de invitación</label>
                 <input id="loginCodigo" class="login-input" type="text" maxlength="6"
                     placeholder="XXXXXX"
                     style="text-transform:uppercase;letter-spacing:.25em;font-size:22px;text-align:center;"
                     onkeydown="if(event.key==='Enter') fbIngresarConCodigo()">
-                <p style="color:var(--text-muted);font-size:12px;margin-top:8px;line-height:1.5;">
+                <p style="color:var(--ink-faint);font-size:12px;margin-top:8px;line-height:1.5;">
                     Ingresa el código que te compartió el titular de la cuenta.
                     Entrarás directamente a sus clientes, sin necesidad de correo.
                 </p>
@@ -2339,7 +2278,9 @@
                 Ingresar
             </button>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -2962,7 +2903,7 @@
 <script src="js/services/diario.js?v=2"></script>
 <script src="js/services/mayor.js?v=2"></script>
 <script src="js/services/balance.js"></script>
-<script src="js/services/dashboard.js"></script>
+<script src="js/services/dashboard.js?v=4"></script>
 <script src="js/services/flujo-caja.js"></script>
 <script src="js/services/balance-clasificado.js"></script>
 <script src="js/services/estado-resultados.js"></script>
@@ -2981,7 +2922,7 @@
 <script src="js/modules/remuneraciones.js"></script>
 <script src="js/modules/segunda-categoria.js"></script>
 
-<script src="js/services/app.js?v=2"></script>
+<script src="js/services/app.js?v=3"></script>
 
 <!-- Firebase SDK (compat) — cargado después de app.js -->
 <!-- ═══════════════════════════════════════════════════════
@@ -3056,33 +2997,54 @@
 <script src="js/services/auth-manager.js"></script>
 <script src="js/services/exportar.js"></script>
 <script src="js/services/ia.js"></script>
-<script src="js/services/firebase-service.js?v=2"></script>
+<script src="js/services/firebase-service.js?v=4"></script>
 <script>
     // Firebase siempre activo — config hardcodeada en firebase-service.js
     fbInit();
 </script>
 <script>
-    function toggleTheme() {
-        var html = document.documentElement;
-        var current = html.getAttribute('data-theme') || 'light';
-        var next = current === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', next);
-        localStorage.setItem('appTheme', next);
-        var icon = document.getElementById('themeIcon');
-        if (icon) icon.textContent = next === 'dark' ? '☀️' : '🌙';
+    // Tema claro/oscuro — soporta múltiples botones .theme-toggle-btn en la misma
+    // página (login, home, topbar), cada uno con sus propios .ic-sun/.ic-moon.
+    // Clave de localStorage sin cambiar ('appTheme') para no perder la preferencia
+    // ya guardada de usuarios existentes.
+    function applyTheme(t) {
+        document.documentElement.setAttribute('data-theme', t);
+        document.querySelectorAll('.theme-toggle-btn').forEach(function (btn) {
+            var sun = btn.querySelector('.ic-sun'), moon = btn.querySelector('.ic-moon');
+            if (sun) sun.style.display = t === 'dark' ? 'none' : 'block';
+            if (moon) moon.style.display = t === 'dark' ? 'block' : 'none';
+        });
+        if (window.refrescarGraficosDashboard) window.refrescarGraficosDashboard();
     }
-    // Sincronizar ícono con el tema actual al cargar
-    (function() {
-        var t = localStorage.getItem('appTheme') || 'light';
-        var icon = document.getElementById('themeIcon');
-        if (icon) icon.textContent = t === 'dark' ? '☀️' : '🌙';
-    })();
+    function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        try { localStorage.setItem('appTheme', next); } catch (e) {}
+    }
+    function initTheme() {
+        var saved = 'light';
+        try { saved = localStorage.getItem('appTheme') || 'light'; } catch (e) {}
+        applyTheme(saved);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTheme);
+    } else {
+        initTheme();
+    }
+
+    // Mostrar/ocultar contraseña en el login (paso 3 del nuevo diseño)
+    function togglePwdLogin() {
+        var input = document.getElementById('loginPass');
+        if (input) input.type = input.type === 'password' ? 'text' : 'password';
+    }
 </script>
 
 <script src="js/core/busqueda-global.js"></script>
 <script src="js/auditor/licencia.js"></script>
 <script src="js/categorias/primera.js"></script>
 <script src="js/categorias/segunda.js"></script>
+<script src="js/services/menu.js?v=2"></script>
 <script src="js/auditor/multi-cliente.js"></script>
 <script src="js/auditor/panel-estudio.js"></script>
 <script src="js/auditor/hallazgos.js"></script>

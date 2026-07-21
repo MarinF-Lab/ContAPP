@@ -1,46 +1,89 @@
 /* ─────────────────────────────────────────────────────────────
    CONTAPP FORGE — Design System Variables
    Light mode (default) + Dark mode via [data-theme="dark"]
-   Paleta navy/teal + acento magenta-pink (D-8)
+   Nuevo diseño (navy/coral/periwinkle) — ver Diseño de apps/integracion-diseno.md
+   Paso 1 de la integración: tokens de color y tipografía únicamente.
 ───────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 /* ══════════════════════════════════════════
    LIGHT MODE (default)
 ══════════════════════════════════════════ */
 :root {
-    /* Core palette — alineada con ID Workshop */
-    --bg:             #e4e8ed;
-    --sidebar:        #FFFFFF;
-    --card:           #f4f6f8;
-    --card-border:    #bdc8d0;
-    --text:           #0A1922;
-    --text-muted:     #566779;
-    --text-subtle:    #9aadb8;
-    --accent:         #AC406D;
-    --accent-soft:    #F7E8EF;
-    --accent-grad:    linear-gradient(135deg, #AC406D 0%, #722652 100%);
-    --accent-glow:    0 4px 16px rgba(172,64,109,.28);
-    --accent-glow-lg: 0 8px 28px rgba(172,64,109,.42);
-    --positive:       #0FA86E;
-    --positive-soft:  #E8F8F2;
-    --negative:       #E53E5A;
-    --negative-soft:  #FEF0F2;
-    --warning:        #F59E0B;
-    --warning-soft:   #FEF9EC;
-    --info:           #3B7DD8;
-    --info-soft:      #EBF2FD;
-    --divider:        #bdc8d0;
-    --table-stripe:   #eaeef2;
-    --input-bg:       #edf0f4;
-    --shadow:         0 4px 24px rgba(0,0,0,.12);
-    --shadow-lg:      0 8px 40px rgba(0,0,0,.20);
-    --shadow-card:    0 2px 12px rgba(10,25,34,.06);
-    --nav-active:     #F7E8EF;
-    --glow-pink:      rgba(172,64,109,.06);
-    --glow-blue:      rgba(145,166,178,.18);
+    /* Tipografía — Space Grotesk (títulos/marca), Manrope (texto), IBM Plex Mono (cifras/mono) */
+    --font-heading: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --font-sans:    'Manrope', 'Segoe UI', sans-serif;
+    --font-mono:    'IBM Plex Mono', 'SF Mono', monospace;
 
-    /* Sidebar-specific */
+    /* ---- paleta de marca (nuevo diseño) ---- */
+    --navy:             #1E1E5D;
+    --navy-light:       #2B2B74;
+    --coral:            #FF8692;
+    --coral-deep:       #E8687A;
+    --blue:             #587FFC;
+    --periwinkle:       #92A5FD;
+    --periwinkle-soft:  #C7D2FE;
+
+    /* ---- estados (nuevo diseño) ---- */
+    --ok:               #1FB579;
+    --ok-tint:          #E1F7EC;
+    --warn:             #F2A94E;
+    --warn-tint:        #FCEEDA;
+    --danger:           #EF5B72;
+    --danger-tint:      #FCE4E8;
+
+    /* ---- superficies (nuevo diseño, tema claro) ---- */
+    --paper:            #F5F6FC;
+    --card-bg:          #FFFFFF;
+    --paper-deep:       #ECEFFA;
+    --ink:              #1E1E5D;
+    --ink-soft:         #5B5F82;
+    --ink-faint:        #9498B8;
+    --rule:             #E1E4F3;
+    --rule-strong:      #CBD1EE;
+
+    --shadow-1:         0 1px 2px rgba(30,30,93,.06), 0 6px 16px rgba(30,30,93,.08);
+    --shadow-2:         0 2px 4px rgba(30,30,93,.08), 0 14px 32px rgba(30,30,93,.16);
+    --radius-s:         8px;
+    --radius-m:         14px;
+    --wash-a:           rgba(146,165,253,.20);
+    --wash-b:           rgba(255,134,146,.16);
+
+    /* ══ Tokens existentes del proyecto — remapeados a la paleta nueva ══
+       Se conservan estos nombres porque main.css/auditor.css/remuneraciones.css y los
+       estilos inline del proyecto los consumen; así el nuevo diseño se propaga sin
+       tener que tocar cada archivo todavía (eso ocurre en los pasos siguientes del plan). */
+    --bg:             var(--paper);
+    --sidebar:        #FFFFFF;                 /* sin tocar aún: el sidebar se rediseña en los pasos 4-5 */
+    --card:           var(--card-bg);
+    --card-border:    var(--rule-strong);
+    --text:           var(--ink);
+    --text-muted:     var(--ink-soft);
+    --text-subtle:    var(--ink-faint);
+    --accent:         var(--coral);
+    --accent-soft:    #FFE9EC;
+    --accent-grad:    linear-gradient(135deg, var(--coral) 0%, var(--coral-deep) 100%);
+    --accent-glow:    0 4px 16px rgba(255,134,146,.35);
+    --accent-glow-lg: 0 8px 28px rgba(255,134,146,.50);
+    --positive:       var(--ok);
+    --positive-soft:  var(--ok-tint);
+    --negative:       var(--danger);
+    --negative-soft:  var(--danger-tint);
+    --warning:        var(--warn);
+    --warning-soft:   var(--warn-tint);
+    --info:           var(--blue);
+    --info-soft:      #E3E9FE;
+    --divider:        var(--rule);
+    --table-stripe:   var(--paper-deep);
+    --input-bg:       var(--paper-deep);
+    --shadow:         var(--shadow-2);
+    --shadow-lg:      var(--shadow-2);
+    --shadow-card:    var(--shadow-1);
+    --nav-active:     #F7E8EF;
+    --glow-pink:      rgba(255,134,146,.10);
+    --glow-blue:      rgba(88,127,252,.14);
+
+    /* Sidebar-specific — sin tocar todavía (pasos 4-5 del plan) */
     --sidebar-text:          #233443;
     --sidebar-text-hover:    #0A1922;
     --sidebar-icon-color:    #5A6E7A;
@@ -53,8 +96,8 @@
     --sidebar-divider:       1px solid rgba(10,25,34,0.08);
 
     /* ── Legacy aliases ── */
-    --primary:        #AC406D;
-    --primary-hover:  #8F3059;
+    --primary:        var(--coral);
+    --primary-hover:  var(--coral-deep);
     --sidebar-bg:     var(--sidebar);
     --sidebar-hover:  var(--sidebar-item-hover);
     --surface:        var(--card);
@@ -71,38 +114,55 @@
    DARK MODE
 ══════════════════════════════════════════ */
 [data-theme="dark"] {
-    /* Core palette — alineada con ID Workshop dark */
-    --bg:             #0d1929;
-    --sidebar:        #0C1A27;
-    --card:           #152235;
-    --card-border:    #1e3349;
-    --text:           #D6E0E8;
-    --text-muted:     #8DA1AF;
-    --text-subtle:    #3a5060;
-    --accent:         #F95A8A;
-    --accent-soft:    #2B0F1F;
-    --accent-grad:    linear-gradient(135deg, #F95A8A 0%, #843B5B 100%);
-    --accent-glow:    0 4px 16px rgba(249,90,138,.32);
-    --accent-glow-lg: 0 8px 28px rgba(249,90,138,.50);
-    --positive:       #1ACC8A;
-    --positive-soft:  #0D2B20;
-    --negative:       #FF4D6A;
-    --negative-soft:  #2B0F17;
-    --warning:        #FBBF24;
-    --warning-soft:   #2B1F07;
-    --info:           #60A5FA;
-    --info-soft:      #0D1E35;
-    --divider:        #1e3349;
-    --table-stripe:   #142131;
-    --input-bg:       #0E1A28;
-    --shadow:         0 4px 24px rgba(0,0,0,.45);
-    --shadow-lg:      0 24px 60px rgba(0,0,0,.50);
-    --shadow-card:    0 2px 12px rgba(0,0,0,.25);
-    --nav-active:     #1C2939;
-    --glow-pink:      rgba(249,90,138,.07);
-    --glow-blue:      rgba(21,34,53,.45);
+    /* ---- superficies (nuevo diseño, tema oscuro) ----
+       Nota: --navy/--coral/--blue/--periwinkle y sus variantes NO cambian entre temas
+       (igual que en el prototipo) — solo cambian superficies, texto y los "tint" de estado. */
+    --paper:            #17171d;
+    --card-bg:          #1e1e25;
+    --paper-deep:       #25252d;
+    --ink:              #EDEEF2;
+    --ink-soft:         #A6A7B5;
+    --ink-faint:        #75768A;
+    --rule:             #2b2b34;
+    --rule-strong:      #37373f;
+    --ok-tint:          #132922;
+    --warn-tint:        #302514;
+    --danger-tint:      #301a20;
+    --wash-a:           rgba(146,165,253,.11);
+    --wash-b:           rgba(255,134,146,.10);
 
-    /* Sidebar-specific */
+    /* ══ Tokens existentes del proyecto — remapeados ══ */
+    --bg:             var(--paper);
+    --sidebar:        #0C1A27;                 /* sin tocar aún: el sidebar se rediseña en los pasos 4-5 */
+    --card:           var(--card-bg);
+    --card-border:    var(--rule-strong);
+    --text:           var(--ink);
+    --text-muted:     var(--ink-soft);
+    --text-subtle:    var(--ink-faint);
+    --accent:         var(--coral);
+    --accent-soft:    #3A1F24;
+    --accent-grad:    linear-gradient(135deg, var(--coral) 0%, var(--coral-deep) 100%);
+    --accent-glow:    0 4px 16px rgba(255,134,146,.40);
+    --accent-glow-lg: 0 8px 28px rgba(255,134,146,.55);
+    --positive:       var(--ok);
+    --positive-soft:  var(--ok-tint);
+    --negative:       var(--danger);
+    --negative-soft:  var(--danger-tint);
+    --warning:        var(--warn);
+    --warning-soft:   var(--warn-tint);
+    --info:           var(--blue);
+    --info-soft:      #16213D;
+    --divider:        var(--rule);
+    --table-stripe:   var(--paper-deep);
+    --input-bg:       #121217;
+    --shadow:         var(--shadow-2);
+    --shadow-lg:      var(--shadow-2);
+    --shadow-card:    var(--shadow-1);
+    --nav-active:     #1C2939;
+    --glow-pink:      rgba(255,134,146,.10);
+    --glow-blue:      rgba(88,127,252,.18);
+
+    /* Sidebar-specific — sin tocar todavía (pasos 4-5 del plan) */
     --sidebar-text:          #9CB0BD;
     --sidebar-text-hover:    #CAD8E2;
     --sidebar-icon-color:    #717E8B;
@@ -115,8 +175,8 @@
     --sidebar-divider:       1px solid rgba(255,255,255,0.07);
 
     /* ── Legacy overrides ── */
-    --primary:        #F95A8A;
-    --primary-hover:  #D94070;
+    --primary:        var(--coral);
+    --primary-hover:  var(--coral-deep);
     --sidebar-bg:     var(--sidebar);
     --sidebar-hover:  var(--sidebar-item-hover);
     --surface:        var(--card);

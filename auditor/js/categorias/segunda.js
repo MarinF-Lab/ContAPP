@@ -7,30 +7,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CAT2_MODULOS = [
-    { id: 'libros-contables-hon',        label: 'Libros Contables (Honorarios/Ingresos/Egresos)', grupo: 'G1 · Contabilidad', defecto: true },
-    { id: 'documentos-hon',              label: 'Documentación',            grupo: 'G2 · Datos', defecto: true },
-    { id: 'conciliacion-cartolas-hon',   label: 'Conciliación y Cartolas',  grupo: 'G2 · Datos', defecto: true },
-    { id: 'clientes-hon',                label: 'Clientes / Prov.',         grupo: 'G2 · Datos', defecto: true },
-    { id: 'prestadores',                 label: 'Prestadores',              grupo: 'G2 · Datos', defecto: true },
-    { id: 'declaracion-impuestos-hon',   label: 'Declaración de Impuestos (F29/F22)', grupo: 'G3 · Tributario', defecto: true },
-    { id: 'auditoria-hon',               label: 'Auditoría',                grupo: 'G4 · Empresa', defecto: true },
-];
-
-// IDs de grupos de nav de segunda categoría
-const CAT2_IDS_MOSTRAR = [
-    'nav-grupo-contabilidad-hon',
-    'nav-grupo-datos-hon',
-    'nav-grupo-tributario-hon',
-    'nav-grupo-empresa-hon',
-];
-
-// IDs de grupos de nav de primera categoría (se ocultan con segunda activa)
-const CAT2_IDS_OCULTAR = [
-    'nav-grupo-contabilidad',
-    'nav-grupo-comercial',
-    'nav-grupo-datos',
-    'nav-grupo-rrhh',
-    'nav-grupo-empresa',
+    { id: 'libros-contables-hon',        label: 'Libros Contables (Honorarios/Ingresos/Egresos)', grupo: 'Contabilidad', icono: '📒', defecto: true },
+    { id: 'declaracion-impuestos-hon',   label: 'Declaración de Impuestos (F29/F22)', grupo: 'Contabilidad', icono: '🧾', defecto: true },
+    { id: 'documentos-hon',              label: 'Documentación',            grupo: 'Comercial', icono: '📁', defecto: true },
+    { id: 'conciliacion-cartolas-hon',   label: 'Conciliación y Cartolas',  grupo: 'Comercial', icono: '🏦', defecto: true },
+    { id: 'clientes-hon',                label: 'Clientes / Prov.',         grupo: 'Comercial', icono: '🤝', defecto: true },
+    { id: 'prestadores',                 label: 'Prestadores',              grupo: 'Comercial', icono: '👤', defecto: true },
+    { id: 'auditoria-hon',               label: 'Auditoría',                grupo: 'Empresa', icono: '📋', defecto: true },
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
@@ -38,42 +21,11 @@ function cat2ModulosDefecto() {
     return Object.fromEntries(CAT2_MODULOS.map(m => [m.id, m.defecto]));
 }
 
-// ── Aplicar al sidebar ────────────────────────────────────────────────────────
+// ── Aplicar módulos activos ───────────────────────────────────────────────────
+// Ver nota equivalente en primera.js — el sidebar que esto tocaba ya no existe;
+// ahora solo se pide un re-render del menú compartido (menu.js).
 function cat2AplicarModulos(modulosActivos) {
-    const efectivos = modulosActivos || cat2ModulosDefecto();
-
-    CAT2_IDS_MOSTRAR.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = '';
-    });
-    CAT2_IDS_OCULTAR.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-    });
-
-    // Scoped a los grupos de segunda para no afectar los data-modulo duplicados de primera
-    const scopeGroups = CAT2_IDS_MOSTRAR
-        .map(id => document.getElementById(id))
-        .filter(Boolean);
-
-    CAT2_MODULOS.forEach(m => {
-        const activo = m.id in efectivos ? efectivos[m.id] : m.defecto;
-        scopeGroups.forEach(grupo => {
-            const navEl = grupo.querySelector(`[data-modulo="${m.id}"]`);
-            if (navEl) navEl.style.display = activo ? '' : 'none';
-        });
-    });
-
-    // Ocultar grupos de segunda que queden sin ítems visibles
-    CAT2_IDS_MOSTRAR.forEach(id => {
-        const grupo = document.getElementById(id);
-        if (!grupo) return;
-        const items      = grupo.querySelectorAll('.nav-item');
-        const hayVisible = [...items].some(el => el.style.display !== 'none');
-        const esSistema  = grupo.querySelector('.nav-group-title')?.textContent?.includes('SISTEMA');
-        const esInicio   = grupo.classList.contains('nav-group-solo');
-        if (!hayVisible && !esSistema && !esInicio) grupo.style.display = 'none';
-    });
+    if (typeof refrescarMenuNavegacion === 'function') refrescarMenuNavegacion();
 }
 
 // ── Renderizar checkboxes en un contenedor ────────────────────────────────────

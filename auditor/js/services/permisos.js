@@ -36,31 +36,14 @@ function aplicarPermisos() {
     }
 }
 
-// Oculta módulos que no aplican según categoría tributaria
+// Oculta módulos que no aplican según categoría tributaria.
+// La navegación ya no es un sidebar estático (Home abanico + selector de
+// módulo en topbar, ver menu.js) — aquí solo se actualiza el badge y se
+// delega el filtrado real (categoría + módulos activos por cliente) a
+// construirMenu()/refrescarMenuNavegacion() en menu.js.
 function aplicarNavegacionPorCategoria() {
     const cat      = window.currentUser?.categoria || 'primera';
     const esSegunda = cat === 'segunda';
-
-    // Solo gestiona los GRUPOS — los ítems individuales los controla audAplicarModulos.
-    // Grupos exclusivos de PRIMERA categoría (G1-G5 del rediseño de arquitectura)
-    const gruposPrimera = [
-        'nav-grupo-contabilidad', 'nav-grupo-comercial', 'nav-grupo-datos',
-        'nav-grupo-rrhh', 'nav-grupo-empresa',
-    ];
-    gruposPrimera.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = esSegunda ? 'none' : '';
-    });
-
-    // Grupos exclusivos de SEGUNDA categoría
-    const gruposSegunda = [
-        'nav-grupo-contabilidad-hon', 'nav-grupo-datos-hon', 'nav-grupo-tributario-hon',
-        'nav-grupo-empresa-hon',
-    ];
-    gruposSegunda.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = esSegunda ? '' : 'none';
-    });
 
     // Actualizar indicador de categoría en configuración
     const catBadge = document.getElementById('cfgCategoriaBadge');
@@ -69,11 +52,7 @@ function aplicarNavegacionPorCategoria() {
         catBadge.className   = esSegunda ? 'badge badge-segunda' : 'badge badge-primera';
     }
 
-    // Delegar visibilidad de ítems individuales a audAplicarModulos (si está disponible)
-    if (typeof audAplicarModulos === 'function') {
-        const modulosActivos = window.currentUser?.modulosActivos || null;
-        audAplicarModulos(modulosActivos, cat);
-    }
+    if (typeof refrescarMenuNavegacion === 'function') refrescarMenuNavegacion();
 }
 
 window.ROLES                         = ROLES;

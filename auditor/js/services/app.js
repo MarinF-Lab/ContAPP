@@ -2,23 +2,6 @@ let dbAsientos = JSON.parse(localStorage.getItem('core_asientos')) || [];
 window.dbAsientos = dbAsientos;
 
 // ─────────────────────────────────────────────────────────────
-//  SIDEBAR RESPONSIVE — drawer toggle
-// ─────────────────────────────────────────────────────────────
-function toggleSidebar() {
-    const sb      = document.querySelector('.sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    const abierto = sb.classList.toggle('sidebar-open');
-    if (overlay) overlay.style.display = abierto ? 'block' : 'none';
-}
-
-function cerrarSidebar() {
-    const sb      = document.querySelector('.sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sb.classList.remove('sidebar-open');
-    if (overlay) overlay.style.display = 'none';
-}
-
-// ─────────────────────────────────────────────────────────────
 //  NAVEGACIÓN SPA
 // ─────────────────────────────────────────────────────────────
 function modTab(viewId, tabId) {
@@ -78,6 +61,68 @@ function toggleIndicadoresWidget() {
     if (chevron) chevron.style.transform = abierto ? 'rotate(-90deg)' : 'rotate(0deg)';
 }
 
+// Título + descripción real por módulo — fuente única, la usa navegar() para
+// la barra de título y el widget "Accesos rápidos" del dashboard de Inicio
+// (dashboard.js) para mostrar el label correcto de cada acceso reciente.
+const MODULO_TITULOS = {
+    inicio:                ['Panel de Inicio',              'Resumen financiero consolidado en tiempo real'],
+    'estructura-contable': ['Contabilidad — Estructura Contable', 'Libro Diario, Libro Mayor, Balance General y Plan de Cuentas'],
+    'reportes-financieros':['Contabilidad — Reportes Financieros','Balance Clasificado, Estado de Resultados y Flujo de Caja'],
+    'egresos-ingresos':    ['Comercial — Egresos e Ingresos','Libro de Compras, Libro de Ventas y Boletas de Honorarios'],
+    'tributario-1cat':     ['Comercial — Tributario',        'Declaración de impuestos F29 e IVA del período'],
+    'conciliacion-cartolas':['Datos — Conciliación y Cartolas','Cartolas bancarias y conciliación de movimientos contra el diario'],
+    remuneraciones:        ['RRHH — Remuneraciones',        'Liquidaciones de sueldo, fichas de trabajadores e indicadores previsionales'],
+    'activos-produccion':  ['Empresa — Activos y Producción','Activos fijos y catálogo de productos y servicios'],
+    auditoria:             ['Empresa — Auditoría',          'Informe de auditoría y hallazgos del período'],
+    diario:                ['Libro Diario Automático',      'Procesador lingüístico de operaciones de comercio'],
+    mayor:                 ['Libro Mayor General',          'Apertura de movimientos consolidados por cuentas T'],
+    balance:               ['Balance de Comprobación',      'Matriz de control financiero de 8 columnas'],
+    compras:               ['Libro de Compras',             'Registro de documentos de compra — formato SII Chile'],
+    ventas:                ['Libro de Ventas',              'Registro de documentos de venta — formato SII Chile'],
+    documentos:            ['Registro de Documentación',    'Archivo de facturas, boletas y honorarios clasificados por categoría'],
+    clientes:              ['Clientes y Proveedores',       'Directorio de contactos con historial de transacciones'],
+    productos:             ['Productos y Servicios',         'Catálogo del cliente — base para compras, ventas e inventario'],
+    activos:               ['Activos Fijos',                 'Registro, depreciación lineal y acelerada SII por bien del activo'],
+    cartolas:              ['Cartolas Bancarias',            'Importa extractos bancarios y clasifica movimientos en el diario'],
+    'flujo-caja':          ['Flujo de Caja',                'Movimientos de efectivo — Caja y Banco'],
+    'balance-clasificado': ['Balance Clasificado',          'Activo, Pasivo y Patrimonio ordenados por liquidez'],
+    'estado-resultados':   ['Estado de Resultados',         'Ingresos, costos y resultado del ejercicio'],
+    'plan-cuentas':        ['Plan de Cuentas',              'Administración del catálogo contable'],
+    reconciliacion:        ['Conciliación Bancaria',        'Cruce de movimientos del extracto bancario contra el diario'],
+    configuracion:         ['Configuración',                'Ajustes de la empresa y del sistema'],
+    indicadores:           ['Indicadores Económicos',       'UF, UTM, Dólar, Euro y otros indicadores del día'],
+    'iva-resumen':         ['Resumen IVA — F29',            'Cruce de débito y crédito fiscal del período'],
+    // Segunda categoría
+    'libros-contables-hon':      ['Contabilidad — Libros Contables', 'Libro de Honorarios, Libro de Ingresos y Libro de Egresos'],
+    'declaracion-impuestos-hon': ['Tributario — Declaración de Impuestos', 'Formulario 29 y Formulario 22'],
+    'libro-ingresos-hon':  ['Libro de Ingresos',            'Registro de todos los ingresos del año: boletas BHE y otros'],
+    'libro-egresos-hon':   ['Libro de Egresos',             'Registro de gastos deducibles — alimenta el F22 como gastos efectivos'],
+    'libro-honorarios':    ['Libro de Honorarios',          'Registro de boletas BHE emitidas con estado de pago y retenciones'],
+    honorarios:            ['Boleta de Honorarios',         'Emitir boletas con cálculo automático de retención 15,25%'],
+    'cotizaciones-hon':    ['Cotizaciones Previsionales',   'Estimación de AFP, Salud y SIS sobre base 80% del bruto'],
+    'gastos-presuntos':    ['Gastos Presuntos vs Efectivos','Comparación para optimizar base imponible del F22'],
+    'retenciones-hon':     ['Retenciones Recibidas',        'Retenciones enteradas por pagadores — alimenta el F22'],
+    'f29-hon':             ['Formulario 29',                'PPM voluntario y retenciones pagadas a prestadores'],
+    'f22-hon':             ['Formulario 22',                'Estimación del impuesto anual (IGC) con proyección de devolución o pago'],
+    dj1879:                ['DJ 1879',                      'Declaración de honorarios pagados a prestadores independientes'],
+    'calendario-hon':      ['Calendario Tributario',        'Vencimientos F22 y DJ 1879 con alertas de anticipación'],
+    prestadores:           ['Prestadores / Terceros',       'Personas a quienes pagas honorarios — base para DJ 1879'],
+    hallazgos:             ['Hallazgos de Auditoría',        'Observaciones y hallazgos del período — diferencial Auditor'],
+    informe:               ['Informe de Auditoría',          'Generador del documento formal con hallazgos e opinión profesional'],
+};
+window.MODULO_TITULOS = MODULO_TITULOS;
+
+// MRU real de módulos visitados — alimenta el widget "Accesos rápidos" de Inicio.
+const MODULOS_RECIENTES_KEY = 'contapp-modulos-recientes';
+const MODULOS_RECIENTES_MAX = 8;
+function _modulosRecientesRegistrar(modulo) {
+    if (!modulo || modulo === 'inicio') return;
+    let ids = [];
+    try { ids = JSON.parse(localStorage.getItem(MODULOS_RECIENTES_KEY)) || []; } catch {}
+    ids = [modulo, ...ids.filter(id => id !== modulo)].slice(0, MODULOS_RECIENTES_MAX);
+    localStorage.setItem(MODULOS_RECIENTES_KEY, JSON.stringify(ids));
+}
+
 function navegar(modulo, elNav) {
 
     // Cerrar cualquier modal abierto al cambiar de módulo (evita que quede
@@ -125,9 +170,6 @@ function navegar(modulo, elNav) {
         return;
     }
 
-    // En móvil, cerrar el drawer al navegar
-    if (window.innerWidth <= 860) cerrarSidebar();
-
     // Marcar ítem activo en el sidebar
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     const navEl = elNav || (typeof event !== 'undefined' && event && event.currentTarget);
@@ -142,57 +184,11 @@ function navegar(modulo, elNav) {
     const vc = document.querySelector('.view-container');
     if (vc) vc.scrollTop = 0;
 
-    const titulos = {
-        inicio:                ['Panel de Inicio',              'Resumen financiero consolidado en tiempo real'],
-        'estructura-contable': ['Contabilidad — Estructura Contable', 'Libro Diario, Libro Mayor, Balance General y Plan de Cuentas'],
-        'reportes-financieros':['Contabilidad — Reportes Financieros','Balance Clasificado, Estado de Resultados y Flujo de Caja'],
-        'egresos-ingresos':    ['Comercial — Egresos e Ingresos','Libro de Compras, Libro de Ventas y Boletas de Honorarios'],
-        'tributario-1cat':     ['Comercial — Tributario',        'Declaración de impuestos F29 e IVA del período'],
-        'conciliacion-cartolas':['Datos — Conciliación y Cartolas','Cartolas bancarias y conciliación de movimientos contra el diario'],
-        remuneraciones:        ['RRHH — Remuneraciones',        'Liquidaciones de sueldo, fichas de trabajadores e indicadores previsionales'],
-        'activos-produccion':  ['Empresa — Activos y Producción','Activos fijos y catálogo de productos y servicios'],
-        auditoria:             ['Empresa — Auditoría',          'Informe de auditoría y hallazgos del período'],
-        diario:                ['Libro Diario Automático',      'Procesador lingüístico de operaciones de comercio'],
-        mayor:                 ['Libro Mayor General',          'Apertura de movimientos consolidados por cuentas T'],
-        balance:               ['Balance de Comprobación',      'Matriz de control financiero de 8 columnas'],
-        compras:               ['Libro de Compras',             'Registro de documentos de compra — formato SII Chile'],
-        ventas:                ['Libro de Ventas',              'Registro de documentos de venta — formato SII Chile'],
-        documentos:            ['Registro de Documentación',    'Archivo de facturas, boletas y honorarios clasificados por categoría'],
-        clientes:              ['Clientes y Proveedores',       'Directorio de contactos con historial de transacciones'],
-        productos:             ['Productos y Servicios',         'Catálogo del cliente — base para compras, ventas e inventario'],
-        activos:               ['Activos Fijos',                 'Registro, depreciación lineal y acelerada SII por bien del activo'],
-        cartolas:              ['Cartolas Bancarias',            'Importa extractos bancarios y clasifica movimientos en el diario'],
-        'flujo-caja':          ['Flujo de Caja',                'Movimientos de efectivo — Caja y Banco'],
-        'balance-clasificado': ['Balance Clasificado',          'Activo, Pasivo y Patrimonio ordenados por liquidez'],
-        'estado-resultados':   ['Estado de Resultados',         'Ingresos, costos y resultado del ejercicio'],
-        'plan-cuentas':        ['Plan de Cuentas',              'Administración del catálogo contable'],
-        reconciliacion:        ['Conciliación Bancaria',        'Cruce de movimientos del extracto bancario contra el diario'],
-        configuracion:         ['Configuración',                'Ajustes de la empresa y del sistema'],
-        indicadores:           ['Indicadores Económicos',       'UF, UTM, Dólar, Euro y otros indicadores del día'],
-        'iva-resumen':         ['Resumen IVA — F29',            'Cruce de débito y crédito fiscal del período'],
-        // Segunda categoría
-        'libros-contables-hon':      ['Contabilidad — Libros Contables', 'Libro de Honorarios, Libro de Ingresos y Libro de Egresos'],
-        'declaracion-impuestos-hon': ['Tributario — Declaración de Impuestos', 'Formulario 29 y Formulario 22'],
-        'libro-ingresos-hon':  ['Libro de Ingresos',            'Registro de todos los ingresos del año: boletas BHE y otros'],
-        'libro-egresos-hon':   ['Libro de Egresos',             'Registro de gastos deducibles — alimenta el F22 como gastos efectivos'],
-        'libro-honorarios':    ['Libro de Honorarios',          'Registro de boletas BHE emitidas con estado de pago y retenciones'],
-        honorarios:            ['Boleta de Honorarios',         'Emitir boletas con cálculo automático de retención 15,25%'],
-        'cotizaciones-hon':    ['Cotizaciones Previsionales',   'Estimación de AFP, Salud y SIS sobre base 80% del bruto'],
-        'gastos-presuntos':    ['Gastos Presuntos vs Efectivos','Comparación para optimizar base imponible del F22'],
-        'retenciones-hon':     ['Retenciones Recibidas',        'Retenciones enteradas por pagadores — alimenta el F22'],
-        'f29-hon':             ['Formulario 29',                'PPM voluntario y retenciones pagadas a prestadores'],
-        'f22-hon':             ['Formulario 22',                'Estimación del impuesto anual (IGC) con proyección de devolución o pago'],
-        dj1879:                ['DJ 1879',                      'Declaración de honorarios pagados a prestadores independientes'],
-        'calendario-hon':      ['Calendario Tributario',        'Vencimientos F22 y DJ 1879 con alertas de anticipación'],
-        prestadores:           ['Prestadores / Terceros',       'Personas a quienes pagas honorarios — base para DJ 1879'],
-        hallazgos:             ['Hallazgos de Auditoría',        'Observaciones y hallazgos del período — diferencial Auditor'],
-        informe:               ['Informe de Auditoría',          'Generador del documento formal con hallazgos e opinión profesional'],
-    };
-
-    if (titulos[modulo]) {
-        document.getElementById('txt-modulo-titulo').innerText = titulos[modulo][0];
-        document.getElementById('txt-modulo-desc').innerText   = titulos[modulo][1];
+    if (MODULO_TITULOS[modulo]) {
+        document.getElementById('txt-modulo-titulo').innerText = MODULO_TITULOS[modulo][0];
+        document.getElementById('txt-modulo-desc').innerText   = MODULO_TITULOS[modulo][1];
     }
+    _modulosRecientesRegistrar(modulo);
 
     if (modulo === 'inicio')               { calcularKPIs(); renderIndicadores(); }
     if (modulo === 'estructura-contable')  _fireActiveTab('view-estructura-contable');
@@ -219,6 +215,8 @@ function navegar(modulo, elNav) {
         if (typeof aplicarNavegacionPorCategoria === 'function') aplicarNavegacionPorCategoria();
         if (typeof iaVerificarKeyAlCargar === 'function') iaVerificarKeyAlCargar();
     }
+
+    if (typeof actualizarTopbarModulo === 'function') actualizarTopbarModulo(modulo);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -366,9 +364,18 @@ function aplicarConfiguracion(cfg) {
     txt('empresaRut',     cfg.rut     || '-');
     txt('empresaPeriodo', cfg.periodo || '-');
     txt('headerEmpresa',  cfg.empresa || 'Mi Empresa Ltda.');
+    txt('homeGreetEmpresa', cfg.empresa || 'Mi Empresa Ltda.');
+    txt('fieldEmpresa', cfg.empresa || 'Mi Empresa Ltda.');
+    txt('fieldEjercicio', cfg.periodo || new Date().getFullYear());
 
     const hp = document.getElementById('headerPeriodo');
     if (hp) hp.textContent = cfg.periodo ? `Período ${cfg.periodo}` : '';
+
+    const iniciales = (cfg.empresa || 'CA').trim().slice(0, 2).toUpperCase();
+    const seal = document.getElementById('homeAvatarSeal');
+    if (seal) seal.textContent = iniciales;
+    const topbarSeal = document.getElementById('topbarAvatarSeal');
+    if (topbarSeal) topbarSeal.textContent = iniciales;
 }
 
 // ─────────────────────────────────────────────────────────────

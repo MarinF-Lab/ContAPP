@@ -21,7 +21,7 @@ function calcularKPIs() {
         const el = document.getElementById(id);
         if (!el) return;
         el.innerText = '$' + fmt(Math.abs(val));
-        if (color) el.style.color = val >= 0 ? '#16a34a' : '#dc2626';
+        if (color) el.style.color = val >= 0 ? 'var(--positive)' : 'var(--negative)';
     };
 
     setKPI('kpi-activos',    activos);
@@ -75,6 +75,71 @@ function calcularKPIs() {
     _renderUltimosAsientos();
     _renderTopCuentas(cuentas);
     _renderLiquidezDash(_liq);
+    _renderDashHallazgos();
+    _renderAccesosRapidos();
+}
+
+// ── Hallazgos de auditoría abiertos (dato real: aud_hallazgos) ─────────────
+function _renderDashHallazgos() {
+    const el    = document.getElementById('dashHallazgos');
+    const badge = document.getElementById('dashHallazgosBadge');
+    if (!el) return;
+
+    let hallazgos = [];
+    try { hallazgos = JSON.parse(localStorage.getItem('aud_hallazgos')) || []; } catch {}
+    const abiertos = hallazgos
+        .filter(h => h.estado === 'abierto')
+        .sort((a, b) => new Date(b.fechaDeteccion) - new Date(a.fechaDeteccion));
+
+    if (badge) {
+        if (abiertos.length) {
+            badge.style.display = 'inline-block';
+            badge.textContent = abiertos.length;
+            badge.className = 'badge-doc badge-doc-compra'; // reutiliza el pill ámbar de alerta ya existente
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    if (!abiertos.length) {
+        el.innerHTML = `<div style="padding:10px 0;color:var(--positive);font-size:13px;display:flex;align-items:center;gap:8px;">✅ Sin hallazgos abiertos.</div>`;
+        return;
+    }
+
+    const iconoTipo = { error: '🔴', advertencia: '🟡', sugerencia: '🔵' };
+    el.innerHTML = abiertos.slice(0, 4).map(h => `
+        <div class="dash-asiento-row">
+            <div class="dash-asiento-info">
+                <span>${iconoTipo[h.tipo] || '•'}</span>
+                <span class="dash-asiento-fecha">${h.modulo || ''}</span>
+            </div>
+            <div class="dash-asiento-glosa">${h.descripcion || ''}</div>
+        </div>`).join('')
+        + `<button class="btn btn-secondary" style="margin-top:10px;font-size:12px;padding:6px 12px;" onclick="navegar('hallazgos')">Ver todos los hallazgos →</button>`;
+}
+
+// ── Accesos rápidos — MRU real de navegación (contapp-modulos-recientes) ───
+function _renderAccesosRapidos() {
+    const el = document.getElementById('dashAccesosRapidos');
+    if (!el) return;
+
+    let ids = [];
+    try { ids = JSON.parse(localStorage.getItem('contapp-modulos-recientes')) || []; } catch {}
+    const titulos = window.MODULO_TITULOS || {};
+    const items = ids.map(id => titulos[id] ? { id, label: titulos[id][0] } : null).filter(Boolean).slice(0, 6);
+
+    if (!items.length) {
+        el.innerHTML = `<div style="padding:10px 0;color:var(--text-muted);font-size:13px;">Todavía no visitaste otros módulos en esta sesión.</div>`;
+        return;
+    }
+
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;">` +
+        items.map(it => `
+            <button class="dash-quick-chip" onclick="navegar('${it.id}')">
+                <span>${it.label}</span>
+                <span class="dash-quick-chip-arrow">→</span>
+            </button>`).join('')
+        + `</div>`;
 }
 
 // ── Liquidez ──────────────────────────────────────────────────
@@ -102,8 +167,8 @@ function _renderLiquidezDash(liq) {
     const el = document.getElementById('dashLiquidez');
     if (!el) return;
     function sem(v, ok, warn) {
-        if (v === null) return '#94a3b8';
-        return v >= ok ? '#16a34a' : v >= warn ? '#d97706' : '#dc2626';
+        if (v === null) return 'var(--ink-faint)';
+        return v >= ok ? 'var(--ok)' : v >= warn ? 'var(--warn)' : 'var(--danger)';
     }
     el.innerHTML = `
         <div class="dash-liq-card">
@@ -122,22 +187,56 @@ function _renderLiquidezDash(liq) {
         </div>
         <div class="dash-liq-card">
             <div class="dash-liq-label">Capital de Trabajo</div>
-            <div class="dash-liq-val" style="color:${liq.capitalTrabajo >= 0 ? '#16a34a' : '#dc2626'}">
+            <div class="dash-liq-val" style="color:${liq.capitalTrabajo >= 0 ? 'var(--positive)' : 'var(--negative)'}">
                 $${fmt(Math.abs(liq.capitalTrabajo))}
             </div>
             <div class="dash-liq-meta">${liq.capitalTrabajo >= 0 ? 'Positivo' : 'Negativo'}</div>
         </div>`;
 }
 
-// ── Gráficos del dashboard ────────────────────────────────────
+// ── Gráficos del dashboard (Chart.js — paso 6 de la integración de diseño,
+//    reemplaza los SVG dibujados a mano que había antes) ───────────────────
+const _dashCharts = { barras: null, donutActivos: null, donutResultado: null };
+
+// Lee los tokens de color reales de variables.css (se reevalúan en cada
+// render para que los gráficos se actualicen solos al cambiar de tema).
+function _dashChartColors() {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (name, fallback) => (cs.getPropertyValue(name) || fallback).trim();
+    return {
+        periwinkle: v('--periwinkle', '#92A5FD'),
+        coral:      v('--coral', '#FF8692'),
+        coralDeep:  v('--coral-deep', '#E8687A'),
+        navy:       v('--navy', '#1E1E5D'),
+        ok:         v('--ok', '#1FB579'),
+        ink:        v('--ink', '#1E1E5D'),
+        inkSoft:    v('--ink-soft', '#5B5F82'),
+        inkFaint:   v('--ink-faint', '#9498B8'),
+        rule:       v('--rule', '#E1E4F3'),
+        fontMono:   v('--font-mono', "'IBM Plex Mono', monospace"),
+        fontSans:   v('--font-sans', "'Manrope', sans-serif"),
+    };
+}
+
 function _renderDashboardCharts(cuentas, ingresos, gastos, activos, pasivos, patrimonio, resultado) {
+    if (typeof Chart === 'undefined') return; // CDN no disponible (offline) — no bloquear el resto del dashboard
     _renderBarrasMensuales();
     _renderDonutActivos(activos, pasivos, patrimonio);
     _renderDonutResultado(ingresos, gastos);
 }
 
+// Vuelve a dibujar los 3 gráficos con los colores del tema activo — se llama
+// desde applyTheme() en index.html al cambiar entre claro/oscuro.
+function refrescarGraficosDashboard() {
+    if (typeof Chart === 'undefined' || !document.getElementById('dashBarrasMensuales')) return;
+    calcularKPIs();
+}
+window.refrescarGraficosDashboard = refrescarGraficosDashboard;
+
 // Barras mensuales: ingresos vs gastos (año actual)
 function _renderBarrasMensuales() {
+    const canvas = document.getElementById('dashBarrasMensuales');
+    if (!canvas) return;
     const anio = new Date().getFullYear();
     const meses = Array.from({length: 12}, () => ({ ing: 0, gst: 0 }));
 
@@ -155,94 +254,87 @@ function _renderBarrasMensuales() {
         });
     });
 
-    const max = Math.max(...meses.flatMap(m => [m.ing, m.gst]), 1);
     const labels = ['E','F','M','A','M','J','J','A','S','O','N','D'];
-    const W = 540, H = 160, padL = 50, padB = 22, barW = 14, gap = 5;
-    const gW = barW * 2 + gap + 10;
+    const c = _dashChartColors();
 
-    let bars = '', xLab = '', yLines = '';
-    for (let i = 0; i <= 4; i++) {
-        const y = Math.round((H - padB) * (1 - i / 4));
-        const v = Math.round(max * i / 4);
-        yLines += `<line x1="${padL-4}" y1="${y}" x2="${padL + 12 * gW}" y2="${y}" stroke="#f1f5f9" stroke-width="1"/>`;
-        yLines += `<text x="${padL-6}" y="${y+3}" text-anchor="end" font-size="8" fill="#94a3b8">${v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}</text>`;
-    }
-    meses.forEach((m, i) => {
-        const x = padL + i * gW;
-        const hI = Math.round((Math.max(m.ing,0) / max) * (H - padB));
-        const hG = Math.round((Math.max(m.gst,0) / max) * (H - padB));
-        bars += `<rect x="${x}" y="${H-padB-hI}" width="${barW}" height="${hI}" fill="#3b82f6" rx="2"/>`;
-        bars += `<rect x="${x+barW+gap}" y="${H-padB-hG}" width="${barW}" height="${hG}" fill="#f87171" rx="2"/>`;
-        xLab += `<text x="${x+barW}" y="${H}" text-anchor="middle" font-size="8" fill="#64748b">${labels[i]}</text>`;
+    if (_dashCharts.barras) _dashCharts.barras.destroy();
+    _dashCharts.barras = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label: 'Ingresos', data: meses.map(m => Math.max(m.ing, 0)), backgroundColor: c.periwinkle, borderRadius: 3, maxBarThickness: 14 },
+                { label: 'Gastos',   data: meses.map(m => Math.max(m.gst, 0)), backgroundColor: c.coral,      borderRadius: 3, maxBarThickness: 14 },
+            ],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, animation: false,
+            plugins: {
+                legend: { position: 'top', align: 'end', labels: { color: c.inkSoft, font: { family: c.fontSans, size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'rectRounded' } },
+                tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: $${fmt(ctx.parsed.y)}` } },
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: c.inkFaint, font: { family: c.fontMono, size: 9.5 } } },
+                y: { grid: { color: c.rule, borderDash: [3, 3] }, border: { display: false },
+                     ticks: { color: c.inkFaint, font: { family: c.fontMono, size: 9 }, callback: (v) => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v } },
+            },
+        },
     });
-
-    const svg = `<svg viewBox="0 0 ${W} ${H+8}" xmlns="http://www.w3.org/2000/svg" style="width:100%;">
-        ${yLines}${bars}${xLab}
-        <rect x="${W-90}" y="6" width="10" height="8" fill="#3b82f6" rx="1"/>
-        <text x="${W-77}" y="13" font-size="9" fill="#64748b">Ingresos</text>
-        <rect x="${W-90}" y="20" width="10" height="8" fill="#f87171" rx="1"/>
-        <text x="${W-77}" y="27" font-size="9" fill="#64748b">Gastos</text>
-    </svg>`;
-
-    const el = document.getElementById('dashBarrasMensuales');
-    if (el) el.innerHTML = svg;
 }
 
 // Donut: distribución Activo vs Pasivo vs Patrimonio
 function _renderDonutActivos(activos, pasivos, patrimonio) {
-    const el = document.getElementById('dashDonutActivos');
-    if (!el) return;
-    const total = Math.max(activos + pasivos + patrimonio, 1);
-    const datos = [
-        { label: 'Activo',     val: Math.max(activos,    0), color: '#3b82f6' },
-        { label: 'Pasivo',     val: Math.max(pasivos,    0), color: '#f87171' },
-        { label: 'Patrimonio', val: Math.max(patrimonio, 0), color: '#34d399' },
-    ].filter(d => d.val > 0);
-    el.innerHTML = _svgDonut(datos, total, 'Estructura');
+    const c = _dashChartColors();
+    _renderDashDonut('dashDonutActivos', 'donutActivos', [
+        { label: 'Activo',     val: Math.max(activos,    0), color: c.periwinkle },
+        { label: 'Pasivo',     val: Math.max(pasivos,    0), color: c.coral },
+        { label: 'Patrimonio', val: Math.max(patrimonio, 0), color: c.navy },
+    ]);
 }
 
 // Donut: ingresos vs gastos
 function _renderDonutResultado(ingresos, gastos) {
-    const el = document.getElementById('dashDonutResultado');
-    if (!el) return;
-    const total = Math.max(ingresos + gastos, 1);
-    const datos = [
-        { label: 'Ingresos', val: Math.max(ingresos, 0), color: '#3b82f6' },
-        { label: 'Gastos',   val: Math.max(gastos,   0), color: '#f87171' },
-    ].filter(d => d.val > 0);
-    el.innerHTML = _svgDonut(datos, total, 'Resultado');
+    const c = _dashChartColors();
+    _renderDashDonut('dashDonutResultado', 'donutResultado', [
+        { label: 'Ingresos', val: Math.max(ingresos, 0), color: c.ok },
+        { label: 'Gastos',   val: Math.max(gastos,   0), color: c.coralDeep },
+    ]);
 }
 
-function _svgDonut(datos, total, titulo) {
-    const cx = 70, cy = 65, r = 52, ri = 30;
-    let startAngle = -Math.PI / 2;
-    let paths = '';
-    let legend = '';
+function _renderDashDonut(canvasId, key, datos) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const c = _dashChartColors();
+    const activos_ = datos.filter(d => d.val > 0);
+    const data = activos_.length ? activos_ : [{ label: 'Sin datos', val: 1, color: c.rule }];
 
-    datos.forEach((d, i) => {
-        const sweep = (d.val / total) * 2 * Math.PI;
-        const endAngle = startAngle + sweep;
-        const x1 = cx + r * Math.cos(startAngle);
-        const y1 = cy + r * Math.sin(startAngle);
-        const x2 = cx + r * Math.cos(endAngle);
-        const y2 = cy + r * Math.sin(endAngle);
-        const xi1 = cx + ri * Math.cos(startAngle);
-        const yi1 = cy + ri * Math.sin(startAngle);
-        const xi2 = cx + ri * Math.cos(endAngle);
-        const yi2 = cy + ri * Math.sin(endAngle);
-        const large = sweep > Math.PI ? 1 : 0;
-        paths += `<path d="M${xi1},${yi1} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} L${xi2},${yi2} A${ri},${ri} 0 ${large},0 ${xi1},${yi1}" fill="${d.color}" opacity="0.9"/>`;
-        legend += `<rect x="145" y="${8 + i * 18}" width="10" height="10" fill="${d.color}" rx="2"/>
-            <text x="159" y="${17 + i * 18}" font-size="9.5" fill="#475569">${d.label}</text>
-            <text x="220" y="${17 + i * 18}" font-size="9" fill="#64748b" text-anchor="end">$${fmt(d.val)}</text>`;
-        startAngle = endAngle;
+    if (_dashCharts[key]) _dashCharts[key].destroy();
+    _dashCharts[key] = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: [{ data: data.map(d => d.val), backgroundColor: data.map(d => d.color), borderColor: c.rule, borderWidth: 2 }],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '62%', animation: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: c.inkSoft, font: { family: c.fontSans, size: 10.5 }, boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: 'circle', padding: 10,
+                        generateLabels: (chart) => chart.data.labels.map((label, i) => ({
+                            text: `${label} — $${fmt(chart.data.datasets[0].data[i])}`,
+                            fillStyle: chart.data.datasets[0].backgroundColor[i],
+                            strokeStyle: chart.data.datasets[0].backgroundColor[i],
+                            pointStyle: 'circle',
+                            index: i,
+                        })),
+                    },
+                },
+                tooltip: { enabled: activos_.length > 0 },
+            },
+        },
     });
-
-    return `<svg viewBox="0 0 230 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:230px;">
-        ${paths}
-        <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">${titulo}</text>
-        ${legend}
-    </svg>`;
 }
 
 // Últimos 5 asientos
@@ -257,8 +349,8 @@ function _renderUltimosAsientos() {
     el.innerHTML = ultimos.map(a => {
         const totDebe = (a.movimientos || []).reduce((s, m) => s + (m.debe || 0), 0);
         const tag = a.estado === 'ANULADO'
-            ? `<span style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:10px;font-size:11px;">Anulado</span>`
-            : `<span style="background:#dbeafe;color:#1d4ed8;padding:1px 7px;border-radius:10px;font-size:11px;">Activo</span>`;
+            ? `<span style="background:var(--negative-soft);color:var(--negative);padding:1px 7px;border-radius:10px;font-size:11px;">Anulado</span>`
+            : `<span style="background:var(--info-soft);color:var(--info);padding:1px 7px;border-radius:10px;font-size:11px;">Activo</span>`;
         return `<div class="dash-asiento-row">
             <div class="dash-asiento-info">
                 <span class="dash-asiento-num">N° ${a.numero}</span>
@@ -292,11 +384,11 @@ function _renderTopCuentas(cuentas) {
     }
 
     const maxSaldo = lista[0].saldo;
-    const colores  = { Activo: '#3b82f6', Pasivo: '#f87171', Patrimonio: '#34d399', Ganancia: '#a78bfa', Pérdida: '#fb923c' };
+    const colores  = { Activo: 'var(--periwinkle)', Pasivo: 'var(--coral)', Patrimonio: 'var(--navy)', Ganancia: 'var(--ok)', Pérdida: 'var(--danger)' };
 
     el.innerHTML = lista.map(x => {
         const pct = Math.round((x.saldo / maxSaldo) * 100);
-        const clr = colores[x.tipo] || '#94a3b8';
+        const clr = colores[x.tipo] || 'var(--ink-faint)';
         return `<div class="dash-cuenta-row">
             <div class="dash-cuenta-label">
                 <span>${x.nombre}</span>
