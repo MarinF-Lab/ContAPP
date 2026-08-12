@@ -13,8 +13,7 @@ const CAT1_MODULOS = [
     { id: 'conciliacion-cartolas', label: 'Conciliación y Cartolas',                          grupo: 'Comercial',    icono: '🏦', defecto: true  },
     { id: 'clientes',              label: 'Clientes / Prov.',                                 grupo: 'Comercial',    icono: '🤝', defecto: true  },
     { id: 'remuneraciones',        label: 'Remuneraciones',                                  grupo: 'Empresa',      icono: '👷', defecto: false },
-    { id: 'activos-produccion',    label: 'Activos y Producción',                             grupo: 'Empresa',      icono: '🏷', defecto: true  },
-    { id: 'auditoria',             label: 'Auditoría',                                        grupo: 'Empresa',      icono: '📋', defecto: true  },
+    { id: 'inventario-activos',    label: 'Inventario y Activos',                            grupo: 'Empresa',      icono: '📦', defecto: true  },
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────

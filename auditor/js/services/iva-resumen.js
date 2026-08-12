@@ -219,6 +219,10 @@ function _renderIvaResumen(d) {
         html += `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
             Débito $${fmt(d.ivaDebito)} − Crédito total $${fmt(d.creditoTotal)} = <strong>$${fmt(d.ivaAPagar)} a pagar</strong>
         </div>`;
+        html += `<button class="btn btn-primary" style="margin-top:12px;"
+            onclick="generarAsientoPagoIVA(${d.mes}, ${d.anio}, ${d.ivaDebito}, ${d.creditoTotal}, ${d.ivaAPagar})">
+            📝 Generar asiento de pago en el Diario
+        </button>`;
     } else {
         html += totalBox(`Remanente a FAVOR — arrastrar al mes siguiente`, d.nuevoRemanente, false);
         html += `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
@@ -242,13 +246,49 @@ function guardarRemanenteDesdeResumen(monto, mes, anio) {
     mostrarToast(`Remanente de $${fmt(monto)} guardado. Se aplicará en ${mesSig}/${anioSig}.`, 'ok');
 }
 
+// Genera (o actualiza, si ya existe) el asiento de pago del F29-IVA del
+// período — mismo patrón de idempotencia por prefijo de glosa que
+// generarAsientoCompras()/generarAsientoVentas() (js/modules/compras.js,
+// ventas.js): reclick actualiza el mismo asiento en vez de duplicarlo.
+// creditoTotal ya incluye el remanente reajustado consumido este período —
+// no existe una cuenta contable separada de "remanente", así que se acredita
+// junto con IVA Crédito Fiscal para que el asiento cuadre.
+function generarAsientoPagoIVA(mes, anio, ivaDebito, creditoTotal, ivaAPagar) {
+    const movimientos = [];
+    if (ivaDebito > 0)    movimientos.push({ cuenta: 'IVA Débito Fiscal',  debe: ivaDebito, haber: 0 });
+    if (creditoTotal > 0) movimientos.push({ cuenta: 'IVA Crédito Fiscal', debe: 0, haber: creditoTotal });
+    movimientos.push({ cuenta: 'Banco', debe: 0, haber: ivaAPagar });
+
+    const glosaBase = `Pago F29 IVA ${_nombreMes(mes)} ${anio}`;
+    const fecha = `${String(_ultimoDia(mes, anio)).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${anio}`;
+    const idxExist = dbAsientos.findIndex(a => a.glosa && a.glosa.startsWith(glosaBase));
+
+    let asiento;
+    if (idxExist >= 0) {
+        asiento = Object.assign(dbAsientos[idxExist], { fecha, glosa: glosaBase, movimientos });
+        mostrarToast(`Asiento N°${asiento.numero} actualizado en el Libro Diario.`, 'ok');
+    } else {
+        asiento = { id: Date.now(), numero: _nextNumeroAsiento(), estado: 'ACTIVO', fecha, glosa: glosaBase, movimientos };
+        dbAsientos.push(asiento);
+        mostrarToast(`Asiento N°${asiento.numero} creado en el Libro Diario.`, 'ok');
+    }
+
+    localStorage.setItem('core_asientos', JSON.stringify(dbAsientos));
+    if (typeof renderHistorialDiario === 'function') renderHistorialDiario();
+    if (typeof generarLibroMayor === 'function') generarLibroMayor();
+    if (typeof generarBalanceGeneral === 'function') generarBalanceGeneral();
+}
+window.generarAsientoPagoIVA = generarAsientoPagoIVA;
+
 // ─────────────────────────────────────────────────────────────
 //  KPI HELPERS
 // ─────────────────────────────────────────────────────────────
 function _ivaSetKPI(id, val, esNeto) {
     const el = document.getElementById(id);
     if (!el) return;
-    el.textContent = '$' + fmt(Math.abs(val));
+    // fmt() muestra "-" para 0 (correcto en tablas), pero en un KPI de
+    // cabecera un guión pelado se lee como error — mostrar "$0" explícito.
+    el.textContent = val === 0 ? '$0' : '$' + fmt(Math.abs(val));
     if (esNeto) {
         el.style.color = val > 0 ? 'var(--negative)' : 'var(--positive)';
     } else {
@@ -256,14 +296,18 @@ function _ivaSetKPI(id, val, esNeto) {
     }
 }
 
-// Inicializar selectores de período al abrir la vista
+// Inicializar selectores de período al abrir la vista — solo la PRIMERA vez
+// (dataset.init como centinela, ver _initSelFlujoCajaAnio() en app.js): un
+// <select> sin opción "selected" igual devuelve un .value truthy (el primer
+// <option>), así que "!selA.value" nunca detectaba "todavía sin inicializar"
+// y esta vista quedaba siempre en Enero/2023 al abrir.
 function _initIvaSelectores() {
     const anio = new Date().getFullYear();
     const mes  = new Date().getMonth() + 1;
     const selA = document.getElementById('selIvaAnio');
     const selM = document.getElementById('selIvaMes');
-    if (selA && !selA.value) selA.value = anio;
-    if (selM && !selM.value) selM.value = mes;
+    if (selA && !selA.dataset.init) { selA.value = anio; selA.dataset.init = '1'; }
+    if (selM && !selM.dataset.init) { selM.value = mes;  selM.dataset.init = '1'; }
 
     // Pre-cargar remanente guardado en los inputs del panel
     const rem = _cargarRemanente();

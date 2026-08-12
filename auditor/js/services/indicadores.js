@@ -80,7 +80,6 @@ const _IMM_BASE = {
     _ref: 'desde 01/01/2026',
 };
 
-const PV_CREDS_KEY    = 'core_pv_creds';
 const PV_TASAS_KEY    = 'core_pv_tasas';
 const PV_TASAS_IND_KEY = 'core_pv_tasas_ind';
 const PV_ASIG_KEY     = 'core_pv_asig';
@@ -314,6 +313,44 @@ async function actualizarIndicadores(forzar = false) {
     renderIndicadores();
 }
 
+// Botón "Actualizar ahora" de la pestaña Remuneraciones → Indicadores Previsionales.
+// Si hay un proxy de Previred configurado (ver previred-scraper.js), trae UF,
+// UTM, tasas AFP, SIS e IMM reales leyendo el PDF público mensual de Previred.
+// Sin proxy configurado, cae al comportamiento anterior: solo UF/UTM/IMM desde
+// mindicador.cl, con aviso de que las tasas AFP/asignación familiar deben
+// editarse a mano.
+async function previredActualizarAhora() {
+    const btn    = document.getElementById('btnPreviredActualizar');
+    const estado = document.getElementById('previredEstadoActualizacion');
+    if (btn) { btn.disabled = true; btn.textContent = '⟳ Actualizando…'; }
+
+    if (typeof _pvProxyUrl === 'function' && _pvProxyUrl()) {
+        if (estado) estado.textContent = 'Consultando previred.com…';
+        await actualizarIndicadores(true);        // UF/UTM base desde mindicador.cl primero
+        const r = await pvScrapearIndicadores();   // luego pisa con datos reales de Previred si hay proxy
+        if (btn) { btn.disabled = false; btn.textContent = '↻ Actualizar ahora'; }
+        if (estado && r?.ok) {
+            estado.innerHTML = `<span style="color:var(--positive);">✅ Actualizado automáticamente desde previred.com.</span>`;
+        }
+        return;
+    }
+
+    if (estado) estado.textContent = 'Consultando mindicador.cl…';
+    await actualizarIndicadores(true);
+
+    const cache = _cargarCacheIndicadores();
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Actualizar ahora'; }
+    if (estado) {
+        if (cache._actualizadoEn) {
+            estado.innerHTML = `<span style="color:var(--positive);">✅ UF/UTM/IMM actualizados (${cache._actualizadoEn}).</span> ` +
+                'Configura el proxy de Previred (abajo) para traer también tasas AFP, SIS e IMM automáticamente.';
+        } else {
+            estado.innerHTML = `<span style="color:var(--negative);">⚠ No se pudo conectar. Se mantienen los últimos valores guardados.</span>`;
+        }
+    }
+}
+window.previredActualizarAhora = previredActualizarAhora;
+
 // ─────────────────────────────────────────────────────────────
 //  AUTO-ACTUALIZACIÓN AL INICIAR (una vez cada 12 h)
 // ─────────────────────────────────────────────────────────────
@@ -388,7 +425,6 @@ function renderIndicadores() {
         REM.SUELDO_MINIMO = REM.IMM;
     }
 
-    _pvCargarCredsUI();
     _pvCargarTasasUI();
     _sincronizarTasasConREM();
     renderPreviredTablas();
@@ -477,18 +513,6 @@ function _pvSetTasasEstado(msg, tipo) {
     el.textContent = msg;
 }
 
-function _pvCargarCredsUI() {
-    try {
-        const creds = JSON.parse(localStorage.getItem(PV_CREDS_KEY) || 'null');
-        if (creds?.rut && document.getElementById('pvRut')) {
-            document.getElementById('pvRut').value = creds.rut;
-            const badge = document.getElementById('previredBadge');
-            if (badge) badge.style.display = creds.conectado ? 'inline' : 'none';
-            if (creds.conectado) _pvSetEstado(`✅ Conectado como ${creds.rut} · ${creds.empresa || ''}`, 'ok');
-        }
-    } catch {}
-}
-
 function _pvCargarTasasUI() {
     const t  = _pvTasasActivas();
     const af = _asigFamActiva();
@@ -537,24 +561,6 @@ function _pvCargarTasasUI() {
                 </div>
             </div>
         </div>`).join('');
-}
-
-async function previredConectar() {
-    const rut = document.getElementById('pvRut')?.value.trim();
-    if (!rut) { _pvSetEstado('Ingresa el RUT empresa.', 'error'); return; }
-    const creds = { rut, conectado: false, empresa: '' };
-    localStorage.setItem(PV_CREDS_KEY, JSON.stringify(creds));
-    _pvSetEstado('RUT guardado. Actualizando datos desde previred.com…', 'info');
-    await actualizarIndicadores(true);
-}
-
-function previredBorrar() {
-    localStorage.removeItem(PV_CREDS_KEY);
-    const el = document.getElementById('pvRut'); if (el) el.value = '';
-    const ep = document.getElementById('pvPass'); if (ep) ep.value = '';
-    const badge = document.getElementById('previredBadge');
-    if (badge) badge.style.display = 'none';
-    _pvSetEstado('Credenciales eliminadas.', 'info');
 }
 
 function previredGuardarTasas() {

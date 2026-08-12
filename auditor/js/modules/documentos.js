@@ -116,15 +116,11 @@ function _docHtml() {
     const anios = [...new Set(dbDocumentos.map(d => _docMesAnio(d.fecha).anio).filter(Boolean))].sort().reverse();
     if (!anios.includes(new Date().getFullYear())) anios.unshift(new Date().getFullYear());
 
-    const selAnio = `<select onchange="docSetAnio(this.value)"
-        style="padding:7px 12px;border:1px solid var(--divider);border-radius:8px;
-               font-size:13px;font-family:inherit;background:var(--input-bg);color:var(--text);">
+    const selAnio = `<select class="sel-periodo" onchange="docSetAnio(this.value)">
         ${anios.map(a => `<option value="${a}" ${a === docState.anioFiltro ? 'selected' : ''}>${a}</option>`).join('')}
     </select>`;
 
-    const selMes = `<select onchange="docSetMes(this.value)"
-        style="padding:7px 12px;border:1px solid var(--divider);border-radius:8px;
-               font-size:13px;font-family:inherit;background:var(--input-bg);color:var(--text);">
+    const selMes = `<select class="sel-periodo" onchange="docSetMes(this.value)">
         <option value="0" ${!docState.mesFiltro ? 'selected' : ''}>Todos los meses</option>
         ${Array.from({length:12},(_,i)=>i+1).map(m =>
             `<option value="${m}" ${m === docState.mesFiltro ? 'selected' : ''}>${_docNombreMes(m)}</option>`
@@ -242,8 +238,10 @@ function _docHtml() {
             style="flex:1;min-width:200px;padding:9px 14px;border:1px solid var(--divider);
                    border-radius:8px;font-size:13px;font-family:inherit;
                    background:var(--input-bg);color:var(--text);">
-        ${selMes}
-        ${selAnio}
+        <div class="libro-toolbar-left">
+            ${selMes}
+            ${selAnio}
+        </div>
         <button class="btn btn-primary" style="padding:9px 18px;font-size:13px;white-space:nowrap;"
             onclick="abrirNuevoDocumento()">
             + Nuevo documento

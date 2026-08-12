@@ -6,7 +6,7 @@
  * cae al cache si no hay red) y "cache-first" para estáticos. Firebase y
  * mindicador.cl se dejan pasar siempre a la red.
  */
-const CACHE = 'auditor-beta-v2';
+const CACHE = 'auditor-beta-v7';
 const ASSETS = [
     './',
     './index.html',

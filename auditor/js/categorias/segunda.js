@@ -13,7 +13,6 @@ const CAT2_MODULOS = [
     { id: 'conciliacion-cartolas-hon',   label: 'Conciliación y Cartolas',  grupo: 'Comercial', icono: '🏦', defecto: true },
     { id: 'clientes-hon',                label: 'Clientes / Prov.',         grupo: 'Comercial', icono: '🤝', defecto: true },
     { id: 'prestadores',                 label: 'Prestadores',              grupo: 'Comercial', icono: '👤', defecto: true },
-    { id: 'auditoria-hon',               label: 'Auditoría',                grupo: 'Empresa', icono: '📋', defecto: true },
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────

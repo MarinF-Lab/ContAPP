@@ -29,14 +29,18 @@ function prodGetById(id) {
     return getProductos().find(function(p){ return String(p.id) === String(id); }) || null;
 }
 
+// Sufijo random además de Date.now(): dos productos creados en el mismo
+// milisegundo (ej. una compra con varios ítems Mercaderías sincronizada de
+// una sola vez desde el Diario) quedarían con el mismo id — y editar
+// cualquiera de los dos abriría siempre el primero (prodGetById/find()).
 function _prodNuevoId() {
-    return 'p' + Date.now();
+    return 'p' + Date.now() + Math.floor(Math.random() * 1000);
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 
 function renderProductos() {
-    var view = document.getElementById('view-productos');
+    var view = document.getElementById('tab-ap-productos');
     if (!view) return;
 
     if (!document.getElementById('prod-tabla-body')) {

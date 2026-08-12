@@ -30,8 +30,12 @@ function activoGetById(id) {
     return getActivos().find(function (a) { return String(a.id) === String(id); }) || null;
 }
 
+// Sufijo random además de Date.now(): dos activos creados en el mismo
+// milisegundo (ej. una compra con varios ítems de activo fijo sincronizada
+// de una sola vez desde el Diario) quedarían con el mismo id — y editar
+// cualquiera de los dos abriría siempre el primero (prodGetById/find()).
 function _activoNuevoId() {
-    return 'a' + Date.now();
+    return 'a' + Date.now() + Math.floor(Math.random() * 1000);
 }
 
 // ── Cálculo de depreciación ────────────────────────────────────────────────────
@@ -97,7 +101,7 @@ function _calcDepMes(activo, anio, mes) {
 // ── RENDER ────────────────────────────────────────────────────────────────────
 
 function renderActivos() {
-    var view = document.getElementById('view-activos');
+    var view = document.getElementById('tab-ap-activos');
     if (!view) return;
 
     if (!document.getElementById('activo-tabla-body')) {
@@ -630,8 +634,13 @@ function activoGenerarAsientoDepreciacion(anio, mes) {
     var totalHabe = movimientos.reduce(function (s, m) { return s + m.haber; }, 0);
 
     var asiento = {
-        id:           'a' + Date.now(),
-        fecha:        anio + '-' + String(mes + 1).padStart(2, '0') + '-01',
+        id:           Date.now(),
+        numero:       _nextNumeroAsiento(),
+        estado:       'ACTIVO',
+        // DD/MM/AAAA — mismo formato que el resto de la app (diario.js), no ISO:
+        // con ISO el asiento desaparecía de Dashboard/Flujo de Caja/Conciliación,
+        // que filtran por período haciendo fecha.split('/').
+        fecha:        '01/' + String(mes + 1).padStart(2, '0') + '/' + anio,
         tipo:         'diario',
         glosa:        glosa,
         movimientos:  movimientos,
@@ -659,7 +668,7 @@ function activoGenerarAsientoDepreciacion(anio, mes) {
         if (!a.periodos_depreciados.includes(periodoStr)) a.periodos_depreciados.push(periodoStr);
     });
     localStorage.setItem('core_activos', JSON.stringify(activosActualizados));
-    _renderTablaActivos();
+    _activoActualizarTabla();
 
     mostrarToast(
         'Asiento de depreciación generado: ' + lineas.length + ' activo' + (lineas.length !== 1 ? 's' : '') +

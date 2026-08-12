@@ -45,7 +45,10 @@ let remState = {
 // ── Helpers ───────────────────────────────────────────────────
 const fmt$ = n => '$ ' + Math.round(n || 0).toLocaleString('es-CL');
 
-function fmtRut(raw) {
+// Nombre distinto a la fmtRut(input) global de app.js (esa espera un elemento
+// DOM, esta un string) — antes colisionaban en el mismo scope global y la de
+// app.js pisaba a esta, rompiendo el auto-formato de RUT en este módulo.
+function _remFmtRutStr(raw) {
     const r = (raw || '').replace(/[^0-9kK]/g, '').toUpperCase();
     if (r.length < 2) return r;
     const dv = r.slice(-1);
@@ -81,7 +84,7 @@ function parseMonto(str) {
 }
 
 function remFmtRutInp(inp) {
-    inp.value = fmtRut(inp.value);
+    inp.value = _remFmtRutStr(inp.value);
 }
 
 const COLORES = ['#3b82f6','#8b5cf6','#06b6d4','#10b981','#f59e0b',
@@ -1946,8 +1949,14 @@ function remCalcularFiniquito(t, fechaTermino, causal, avisoPrevio) {
     const indemAviso = (!avisoPrevio && infoCausal.indem)
         ? Math.round(baseCalc) : 0;
 
-    // ── Vacaciones proporcionales ───────────────────────────────
-    // Días acumulados desde último período completo pagado
+    // ── Vacaciones / feriado proporcional ────────────────────────
+    // Días acumulados desde el ingreso hasta hoy (vacDiasAcumulados ya cubre
+    // el año en curso completo), menos los ya tomados. Antes esto se sumaba
+    // por separado a "feriado proporcional" (meses del año en curso × cuota
+    // mensual) — pero es el mismo concepto legal (el feriado proporcional ES
+    // el pago de la vacación no usada al término), y vacDiasAcumulados ya
+    // incluye esos mismos meses del año en curso, así que sumarlos aparte
+    // pagaba el mismo período dos veces. Se dejó un solo monto.
     const diasVacBase   = Number(t.diasVacaciones || 15);
     const diasAcumTotal = vacDiasAcumulados(t);
     const diasTomados   = vacDiasTomados(t.id);
@@ -1956,20 +1965,13 @@ function remCalcularFiniquito(t, fechaTermino, causal, avisoPrevio) {
     const valorDia      = Math.round(baseCalc / 30);
     const vacProporcional = Math.round(diasPendientes * valorDia);
 
-    // ── Feriado proporcional ────────────────────────────────────
-    // Meses trabajados en el año en curso × (diasVacBase/12) días
-    const inicioAnio    = new Date(termino.getFullYear(), 0, 1);
-    const mesesAnio     = termino.getMonth() + (termino.getDate() > 0 ? 1 : 0);
-    const diasFeriado   = Math.round(mesesAnio * diasVacBase / 12);
-    const feriadoProp   = Math.round(diasFeriado * valorDia);
-
     // ── Sueldo proporcional al mes (si no terminó en fin de mes) ─
     const diaTermino    = termino.getDate();
     const diasDelMes    = new Date(termino.getFullYear(), termino.getMonth() + 1, 0).getDate();
     const sueldoProp    = diaTermino < diasDelMes
         ? Math.round(baseCalc * diaTermino / diasDelMes) : baseCalc;
 
-    const totalFiniquito = indemAnios + indemAviso + vacProporcional + feriadoProp + sueldoProp;
+    const totalFiniquito = indemAnios + indemAviso + vacProporcional + sueldoProp;
 
     return {
         anios, meses, aniosFrac, aniosIndem,
@@ -1977,7 +1979,6 @@ function remCalcularFiniquito(t, fechaTermino, causal, avisoPrevio) {
         correspondeIndem, indemAnios,
         indemAviso, avisoPrevio,
         diasPendientes, vacProporcional,
-        diasFeriado, feriadoProp,
         diaTermino, diasDelMes, sueldoProp,
         totalFiniquito,
     };
@@ -2025,14 +2026,9 @@ function remHtmlFiqResultado(t, c, fechaTermino, causal, avisoPrevio) {
           `${c.baseCalc.toLocaleString('es-CL')} / ${c.diasDelMes} × ${c.diaTermino} días`
       )}
       ${fila(
-          `Vacaciones proporcionales (${c.diasPendientes} días pendientes)`,
+          `Vacaciones / feriado proporcional (${c.diasPendientes} días pendientes)`,
           c.vacProporcional,
           `Valor día: ${fmt$(c.valorDia)}`
-      )}
-      ${fila(
-          `Feriado proporcional (${c.diasFeriado} días del año en curso)`,
-          c.feriadoProp,
-          `${new Date().getMonth() + 1} meses trabajados en ${new Date().getFullYear()}`
       )}
       ${c.correspondeIndem ? fila(
           `Indemnización por años de servicio (${c.aniosIndem} año${c.aniosIndem !== 1 ? 's' : ''}, tope 11)`,
@@ -2114,8 +2110,7 @@ th{background:#f8fafc;padding:7px 10px;text-align:left;font-size:10px;font-weigh
   <thead><tr><th>Concepto</th><th style="text-align:right;">Monto</th></tr></thead>
   <tbody>
     ${fila(`Sueldo proporcional al mes (${c.diaTermino} de ${c.diasDelMes} días)`, c.sueldoProp)}
-    ${fila(`Vacaciones proporcionales (${c.diasPendientes} días)`, c.vacProporcional)}
-    ${fila(`Feriado proporcional (${c.diasFeriado} días)`, c.feriadoProp)}
+    ${fila(`Vacaciones / feriado proporcional (${c.diasPendientes} días)`, c.vacProporcional)}
     ${fila(`Indemnización por años de servicio (${c.aniosIndem} año${c.aniosIndem!==1?'s':''})`, c.indemAnios)}
     ${fila('Indemnización sustitutiva de aviso previo', c.indemAviso)}
   </tbody>
@@ -2165,8 +2160,8 @@ function remFiqAsiento(trabId, fechaTermino, causal, avisoPrevio) {
     deb('Gasto Finiquito', gastoTotal);
     if (c.indemAnios > 0)   hab('Indemnización por años por pagar', c.indemAnios);
     if (c.indemAviso > 0)   hab('Indemnización por años por pagar', c.indemAviso);
-    if (c.vacProporcional + c.feriadoProp > 0) hab('Vacaciones por pagar', c.vacProporcional + c.feriadoProp);
-    hab('Banco', c.sueldoProp + (c.vacProporcional + c.feriadoProp) * 0); // sueldo se paga directo
+    if (c.vacProporcional > 0) hab('Vacaciones por pagar', c.vacProporcional);
+    hab('Banco', c.sueldoProp); // sueldo se paga directo
     // Ajuste: todo lo que no va a cuentas específicas va a Banco
     const habTotal = movs.filter(m=>m.haber>0).reduce((s,m)=>s+m.haber,0);
     if (gastoTotal > habTotal) hab('Banco', gastoTotal - habTotal);
