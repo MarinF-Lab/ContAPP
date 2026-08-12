@@ -85,8 +85,8 @@
         if (idx < 0 || idx >= suggestions.length) return;
         justSelected = true;
         const val = suggestions[idx];
+        if (activeInput) activeInput.value = val;
         if (onSelectCb) onSelectCb(val);
-        // El callback puede haber cambiado activeInput.value; no sobreescribir
         cerrar();
         // Mover foco al siguiente input del mismo modal
         moverFoco(activeInput, 1);

@@ -8,8 +8,37 @@ const GASTOS_FIN_CUENTAS = [
     'Comisiones Bancarias', 'Gastos Financieros',
 ];
 
-function generarEstadoResultados() {
+// Recalcula {debe, haber} por cuenta usando solo los movimientos del período
+// elegido (mes+año, o el año completo si mes === 0) — recopilarMovimientosPorCuenta(hastaFecha)
+// solo soporta un tope superior (acumulado hasta esa fecha), no un rango, así
+// que acá se re-suma desde el historial completo de cada cuenta filtrando por
+// fecha, igual patrón que ya usa el Mayor (mayor.js, generarLibroMayor()).
+function _erRecopilarCuentasPeriodo(mes, anio) {
     const cuentas = recopilarMovimientosPorCuenta();
+    const resultado = {};
+    Object.entries(cuentas).forEach(([nombre, c]) => {
+        const historialFiltrado = c.historial.filter(h => {
+            const fo = _fechaAsientoOrdenable(h.fecha);
+            if (!fo || !fo.startsWith(String(anio))) return false;
+            if (mes && fo.slice(5, 7) !== String(mes).padStart(2, '0')) return false;
+            return true;
+        });
+        if (!historialFiltrado.length) return;
+        resultado[nombre] = {
+            debe:  historialFiltrado.reduce((s, h) => s + (h.debe  || 0), 0),
+            haber: historialFiltrado.reduce((s, h) => s + (h.haber || 0), 0),
+        };
+    });
+    return resultado;
+}
+
+// Cómputo puro (sin HTML, sin tasa de impuesto) del Estado de Resultados
+// hasta UTILIDAD ANTES DE IMPUESTO — extraído de generarEstadoResultados()
+// para reusarlo también en exportarPDFEstadoResultados()
+// (js/services/exportar.js). La tasa de impuesto queda fuera a propósito:
+// es un supuesto de la pantalla/export, no un dato del período.
+function _calcularEstadoResultados(mes, anio) {
+    const cuentas = _erRecopilarCuentasPeriodo(mes, anio);
 
     const ingresos    = [];
     const costoVentas = [];
@@ -40,6 +69,21 @@ function generarEstadoResultados() {
     const utilOp       = utilBruta - totGastosOp;
     const totGastosFin = gastosFin.reduce((s, x) => s + x.monto, 0);
     const utilAntesImp = utilOp - totGastosFin;
+
+    return {
+        ingresos, costoVentas, gastosOp, gastosFin,
+        totIngresos, totCosto, utilBruta, totGastosOp, utilOp, totGastosFin, utilAntesImp,
+    };
+}
+window._calcularEstadoResultados = _calcularEstadoResultados;
+
+function generarEstadoResultados() {
+    const mes  = parseInt(document.getElementById('selErMes')?.value)  || 0; // 0 = Todo el año
+    const anio = parseInt(document.getElementById('selErAnio')?.value) || new Date().getFullYear();
+    const {
+        ingresos, costoVentas, gastosOp, gastosFin,
+        totIngresos, totCosto, utilBruta, totGastosOp, utilOp, totGastosFin, utilAntesImp,
+    } = _calcularEstadoResultados(mes, anio);
 
     // Tasa de impuesto desde el selector
     const tasa     = parseFloat(document.getElementById('erTasaImpuesto')?.value || '0.27');

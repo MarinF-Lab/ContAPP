@@ -329,6 +329,61 @@ body {
     margin-top: 16px;
 }
 
+/* Fila glosa + calculadora — la glosa (con la tabla de cuentas generadas
+   apilada debajo) ocupa todo el ancho sola; al abrir la calculadora
+   (#calcPanel pasa de display:none a flex) se comparte el espacio y la
+   glosa se angosta. align-items:stretch para que ambas columnas compartan
+   el mismo alto visual (la más corta se estira, sin recortar contenido).
+   flex-wrap para que en pantallas angostas la calculadora simplemente baje
+   debajo en vez de comprimirse. */
+.diario-glosa-row {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    flex-wrap: wrap;
+}
+.glosa-main { flex: 1 1 360px; min-width: 0; }
+
+.calc-panel {
+    width: 320px;
+    flex: 0 0 320px;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border-radius: var(--radius-m, 14px);
+    background: var(--card);
+    border: 1px solid var(--card-border);
+}
+
+.calc-item-card {
+    border: 1.5px solid var(--rule-strong, var(--card-border));
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--input-bg);
+}
+.calc-item-card input,
+.calc-item-card select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12.5px;
+    background: var(--card);
+    color: var(--text);
+}
+.calc-item-head { display: flex; gap: 6px; align-items: center; }
+.calc-item-head input { flex: 1; }
+.calc-item-head button {
+    flex-shrink: 0; border: none; cursor: pointer; width: 24px; height: 24px;
+    border-radius: 6px; background: var(--negative-soft); color: var(--negative);
+    font-size: 13px; line-height: 1;
+}
+.calc-item-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
 /* ══════════════════════════════════════════
    BOTONES
 ══════════════════════════════════════════ */
@@ -720,7 +775,37 @@ body {
     color: white;
 }
 
+.btn-plan-relacionadas {
+    background: var(--info, #587FFC);
+    color: white;
+}
+
 .btn-plan:hover { opacity: .9; }
+
+/* Libro Mayor — resaltado temporal de la cuenta de origen al llegar desde
+   el Balance General (ver mayorIrACuenta() en mayor.js); no aísla la vista,
+   solo la hace fácil de ubicar entre las demás cuentas. */
+#contenedorMayor .card { transition: box-shadow .3s ease, border-color .3s ease; }
+.mayor-cuenta-resaltada {
+    box-shadow: 0 0 0 3px var(--accent);
+    border-color: var(--accent) !important;
+}
+
+/* Libro Mayor — popover de detalle anclado a la fila clickeada (ver
+   mayorAbrirDetalle() en mayor.js). No es un modal de pantalla completa: no
+   tiene overlay de fondo, se posiciona con getBoundingClientRect() justo
+   debajo de la fila y no empuja ni oculta el resto de la tabla. */
+.mayor-detalle-popover {
+    position: fixed;
+    z-index: 200;
+    background: var(--card-bg, var(--card));
+    border: 1.5px solid var(--rule-strong, var(--card-border));
+    border-radius: 8px;
+    padding: 12px 14px;
+    box-shadow: var(--shadow-2, var(--shadow-lg));
+    flex-direction: column;
+    gap: 8px;
+}
 
 .plan-acciones {
     display: flex;
@@ -1168,6 +1253,41 @@ body {
 .totales-badge.error {
     background: var(--negative-soft);
     color: var(--negative);
+}
+
+/* Indicador permanente de saldo disponible (Caja/Banco/etc.) y aviso reactivo
+   de fondos insuficientes — Libro Diario, calculadora/glosa y Asiento Manual. */
+.disponible-indicador {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.disponible-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--positive-soft);
+    color: var(--positive);
+}
+
+.disponible-chip.negativo {
+    background: var(--negative-soft);
+    color: var(--negative);
+}
+
+.alerta-disponible {
+    background: var(--warning-soft);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-top: 10px;
+    line-height: 1.5;
 }
 
 /* ══════════════════════════════════════════
@@ -3289,6 +3409,7 @@ input:focus, select:focus, textarea:focus {
 
     /* Ocultar todo lo que no es contenido */
     .sidebar, #sidebarOverlay, .top-header,
+    #app-topbar, #pageTitleBar, .mod-tabs,
     #login-overlay, #wizardOverlay,
     .export-bar, #btnHamburger,
     #fb-user-bar, #toast-global,
@@ -4345,7 +4466,11 @@ body[data-imprimiendo] .ia-chat-panel { display: none !important; }
 .tentacle-data .td-list li::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--coral); flex-shrink: 0; }
 
 @media (max-width: 900px) {
-    .home-greet { display: none; }
+    /* No ocultar .home-greet completo: es el único lugar en Inicio para cambiar
+       de empresa (el topbar con el menú de usuario está oculto en Inicio). Se
+       oculta solo el saludo decorativo, el selector de cliente queda visible. */
+    .home-greet { flex: 0 1 auto; min-width: 0; text-align: left; }
+    .home-greet .hg-strong, .home-greet .hg-sep { display: none; }
     #app-topbar .field { display: none; }
     .float-search { min-width: 0; flex: 1; }
     .group-card { width: 100%; max-width: 320px; }

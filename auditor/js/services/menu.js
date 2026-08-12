@@ -63,11 +63,9 @@ const MENU_SUBSECCIONES = {
     'tributario-1cat':           ['Declaración de Impuestos (F29/IVA)'],
     'conciliacion-cartolas':     ['Cartolas Bancarias', 'Conciliación Bancaria'],
     remuneraciones:              ['Liquidaciones', 'Indicadores Previsionales'],
-    'activos-produccion':        ['Activos Fijos', 'Productos y Servicios'],
-    auditoria:                   ['Informe de Auditoría', 'Hallazgos'],
+    'inventario-activos':        ['Centros de Costo', 'Bodegas', 'Movimientos', 'Activos Fijos', 'Productos y Servicios'],
     'libros-contables-hon':      ['Libro de Honorarios', 'Libro de Ingresos', 'Libro de Egresos'],
     'declaracion-impuestos-hon': ['Formulario 29', 'Formulario 22'],
-    'auditoria-hon':             ['Informe de Auditoría', 'Hallazgos'],
 };
 
 // El prototipo diseña los tentáculos como chips cortos de 1-3 palabras

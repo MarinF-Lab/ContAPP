@@ -9,6 +9,16 @@ const TASA_SALUD_HON       = 0.07;
 const TASA_SIS_HON         = 0.0087;
 const GASTOS_PRESUNTOS_PCT = 0.30;
 const GASTOS_PRESUNTOS_UTA = 15;     // tope 15 UTA
+const TOPE_IMPONIBLE_UF    = 90.0;   // tope AFP/Salud (mismo tope legal que dependientes, ver remuneraciones.js)
+
+// Base imponible para cotizaciones de independientes, topada a 90 UF mensuales (igual que
+// dependientes, ver remuneraciones.js). meses=1 para un cálculo puntual/mensual, meses=12 para
+// una base ya anualizada (F22, proyección) — el tope legal es mensual, no anual.
+function _honBaseCotizacionTopada(base, meses = 1) {
+    const uf   = window.indicadoresEconomicos?.uf?.valor || 38000;
+    const tope = Math.round(TOPE_IMPONIBLE_UF * meses * uf);
+    return { baseTopada: Math.min(base, tope), tope, topeAplicado: base > tope };
+}
 
 // ── Storage helpers ───────────────────────────────────────────
 function _honGet(key) {
@@ -171,6 +181,7 @@ function honAgregarIngreso() {
 }
 
 function honRenderLibroIngresos() {
+    const mes    = parseInt(document.getElementById('ingMes')?.value  || '0');
     const anio   = parseInt(document.getElementById('ingAnio')?.value || _anioActual());
     const cuerpo = document.getElementById('ingBody');
     const pie    = document.getElementById('ingTotales');
@@ -180,10 +191,14 @@ function honRenderLibroIngresos() {
         BHE: 'Boleta BHE', arriendo: 'Arriendo', servicios: 'Serv. prof.',
         devolucion: 'Devolución', interes: 'Intereses', otro: 'Otro ingreso',
     };
+    const _enPeriodo = (fechaStr) => {
+        const d = new Date(fechaStr + 'T00:00:00');
+        return d.getFullYear() === anio && (mes === 0 || d.getMonth() + 1 === mes);
+    };
 
     // BHE desde libro de honorarios
     const bhe = _honGet('hon_boletas')
-        .filter(b => new Date(b.fecha+'T00:00:00').getFullYear() === anio)
+        .filter(b => _enPeriodo(b.fecha))
         .map(b => ({
             id: 'bhe_'+b.id, fecha: b.fecha, tipo: 'BHE',
             nDoc: b.folio||'', rutPag: b.rut||'', nombrePag: b.nombre||'',
@@ -192,7 +207,7 @@ function honRenderLibroIngresos() {
 
     // Ingresos manuales — compatible con entradas antiguas (solo monto)
     const manuales = _honGet('hon_ingresos_extra')
-        .filter(x => new Date(x.fecha+'T00:00:00').getFullYear() === anio)
+        .filter(x => _enPeriodo(x.fecha))
         .map(x => ({
             id: x.id, fecha: x.fecha, tipo: x.tipo||'otro',
             nDoc: x.nDoc||'', rutPag: x.rutPag||'', nombrePag: x.nombrePag||x.desc||'',
@@ -202,9 +217,10 @@ function honRenderLibroIngresos() {
     const todos = [...bhe, ...manuales].sort((a,b) => a.fecha.localeCompare(b.fecha));
 
     let totB = 0, totR = 0, totL = 0;
+    const labelPeriodo = mes ? `${_nombreMes(mes)} ${anio}` : anio;
 
     if (!todos.length) {
-        cuerpo.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--text-muted);">Sin ingresos para ${anio}.</td></tr>`;
+        cuerpo.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--text-muted);">Sin ingresos para ${labelPeriodo}.</td></tr>`;
         if (pie) pie.innerHTML = '';
     } else {
         cuerpo.innerHTML = todos.map(r => {
@@ -224,7 +240,7 @@ function honRenderLibroIngresos() {
             </tr>`;
         }).join('');
         if (pie) pie.innerHTML = `<tr class="hon-total-row">
-            <td colspan="5">Totales ${anio}</td>
+            <td colspan="5">Totales ${labelPeriodo}</td>
             <td class="monto">${fmt(totB)}</td>
             <td class="monto" style="color:var(--negative);">${fmt(totR)}</td>
             <td class="monto" style="color:var(--positive);">${fmt(totL)}</td>
@@ -280,12 +296,17 @@ function honAgregarEgreso() {
 }
 
 function honRenderLibroEgresos() {
+    const mes     = parseInt(document.getElementById('egrMes')?.value  || '0');
     const anio    = parseInt(document.getElementById('egrAnio')?.value || _anioActual());
     const filtCat = document.getElementById('egrFiltroCat')?.value || '';
     let filtrados = _honGet('hon_egresos')
-        .filter(x => new Date(x.fecha+'T00:00:00').getFullYear() === anio)
+        .filter(x => {
+            const d = new Date(x.fecha+'T00:00:00');
+            return d.getFullYear() === anio && (mes === 0 || d.getMonth() + 1 === mes);
+        })
         .sort((a,b) => a.fecha.localeCompare(b.fecha));
     if (filtCat) filtrados = filtrados.filter(x => x.cat === filtCat);
+    const labelPeriodo = mes ? `${_nombreMes(mes)} ${anio}` : anio;
 
     const cuerpo = document.getElementById('egrBody');
     const pie    = document.getElementById('egrTotales');
@@ -297,7 +318,7 @@ function honRenderLibroEgresos() {
     let totNeto = 0, totIva = 0, totTotal = 0;
 
     if (!filtrados.length) {
-        cuerpo.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--text-muted);">Sin egresos para ${anio}.</td></tr>`;
+        cuerpo.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--text-muted);">Sin egresos para ${labelPeriodo}.</td></tr>`;
         if (pie) pie.innerHTML = '';
     } else {
         cuerpo.innerHTML = filtrados.map(e => {
@@ -322,7 +343,7 @@ function honRenderLibroEgresos() {
             </tr>`;
         }).join('');
         if (pie) pie.innerHTML = `<tr class="hon-total-row">
-            <td colspan="6">Total egresos ${anio}${filtCat ? ` — ${ETIQ_CAT[filtCat]}` : ''}</td>
+            <td colspan="6">Total egresos ${labelPeriodo}${filtCat ? ` — ${ETIQ_CAT[filtCat]}` : ''}</td>
             <td class="monto">${fmt(totNeto)}</td>
             <td class="monto" style="color:var(--text-muted);">${totIva ? fmt(totIva) : '—'}</td>
             <td class="monto" style="color:var(--negative);">${fmt(totTotal)}</td>
@@ -345,17 +366,18 @@ function honCalcularCotizaciones() {
     const raw   = (document.getElementById('cotBruto')?.value || '').replace(/\D/g,'');
     const bruto = parseInt(raw) || 0;
     const base  = Math.round(bruto * TASA_BASE_COTIZACION);
+    const { baseTopada, tope, topeAplicado } = _honBaseCotizacionTopada(base);
 
     const afpNombre = window.currentUser?.afp || '';
     const afpTasas  = window.indicadoresEconomicos?.afpTasas || {};
     const tasaAFP   = (afpTasas[afpNombre] || 11.27) / 100;
 
-    const afpMonto  = Math.round(base * tasaAFP);
-    const saludMon  = Math.round(base * TASA_SALUD_HON);
-    const sisMon    = Math.round(base * TASA_SIS_HON);
+    const afpMonto  = Math.round(baseTopada * tasaAFP);
+    const saludMon  = Math.round(baseTopada * TASA_SALUD_HON);
+    const sisMon    = Math.round(baseTopada * TASA_SIS_HON);
     const total     = afpMonto + saludMon + sisMon;
 
-    _honSet2('cotBase',      fmt(base));
+    _honSet2('cotBase',      fmt(baseTopada) + (topeAplicado ? ` (tope 90 UF = $${fmt(tope)} aplicado, base sin tope: $${fmt(base)})` : ''));
     _honSet2('cotAfpLabel',  `AFP ${afpNombre || 'seleccionada'} (${(tasaAFP*100).toFixed(2)}%)`);
     _honSet2('cotAfp',       fmt(afpMonto));
     _honSet2('cotSalud',     fmt(saludMon));
@@ -415,17 +437,20 @@ function honAgregarRetencion() {
 }
 
 function honRenderRetenciones() {
+    const mes  = parseInt(document.getElementById('retMes')?.value  || '0');
     const anio = parseInt(document.getElementById('retAnio')?.value || _anioActual());
-    const filtradas = _honGet('hon_retenciones').filter(r =>
-        new Date(r.fecha + 'T00:00:00').getFullYear() === anio
-    );
+    const filtradas = _honGet('hon_retenciones').filter(r => {
+        const d = new Date(r.fecha + 'T00:00:00');
+        return d.getFullYear() === anio && (mes === 0 || d.getMonth() + 1 === mes);
+    });
     const cuerpo = document.getElementById('retBody');
     const pie    = document.getElementById('retTotales');
     if (!cuerpo) return;
 
     let totB = 0, totR = 0;
+    const labelPeriodo = mes ? `${_nombreMes(mes)} ${anio}` : anio;
     if (!filtradas.length) {
-        cuerpo.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text-muted);">Sin retenciones para ${anio}.</td></tr>`;
+        cuerpo.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text-muted);">Sin retenciones para ${labelPeriodo}.</td></tr>`;
         if (pie) pie.innerHTML = '';
     } else {
         cuerpo.innerHTML = filtradas.map(r => {
@@ -440,7 +465,7 @@ function honRenderRetenciones() {
             </tr>`;
         }).join('');
         if (pie) pie.innerHTML = `<tr class="hon-total-row">
-            <td colspan="3">Totales año ${anio}</td>
+            <td colspan="3">Totales ${labelPeriodo}</td>
             <td class="monto">${fmt(totB)}</td>
             <td class="monto" style="color:var(--negative);">${fmt(totR)}</td>
             <td></td>
@@ -528,10 +553,15 @@ function honGenerarF29() {
         .filter(b => b.tipoRet !== 'auto' && prestRuts.has(b.rut))
         .reduce((s, b) => s + b.retencion, 0);
 
-    _honSet2('f29honPPM',         fmt(totPPM));
-    _honSet2('f29honAutoRet',     fmt(totAutoRet));
-    _honSet2('f29honRetenciones', fmt(totRetTerc));
-    _honSet2('f29honTotal',       fmt(totPPM + totAutoRet + totRetTerc));
+    // _honSet2() reemplaza todo el textContent (el markup estático es "$0"),
+    // así que hay que incluir el "$" acá — fmt() devuelve "-" para 0, que sin
+    // el "$" se veía como un guión pelado dando la impresión de que el F29
+    // estaba roto.
+    const _f29Monto = (v) => v === 0 ? '$0' : '$' + fmt(v);
+    _honSet2('f29honPPM',         _f29Monto(totPPM));
+    _honSet2('f29honAutoRet',     _f29Monto(totAutoRet));
+    _honSet2('f29honRetenciones', _f29Monto(totRetTerc));
+    _honSet2('f29honTotal',       _f29Monto(totPPM + totAutoRet + totRetTerc));
 
     // Mostrar/ocultar fila auto-retención según si hay monto
     const filaAuto = document.getElementById('f29FilaAutoRet');
@@ -558,10 +588,11 @@ function honCalcularF22() {
     const totRetLeg = retEntd.reduce((s,r) => s + r.retencion, 0);
 
     const baseCot   = Math.round(brutoAnual * TASA_BASE_COTIZACION);
+    const { baseTopada: baseCotTopada } = _honBaseCotizacionTopada(baseCot, 12);
     const afpNombre = window.currentUser?.afp || '';
     const afpTasas  = window.indicadoresEconomicos?.afpTasas || {};
     const tasaAFP   = (afpTasas[afpNombre] || 11.27) / 100;
-    const cotizaciones = Math.round(baseCot * (tasaAFP + TASA_SALUD_HON + TASA_SIS_HON));
+    const cotizaciones = Math.round(baseCotTopada * (tasaAFP + TASA_SALUD_HON + TASA_SIS_HON));
 
     const tope     = Math.round(utm * 12 * GASTOS_PRESUNTOS_UTA);
     const presunto = Math.min(Math.round(brutoAnual * GASTOS_PRESUNTOS_PCT), tope);
@@ -648,10 +679,11 @@ function honProyectarF22() {
     const proyAnual = mesActual > 0 ? Math.round(brutoAcum * 12 / mesActual) : 0;
 
     const baseCot  = Math.round(proyAnual * TASA_BASE_COTIZACION);
+    const { baseTopada: baseCotProyTopada } = _honBaseCotizacionTopada(baseCot, 12);
     const afpNombre= window.currentUser?.afp || '';
     const afpTasas = window.indicadoresEconomicos?.afpTasas || {};
     const tasaAFP  = (afpTasas[afpNombre] || 11.27) / 100;
-    const cotProy  = Math.round(baseCot * (tasaAFP + TASA_SALUD_HON + TASA_SIS_HON));
+    const cotProy  = Math.round(baseCotProyTopada * (tasaAFP + TASA_SALUD_HON + TASA_SIS_HON));
 
     const tope  = Math.round(utm * 12 * GASTOS_PRESUNTOS_UTA);
     const gProy = Math.min(Math.round(proyAnual * GASTOS_PRESUNTOS_PCT), tope);
@@ -836,10 +868,19 @@ function _honSet2(id, v) { const el = document.getElementById(id); if (el) el.te
     const elPeriodo = document.getElementById('honPeriodo');
     if (elPeriodo && !elPeriodo.value) elPeriodo.value = hoy.slice(0, 7);
     const mesActual = new Date().getMonth() + 1;
+    const anioActual = new Date().getFullYear();
     const selPPM = document.getElementById('ppmMes');
     if (selPPM) selPPM.value = String(mesActual);
     const selPPMAnio = document.getElementById('ppmAnio');
-    if (selPPMAnio) selPPMAnio.value = String(new Date().getFullYear());
+    if (selPPMAnio) selPPMAnio.value = String(anioActual);
+
+    // F29 de Honorarios tiene sus PROPIOS selects (f29honMes/f29honAnio) —
+    // antes solo se inicializaban los de PPM, así que el F29 siempre abría
+    // en Enero por defecto.
+    const selF29Mes = document.getElementById('f29honMes');
+    if (selF29Mes) selF29Mes.value = String(mesActual);
+    const selF29Anio = document.getElementById('f29honAnio');
+    if (selF29Anio) selF29Anio.value = String(anioActual);
 })();
 
 // ── Exports globales ──────────────────────────────────────────

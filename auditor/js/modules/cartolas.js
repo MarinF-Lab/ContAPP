@@ -384,15 +384,28 @@ function cartolasGenerarAsientos() {
             monto  = mv.abono;
         }
 
+        // Fecha de cartola es ISO (YYYY-MM-DD) — convertir a DD/MM/AAAA y usar
+        // la misma forma {movimientos:[...]} que el resto de la app (Diario,
+        // Activos, Remuneraciones). La forma anterior ({debe,haber,monto} planos)
+        // no la entendía nada más y rompía el render del Libro Diario apenas
+        // aparecía el primer asiento de cartola.
+        const partesFecha = (mv.fecha || '').split('-');
+        const fechaDMA = partesFecha.length === 3
+            ? partesFecha[2] + '/' + partesFecha[1] + '/' + partesFecha[0]
+            : mv.fecha;
+
         const asiento = {
-            id:      'as' + Date.now() + Math.random().toString(36).slice(2, 6),
-            fecha:   mv.fecha,
-            glosa:   mv.descripcion + ' [cartola ' + mv.banco + ']',
-            debe:    debe,
-            haber:   haber,
-            monto:   monto,
-            origen:  'cartola',
-            ref_mv:  mv.id,
+            id:         Date.now() + Math.floor(Math.random() * 1000),
+            numero:     _nextNumeroAsiento(),
+            estado:     'ACTIVO',
+            fecha:      fechaDMA,
+            glosa:      mv.descripcion + ' [cartola ' + mv.banco + ']',
+            movimientos: [
+                { cuenta: debe,  debe: monto, haber: 0 },
+                { cuenta: haber, debe: 0,     haber: monto },
+            ],
+            origen:     'cartola',
+            ref_mv:     mv.id,
             created_at: Date.now()
         };
 
@@ -719,6 +732,12 @@ function renderCartolas() {
     });
 
     const anioActual = new Date().getFullYear();
+    let optAnios = '';
+    [2023, 2024, 2025, 2026, 2027].forEach(function (a) {
+        optAnios += '<option value="' + a + '"' +
+                    (a === _cartolaFiltroAnio ? ' selected' : '') +
+                    '>' + a + '</option>';
+    });
 
     contenedor.innerHTML =
         // ── KPIs ──
@@ -760,10 +779,10 @@ function renderCartolas() {
         // ── Filtros y acciones ──
         '<div class="cartola-filtros">' +
             '<label>Mes:' +
-                '<select id="sel-mes-cartola">' + optMeses + '</select>' +
+                '<select id="sel-mes-cartola" class="sel-periodo">' + optMeses + '</select>' +
             '</label>' +
             '<label>Año:' +
-                '<input type="number" id="inp-anio-cartola" value="' + anioActual + '" min="2000" max="2099">' +
+                '<select id="sel-anio-cartola" class="sel-periodo">' + optAnios + '</select>' +
             '</label>' +
             '<label>Tipo:' +
                 '<select id="sel-tipo-cartola">' +
@@ -816,12 +835,9 @@ function renderCartolas() {
         _cartolaRefrescar();
     });
 
-    document.getElementById('inp-anio-cartola').addEventListener('change', function () {
-        const v = parseInt(this.value);
-        if (v >= 2000 && v <= 2099) {
-            _cartolaFiltroAnio = v;
-            _cartolaRefrescar();
-        }
+    document.getElementById('sel-anio-cartola').addEventListener('change', function () {
+        _cartolaFiltroAnio = parseInt(this.value);
+        _cartolaRefrescar();
     });
 
     document.getElementById('sel-tipo-cartola').addEventListener('change', function () {

@@ -75,47 +75,7 @@ function calcularKPIs() {
     _renderUltimosAsientos();
     _renderTopCuentas(cuentas);
     _renderLiquidezDash(_liq);
-    _renderDashHallazgos();
     _renderAccesosRapidos();
-}
-
-// ── Hallazgos de auditoría abiertos (dato real: aud_hallazgos) ─────────────
-function _renderDashHallazgos() {
-    const el    = document.getElementById('dashHallazgos');
-    const badge = document.getElementById('dashHallazgosBadge');
-    if (!el) return;
-
-    let hallazgos = [];
-    try { hallazgos = JSON.parse(localStorage.getItem('aud_hallazgos')) || []; } catch {}
-    const abiertos = hallazgos
-        .filter(h => h.estado === 'abierto')
-        .sort((a, b) => new Date(b.fechaDeteccion) - new Date(a.fechaDeteccion));
-
-    if (badge) {
-        if (abiertos.length) {
-            badge.style.display = 'inline-block';
-            badge.textContent = abiertos.length;
-            badge.className = 'badge-doc badge-doc-compra'; // reutiliza el pill ámbar de alerta ya existente
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-
-    if (!abiertos.length) {
-        el.innerHTML = `<div style="padding:10px 0;color:var(--positive);font-size:13px;display:flex;align-items:center;gap:8px;">✅ Sin hallazgos abiertos.</div>`;
-        return;
-    }
-
-    const iconoTipo = { error: '🔴', advertencia: '🟡', sugerencia: '🔵' };
-    el.innerHTML = abiertos.slice(0, 4).map(h => `
-        <div class="dash-asiento-row">
-            <div class="dash-asiento-info">
-                <span>${iconoTipo[h.tipo] || '•'}</span>
-                <span class="dash-asiento-fecha">${h.modulo || ''}</span>
-            </div>
-            <div class="dash-asiento-glosa">${h.descripcion || ''}</div>
-        </div>`).join('')
-        + `<button class="btn btn-secondary" style="margin-top:10px;font-size:12px;padding:6px 12px;" onclick="navegar('hallazgos')">Ver todos los hallazgos →</button>`;
 }
 
 // ── Accesos rápidos — MRU real de navegación (contapp-modulos-recientes) ───

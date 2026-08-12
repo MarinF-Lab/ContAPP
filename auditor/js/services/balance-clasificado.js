@@ -1,8 +1,18 @@
 // ─────────────────────────────────────────────────────────────
 //  BALANCE CLASIFICADO
 // ─────────────────────────────────────────────────────────────
-function generarBalanceClasificado() {
-    const cuentas = recopilarMovimientosPorCuenta();
+
+// Cómputo puro (sin HTML) del Balance Clasificado — extraído de
+// generarBalanceClasificado() para reusarlo también en
+// exportarPDFBalanceClasificado()/exportarExcelBalanceClasificado()
+// (js/services/exportar.js), mismo criterio que _calcularBalance() en
+// balance.js. Mismo corte "acumulado a fin del mes/año elegido" que Balance
+// General — un balance clasificado también es una foto del saldo en un
+// momento dado, no solo los movimientos del período.
+function _calcularBalanceClasificado() {
+    const mes  = parseInt(document.getElementById('selBalanceClasifMes')?.value)  || (new Date().getMonth() + 1);
+    const anio = parseInt(document.getElementById('selBalanceClasifAnio')?.value) || new Date().getFullYear();
+    const cuentas = recopilarMovimientosPorCuenta(_finDeMesOrdenable(mes, anio));
 
     const secciones = {
         'Activo Circulante':    { items: [], total: 0 },
@@ -88,6 +98,32 @@ function generarBalanceClasificado() {
     const totalPasivo  = secciones['Pasivo Circulante'].total + secciones['Pasivo No Circulante'].total;
     const totalPatrim  = secciones['Patrimonio'].total;
     const totalPasPat  = totalPasivo + totalPatrim;
+    const cuadra       = Math.abs(totalActivo - totalPasPat) < 1;
+
+    // ── Indicadores de liquidez ─────────────────────────────────
+    const actCirc  = secciones['Activo Circulante'].total;
+    const pasCirc  = secciones['Pasivo Circulante'].total;
+
+    // Activos menos líquidos para prueba ácida
+    const inventarios = (secciones['Activo Circulante'].items
+        .filter(i => ['Mercaderías','Inventario de Productos Terminados'].includes(i.nombre))
+        .reduce((s, i) => s + i.saldo, 0));
+
+    const razonCorriente = pasCirc > 0 ? actCirc / pasCirc : null;
+    const pruebaAcida    = pasCirc > 0 ? (actCirc - inventarios) / pasCirc : null;
+    const capitalTrabajo = actCirc - pasCirc;
+
+    return {
+        mes, anio, secciones,
+        totalActivo, totalPasivo, totalPatrim, totalPasPat, cuadra,
+        liquidez: { razonCorriente, pruebaAcida, capitalTrabajo },
+    };
+}
+window._calcularBalanceClasificado = _calcularBalanceClasificado;
+
+function generarBalanceClasificado() {
+    const { secciones, totalActivo, totalPasPat, cuadra, liquidez } = _calcularBalanceClasificado();
+    const { razonCorriente, pruebaAcida, capitalTrabajo } = liquidez;
 
     function htmlSeccion(titulo, seccion, claseHeader) {
         if (!seccion.items.length) return '';
@@ -144,21 +180,6 @@ function generarBalanceClasificado() {
             <span>$${fmt(totalPasPat)}</span>
         </div>`;
 
-    const cuadra = Math.abs(totalActivo - totalPasPat) < 1;
-
-    // ── Indicadores de liquidez ─────────────────────────────────
-    const actCirc  = secciones['Activo Circulante'].total;
-    const pasCirc  = secciones['Pasivo Circulante'].total;
-
-    // Activos menos líquidos para prueba ácida
-    const inventarios = (secciones['Activo Circulante'].items
-        .filter(i => ['Mercaderías','Inventario de Productos Terminados'].includes(i.nombre))
-        .reduce((s, i) => s + i.saldo, 0));
-
-    const razonCorriente = pasCirc > 0 ? actCirc / pasCirc : null;
-    const pruebaAcida    = pasCirc > 0 ? (actCirc - inventarios) / pasCirc : null;
-    const capitalTrabajo = actCirc - pasCirc;
-
     function semaforo(val, ok, warn) {
         if (val === null) return 'color:#94a3b8;';
         if (val >= ok)   return 'color:#16a34a;';
@@ -195,7 +216,7 @@ function generarBalanceClasificado() {
         </div>`;
 
     // Exportar para el dashboard
-    window._liquidezData = { razonCorriente, pruebaAcida, capitalTrabajo };
+    window._liquidezData = liquidez;
 
     const cont = document.getElementById('balanceClasificadoCont');
     if (!cont) return;

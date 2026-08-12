@@ -49,55 +49,34 @@ function tieneString(archivo, texto) {
 }
 
 // ─────────────────────────────────────────────────────────────
-console.log('\n══ SPRINT 1 — hallazgos.js ══');
+console.log('\n══ SPRINT 1 — Inventario y Activos (Centros de Costo / Bodegas / Movimientos / Activos Fijos / Productos) ══');
 
-check('hallazgos.js tiene contenido real (≥30 líneas de código)',
-    tieneContenido('js/auditor/hallazgos.js', 30));
+check('centros-costo.js tiene contenido real (≥20 líneas de código)',
+    tieneContenido('js/modules/centros-costo.js', 20));
 
-check('audHallazgosCargar() está implementada',
-    tieneFunc('js/auditor/hallazgos.js', 'audHallazgosCargar'));
+check('renderCentrosCosto() está implementada',
+    tieneFunc('js/modules/centros-costo.js', 'renderCentrosCosto'));
 
-check('audHallazgoCrear() está implementada',
-    tieneFunc('js/auditor/hallazgos.js', 'audHallazgoCrear'));
+check('bodegas.js tiene contenido real (≥20 líneas de código)',
+    tieneContenido('js/modules/bodegas.js', 20));
 
-check('audHallazgoResolver() está implementada',
-    tieneFunc('js/auditor/hallazgos.js', 'audHallazgoResolver'));
+check('renderBodegas() está implementada',
+    tieneFunc('js/modules/bodegas.js', 'renderBodegas'));
 
-check('audHallazgosRender() está implementada',
-    tieneFunc('js/auditor/hallazgos.js', 'audHallazgosRender'));
+check('inventario.js tiene contenido real (≥20 líneas de código)',
+    tieneContenido('js/modules/inventario.js', 20));
 
-check('audHallazgosExportar() está implementada',
-    tieneFunc('js/auditor/hallazgos.js', 'audHallazgosExportar'));
+check('renderMovimientosInventario() está implementada',
+    tieneFunc('js/modules/inventario.js', 'renderMovimientosInventario'));
 
-check('index.html tiene sección de Hallazgos',
-    tieneString('index.html', 'hallazgos') || tieneString('index.html', 'Hallazgos'));
+check('index.html tiene la sección fusionada de Inventario y Activos',
+    tieneString('index.html', 'view-inventario-activos') &&
+    tieneString('index.html', 'tab-ap-activos') &&
+    tieneString('index.html', 'tab-ap-productos'));
 
-check('diario tiene botón de hallazgo (JS o HTML)',
-    tieneString('js/services/diario.js', 'hallazgo') || tieneString('js/services/diario.js', 'audHallazgo') ||
-    tieneString('index.html', "audAbrirCrearHallazgo('diario')"));
-
-check('compras tiene botón de hallazgo (JS o HTML)',
-    tieneString('js/modules/compras.js', 'hallazgo') || tieneString('js/modules/compras.js', 'audHallazgo') ||
-    tieneString('index.html', "audAbrirCrearHallazgo('compras')"));
-
-check('ventas tiene botón de hallazgo (JS o HTML)',
-    tieneString('js/modules/ventas.js', 'hallazgo') || tieneString('js/modules/ventas.js', 'audHallazgo') ||
-    tieneString('index.html', "audAbrirCrearHallazgo('ventas')"));
-
-console.log('\n══ SPRINT 1 — informe-auditoria.js ══');
-
-check('informe-auditoria.js tiene contenido real (≥30 líneas de código)',
-    tieneContenido('js/auditor/informe-auditoria.js', 30));
-
-check('informeCargarDatos() o informeVistaPrevia() implementada',
-    tieneFunc('js/auditor/informe-auditoria.js', 'informeCargarDatos') ||
-    tieneFunc('js/auditor/informe-auditoria.js', 'informeVistaPrevia'));
-
-check('informeExportarPDF() está implementada',
-    tieneFunc('js/auditor/informe-auditoria.js', 'informeExportarPDF'));
-
-check('informeGuardarBorrador() está implementada',
-    tieneFunc('js/auditor/informe-auditoria.js', 'informeGuardarBorrador'));
+check('la calculadora del Diario registra movimientos de inventario',
+    tieneString('js/services/diario.js', 'registrarMovimientoInventario') ||
+    tieneString('js/services/diario.js', 'invRegistrarMovimiento'));
 
 // ─────────────────────────────────────────────────────────────
 console.log('\n══ SPRINT 2 — UX ══');

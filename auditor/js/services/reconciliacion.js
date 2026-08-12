@@ -111,9 +111,9 @@ function renderReconciliacion() {
         <div class="card" style="padding:16px;margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
             <div style="display:flex;flex-direction:column;gap:4px;">
                 <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;">Período</label>
-                <input type="month" id="recPeriodo" value="${_recState.periodo}"
-                    style="padding:7px 10px;border:1px solid var(--divider);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:13px;"
-                    onchange="recCambiarPeriodo(this.value)">
+                <div class="libro-toolbar-left" style="gap:6px;">
+                    ${_recSelectsPeriodo()}
+                </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:4px;">
                 <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;">Cuenta banco</label>
@@ -143,6 +143,7 @@ function renderReconciliacion() {
 }
 
 function _recHtmlImport() {
+    const disponiblesCartolas = _recMovsCartolaDelPeriodo().length;
     return `
     <div id="recDropZone"
         style="border:2px dashed var(--divider);border-radius:12px;padding:48px 24px;text-align:center;cursor:pointer;transition:.2s;background:var(--table-stripe);"
@@ -160,7 +161,81 @@ function _recHtmlImport() {
     <input type="file" id="recFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="recOnFile(this)">
 
     <!-- Mapeador manual (oculto hasta que se necesite) -->
-    <div id="recMapeoManual" style="display:none;margin-top:16px;"></div>`;
+    <div id="recMapeoManual" style="display:none;margin-top:16px;"></div>
+
+    <!-- Alternativa: reusar lo ya importado en Cartolas Bancarias, sin volver a subir el archivo -->
+    <div style="display:flex;align-items:center;gap:12px;margin-top:16px;padding:14px 16px;
+                border:1px solid var(--divider);border-radius:10px;background:var(--card);">
+        <div style="font-size:20px;">🏦</div>
+        <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);">¿Ya importaste este extracto en Cartolas Bancarias?</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+                ${disponiblesCartolas > 0
+                    ? disponiblesCartolas + ' movimiento(s) disponibles para el período/cuenta seleccionados.'
+                    : 'No hay movimientos de Cartolas para el período/cuenta seleccionados todavía.'}
+            </div>
+        </div>
+        <button class="btn btn-sm" ${disponiblesCartolas === 0 ? 'disabled' : ''} onclick="recImportarDesdeCartolas()">
+            Usar esos movimientos
+        </button>
+    </div>`;
+}
+
+// ── Puente con Cartolas Bancarias (core_cartola_movs) ──────────────────────
+// Antes Cartolas y Conciliación no se comunicaban: cada una guardaba su propio
+// estado por separado y había que subir el mismo extracto dos veces. Esto lee
+// directo del localStorage que puebla cartolas.js (sin depender de que ese
+// módulo haya corrido en esta sesión) y lo adapta a la forma que usa
+// _recState.transacciones.
+function _recMovsCartolaDelPeriodo() {
+    let movs = [];
+    try { movs = JSON.parse(localStorage.getItem('core_cartola_movs')) || []; } catch { return []; }
+    if (!_recState.periodo) return movs;
+
+    const [anio, mes] = _recState.periodo.split('-').map(Number);
+    return movs.filter(mv => {
+        // Cartolas guarda fecha ISO (YYYY-MM-DD)
+        const p = (mv.fecha || '').split('-');
+        if (p.length !== 3) return false;
+        if (parseInt(p[0]) !== anio || parseInt(p[1]) !== mes) return false;
+        // Si el movimiento ya fue clasificado con una cuenta banco específica
+        // en Cartolas, debe coincidir con la cuenta seleccionada acá; si no
+        // tiene cuenta asignada todavía, se incluye igual (útil para conciliar
+        // antes de clasificar en Cartolas).
+        if (mv.cuenta_banco) {
+            return mv.cuenta_banco.toLowerCase() === (_recState.cuentaBanco || '').toLowerCase();
+        }
+        return true;
+    });
+}
+
+function recImportarDesdeCartolas() {
+    const movs = _recMovsCartolaDelPeriodo();
+    if (!movs.length) {
+        mostrarToast('No hay movimientos de Cartolas Bancarias para este período.', 'error');
+        return;
+    }
+
+    const txs = movs.map(mv => {
+        const p = (mv.fecha || '').split('-');
+        const fechaDMA = p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : mv.fecha;
+        return {
+            _id:         'cart_' + mv.id,
+            fecha:       fechaDMA,
+            descripcion: mv.descripcion || '',
+            cargo:       mv.cargo || 0,
+            abono:       mv.abono || 0,
+        };
+    });
+
+    _recState.transacciones = txs;
+    _recState.conciliados   = {};
+    _recState.mapeo         = 'Cartolas Bancarias';
+    _recGuardar();
+
+    mostrarToast(`${txs.length} movimiento(s) traídos desde Cartolas Bancarias.`, 'ok');
+    renderReconciliacion();
+    recAutoMatch(false);
 }
 
 function _recHtmlTabla() {
@@ -584,6 +659,29 @@ function recCambiarPeriodo(val) {
     renderReconciliacion();
 }
 
+// Selector Mes+Año (en vez del <input type="month"> nativo) para que se vea
+// igual al resto de los libros/reportes — compone 'YYYY-MM' y reusa
+// recCambiarPeriodo() sin tocar su firma ni _recState.periodo.
+function _recSelectsPeriodo() {
+    const [anioSel, mesSel] = (_recState.periodo || '').split('-').map(Number);
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+        'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const optMeses = meses.map((m, i) =>
+        `<option value="${i + 1}" ${i + 1 === mesSel ? 'selected' : ''}>${m}</option>`).join('');
+    const optAnios = [2023, 2024, 2025, 2026, 2027].map(a =>
+        `<option value="${a}" ${a === anioSel ? 'selected' : ''}>${a}</option>`).join('');
+    return `<select id="recPeriodoMes" class="sel-periodo" onchange="recCambiarPeriodoMesAnio()">${optMeses}</select>
+            <select id="recPeriodoAnio" class="sel-periodo" onchange="recCambiarPeriodoMesAnio()">${optAnios}</select>`;
+}
+
+function recCambiarPeriodoMesAnio() {
+    const mes  = document.getElementById('recPeriodoMes')?.value;
+    const anio = document.getElementById('recPeriodoAnio')?.value;
+    if (!mes || !anio) return;
+    recCambiarPeriodo(`${anio}-${String(mes).padStart(2, '0')}`);
+}
+window.recCambiarPeriodoMesAnio = recCambiarPeriodoMesAnio;
+
 function recCambiarCuenta(val) {
     _recState.cuentaBanco = val;
     _recState.conciliados = {};
@@ -727,7 +825,8 @@ function _recParseNum(val) {
 
 // ── Exports ───────────────────────────────────────────────────
 
-window.renderReconciliacion    = renderReconciliacion;
+window.renderReconciliacion       = renderReconciliacion;
+window.recImportarDesdeCartolas   = recImportarDesdeCartolas;
 window.recCargarDesdeFirebase  = recCargarDesdeFirebase;
 window.recOnDrop               = recOnDrop;
 window.recOnFile               = recOnFile;

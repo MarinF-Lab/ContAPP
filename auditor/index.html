@@ -11,18 +11,28 @@
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 
     <!-- Adaptador web: define window.electronAPI antes que el resto de scripts -->
-    <script src="js/web-adapter.js"></script>
+    <script src="js/web-adapter.js?v=1"></script>
     <!-- SheetJS para exportar Excel en el navegador -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <!-- jsPDF para exportar PDF (boletas honorarios e informes) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- autoTable: tablas con texto real (no imagen) — usado por exportarPDFDiario() -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script>window.jsPDF = window.jspdf?.jsPDF;</script>
     <!-- Chart.js para los gráficos del dashboard de Inicio (paso 6 de la integración de diseño) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <!-- pdf.js para leer el PDF público de Indicadores Previsionales de Previred
+         (solo hay build ESM desde pdf.js 5+, se importa como módulo y se expone
+         en window.pdfjsLib para que el resto del código, con <script> clásicos, lo use igual) -->
+    <script type="module">
+        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.min.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.worker.min.mjs';
+        window.pdfjsLib = pdfjsLib;
+    </script>
 
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/main.css?v=5">
-    <link rel="stylesheet" href="css/remuneraciones.css">
+    <link rel="stylesheet" href="css/variables.css?v=1">
+    <link rel="stylesheet" href="css/main.css?v=11">
+    <link rel="stylesheet" href="css/remuneraciones.css?v=1">
     <link rel="stylesheet" href="css/auditor.css?v=2">
     <script>
         // Restaurar tema guardado antes de que el DOM pinte (evita flash)
@@ -136,7 +146,6 @@
             <div class="notif-panel" id="notifPanel" onclick="event.stopPropagation()">
                 <div class="nh">Notificaciones</div>
                 <div class="notif-item"><span class="dot2"></span><div><b>Conciliación pendiente</b>Revisa las cartolas bancarias del período.</div></div>
-                <div class="notif-item"><span class="dot2"></span><div><b>Hallazgo de auditoría</b>Hay hallazgos abiertos sin resolver.</div></div>
                 <div class="notif-item"><span class="dot2"></span><div><b>F29 por vencer</b>Revisa la declaración de impuestos del período.</div></div>
             </div>
         </div>
@@ -291,15 +300,8 @@
             <!-- Gráficos: barra mensual (2/3) + donuts apilados (1/3) -->
             <div id="dash-charts-area">
 
-            <!-- Pendientes reales (hallazgos abiertos) + accesos rápidos (MRU real de navegación) -->
-            <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-bottom:16px;">
-                <div class="card" style="padding:18px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-                        <div style="font-weight:700;font-size:13px;color:var(--text-main);">🔎 Hallazgos de Auditoría</div>
-                        <span id="dashHallazgosBadge" class="badge-doc" style="display:none;"></span>
-                    </div>
-                    <div id="dashHallazgos"></div>
-                </div>
+            <!-- Accesos rápidos (MRU real de navegación) -->
+            <div style="margin-bottom:16px;">
                 <div class="card" style="padding:18px;">
                     <div style="font-weight:700;font-size:13px;margin-bottom:14px;color:var(--text-main);">⚡ Accesos Rápidos</div>
                     <div id="dashAccesosRapidos"></div>
@@ -371,26 +373,43 @@
             <div id="tab-diario" class="mod-tab-panel active">
             <div class="card">
                 <div class="glosa-area">
+                <div class="diario-glosa-row">
+                    <div class="glosa-main">
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+                        <button class="btn btn-danger" onclick="vaciarDiario()">🗑 Vaciar Diario</button>
+                    </div>
+                    <div id="diarioDisponibleIndicador" class="disponible-indicador"></div>
                     <textarea id="glosaInput" class="glosa-input" rows="2"
-                        placeholder="Ej: Venta de mercadería por $120.000 con transferencia"></textarea>
+                        placeholder="Ej: Venta de mercadería al contado"
+                        onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); manejarEnterGlosa(); }"
+                        oninput="_resetBotonAsientoSiCambioGlosa()"></textarea>
+
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                        <label style="font-size:13px;color:var(--text-muted);font-weight:500;">Monto:</label>
+                        <input type="number" id="montoAsiento" placeholder="$"
+                            oninput="_resetBotonAsientoSiCambioGlosa()"
+                            style="width:160px;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:'IBM Plex Mono';background:var(--input-bg);color:var(--text);">
+                    </div>
 
                     <details id="glosaAyuda" style="margin:6px 0;font-size:13px;color:var(--text-muted);">
                         <summary style="cursor:pointer;font-weight:500;color:var(--accent);">¿Cómo escribir la glosa?</summary>
                         <div style="padding:8px 12px;line-height:1.8;">
-                            <strong>Ejemplos reconocidos:</strong><br>
-                            • Venta de mercadería por $200.000 al contado<br>
-                            • Compra de mercadería por $300.000 a crédito<br>
-                            • Depósito de $500.000 en banco desde caja<br>
-                            • Retiro de $100.000 desde banco a caja<br>
-                            • Cobro a cliente por $150.000 con transferencia<br>
-                            • Pago a proveedor por $80.000 con cheque<br>
-                            • Gasto de arriendo por $200.000 con transferencia<br>
-                            • Recibimos préstamo bancario por $1.000.000<br>
-                            • Pago cuota préstamo $50.000 intereses $5.000<br>
-                            • Pago de remuneraciones por $800.000<br>
-                            • Nota de crédito de proveedor por $100.000<br>
-                            • Devolución de venta cliente por $50.000<br>
-                            • Traspaso de caja a banco por $300.000
+                            <strong>Ejemplos reconocidos</strong> (el monto va en el campo "Monto", no en el texto):<br>
+                            • Venta de mercadería al contado<br>
+                            • Compra de mercadería a crédito<br>
+                            • Depósito en banco desde caja<br>
+                            • Retiro desde banco a caja<br>
+                            • Cobro a cliente con transferencia<br>
+                            • Pago a proveedor con cheque<br>
+                            • Gasto de arriendo con transferencia<br>
+                            • Recibimos préstamo bancario<br>
+                            • Pago cuota préstamo<br>
+                            • Pago de remuneraciones<br>
+                            • Nota de crédito de proveedor<br>
+                            • Devolución de venta cliente<br>
+                            • Traspaso de caja a banco<br>
+                            • ¿Vas a registrar varios productos en la misma operación? Usá
+                              "🧮 Varios productos" más abajo.
                         </div>
                     </details>
 
@@ -401,49 +420,105 @@
                                 style="padding:8px;border:1px solid var(--border);border-radius:6px;font-family:'IBM Plex Mono';">
                         </div>
                         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                            <button class="btn btn-primary"   onclick="procesarGlosa()">Generar Asiento →</button>
-                            <button class="btn btn-ia" id="btnIaGlosaPrincipal" onclick="iaSugerirCuentaGlosaPrincipal()" style="display:none;">✨ Intentar con IA</button>
-                            <button class="btn btn-secondary" onclick="abrirAsientoManual()">✏ Nuevo Asiento</button>
-                            <button class="btn btn-secondary" onclick="audAbrirCrearHallazgo('diario')">📋 Agregar Hallazgo</button>
-                            <button class="btn btn-danger"    onclick="vaciarDiario()">🗑 Vaciar Diario</button>
+                            <button class="btn btn-primary" id="btnGuardarAsiento" onclick="manejarBotonAsiento()">Generar Asiento →</button>
+                            <button class="btn btn-secondary" onclick="abrirAsientoManual()">✏ Asiento Manual</button>
+                            <button class="btn btn-secondary" onclick="navegar('plan-cuentas', null); abrirNuevaCuenta();">+ Agregar Cuenta</button>
+                            <button class="btn btn-secondary" id="btnCalcAbrir" onclick="calcAbrir()">🧮 Varios productos</button>
                         </div>
                     </div>
-                    <div id="iaGlosaSugerenciaPrincipal" style="display:none;margin-top:6px;font-size:12px;padding:8px 12px;background:var(--accent-soft,#f0f4ff);border-radius:6px;color:var(--accent);"></div>
-                </div>
 
-                <div class="table-wrapper">
-                    <table class="cont-table">
-                        <thead>
-                            <tr>
-                                <th>Cuenta</th>
-                                <th class="monto" style="width:180px;">Debe</th>
-                                <th class="monto" style="width:180px;">Haber</th>
-                            </tr>
-                        </thead>
-                        <tbody id="diarioPreasientoBody"></tbody>
-                    </table>
-                </div>
-
-                <div class="totales-bar">
-                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                        <div id="badgePreasiento" class="totales-badge error">Balance: Cuadrado $0</div>
-                        <span id="badgeIaGlosa" style="display:none;background:#f0f4ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Propuesto por IA — revisa antes de guardar</span>
+                    <div class="table-wrapper" style="margin-top:16px;">
+                        <table class="cont-table">
+                            <thead>
+                                <tr>
+                                    <th>Cuenta</th>
+                                    <th class="monto" style="width:130px;">Debe</th>
+                                    <th class="monto" style="width:130px;">Haber</th>
+                                </tr>
+                            </thead>
+                            <tbody id="diarioPreasientoBody"></tbody>
+                        </table>
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                        <div style="position:relative;">
-                            <input type="text" id="contactoAsiento" list="listaContactosAsiento"
-                                placeholder="👤 Contacto (opcional)"
-                                style="width:220px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg);color:var(--text);">
-                            <datalist id="listaContactosAsiento"></datalist>
+
+                    <div class="totales-bar">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <div id="badgePreasiento" class="totales-badge error">Balance: Cuadrado $0</div>
+                            <span id="badgeIaGlosa" style="display:none;background:#f0f4ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Propuesto por IA — revisa antes de guardar</span>
                         </div>
-                        <button class="btn btn-secondary" id="btnGuardarAsiento" disabled onclick="guardarAsiento()">
-                            💾 Registrar en Diario
-                        </button>
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                            <div style="position:relative;">
+                                <input type="text" id="contactoAsiento" list="listaContactosAsiento"
+                                    placeholder="👤 Contacto (opcional)"
+                                    style="width:220px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg);color:var(--text);">
+                                <datalist id="listaContactosAsiento"></datalist>
+                            </div>
+                        </div>
                     </div>
+                    <div id="alertaDisponiblePreasiento" style="display:none;"></div>
+                    </div><!-- /glosa-main -->
+
+                    <!-- Calculadora de productos — opcional, colapsada por defecto. Solo para el
+                         caso de más de un producto en la misma operación (ver botón de arriba).
+                         Tarjeta angosta a la derecha; la glosa se angosta para compartir el espacio. -->
+                    <div id="calcPanel" class="calc-panel" style="display:none;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                            <select id="calcTipo" onchange="calcCambiarTipo(this.value)"
+                                style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-weight:600;">
+                                <option value="compra">🧮 Compra</option>
+                                <option value="venta">🧮 Venta</option>
+                                <option value="pago">🧮 Pago</option>
+                                <option value="cobro">🧮 Cobro</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="calcCerrar()" style="padding:5px 10px;font-size:12px;">✕</button>
+                        </div>
+                        <div id="calcTbody" style="display:flex;flex-direction:column;gap:10px;"></div>
+                        <datalist id="calcProductosList"></datalist>
+                        <button class="btn btn-secondary" onclick="calcAgregarItem()" style="width:100%;">➕ Agregar producto</button>
+                        <div id="calcPagoPanel" style="border-top:1px dashed var(--border);padding-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;font-family:'IBM Plex Mono';padding-top:4px;border-top:1px dashed var(--border);">
+                            <span>Total</span><span id="calcTotal">$0</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="calcGenerar()" style="width:100%;">Generar glosa y asiento →</button>
+                    </div>
+                </div><!-- /diario-glosa-row -->
                 </div>
             </div>
 
-            <h3 style="margin-bottom:16px;">📚 Registros Históricos del Diario</h3>
+            <h3 style="margin-bottom:12px;">📚 Registros Históricos del Diario</h3>
+            <div class="libro-toolbar card">
+                <div class="libro-toolbar-left">
+                    <select id="selDiarioHistMes" class="sel-periodo"
+                        onchange="diarioHistMes=parseInt(this.value); renderHistorialDiario();">
+                        <option value="1">Enero</option><option value="2">Febrero</option>
+                        <option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option>
+                        <option value="7">Julio</option><option value="8" selected>Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option>
+                        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
+                    <select id="selDiarioHistAnio" class="sel-periodo"
+                        onchange="diarioHistAnio=parseInt(this.value); renderHistorialDiario();">
+                        <option value="2023">2023</option><option value="2024">2024</option>
+                        <option value="2025">2025</option><option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                    <button class="btn-export btn-export-pdf" onclick="exportarPDFDiario()">⬇ PDF</button>
+                </div>
+                <div class="libro-kpis">
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Total Debe</span>
+                        <span class="libro-kpi-val" id="diarioHistTotalDebe">$0</span>
+                    </div>
+                    <div class="libro-kpi">
+                        <span class="libro-kpi-label">Total Haber</span>
+                        <span class="libro-kpi-val" id="diarioHistTotalHaber">$0</span>
+                    </div>
+                    <div class="libro-kpi libro-kpi-total">
+                        <span class="libro-kpi-label" id="diarioHistEstadoLabel">Balance del mes</span>
+                        <span class="libro-kpi-val" id="diarioHistEstadoVal">$0</span>
+                    </div>
+                </div>
+            </div>
             <div id="historialDiarioLista"></div>
             </div><!-- /tab-diario -->
 
@@ -455,6 +530,17 @@
                 <button class="btn-export btn-export-print" onclick="imprimirMayor()">🖨 Imprimir</button>
             </div>
             <div class="mayor-grid" id="contenedorMayor"></div>
+
+            <!-- Popover de detalle de asiento — anclado a la fila clickeada, ver
+                 mayorAbrirDetalle() en mayor.js. Singleton reutilizado por todas las filas. -->
+            <div id="mayorDetallePopover" class="mayor-detalle-popover" style="display:none;">
+                <div style="font-size:11.5px;color:var(--text-muted);text-transform:uppercase;font-weight:700;">Glosa</div>
+                <div id="mayorDetalleGlosaTexto" style="font-size:13px;">—</div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn-plan btn-plan-relacionadas" onclick="mayorFiltrarCuentasIntervinientes()">🔗 Relacionadas</button>
+                    <button class="btn-plan btn-plan-editar" onclick="mayorEditarAsiento()">✏️ Editar</button>
+                </div>
+            </div>
             </div><!-- /tab-mayor -->
 
             <!-- ── TAB: Balance General ── -->
@@ -465,6 +551,25 @@
                 <button class="btn-export btn-export-print" onclick="imprimirBalance()">🖨 Imprimir</button>
                 <button class="btn-export btn-export-ia"    onclick="iaAnalizarBalance()">✨ Analizar con IA</button>
                 <button class="btn-export btn-export-ia"    onclick="iaCompararPeriodos('Balance General')" title="Comparar dos períodos">⚖ Comparar períodos</button>
+            </div>
+            <!-- Balance acumulado a fin del mes/año elegido — ver _calcularBalance() en balance.js -->
+            <div class="libro-toolbar card">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <label style="font-size:13px;color:var(--text-muted);font-weight:500;">Balance al fin de:</label>
+                    <select id="selBalanceMes" class="sel-periodo" onchange="generarBalanceGeneral()">
+                        <option value="1">Enero</option><option value="2">Febrero</option>
+                        <option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option>
+                        <option value="7">Julio</option><option value="8" selected>Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option>
+                        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
+                    <select id="selBalanceAnio" class="sel-periodo" onchange="generarBalanceGeneral()">
+                        <option value="2023">2023</option><option value="2024">2024</option>
+                        <option value="2025">2025</option><option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
             </div>
             <div id="balanceAlertas" style="display:none;margin-bottom:12px;"></div>
             <div class="card">
@@ -630,7 +735,6 @@
                         <option value="2025">2025</option><option value="2026">2026</option>
                     </select>
                     <button class="btn btn-primary"   onclick="abrirNuevaCompra()">+ Registrar Compra</button>
-                    <button class="btn btn-secondary" onclick="audAbrirCrearHallazgo('compras')">📋 Agregar Hallazgo</button>
                     <button class="btn btn-danger"    onclick="vaciarLibroCompras()">🗑 Vaciar Libro</button>
                 </div>
                 <div class="libro-kpis">
@@ -728,7 +832,6 @@
                         <option value="2025">2025</option><option value="2026">2026</option>
                     </select>
                     <button class="btn btn-primary" onclick="abrirNuevaVenta()">+ Registrar Venta</button>
-                    <button class="btn btn-secondary" onclick="audAbrirCrearHallazgo('ventas')">📋 Agregar Hallazgo</button>
                     <button class="btn btn-danger"  onclick="vaciarLibroVentas()">🗑 Vaciar Libro</button>
                 </div>
                 <div class="libro-kpis">
@@ -814,29 +917,6 @@
         </div>
 
         <!-- ════════════════════
-             G5 · EMPRESA — Activos y Producción (tabs)
-             Paneles poblados por _initModulosEmpresa() en app.js
-        ═════════════════════ -->
-        <div id="view-activos-produccion" class="view">
-            <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="tab-ap-activos"   onclick="modTab('view-activos-produccion','tab-ap-activos')">🏦 Activos Fijos</button>
-                <button class="mod-tab-btn"        data-tab="tab-ap-productos" onclick="modTab('view-activos-produccion','tab-ap-productos')">🏷 Productos / Servicios</button>
-            </div>
-            <div id="tab-ap-activos"   class="mod-tab-panel active"></div>
-            <div id="tab-ap-productos" class="mod-tab-panel"></div>
-        </div><!-- /view-activos-produccion -->
-
-        <!-- ════════════════════
-             PRODUCTOS Y SERVICIOS (legacy — reubicado a tab-ap-productos)
-        ═════════════════════ -->
-        <div id="view-productos" class="view"></div>
-
-        <!-- ════════════════════
-             ACTIVOS FIJOS (legacy — reubicado a tab-ap-activos)
-        ═════════════════════ -->
-        <div id="view-activos" class="view"></div>
-
-        <!-- ════════════════════
              CARTOLAS BANCARIAS
         ═════════════════════ -->
         <div id="view-cartolas" class="view"></div>
@@ -909,27 +989,27 @@
         </div>
 
         <!-- ════════════════════
-             G5 · EMPRESA — Auditoría (tabs)
-             Paneles poblados por _initModulosEmpresa() en app.js
+             G5 · EMPRESA — Inventario y Activos (tabs)
+             Fusión de los antiguos módulos "Inventario" y "Activos y Producción"
+             (cumplen funciones conjuntas — ver sincronización automática desde
+             la calculadora del Diario en js/services/diario.js). Todos los
+             paneles se pueblan directo por su render — sin shells legacy:
+             centros-costo.js, bodegas.js, inventario.js, activos.js, productos.js.
         ═════════════════════ -->
-        <div id="view-auditoria" class="view">
+        <div id="view-inventario-activos" class="view">
             <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="tab-aud-informe"    onclick="modTab('view-auditoria','tab-aud-informe')">📄 Informe</button>
-                <button class="mod-tab-btn"        data-tab="tab-aud-hallazgos" onclick="modTab('view-auditoria','tab-aud-hallazgos')">📋 Hallazgos</button>
+                <button class="mod-tab-btn active" data-tab="tab-inv-centros"     onclick="modTab('view-inventario-activos','tab-inv-centros')">🏢 Centros de Costo</button>
+                <button class="mod-tab-btn"        data-tab="tab-inv-bodegas"     onclick="modTab('view-inventario-activos','tab-inv-bodegas')">🏬 Bodegas</button>
+                <button class="mod-tab-btn"        data-tab="tab-inv-movimientos" onclick="modTab('view-inventario-activos','tab-inv-movimientos')">📦 Movimientos</button>
+                <button class="mod-tab-btn"        data-tab="tab-ap-activos"      onclick="modTab('view-inventario-activos','tab-ap-activos')">🏦 Activos Fijos</button>
+                <button class="mod-tab-btn"        data-tab="tab-ap-productos"    onclick="modTab('view-inventario-activos','tab-ap-productos')">🏷 Productos / Servicios</button>
             </div>
-            <div id="tab-aud-informe"    class="mod-tab-panel active"></div>
-            <div id="tab-aud-hallazgos"  class="mod-tab-panel"></div>
-        </div><!-- /view-auditoria -->
-
-        <!-- ════════════════════
-             HALLAZGOS (legacy — reubicado a tab-aud-hallazgos)
-        ═════════════════════ -->
-        <div id="view-hallazgos" class="view"></div>
-
-        <!-- ════════════════════
-             INFORME DE AUDITORÍA (legacy — reubicado a tab-aud-informe)
-        ═════════════════════ -->
-        <div id="view-informe" class="view"></div>
+            <div id="tab-inv-centros"     class="mod-tab-panel active"></div>
+            <div id="tab-inv-bodegas"     class="mod-tab-panel"></div>
+            <div id="tab-inv-movimientos" class="mod-tab-panel"></div>
+            <div id="tab-ap-activos"      class="mod-tab-panel"></div>
+            <div id="tab-ap-productos"    class="mod-tab-panel"></div>
+        </div><!-- /view-inventario-activos -->
 
 
         <!-- ════════════════════
@@ -1101,6 +1181,25 @@
                 <button class="btn-export btn-export-excel" onclick="exportarExcelBalanceClasificado()">⬇ Excel</button>
                 <button class="btn-export btn-export-print" onclick="imprimirBalanceClasificado()">🖨 Imprimir</button>
             </div>
+            <!-- Balance clasificado acumulado a fin del mes/año elegido — ver generarBalanceClasificado() -->
+            <div class="libro-toolbar card">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <label style="font-size:13px;color:var(--text-muted);font-weight:500;">Balance al fin de:</label>
+                    <select id="selBalanceClasifMes" class="sel-periodo" onchange="generarBalanceClasificado()">
+                        <option value="1">Enero</option><option value="2">Febrero</option>
+                        <option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option>
+                        <option value="7">Julio</option><option value="8" selected>Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option>
+                        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
+                    <select id="selBalanceClasifAnio" class="sel-periodo" onchange="generarBalanceClasificado()">
+                        <option value="2023">2023</option><option value="2024">2024</option>
+                        <option value="2025">2025</option><option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+            </div>
             <div id="balanceClasificadoCont"></div>
             </div><!-- /tab-balance-clasificado -->
 
@@ -1120,6 +1219,23 @@
                     <div class="libro-kpi"><span class="libro-kpi-label">Gastos Op.</span><span class="libro-kpi-val" id="erKpiGastos" style="color:var(--warning);">$0</span></div>
                     <div class="libro-kpi"><span class="libro-kpi-label">Ut. antes Impuesto</span><span class="libro-kpi-val" id="erKpiAntesImp">$0</span></div>
                     <div class="libro-kpi libro-kpi-total"><span class="libro-kpi-label">Utilidad Neta</span><span class="libro-kpi-val" id="erKpiResultado">$0</span></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Período:</label>
+                    <select id="selErMes" class="sel-periodo" onchange="generarEstadoResultados()">
+                        <option value="0">Todo el año</option>
+                        <option value="1">Enero</option><option value="2">Febrero</option>
+                        <option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option>
+                        <option value="7">Julio</option><option value="8" selected>Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option>
+                        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
+                    <select id="selErAnio" class="sel-periodo" onchange="generarEstadoResultados()">
+                        <option value="2023">2023</option><option value="2024">2024</option>
+                        <option value="2025">2025</option><option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
+                    </select>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                     <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Régimen tributario:</label>
@@ -1146,9 +1262,19 @@
             </div>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
+                    <select id="selFlujoCajaMes" class="sel-periodo" onchange="generarFlujoCaja()">
+                        <option value="0">Todos los meses</option>
+                        <option value="1">Enero</option><option value="2">Febrero</option>
+                        <option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option>
+                        <option value="7">Julio</option><option value="8">Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option>
+                        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
                     <select id="selFlujoCajaAnio" class="sel-periodo" onchange="generarFlujoCaja()">
                         <option value="2023">2023</option><option value="2024">2024</option>
                         <option value="2025">2025</option><option value="2026">2026</option>
+                        <option value="2027">2027</option>
                     </select>
                     <button class="btn btn-primary" onclick="generarFlujoCaja()">Generar</button>
                     <button class="btn btn-secondary" onclick="fcAbrirOverrides()" style="font-size:12px;">⚙️ Clasificación</button>
@@ -1305,10 +1431,15 @@
             <div id="tab-rem-previsional" class="mod-tab-panel">
 
                 <!-- Previred — Tasas y Tramos (renderizados dinámicamente desde indicadores.js) -->
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
-                            color:var(--text-muted);margin-bottom:10px;">
-                    Previred — Tasas y Tramos
-                    <span id="previredFechaRef" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);margin-left:8px;"></span>
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);">
+                        Previred — Tasas y Tramos
+                        <span id="previredFechaRef" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);margin-left:8px;"></span>
+                    </div>
+                    <button class="btn btn-secondary" id="btnPreviredActualizar" style="font-size:11px;padding:4px 10px;text-transform:none;letter-spacing:0;margin-left:auto;" onclick="previredActualizarAhora()">
+                        ↻ Actualizar ahora
+                    </button>
+                    <span id="previredEstadoActualizacion" style="font-size:11px;text-transform:none;letter-spacing:0;color:var(--text-muted);width:100%;"></span>
                 </div>
                 <div id="previred-tablas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:24px;">
                     <div style="color:var(--text-muted);font-size:13px;padding:20px;grid-column:1/-1;">
@@ -1339,19 +1470,20 @@
                             </button>
                         </div>
 
-                        <div class="pv-section-label">Credenciales empresa</div>
+                        <div class="pv-section-label">Actualización automática</div>
                         <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
-                            Conecta tu empresa para sincronizar tasas automáticamente. Sin conexión, edítalas manualmente abajo.
+                            Previred publica sus indicadores en un PDF público (sin login) cada mes. El navegador no puede
+                            leerlo directo por CORS, así que hace falta un pequeño proxy propio y gratuito
+                            (<a href="PLANIFICACION/previred-proxy-worker.js" target="_blank">instrucciones de despliegue</a>
+                            — Cloudflare Workers, capa gratuita). Pega acá la URL de tu Worker una sola vez.
                         </div>
                         <div class="pv-creds-grid">
-                            <label class="pv-label">RUT empresa</label>
-                            <input id="pvRut" type="text" placeholder="12.345.678-9" oninput="fmtRut(this)" class="pv-input" style="font-family:'Courier New',monospace;">
-                            <label class="pv-label">Contraseña</label>
-                            <input id="pvPass" type="password" placeholder="••••••••" class="pv-input">
+                            <label class="pv-label">URL del proxy</label>
+                            <input id="pvProxyUrl" type="text" placeholder="https://tu-worker.tu-usuario.workers.dev" class="pv-input" style="font-family:'Courier New',monospace;">
                         </div>
                         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-                            <button class="btn btn-primary" onclick="previredConectar()">Conectar</button>
-                            <button class="btn" onclick="previredBorrar()" style="color:var(--negative);">Borrar credenciales</button>
+                            <button class="btn btn-primary" onclick="previredGuardarProxy()">Guardar y probar</button>
+                            <button class="btn" onclick="previredBorrarProxy()" style="color:var(--negative);">Quitar proxy</button>
                         </div>
                         <div id="pvEstado" style="margin-top:8px;font-size:12px;min-height:18px;"></div>
                     </div>
@@ -1436,6 +1568,12 @@
             </div>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
+                    <select id="ingMes" class="sel-periodo" onchange="honRenderLibroIngresos()">
+                        <option value="0">Todos los meses</option>
+                        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8" selected>Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
                     <select id="ingAnio" class="sel-periodo" onchange="honRenderLibroIngresos()">
                         <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
                     </select>
@@ -1495,6 +1633,12 @@
             </div>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
+                    <select id="egrMes" class="sel-periodo" onchange="honRenderLibroEgresos()">
+                        <option value="0">Todos los meses</option>
+                        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8" selected>Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
                     <select id="egrAnio" class="sel-periodo" onchange="honRenderLibroEgresos()">
                         <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
                     </select>
@@ -1758,6 +1902,12 @@
         <div id="view-retenciones-hon" class="view">
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
+                    <select id="retMes" class="sel-periodo" onchange="honRenderRetenciones()">
+                        <option value="0">Todos los meses</option>
+                        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option>
+                        <option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8" selected>Agosto</option>
+                        <option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
                     <select id="retAnio" class="sel-periodo" onchange="honRenderRetenciones()">
                         <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
                     </select>
@@ -2397,7 +2547,8 @@
 ════════════════════════════════════════════════════════ -->
 <div id="modalManual" class="modal-overlay">
     <div class="modal-box" style="width:850px;">
-        <h2>✏️ Asiento Manual</h2>
+        <h2 id="modalManualTitulo">✏️ Asiento Manual</h2>
+        <div id="manualDisponibleIndicador" class="disponible-indicador"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;">
             <div>
                 <label style="font-size:13px;font-weight:600;">Fecha</label>
@@ -2448,6 +2599,7 @@
                 <button class="btn btn-secondary" onclick="cerrarModalManual()">Cancelar</button>
             </div>
         </div>
+        <div id="alertaDisponibleManual" style="display:none;"></div>
     </div>
 </div>
 
@@ -2892,37 +3044,41 @@
 <!-- ─────────────────────────────────────────────── -->
 <!--  SCRIPTS  (orden importante)                    -->
 <!-- ─────────────────────────────────────────────── -->
-<script src="js/core/db.js"></script>
-<script src="js/core/autocomplete.js"></script>
-<script src="js/core/helpers.js"></script>
-<script src="js/core/parser.js"></script>
-<script src="js/core/parser-sii.js"></script>
+<script src="js/core/db.js?v=1"></script>
+<script src="js/core/autocomplete.js?v=2"></script>
+<script src="js/core/helpers.js?v=1"></script>
+<script src="js/core/parser.js?v=1"></script>
+<script src="js/core/parser-sii.js?v=1"></script>
 <script src="js/core/plan-cuentas.js?v=3"></script>
-<script src="js/core/contabilidad.js"></script>
+<script src="js/core/contabilidad.js?v=4"></script>
 
-<script src="js/services/diario.js?v=2"></script>
-<script src="js/services/mayor.js?v=2"></script>
-<script src="js/services/balance.js"></script>
-<script src="js/services/dashboard.js?v=4"></script>
-<script src="js/services/flujo-caja.js"></script>
-<script src="js/services/balance-clasificado.js"></script>
-<script src="js/services/estado-resultados.js"></script>
-<script src="js/services/indicadores.js"></script>
-<script src="js/services/iva-resumen.js"></script>
-<script src="js/services/reconciliacion.js"></script>
-<script src="js/services/sii-rcv.js"></script>
+<script src="js/services/diario.js?v=30"></script>
+<script src="js/services/mayor.js?v=9"></script>
+<script src="js/services/balance.js?v=4"></script>
+<script src="js/services/dashboard.js?v=5"></script>
+<script src="js/services/flujo-caja.js?v=3"></script>
+<script src="js/services/balance-clasificado.js?v=3"></script>
+<script src="js/services/estado-resultados.js?v=3"></script>
+<script src="js/services/indicadores.js?v=3"></script>
+<script src="js/services/previred-scraper.js?v=2"></script>
+<script src="js/services/iva-resumen.js?v=3"></script>
+<script src="js/services/reconciliacion.js?v=3"></script>
+<script src="js/services/sii-rcv.js?v=1"></script>
 
-<script src="js/modules/compras.js"></script>
-<script src="js/modules/ventas.js"></script>
-<script src="js/modules/documentos.js"></script>
-<script src="js/modules/clientes.js"></script>
-<script src="js/modules/productos.js"></script>
-<script src="js/modules/activos.js"></script>
-<script src="js/modules/cartolas.js"></script>
-<script src="js/modules/remuneraciones.js"></script>
-<script src="js/modules/segunda-categoria.js"></script>
+<script src="js/modules/compras.js?v=1"></script>
+<script src="js/modules/ventas.js?v=1"></script>
+<script src="js/modules/documentos.js?v=2"></script>
+<script src="js/modules/clientes.js?v=1"></script>
+<script src="js/modules/productos.js?v=3"></script>
+<script src="js/modules/centros-costo.js?v=2"></script>
+<script src="js/modules/bodegas.js?v=2"></script>
+<script src="js/modules/inventario.js?v=2"></script>
+<script src="js/modules/activos.js?v=4"></script>
+<script src="js/modules/cartolas.js?v=3"></script>
+<script src="js/modules/remuneraciones.js?v=2"></script>
+<script src="js/modules/segunda-categoria.js?v=4"></script>
 
-<script src="js/services/app.js?v=3"></script>
+<script src="js/services/app.js?v=10"></script>
 
 <!-- Firebase SDK (compat) — cargado después de app.js -->
 <!-- ═══════════════════════════════════════════════════════
@@ -2962,7 +3118,7 @@
             </select>
         </div>
         <div id="iaModalAnalisisCuerpo" class="ia-analisis-cuerpo">
-            <div class="ia-loading">Analizando con Claude…</div>
+            <div class="ia-loading">Analizando con Gemini…</div>
         </div>
     </div>
 </div>
@@ -2993,10 +3149,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="js/services/permisos.js"></script>
-<script src="js/services/auth-manager.js"></script>
-<script src="js/services/exportar.js"></script>
-<script src="js/services/ia.js"></script>
+<script src="js/services/permisos.js?v=1"></script>
+<script src="js/services/auth-manager.js?v=1"></script>
+<script src="js/services/exportar.js?v=9"></script>
+<script src="js/services/ia.js?v=3"></script>
 <script src="js/services/firebase-service.js?v=4"></script>
 <script>
     // Firebase siempre activo — config hardcodeada en firebase-service.js
@@ -3040,15 +3196,13 @@
     }
 </script>
 
-<script src="js/core/busqueda-global.js"></script>
-<script src="js/auditor/licencia.js"></script>
-<script src="js/categorias/primera.js"></script>
-<script src="js/categorias/segunda.js"></script>
-<script src="js/services/menu.js?v=2"></script>
-<script src="js/auditor/multi-cliente.js"></script>
-<script src="js/auditor/panel-estudio.js"></script>
-<script src="js/auditor/hallazgos.js"></script>
-<script src="js/auditor/informe-auditoria.js"></script>
+<script src="js/core/busqueda-global.js?v=1"></script>
+<script src="js/auditor/licencia.js?v=1"></script>
+<script src="js/categorias/primera.js?v=3"></script>
+<script src="js/categorias/segunda.js?v=2"></script>
+<script src="js/services/menu.js?v=4"></script>
+<script src="js/auditor/multi-cliente.js?v=1"></script>
+<script src="js/auditor/panel-estudio.js?v=1"></script>
 
 <!-- Registro del Service Worker (PWA) -->
 <script>

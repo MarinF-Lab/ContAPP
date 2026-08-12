@@ -41,9 +41,9 @@ function _clasificarAsiento(asiento) {
     return 'operacional';
 }
 
-function generarFlujoCaja() {
-    const anio = parseInt(document.getElementById('selFlujoCajaAnio')?.value) || new Date().getFullYear();
-
+// Cómputo puro (sin HTML) del Flujo de Caja — extraído de generarFlujoCaja()
+// para reusarlo también en exportarPDFFlujoCaja() (js/services/exportar.js).
+function _calcularFlujoCaja(mes, anio) {
     const secciones = {
         operacional:    { label: 'Actividades Operacionales',  icon: '⚙️',  lineas: [], total: 0 },
         inversion:      { label: 'Actividades de Inversión',   icon: '🏗️', lineas: [], total: 0 },
@@ -63,17 +63,22 @@ function generarFlujoCaja() {
         const cat  = _clasificarAsiento(a);
         const sec  = secciones[cat];
         const idx  = parseInt(m) - 1;
+        const enMes = !mes || (idx + 1) === mes;
 
         a.movimientos.forEach(mov => {
             if (!CUENTAS_EFECTIVO.includes(mov.cuenta)) return;
             const entrada = mov.debe  || 0;
             const salida  = mov.haber || 0;
             const neto    = entrada - salida;
+            // El gráfico siempre muestra los 12 meses del año elegido, sin
+            // importar el filtro de mes — da la vista panorámica del año
+            // mientras la tabla de abajo muestra el detalle del mes elegido.
+            mesesGrafico[idx].entrada += entrada;
+            mesesGrafico[idx].salida  += salida;
+            if (!enMes) return;
             sec.total += neto;
             totEntradas += entrada;
             totSalidas  += salida;
-            mesesGrafico[idx].entrada += entrada;
-            mesesGrafico[idx].salida  += salida;
             sec.lineas.push({
                 fechaSort: `${y}${m}${d}`,
                 fecha: a.fecha,
@@ -91,6 +96,15 @@ function generarFlujoCaja() {
     Object.values(secciones).forEach(s =>
         s.lineas.sort((a, b) => a.fechaSort.localeCompare(b.fechaSort))
     );
+
+    return { secciones, totEntradas, totSalidas, mesesGrafico };
+}
+window._calcularFlujoCaja = _calcularFlujoCaja;
+
+function generarFlujoCaja() {
+    const anio = parseInt(document.getElementById('selFlujoCajaAnio')?.value) || new Date().getFullYear();
+    const mes  = parseInt(document.getElementById('selFlujoCajaMes')?.value)  || 0; // 0 = Todos los meses
+    const { secciones, totEntradas, totSalidas, mesesGrafico } = _calcularFlujoCaja(mes, anio);
 
     // ── Render tabla por secciones ────────────────────────────
     let html = '';
@@ -141,7 +155,8 @@ function generarFlujoCaja() {
 
     const tbody = document.getElementById('tbodyFlujoCaja');
     if (tbody) {
-        tbody.innerHTML = html || `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">Sin movimientos de efectivo para ${anio}</td></tr>`;
+        const _fcLabelPeriodo = mes ? `${_nombreMes(mes)} ${anio}` : anio;
+        tbody.innerHTML = html || `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">Sin movimientos de efectivo para ${_fcLabelPeriodo}</td></tr>`;
     }
 
     // KPIs

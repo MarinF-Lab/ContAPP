@@ -486,6 +486,214 @@ claro y oscuro. `node PLANIFICACION/verificar.js` → 26/26 ✅. Sin commitear.
    ahora es que el overlay se activa y se ve correcto; el `happy path` de autenticación en sí no se
    probó end-to-end en este entorno (no hay credenciales de prueba a mano).
 
+## PDF real extendido a Balance Clasificado, Estado de Resultados y Flujo de Caja ✅ (2026-08-11)
+
+Continuación de la extensión del formato de PDF real (jsPDF + autoTable) al resto del grupo
+"Reportes Financieros" — mismo patrón que Diario/Mayor/Balance General.
+
+- **Balance Clasificado**: se extrajo `_calcularBalanceClasificado()` en `balance-clasificado.js`
+  (mismo criterio que `_calcularBalance()`), separando el cómputo puro (secciones, totales,
+  indicadores de liquidez) del renderizado HTML. El PDF apila las dos columnas de pantalla
+  (Activo | Pasivo+Patrimonio) en una sola tabla continua con encabezados de sección, cuentas
+  Contra/anómalas en rojo, y los indicadores de liquidez como texto debajo de la tabla.
+- **Estado de Resultados**: se extrajo `_calcularEstadoResultados(mes, anio)` en
+  `estado-resultados.js` (cascada de 4 niveles de utilidad, sin la tasa de impuesto — eso queda
+  como supuesto de pantalla/export, no dato del período). El PDF reproduce la misma cascada con
+  títulos de sección, montos negativos en rojo, y las 4 líneas de utilidad destacadas.
+- **Flujo de Caja**: se extrajo `_calcularFlujoCaja(mes, anio)` en `flujo-caja.js`. El PDF lista
+  las 3 secciones de actividades con sus líneas y subtotales — el gráfico de 12 meses no se
+  replica (es visual/canvas, no datos tabulares).
+- **Bonus fuera de lo pedido pero de bajo costo dado el trabajo de arriba**: se encontraron y
+  arreglaron `exportarExcelBalanceClasificado()`, `exportarExcelEstadoResultados()` y
+  `exportarExcelFlujoCaja()`, las 3 rotas desde antes de esta sesión — escaneaban
+  `#view-xxx .cont-table`, pero esas 3 vistas son `<div>` huérfanos vacíos (el contenido real
+  vive en otro contenedor con divs propios, no una tabla), así que el Excel salía vacío. Ahora
+  usan las mismas funciones de cómputo puro que los PDF, con celdas numéricas reales (mismo
+  criterio que `exportarExcelBalance()`, ya arreglado antes esta sesión).
+
+Verificado en navegador con datos de prueba: los 3 PDF se generan sin error (vista previa en
+pestaña nueva), los 3 Excel ahora exportan filas reales con valores numéricos (antes: vacíos) —
+confirmado que Balance Clasificado cuadra (Activo = Pasivo+Patrimonio) con números reales de la
+celda, no texto scrapeado. `node PLANIFICACION/verificar.js` → 20/20 ✅. Cero errores de consola
+nuevos. Datos de prueba limpiados.
+
+## PDF real extendido a Libro Mayor y Balance de Comprobación ✅ (2026-08-11)
+
+Pedido explícito: aplicar el mismo formato de PDF con texto real (jsPDF + autoTable, sin
+`window.print()`) construido para el Libro Diario también al Libro Mayor y al Balance General.
+
+- Se ajustó primero el propio Diario: el sombreado alterno por asiento se veía mezclado porque
+  nunca se fijó `theme` en `doc.autoTable()`, y el tema por defecto (`'striped'`) alterna el
+  color fila por fila por su cuenta, pisando la lógica de agrupar por asiento. Fix: `theme: 'grid'`
+  en las 3 tablas (Diario/Mayor/Balance) para que el único sombreado aplicado sea el mío.
+- También se cambió `doc.save(...)` (descarga forzosa) por abrir el PDF en una pestaña nueva
+  (`window.open(doc.output('bloburl'))`, con `doc.setProperties({title})` para que el visor
+  sugiera un nombre de archivo razonable) — pedido explícito de vista previa antes de
+  descargar/imprimir. Extraído a un helper compartido `_abrirPreviewPDF(doc, nombreArchivo)`
+  reusado por los 3 exports.
+- **Libro Mayor**: se extrajo `_datosMayorFiltrado()` en `mayor.js` (mismo criterio que
+  `_asientosDelMesDiario()` para el Diario) — cuentas + historial ya filtrados por
+  `_mayorFiltrosCuenta`/`_mayorFiltrosPeriodo`/`_mayorCuentasIntervinientes`, reusado tanto por
+  `generarLibroMayor()` (pantalla) como por `exportarPDFMayor()` (nuevo). La tabla agrupa por
+  cuenta (mismo sombreado alterno + borde separador que el Diario agrupa por asiento), con la
+  fila de "Saldo DEUDOR/ACREEDOR" en negrita al final de cada cuenta.
+- **Balance de Comprobación**: `exportarPDFBalance()` reusa `_calcularBalance()` (ya existía,
+  construida esta sesión para el Excel) — 9 columnas (Cuenta/Debe/Haber/Deudor/Acreedor/Activo/
+  Pasivo/Pérdida/Ganancia), cuentas con saldo anómalo en rojo con ⚠, filas SUBTOTALES/UTILIDAD-
+  PÉRDIDA/TOTALES IGUALES en negrita. Al ser una fila por cuenta (sin múltiples líneas como
+  Diario/Mayor) el sombreado alterna por fila simple, no por grupo.
+
+Verificado en navegador con datos de prueba: capturando `didParseCell` se confirmó que el
+sombreado/negrita/bordes caen exactamente donde correspondía en los 3 reportes (Diario: por
+asiento: Mayor: por cuenta; Balance: por fila). `node PLANIFICACION/verificar.js` → 20/20 ✅.
+Cero errores de consola nuevos. Datos de prueba limpiados.
+
+## PDF real del Libro Diario + generador de asiento de pago F29/IVA ✅ (2026-08-11)
+
+Tres pedidos del usuario en un mismo mensaje:
+
+1. **"útiles de oficina no es necesario que aparezca"** — resuelto sin tocar código. Era un chip
+   del indicador de saldo disponible (sesión anterior): esa cuenta quedó clasificada como
+   "Disponible" en el Plan de Cuentas del usuario. El usuario prefirió corregir la clasificación
+   él mismo desde Plan de Cuentas en vez de volver el indicador a una lista fija de nombres.
+2. **PDF real del Libro Diario.** Confirmado que era el único reporte de la app sin ningún botón
+   de exportar, y que TODOS los `exportarPDFXxx()`/`imprimirXxx()` existentes en
+   `js/services/exportar.js` terminan en `window.print()` sobre el DOM en vivo (0 usos de
+   `jsPDF()` en todo el código pese a estar cargado). Se agregó `jspdf-autotable` (`index.html`)
+   y una función nueva, `exportarPDFDiario()`, que arma el PDF con `doc.text()`/`doc.autoTable()`
+   — texto real, no una captura. Verificado inspeccionando el PDF generado a bajo nivel: contiene
+   operadores de texto (`Tj`/`TJ`) y diccionario `/Font`, sin ningún `/Image` real embebido (el
+   único match de "/Image" era el `/ProcSet` estándar de PDF, no una imagen). Se agregó también
+   `_asientosDelMesDiario()` en `diario.js` como helper reutilizable (antes el filtro por
+   mes/año vivía inline dentro de `renderHistorialDiario()`, sin poder reusarse). Alcance
+   acotado al Diario — el resto de los reportes sigue con `window.print()`, no se tocaron.
+3. **Generador del asiento de pago F29/IVA.** `js/services/iva-resumen.js` ya calculaba IVA
+   Débito/Crédito/remanente/neto a pagar pero no generaba ningún asiento. Se agregó
+   `generarAsientoPagoIVA()`, con el mismo patrón de idempotencia por prefijo de glosa que ya usan
+   `generarAsientoCompras()`/`generarAsientoVentas()` (reclick actualiza el mismo asiento en vez
+   de duplicarlo) — botón "📝 Generar asiento de pago en el Diario" visible solo cuando hay IVA a
+   pagar (`d.ivaAPagar > 0`; con remanente a favor no hay nada que pagar, solo aparece el botón
+   existente de "Guardar remanente"). El asiento debita IVA Débito Fiscal, acredita IVA Crédito
+   Fiscal (incluyendo el remanente reajustado consumido, ya que no existe una cuenta contable
+   separada para remanente) y acredita Banco por el neto — verificado en el navegador que tras
+   generarlo, ambas cuentas de IVA quedan exactamente en $0 en el Mayor cuando las ventas/compras
+   del período ya fueron centralizadas (`generarAsientoVentas()`/`generarAsientoCompras()`).
+
+Verificado en navegador con datos de prueba (ventas/compras del mes, flujo completo de
+centralización → generación del asiento de pago, reclick para confirmar idempotencia, caso de
+remanente a favor sin botón de pago). Cero errores de consola nuevos.
+`node PLANIFICACION/verificar.js` → 20/20 ✅. Datos de prueba limpiados de `localStorage`.
+
+## Monitoreo en tiempo real de saldos + fix del F29 ✅ (2026-08-10)
+
+Pedido explícito del usuario: detectar en tiempo real, mientras se arma un asiento en el Libro
+Diario, si algún movimiento dejaría una cuenta como Caja o Banco sin fondos suficientes — no
+recién al mirar el Balance más tarde. Alcance acotado a Diario (calculadora, glosa libre, Asiento
+Manual); los otros 6 puntos que generan asientos "por lote" (Compras/Ventas/Cartolas/Activos/
+Remuneraciones) quedaron fuera a propósito, sin vista previa interactiva donde tuviera sentido.
+
+Implementado en `js/core/contabilidad.js` (`listarCuentasDisponible()`,
+`_saldoActualCuentasDisponible()`, `evaluarImpactoDisponible()` — clasificación siempre por
+`subgrupo === 'Disponible'`, plan-agnóstico, nunca lista fija de nombres) y `js/services/diario.js`:
+- Indicador permanente "Caja: $X disponible" (verde/rojo) en la calculadora/glosa y en el modal
+  de Asiento Manual, sincronizado en cada mutación de `dbAsientos` vía `renderHistorialDiario()`.
+- Aviso inline antes de guardar (`renderPreasiento()`/`actualizarTotalesManual()`, sin listeners
+  nuevos, reusan los re-render existentes).
+- Confirmación soft-gate (`mostrarConfirm`) al guardar si el asiento dejaría una cuenta
+  "Disponible" negativa — el usuario puede continuar igual (giro en descubierto intencional).
+  Encadenada con el gate existente de "cuentas no registradas" (`_confirmarYCrearCuentasFaltantes`)
+  para que nunca aparezcan 2 diálogos simultáneos.
+- `asientoEditando` excluye el asiento propio del cómputo al editar (agregado también en
+  `editarAsiento()`, no solo en el modal manual — encontrado durante la verificación).
+
+Bug encontrado y corregido durante la verificación: `fmt(0)` devuelve `"-"` (correcto en tablas),
+pero en los montos sueltos del nuevo indicador/aviso se leía como error — se agregó manejo
+explícito de cero y de signo (`_fmtMonto`/`_fmtMontoConSigno`) en vez de asumir siempre valor
+absoluto.
+
+De paso se corrigió el reporte de F29 (usuario: "no sirve"), investigado con un agente de
+exploración: no era un problema de cálculo (probado con datos de prueba, el IVA Débito/Crédito
+calculó bien), sino que ambas pantallas de F29 (Primera Categoría en `iva-resumen.js`, Honorarios
+en `segunda-categoria.js`) abrían siempre en Enero/2023 por un guard roto (`!select.value` nunca
+es cierto en un `<select>` sin opción `selected`) y nunca inicializaban sus propios selects de
+período. Con todo en $0 y en el período equivocado, se veía como roto. Fix: guard con
+`dataset.init` (mismo patrón que `_initSelFlujoCajaAnio()` en `app.js`), inicializar también
+`f29honMes`/`f29honAnio`, y mostrar "$0" explícito en vez del guión pelado de `fmt(0)` en los KPIs
+de cabecera.
+
+Verificado en navegador con datos de prueba (asientos que dejan Caja en negativo, cuenta nueva +
+saldo insuficiente en secuencia, modo edición, Asiento Manual, venta/compra de prueba para el
+IVA): todo funciona como se diseñó, cero errores de consola nuevos. `node PLANIFICACION/verificar.js`
+→ 20/20 ✅. Datos de prueba limpiados de `localStorage`.
+
+## Separación completa por mes/año en todos los reportes ✅ (2026-08-10)
+
+Pedido explícito del usuario: extender el filtro de mes/año (ya construido antes en esta misma
+sesión para Balance General, Balance Clasificado y el historial del Libro Diario) a **todos** los
+demás registros e informes de la app. Investigación previa con 2 agentes Explore identificó los
+gaps reales (la mayoría de Honorarios/Documentos/Cartolas/Conciliación ya estaban cubiertos):
+
+- **Libro Mayor** (`mayor.js`): tenía selector de período pero arrancaba en "Todos los períodos"
+  por defecto — se corrigió para que arranque en el mes actual. De paso se encontró y arregló un
+  bug real: `_mayorGetPeriodos()` y el filtro de historial asumían fechas en formato ISO
+  (`slice(0,7)`), pero `h.fecha` está en `DD/MM/YYYY` — funcionaba "por accidente" porque los
+  valores derivados coincidían por prefijo consigo mismos, pero se rompía con cualquier valor
+  bien formado (como el mes actual agregado). Ahora usa `_fechaAsientoOrdenable()` para comparar
+  correctamente.
+- **Estado de Resultados** (`estado-resultados.js`): no tenía ningún filtro (sumaba todo el
+  histórico); se agregó selector Mes+Año con opción "Todo el año", vía nueva
+  `_erRecopilarCuentasPeriodo()` que re-filtra el `historial` de cada cuenta (no se puede usar el
+  cutoff de `recopilarMovimientosPorCuenta()` para un rango, solo para un tope superior).
+- **Flujo de Caja** (`flujo-caja.js`): filtraba solo por año; se agregó filtro de mes a la tabla
+  (el gráfico sigue mostrando los 12 meses del año, panorama + detalle).
+- **Libro de Ingresos/Egresos/Retenciones** (`segunda-categoria.js`): filtraban solo por año; se
+  agregó mes, reutilizando la convención "0 = Todos los meses" que ya usaba Libro de Honorarios.
+- **Inventario → Movimientos** (`inventario.js`): no tenía ningún filtro de período; se agregó
+  mes+año junto a los filtros existentes de producto/bodega.
+- **Documentos, Cartolas, Conciliación**: ya filtraban correctamente por mes/año pero con estilos
+  propios distintos — se re-estilizaron a la clase compartida `.sel-periodo` (Cartolas: el año
+  pasó de `<input type="number">` a `<select>`; Conciliación: el `<input type="month">` nativo
+  pasó a dos `<select>` Mes/Año que componen `'YYYY-MM'` y reusan `recCambiarPeriodo()` sin tocar
+  su firma) — pedido explícito del usuario en la aprobación del plan.
+
+Principio aplicado (confirmado por el usuario): todo selector nuevo por defecto muestra **el mes
+actual**, nunca el acumulado, salvo que exista una opción explícita para ver el total ("Todos los
+meses"/"Todo el año"/"Todos los períodos"). Balance General y Balance Clasificado quedaron fuera
+de este cambio a propósito — siguen "acumulado a fin de mes" porque un balance es una foto de
+saldo en un momento dado, no una lista de movimientos del período.
+
+Verificado en navegador con asientos/registros de prueba en dos meses distintos (julio y agosto
+2026) para cada uno de los 7 reportes con cambio funcional: el filtro por defecto muestra solo el
+mes actual, cambiar de mes filtra correctamente, y la opción de "total" suma ambos períodos. Sin
+errores de consola nuevos. Balance General/Clasificado confirmados sin cambios de comportamiento.
+`node PLANIFICACION/verificar.js` → 20/20 ✅. Datos de prueba limpiados de `localStorage`.
+
+## Fusión "Inventario" + "Activos y Producción" ✅ (2026-08-05)
+
+Pedido explícito del usuario: los módulos "Inventario" (Centros de Costo / Bodegas /
+Movimientos) y "Activos y Producción" (Activos Fijos / Productos y Servicios) cumplen
+funciones conjuntas — la calculadora de ítems del Diario ya sincroniza compras con cuenta
+"Mercaderías" hacia Productos y compras con cuenta de Activo No Circulante (ej. "Muebles y
+Útiles") hacia Activos Fijos — así que se fusionaron en un solo módulo de nav "Empresa":
+**"Inventario y Activos" 📦** (`id: 'inventario-activos'`, `view-inventario-activos`), con 5
+tabs en orden: Centros de Costo → Bodegas → Movimientos → Activos Fijos → Productos/Servicios.
+
+De paso se migró Activos/Productos al mismo patrón "tabs-nativo" que ya usaba Inventario
+(`renderActivos()`/`renderProductos()` ahora escriben directo en `tab-ap-activos`/
+`tab-ap-productos`, sin pasar por los shells legacy `view-activos`/`view-productos` que movía
+`_initModulosEmpresa()` — esa función se eliminó por completo, ya no tiene nada que reubicar).
+
+Se mantuvieron los 5 redirects viejos (`activos`, `productos`, `centros-costo`, `bodegas`,
+`movimientos-inventario`) apuntando al módulo fusionado, y se agregaron 2 alias nuevos
+(`activos-produccion`, `inventario`) para que cualquier enlace/módulo-reciente guardado con el
+id viejo siga funcionando.
+
+Verificado en navegador: una sola tarjeta en el abanico de Inicio (antes eran dos), las 5 tabs
+renderizan, los 7 ids viejos (5 redirects + 2 alias) aterrizan en la tab correcta, la
+sincronización automática Diario→Productos/Activos sigue funcionando y se ve en las tabs
+fusionadas, sin ids `view-activos`/`view-productos`/`view-activos-produccion`/`view-inventario`
+residuales en el DOM, cero errores de consola. `node PLANIFICACION/verificar.js` → 20/20 ✅.
+
 ## Login — reactivado ✅ (2026-07-16)
 
 Ver sección dedicada arriba ("Login — reactivado"). Resumen: `LOGIN_DESACTIVADO_TEMPORAL = false`,

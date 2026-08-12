@@ -32,8 +32,9 @@ function modTab(viewId, tabId) {
         // G5 · Empresa
         'tab-ap-activos':          () => renderActivos(),
         'tab-ap-productos':        () => renderProductos(),
-        'tab-aud-informe':         () => renderInforme(),
-        'tab-aud-hallazgos':       () => renderHallazgos(),
+        'tab-inv-centros':         () => renderCentrosCosto(),
+        'tab-inv-bodegas':         () => renderBodegas(),
+        'tab-inv-movimientos':     () => renderMovimientosInventario(),
         // Segunda categoría — G1 Libros Contables
         'view-libro-honorarios':   () => honRenderLibro(),
         'view-libro-ingresos-hon':() => honRenderLibroIngresos(),
@@ -72,8 +73,7 @@ const MODULO_TITULOS = {
     'tributario-1cat':     ['Comercial — Tributario',        'Declaración de impuestos F29 e IVA del período'],
     'conciliacion-cartolas':['Datos — Conciliación y Cartolas','Cartolas bancarias y conciliación de movimientos contra el diario'],
     remuneraciones:        ['RRHH — Remuneraciones',        'Liquidaciones de sueldo, fichas de trabajadores e indicadores previsionales'],
-    'activos-produccion':  ['Empresa — Activos y Producción','Activos fijos y catálogo de productos y servicios'],
-    auditoria:             ['Empresa — Auditoría',          'Informe de auditoría y hallazgos del período'],
+    'inventario-activos':  ['Empresa — Inventario y Activos','Centros de costo, bodegas, movimientos de stock, activos fijos y catálogo de productos/servicios'],
     diario:                ['Libro Diario Automático',      'Procesador lingüístico de operaciones de comercio'],
     mayor:                 ['Libro Mayor General',          'Apertura de movimientos consolidados por cuentas T'],
     balance:               ['Balance de Comprobación',      'Matriz de control financiero de 8 columnas'],
@@ -107,8 +107,6 @@ const MODULO_TITULOS = {
     dj1879:                ['DJ 1879',                      'Declaración de honorarios pagados a prestadores independientes'],
     'calendario-hon':      ['Calendario Tributario',        'Vencimientos F22 y DJ 1879 con alertas de anticipación'],
     prestadores:           ['Prestadores / Terceros',       'Personas a quienes pagas honorarios — base para DJ 1879'],
-    hallazgos:             ['Hallazgos de Auditoría',        'Observaciones y hallazgos del período — diferencial Auditor'],
-    informe:               ['Informe de Auditoría',          'Generador del documento formal con hallazgos e opinión profesional'],
 };
 window.MODULO_TITULOS = MODULO_TITULOS;
 
@@ -126,7 +124,7 @@ function _modulosRecientesRegistrar(modulo) {
 function navegar(modulo, elNav) {
 
     // Cerrar cualquier modal abierto al cambiar de módulo (evita que quede
-    // flotando sobre la vista de destino — ej. "Nuevo hallazgo" desde Libro Diario)
+    // flotando sobre la vista de destino)
     document.querySelectorAll('.modal-overlay').forEach(m => {
         if (getComputedStyle(m).display !== 'none') m.style.display = 'none';
     });
@@ -149,10 +147,14 @@ function navegar(modulo, elNav) {
         'cartolas':            ['conciliacion-cartolas', 'tab-cc-cartolas'],
         'reconciliacion':      ['conciliacion-cartolas', 'tab-cc-conciliacion'],
         // G5 · Empresa
-        'activos':             ['activos-produccion', 'tab-ap-activos'],
-        'productos':           ['activos-produccion', 'tab-ap-productos'],
-        'informe':             ['auditoria', 'tab-aud-informe'],
-        'hallazgos':           ['auditoria', 'tab-aud-hallazgos'],
+        'activos':             ['inventario-activos', 'tab-ap-activos'],
+        'productos':           ['inventario-activos', 'tab-ap-productos'],
+        'centros-costo':       ['inventario-activos', 'tab-inv-centros'],
+        'bodegas':             ['inventario-activos', 'tab-inv-bodegas'],
+        'movimientos-inventario': ['inventario-activos', 'tab-inv-movimientos'],
+        // Alias — módulos fusionados en inventario-activos (ver PLANIFICACION/INTEGRACION_DISENO.md)
+        'activos-produccion':  ['inventario-activos', 'tab-ap-activos'],
+        'inventario':          ['inventario-activos', 'tab-inv-centros'],
         // Segunda categoría
         'libro-honorarios':    ['libros-contables-hon', 'view-libro-honorarios'],
         'libro-ingresos-hon':  ['libros-contables-hon', 'view-libro-ingresos-hon'],
@@ -176,8 +178,16 @@ function navegar(modulo, elNav) {
     if (navEl) navEl.classList.add('active');
 
     // Mostrar la vista correcta
+    // Módulos de 2ª Categoría que reutilizan una vista compartida con 1ª Categoría
+    // bajo un id con sufijo "-hon" (ver categorias/segunda.js) — el id del módulo
+    // no coincide con el id de la vista real, hay que mapearlo explícitamente.
+    const VIEW_ID_OVERRIDE = {
+        'documentos-hon':            'view-documentos',
+        'conciliacion-cartolas-hon': 'view-conciliacion-cartolas',
+        'clientes-hon':              'view-clientes',
+    };
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    const vista = document.getElementById(`view-${modulo}`);
+    const vista = document.getElementById(VIEW_ID_OVERRIDE[modulo] || `view-${modulo}`);
     if (vista) vista.classList.add('active');
 
     // Resetear scroll al tope al cambiar de módulo
@@ -195,11 +205,10 @@ function navegar(modulo, elNav) {
     if (modulo === 'reportes-financieros') _fireActiveTab('view-reportes-financieros');
     if (modulo === 'egresos-ingresos')     _fireActiveTab('view-egresos-ingresos');
     if (modulo === 'tributario-1cat')      _fireActiveTab('view-tributario-1cat');
-    if (modulo === 'conciliacion-cartolas')_fireActiveTab('view-conciliacion-cartolas');
-    if (modulo === 'activos-produccion')   _fireActiveTab('view-activos-produccion');
-    if (modulo === 'auditoria')            _fireActiveTab('view-auditoria');
-    if (modulo === 'documentos')            renderDocumentos();
-    if (modulo === 'clientes')              renderContactos();
+    if (modulo === 'conciliacion-cartolas' || modulo === 'conciliacion-cartolas-hon') _fireActiveTab('view-conciliacion-cartolas');
+    if (modulo === 'inventario-activos')   _fireActiveTab('view-inventario-activos');
+    if (modulo === 'documentos' || modulo === 'documentos-hon') renderDocumentos();
+    if (modulo === 'clientes' || modulo === 'clientes-hon')     renderContactos();
     if (modulo === 'remuneraciones') _fireActiveTab('view-remuneraciones');
     // Segunda categoría
     if (modulo === 'libros-contables-hon')      _fireActiveTab('view-libros-contables-hon');
@@ -404,6 +413,10 @@ function mostrarToast(mensaje, tipo = 'ok') {
 window.mostrarToast = mostrarToast;
 
 function mostrarConfirm(mensaje, onConfirm, { titulo = '¿Confirmar?', textoBtn = 'Confirmar', tipo = 'danger' } = {}) {
+    // Evita apilar varias confirmaciones si algo la dispara de nuevo mientras
+    // ya hay una abierta (ej. Enter repetido antes del fix de foco de abajo).
+    if (document.querySelector('.modal-confirm')) return;
+
     const overlay = document.createElement('div');
     overlay.className = 'modal-confirm';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:center;justify-content:center;';
@@ -417,10 +430,36 @@ function mostrarConfirm(mensaje, onConfirm, { titulo = '¿Confirmar?', textoBtn 
             </div>
         </div>`;
     document.body.appendChild(overlay);
-    const cerrar = () => document.body.removeChild(overlay);
-    overlay.querySelector('#_confirmCancelar').onclick = cerrar;
-    overlay.querySelector('#_confirmAceptar').onclick = () => { cerrar(); onConfirm(); };
+
+    const focoPrevio  = document.activeElement;
+    const btnAceptar  = overlay.querySelector('#_confirmAceptar');
+    const btnCancelar = overlay.querySelector('#_confirmCancelar');
+
+    // Manejo explícito de teclado en captura — no depender del "Enter activa
+    // el <button> enfocado" del navegador, que solo aplica a eventos de
+    // teclado confiables (isTrusted) y no es verificable/consistente en todos
+    // los casos. stopPropagation() además evita que el Enter siga bajando
+    // hacia el campo que quedó detrás (ej. la glosa) mientras el modal está abierto.
+    function onKeydown(e) {
+        if (e.key === 'Enter')  { e.preventDefault(); e.stopPropagation(); btnAceptar.click(); }
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); btnCancelar.click(); }
+    }
+
+    const cerrar = () => {
+        document.body.removeChild(overlay);
+        document.removeEventListener('keydown', onKeydown, true);
+        // Devuelve el foco a donde estaba (ej. la glosa) para poder seguir escribiendo.
+        if (focoPrevio && typeof focoPrevio.focus === 'function') focoPrevio.focus();
+    };
+
+    btnCancelar.onclick = cerrar;
+    btnAceptar.onclick  = () => { cerrar(); onConfirm(); };
     overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+    document.addEventListener('keydown', onKeydown, true);
+
+    // Mover el foco al botón principal además evita que el campo que quedó
+    // detrás (ej. la glosa) siga recibiendo teclas mientras el modal está abierto.
+    btnAceptar.focus();
 }
 
 window.mostrarConfirm = mostrarConfirm;
@@ -542,25 +581,6 @@ function _initModulosDatos() {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  G5 · EMPRESA — reubicar contenido legacy dentro de tabs
-//  Todos son shells poblados por su render vía getElementById('view-x').
-// ─────────────────────────────────────────────────────────────
-function _initModulosEmpresa() {
-    const mover = (fromId, toId) => {
-        const from = document.getElementById(fromId);
-        const to   = document.getElementById(toId);
-        if (from && to && from.parentElement !== to) {
-            from.classList.remove('view');
-            to.appendChild(from);
-        }
-    };
-    mover('view-activos',   'tab-ap-activos');
-    mover('view-productos', 'tab-ap-productos');
-    mover('view-informe',   'tab-aud-informe');
-    mover('view-hallazgos', 'tab-aud-hallazgos');
-}
-
-// ─────────────────────────────────────────────────────────────
 //  SEGUNDA CATEGORÍA — reubicar contenido legacy dentro de tabs
 //  A diferencia de G1-G5, los paneles conservan el id original
 //  (view-libro-honorarios, view-f29-hon, etc.) porque el código de
@@ -585,10 +605,47 @@ function _initModulosSegunda() {
     moverPanel('view-f22-hon',             'view-declaracion-impuestos-hon',   false);
 }
 
+// Repara ids duplicados que hayan quedado guardados de una versión anterior
+// de los generadores de id (_prodNuevoId/_activoNuevoId/_ccNuevoId/
+// _bodNuevoId), que usaban solo Date.now() sin sufijo random — dos
+// registros creados en el mismo milisegundo (ej. una compra con varios
+// ítems sincronizada de una sola vez desde el Diario, ver calcGenerar() en
+// diario.js) quedaban con el mismo id, y editar/eliminar cualquiera de los
+// dos siempre afectaba al primero (los *GetById() usan find() por id).
+// Se corre una sola vez por carga; si no hay duplicados, no hace nada.
+function _repararIdsDuplicados() {
+    const colecciones = [
+        { key: 'core_productos',     prefijo: 'p'   },
+        { key: 'core_activos',       prefijo: 'a'   },
+        { key: 'core_centros_costo', prefijo: 'cc'  },
+        { key: 'core_bodegas',       prefijo: 'bod' },
+    ];
+    colecciones.forEach(({ key, prefijo }) => {
+        let arr;
+        try { arr = JSON.parse(localStorage.getItem(key) || '[]'); }
+        catch { return; }
+        if (!Array.isArray(arr) || arr.length < 2) return;
+
+        const vistos = new Set();
+        let cambiado = false;
+        arr.forEach(item => {
+            if (!item || item.id == null) return;
+            const id = String(item.id);
+            if (vistos.has(id)) {
+                item.id = prefijo + Date.now() + Math.floor(Math.random() * 100000);
+                cambiado = true;
+            } else {
+                vistos.add(id);
+            }
+        });
+        if (cambiado) localStorage.setItem(key, JSON.stringify(arr));
+    });
+}
+
 function _initModulosTabs() {
+    _repararIdsDuplicados();
     _initModulosComerciales();
     _initModulosDatos();
-    _initModulosEmpresa();
     _initModulosSegunda();
 }
 if (document.readyState === 'loading') {
@@ -675,6 +732,11 @@ function _initSelFlujoCajaAnio() {
     if (sel && !sel.dataset.init) {
         sel.value = new Date().getFullYear();
         sel.dataset.init = '1';
+    }
+    const selMes = document.getElementById('selFlujoCajaMes');
+    if (selMes && !selMes.dataset.init) {
+        selMes.value = new Date().getMonth() + 1;
+        selMes.dataset.init = '1';
     }
 }
 
