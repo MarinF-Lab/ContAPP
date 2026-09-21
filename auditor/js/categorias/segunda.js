@@ -6,13 +6,18 @@
 //  están copiados aquí de forma independiente — sin referencia cruzada.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Grupos restaurados a la división histórica G1-G4 (previa a la consolidación
+// a 3 grupos de la integración de diseño — ver git dbde51e "consolida
+// arquitectura de módulos de Segunda Categoría"). El G4 original era
+// "Empresa: Auditoría" — ese módulo ya no existe en el catálogo, así que acá
+// solo quedan G1-G3.
 const CAT2_MODULOS = [
-    { id: 'libros-contables-hon',        label: 'Libros Contables (Honorarios/Ingresos/Egresos)', grupo: 'Contabilidad', icono: '📒', defecto: true },
-    { id: 'declaracion-impuestos-hon',   label: 'Declaración de Impuestos (F29/F22)', grupo: 'Contabilidad', icono: '🧾', defecto: true },
-    { id: 'documentos-hon',              label: 'Documentación',            grupo: 'Comercial', icono: '📁', defecto: true },
-    { id: 'conciliacion-cartolas-hon',   label: 'Conciliación y Cartolas',  grupo: 'Comercial', icono: '🏦', defecto: true },
-    { id: 'clientes-hon',                label: 'Clientes / Prov.',         grupo: 'Comercial', icono: '🤝', defecto: true },
-    { id: 'prestadores',                 label: 'Prestadores',              grupo: 'Comercial', icono: '👤', defecto: true },
+    { id: 'libros-contables-hon',        label: 'Libros Contables (Honorarios/Ingresos/Egresos)', grupo: 'Contabilidad', icono: '📒', defecto: true }, // G1
+    { id: 'documentos-hon',              label: 'Documentación',            grupo: 'Datos', icono: '📁', defecto: true }, // G2
+    { id: 'conciliacion-cartolas-hon',   label: 'Conciliación y Cartolas',  grupo: 'Datos', icono: '🏦', defecto: true }, // G2
+    { id: 'clientes-hon',                label: 'Clientes / Prov.',         grupo: 'Datos', icono: '🤝', defecto: true }, // G2
+    { id: 'prestadores',                 label: 'Prestadores',              grupo: 'Datos', icono: '👤', defecto: true }, // G2
+    { id: 'declaracion-impuestos-hon',   label: 'Declaración de Impuestos (F29/F22)', grupo: 'Tributario', icono: '🧾', defecto: true }, // G3
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────

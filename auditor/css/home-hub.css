@@ -1,0 +1,164 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   HOME HUB — riel de 3 secciones de Inicio (Centro de mando / Financiero y
+   actividad / Configuración) + tarjetas planas de grupos y panel lateral de
+   módulos en chips. Reemplaza el bloque .home-fan/.group-card/.tentacle de
+   main.css. Panel adaptado de auditor - copia (css/kluster-shell.css, .fan-*),
+   sin geometría de gemas ni animación de fragmentos — ver js/services/home-hub.js.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ---- Riel de 3 secciones ----
+   #view-container solo tiene una altura "real" (acotada al viewport) porque
+   .main-content la clampea vía overflow:hidden — pero <body> usa
+   min-height:100vh (no height:100vh), así que ese clamp no es un tamaño
+   definido en términos de CSS. Un height:100% en cascada hasta acá no tiene
+   ancla definida y termina resolviendo "auto": el hub crecía al alto de su
+   contenido (los 3 slides apilados, con el dashboard real adentro) en vez de
+   acotarse a una pantalla. Se usa 100dvh directo (misma técnica que
+   .sidebar{height:100vh}) menos el alto real de #home-header, medido por JS
+   (ver home-hub.js, _hhMedirHomeHeader) — así no depende de que la cadena de
+   ancestros tenga una altura definida. */
+#view-inicio.view.active { display: block; padding: 0; overflow: hidden; }
+
+.in-viewport {
+    height: calc(100dvh - var(--home-header-h, 71px));
+    overflow-y: scroll; scroll-snap-type: y proximity; scrollbar-width: none;
+}
+.in-viewport::-webkit-scrollbar { display: none; }
+.in-slide { min-height: calc(100dvh - var(--home-header-h, 71px)); scroll-snap-align: start; box-sizing: border-box; }
+.in-slide-hub { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; }
+
+.in-rail {
+    position: fixed; right: 22px; top: 50%; transform: translateY(-50%); z-index: 30;
+    display: flex; flex-direction: column; gap: 14px;
+}
+.in-dot {
+    width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: var(--card-bg); border: 1px solid var(--rule-strong); box-shadow: var(--shadow-2);
+    font-size: 16px; cursor: pointer; opacity: .55; transition: opacity .2s, transform .2s, border-color .2s, box-shadow .2s;
+}
+.in-dot:hover { opacity: .85; transform: scale(1.08); }
+.in-dot.activo { opacity: 1; border-color: var(--coral); box-shadow: 0 0 0 3px var(--wash-a); }
+
+/* ---- Secciones hub: tarjetas planas ---- */
+.home-hub { width: 100%; max-width: 900px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.home-hub-caption { font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+.home-hub-tiles { display: flex; justify-content: center; align-items: stretch; gap: 24px; flex-wrap: wrap; width: 100%; }
+
+.home-hub-tile {
+    width: 260px; background: var(--card-bg); border: 1px solid var(--rule-strong); border-radius: var(--radius-m);
+    padding: 26px 24px 22px; box-shadow: 0 12px 28px rgba(30,30,93,.1), 0 2px 6px rgba(30,30,93,.06);
+    cursor: pointer; position: relative; text-align: left; transition: transform .2s, box-shadow .2s;
+}
+.home-hub-tile::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    border-radius: var(--radius-m) var(--radius-m) 0 0; background: var(--accent, var(--coral));
+}
+.home-hub-tile:hover { transform: translateY(-4px); box-shadow: 0 18px 36px rgba(30,30,93,.16), 0 0 0 3px var(--wash-a); }
+
+.hh-tile-ic {
+    width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, var(--periwinkle-soft), var(--coral) 150%);
+    display: flex; align-items: center; justify-content: center; color: var(--navy); margin-bottom: 14px;
+    box-shadow: 0 6px 18px rgba(88,127,252,.22); font-size: 24px;
+}
+[data-theme="dark"] .hh-tile-ic { background: linear-gradient(135deg, var(--paper-deep), var(--navy-light)); box-shadow: none; }
+.hh-tile-title { font-size: 18px; font-weight: 700; color: var(--ink); font-family: var(--font-heading); letter-spacing: -.01em; margin-bottom: 5px; }
+.hh-tile-count { font-size: 12px; color: var(--ink-faint); }
+
+/* ---- Panel lateral de chips (compartido: grupos + configuración) ---- */
+.hh-overlay {
+    position: fixed; inset: 0; z-index: 90; background: rgba(20,20,45,0);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .25s, background .25s;
+}
+.hh-overlay.abierto { opacity: 1; pointer-events: auto; background: rgba(20,20,45,.28); }
+
+.hh-panel {
+    width: min(60vw, 560px); border-radius: 20px; overflow: hidden;
+    background: var(--card-bg); border: 1px solid var(--rule-strong); box-shadow: 0 24px 60px rgba(30,30,93,.28);
+    position: relative; transform: scale(.94); opacity: 0; transition: transform .22s cubic-bezier(.22,1,.36,1), opacity .22s;
+}
+.hh-overlay.abierto .hh-panel { transform: scale(1); opacity: 1; }
+.hh-panel-body { max-height: min(74vh, 560px); overflow: auto; padding: 26px 26px 22px; }
+
+.hh-panel-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-right: 32px; }
+.hh-panel-icon {
+    width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 20px; color: var(--gcolor, var(--navy)); background: var(--wash-a); border: 1px solid var(--rule-strong);
+    border-radius: 12px;
+}
+.hh-panel-titulo { font-weight: 700; font-size: 17px; color: var(--ink); font-family: var(--font-heading); }
+.hh-panel-hint { font-size: 12px; color: var(--ink-faint); font-weight: 500; margin-top: 3px; min-height: 15px; transition: color .12s; }
+.hh-panel-hint.desc-activa { color: var(--gcolor, var(--navy)); font-weight: 700; font-size: 13px; }
+.hh-panel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+.hh-chip {
+    display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer;
+    background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 10px; border-left: 3px solid transparent;
+    font-size: 12.5px; font-weight: 500; color: var(--ink); transition: border-color .15s, color .15s, transform .15s, background .15s;
+}
+.hh-chip:hover {
+    border-color: var(--gcolor, var(--navy)); border-left-color: var(--gcolor, var(--navy)); color: var(--gcolor, var(--navy));
+    transform: translateX(2px);
+}
+.hh-chip-nombre { flex: 1; }
+.hh-chip-flecha { font-size: 10px; opacity: 0; transform: translateX(-4px); transition: opacity .15s, transform .15s; }
+.hh-chip:hover .hh-chip-flecha { opacity: 1; transform: translateX(0); }
+
+.hh-cerrar {
+    position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; color: var(--ink-faint); cursor: pointer;
+    background: var(--wash-a); border: 1px solid var(--rule-strong); z-index: 2; transition: color .15s; font-size: 13px;
+}
+.hh-cerrar:hover { color: var(--ink); }
+
+/* ---- Sección 2: dashboard compacto (igual al prototipo — 2 columnas: KPIs +
+   gráfico + resumen de actividad a la izquierda, indicadores + donuts a la
+   derecha) — adaptado de auditor copia/PLANIFICACION/kluster-rediseno.html
+   (.s2-grid/.kpi-mx/.in-card/.donut-row/.actividad-mini) a los tokens reales
+   de variables.css. ---- */
+/* minmax(0,...) en vez de 1fr/repeat(n,1fr) a secas: por default los tracks de
+   grid no encogen bajo el tamaño mínimo de su contenido — el <canvas> del
+   gráfico de barras fuerza un ancho mínimo grande y el grid completo se
+   desborda en mobile si no se les da explícitamente permiso de encoger. */
+.s2-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
+.s2-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+.kpi-grid-compacta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.kpi-mx {
+    --k: var(--navy); padding: 12px 14px; border: 1px solid var(--rule-strong); border-top: 3px solid var(--k);
+    border-radius: 11px; background: var(--card-bg); box-shadow: var(--shadow-card); transition: transform .18s, box-shadow .18s;
+}
+.kpi-mx:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.kpi-mx:nth-child(1) { --k: var(--navy); }
+.kpi-mx:nth-child(2) { --k: var(--coral); }
+.kpi-mx:nth-child(3) { --k: var(--ok); }
+.kpi-mx:nth-child(4) { --k: var(--periwinkle); }
+.kpi-mx-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); }
+.kpi-mx-row { margin-top: 2px; }
+.kpi-mx-val { font-size: 17px; font-weight: 700; font-family: var(--font-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.in-card { background: var(--card-bg); border: 1px solid var(--rule-strong); border-radius: 11px; padding: 14px 17px; box-shadow: var(--shadow-card); }
+.in-card.flexcol { display: flex; flex-direction: column; }
+.s2-card-titulo { font-weight: 700; font-size: 12.5px; color: var(--ink); margin-bottom: 8px; }
+.s2-donut-titulo { font-weight: 700; font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+
+.donut-row { display: flex; gap: 10px; }
+.donut-row .in-card { flex: 1; min-width: 0; }
+
+.actividad-mini { display: flex; gap: 12px; font-size: 11.5px; color: var(--ink); }
+.actividad-mini > div { flex: 1; min-width: 0; }
+.actividad-mini b { display: block; font-size: 10px; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
+
+@media (max-width: 900px) {
+    .home-hub-tile { width: 100%; max-width: 320px; }
+    .in-slide-hub { padding-right: 56px; }
+    .in-rail { right: 10px; gap: 10px; }
+    .in-dot { width: 32px; height: 32px; font-size: 14px; }
+    .s2-grid { grid-template-columns: minmax(0, 1fr); }
+    .kpi-grid-compacta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+    .hh-panel { width: 92vw; }
+    .hh-panel-grid { grid-template-columns: 1fr; }
+}

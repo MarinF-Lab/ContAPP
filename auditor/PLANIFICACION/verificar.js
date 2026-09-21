@@ -114,8 +114,8 @@ check('balance.js tiene estado vacío (empty-state o Sin movimientos)',
     tieneString('js/services/balance.js', 'empty-state') ||
     tieneString('js/services/balance.js', 'Sin movimientos'));
 
-check('iva-resumen.js distingue nota_credito al calcular',
-    tieneString('js/services/iva-resumen.js', 'nota_credito'));
+check('iva-resumen.js calcula el IVA desde el Libro Mayor (recopilarMovimientosPorCuenta)',
+    tieneString('js/services/iva-resumen.js', 'recopilarMovimientosPorCuenta'));
 
 check('activos.js tiene periodos_depreciados',
     tieneString('js/modules/activos.js', 'periodos_depreciados'));

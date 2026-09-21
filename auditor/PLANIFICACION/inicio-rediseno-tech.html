@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inicio — propuesta tecnológica (mismo HTML/JS, solo CSS)</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/main.css">
+<link rel="stylesheet" href="../css/auditor.css">
+<!-- Íconos vectoriales reales en vez de emoji — hallazgo de la skill
+     ui-ux-pro-max: "No emojis used as icons" es el primer anti-patrón de su
+     checklist de estilo, y probablemente el mayor contribuyente al "parece
+     trabajo de escolar" que marcó el usuario. Se probó primero con Phosphor
+     Icons vía CDN, pero se verificó en el navegador que ese CDN no carga en
+     este entorno (::before quedaba con content:"" — ícono invisible), así
+     que se reemplazó por SVG inline embebido en el propio <style> (clases
+     .ph-*, sin red, siempre visible) manteniendo el MISMO marcado HTML
+     <i class="ph ph-nombre"> — ver el bloque "ÍCONOS SVG INLINE" abajo.
+     Tipografía IBM Plex Sans para headings: es el pairing "Financial Trust"
+     que la skill recomienda específicamente para banca/fintech/contabilidad,
+     y ya usábamos IBM Plex Mono para los datos tabulares — así quedan
+     unificados en la misma familia tipográfica (con fallback a Segoe UI si
+     esta fuente externa tampoco cargara: a diferencia de un ícono, una
+     fuente sin cargar degrada con gracia en vez de quedar invisible). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<script>
+    (function() { document.documentElement.setAttribute('data-theme', localStorage.getItem('appTheme') || 'light'); })();
+</script>
+<style>
+    /* ═══════════════════════════════════════════════════════════════════
+       VARIANTE "TECNOLÓGICA" (v2, clara/profesional) — mismo HTML y mismo
+       JS que inicio-rediseno.html, CERO cambios de estructura o de
+       comportamiento. Lo único que cambia es este bloque <style>.
+
+       v1 usaba fondo oscuro + neón + chaflanes + resplandor — quedaba con
+       pinta de videojuego. Esta versión apunta a "SaaS empresarial serio"
+       (línea Linear/Stripe/Notion): fondo claro por defecto, un solo azul
+       índigo como color de marca, bordes finos grises (sin neón), esquinas
+       redondeadas moderadas y sombras suaves neutras en vez de resplandor
+       de color. El monoespaciado queda reservado para datos tabulares
+       (montos, fechas, códigos) — no para cada etiqueta de la interfaz.
+       Los íconos de cada grupo siguen tomando su color vía
+       style="--g:var(--navy)" etc. inline en el HTML sin tocar, así que al
+       redefinir --navy/--coral/--periwinkle/--blue/--positive acá todos
+       esos acentos cambian de color solos. ═══════════════════════════════
+    ═══════════════════════════════════════════════════════════════════ */
+    :root {
+        --navy:            #4338ca;  /* índigo — color de marca / Contabilidad */
+        --coral:           #e11d48;  /* rosado — Ventas */
+        --coral-deep:      #be123c;
+        --blue:            #b45309;  /* ámbar oscuro — Inventarios */
+        --periwinkle:      #7c3aed;  /* violeta — Compras */
+        --periwinkle-soft: #ede9fe;
+        --ok:              #059669;  /* esmeralda — Tesorería / estados OK */
+        --ok-tint:         #ecfdf5;
+        --negative:        #e11d48;
+        --danger-tint:     #fef2f2;
+        --paper:           #f8fafc;
+        --card-bg:         #ffffff;
+        --paper-deep:      #f1f5f9;
+        --rule-strong:     #e2e8f0;
+        --bg:              #f8fafc;
+        --text:            #0f172a;
+        --text-muted:      #64748b;
+        --font-heading:    'IBM Plex Sans', 'Segoe UI', sans-serif;
+        --font-mono:       'IBM Plex Mono', 'SF Mono', monospace;
+        --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05);
+        --shadow-md: 0 6px 20px -8px rgba(15, 23, 42, .14);
+        --shadow-lg: 0 18px 44px -14px rgba(15, 23, 42, .22);
+    }
+
+    /* ── Textura de fondo — grid de puntos + wash de gradiente muy sutil,
+       en vez de un color plano. Es la clase de detalle que separa "plantilla
+       genérica" de "producto con dirección de arte" (Stripe/Linear/Mercury
+       usan la misma receta): casi imperceptible en uso normal, pero le da
+       profundidad al lienzo detrás de las tarjetas. ── */
+    html, body {
+        background-color: var(--bg);
+        background-image:
+            radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--navy) 13%, transparent) 1px, transparent 0),
+            radial-gradient(ellipse 900px 500px at 14% -10%, color-mix(in srgb, var(--navy) 7%, transparent), transparent 60%),
+            radial-gradient(ellipse 700px 500px at 100% 8%, color-mix(in srgb, var(--periwinkle) 8%, transparent), transparent 55%);
+        background-size: 22px 22px, auto, auto;
+        background-repeat: repeat, no-repeat, no-repeat;
+        background-attachment: fixed;
+        display: block; height: 100%; margin: 0; overscroll-behavior: none;
+    }
+    /* ═══ ÍCONOS SVG INLINE — sin red, siempre visibles ═══
+       Cada <i class="ph ph-nombre"> es un elemento vacío; el ícono lo
+       dibuja el propio navegador vía mask-image con un SVG embebido como
+       data URI (solo importa la silueta/alfa, el color lo pone
+       background-color:currentColor, así que cada ícono automáticamente
+       toma el color de texto que tenga alrededor — sin necesitar tocar
+       cada aparición si cambia un color de marca). */
+    .ph {
+        display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em;
+        background-color: currentColor;
+        -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+        -webkit-mask-position: center; mask-position: center;
+        -webkit-mask-size: contain; mask-size: contain;
+    }
+    .ph-compass { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='15,9 13,13 9,15 11,11'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='15,9 13,13 9,15 11,11'/%3E%3C/svg%3E"); }
+    .ph-chart-bar { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='11' width='4' height='8' fill='black' stroke='none'/%3E%3Crect x='10' y='6' width='4' height='13' fill='black' stroke='none'/%3E%3Crect x='16' y='13' width='4' height='6' fill='black' stroke='none'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='11' width='4' height='8' fill='black' stroke='none'/%3E%3Crect x='10' y='6' width='4' height='13' fill='black' stroke='none'/%3E%3Crect x='16' y='13' width='4' height='6' fill='black' stroke='none'/%3E%3C/svg%3E"); }
+    .ph-gear { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cline x1='12' y1='2' x2='12' y2='5'/%3E%3Cline x1='12' y1='19' x2='12' y2='22'/%3E%3Cline x1='2' y1='12' x2='5' y2='12'/%3E%3Cline x1='19' y1='12' x2='22' y2='12'/%3E%3Cline x1='4.9' y1='4.9' x2='7' y2='7'/%3E%3Cline x1='17' y1='17' x2='19.1' y2='19.1'/%3E%3Cline x1='4.9' y1='19.1' x2='7' y2='17'/%3E%3Cline x1='17' y1='7' x2='19.1' y2='4.9'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cline x1='12' y1='2' x2='12' y2='5'/%3E%3Cline x1='12' y1='19' x2='12' y2='22'/%3E%3Cline x1='2' y1='12' x2='5' y2='12'/%3E%3Cline x1='19' y1='12' x2='22' y2='12'/%3E%3Cline x1='4.9' y1='4.9' x2='7' y2='7'/%3E%3Cline x1='17' y1='17' x2='19.1' y2='19.1'/%3E%3Cline x1='4.9' y1='19.1' x2='7' y2='17'/%3E%3Cline x1='17' y1='7' x2='19.1' y2='4.9'/%3E%3C/svg%3E"); }
+    .ph-calculator { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='2' width='16' height='20' rx='2'/%3E%3Cline x1='8' y1='6' x2='16' y2='6'/%3E%3Ccircle cx='8' cy='11' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='12' cy='11' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='11' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='8' cy='15' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='12' cy='15' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='15' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='8' cy='19' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='12' cy='19' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='19' r='1' fill='black' stroke='none'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='2' width='16' height='20' rx='2'/%3E%3Cline x1='8' y1='6' x2='16' y2='6'/%3E%3Ccircle cx='8' cy='11' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='12' cy='11' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='11' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='8' cy='15' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='12' cy='15' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='15' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='8' cy='19' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='12' cy='19' r='1' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='19' r='1' fill='black' stroke='none'/%3E%3C/svg%3E"); }
+    .ph-shopping-cart { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='20' r='1.4' fill='black' stroke='none'/%3E%3Ccircle cx='18' cy='20' r='1.4' fill='black' stroke='none'/%3E%3Cpath d='M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 7H6'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='20' r='1.4' fill='black' stroke='none'/%3E%3Ccircle cx='18' cy='20' r='1.4' fill='black' stroke='none'/%3E%3Cpath d='M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 7H6'/%3E%3C/svg%3E"); }
+    .ph-package { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 3 7.5 12 12l9-4.5Z'/%3E%3Cpath d='M3 7.5v9L12 21l9-4.5v-9'/%3E%3Cline x1='12' y1='12' x2='12' y2='21'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 3 7.5 12 12l9-4.5Z'/%3E%3Cpath d='M3 7.5v9L12 21l9-4.5v-9'/%3E%3Cline x1='12' y1='12' x2='12' y2='21'/%3E%3C/svg%3E"); }
+    .ph-cube { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='8' width='13' height='13'/%3E%3Cpolyline points='3,8 8,3 21,3 21,16 16,21'/%3E%3Cline x1='16' y1='8' x2='21' y2='3'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='8' width='13' height='13'/%3E%3Cpolyline points='3,8 8,3 21,3 21,16 16,21'/%3E%3Cline x1='16' y1='8' x2='21' y2='3'/%3E%3C/svg%3E"); }
+    .ph-bank { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12,2 22,8 2,8'/%3E%3Cline x1='4' y1='8' x2='4' y2='19'/%3E%3Cline x1='9' y1='8' x2='9' y2='19'/%3E%3Cline x1='15' y1='8' x2='15' y2='19'/%3E%3Cline x1='20' y1='8' x2='20' y2='19'/%3E%3Cline x1='2' y1='21' x2='22' y2='21'/%3E%3Cline x1='2' y1='19' x2='22' y2='19'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12,2 22,8 2,8'/%3E%3Cline x1='4' y1='8' x2='4' y2='19'/%3E%3Cline x1='9' y1='8' x2='9' y2='19'/%3E%3Cline x1='15' y1='8' x2='15' y2='19'/%3E%3Cline x1='20' y1='8' x2='20' y2='19'/%3E%3Cline x1='2' y1='21' x2='22' y2='21'/%3E%3Cline x1='2' y1='19' x2='22' y2='19'/%3E%3C/svg%3E"); }
+    .ph-buildings { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='9' width='7' height='13'/%3E%3Crect x='13' y='4' width='8' height='18'/%3E%3Ccircle cx='5.5' cy='12' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='7.5' cy='12' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='5.5' cy='16' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='7.5' cy='16' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='8' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='19' cy='8' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='12' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='19' cy='12' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='16' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='19' cy='16' r='0.6' fill='black' stroke='none'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='9' width='7' height='13'/%3E%3Crect x='13' y='4' width='8' height='18'/%3E%3Ccircle cx='5.5' cy='12' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='7.5' cy='12' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='5.5' cy='16' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='7.5' cy='16' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='8' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='19' cy='8' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='12' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='19' cy='12' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='16' cy='16' r='0.6' fill='black' stroke='none'/%3E%3Ccircle cx='19' cy='16' r='0.6' fill='black' stroke='none'/%3E%3C/svg%3E"); }
+    .ph-identification-card { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='5' width='20' height='14' rx='2'/%3E%3Ccircle cx='8' cy='12' r='2.2'/%3E%3Cline x1='13' y1='10' x2='19' y2='10'/%3E%3Cline x1='13' y1='14' x2='17' y2='14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='5' width='20' height='14' rx='2'/%3E%3Ccircle cx='8' cy='12' r='2.2'/%3E%3Cline x1='13' y1='10' x2='19' y2='10'/%3E%3Cline x1='13' y1='14' x2='17' y2='14'/%3E%3C/svg%3E"); }
+    .ph-magnifying-glass { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.2' y2='16.2'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.2' y2='16.2'/%3E%3C/svg%3E"); }
+    .ph-calendar-check { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='17' rx='2'/%3E%3Cline x1='3' y1='9' x2='21' y2='9'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cpolyline points='8,14 11,17 16,12'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='17' rx='2'/%3E%3Cline x1='3' y1='9' x2='21' y2='9'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cpolyline points='8,14 11,17 16,12'/%3E%3C/svg%3E"); }
+    .ph-lightning { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='13,2 4,14 11,14 9,22 20,9 13,9' fill='black' stroke='none'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='13,2 4,14 11,14 9,22 20,9 13,9' fill='black' stroke='none'/%3E%3C/svg%3E"); }
+    .ph-book-open-text { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6C9.5 4.5 6 4 3 4v14c3 0 6.5 0.5 9 2 2.5-1.5 6-2 9-2V4c-3 0-6.5 0.5-9 2Z'/%3E%3Cline x1='12' y1='6' x2='12' y2='20'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6C9.5 4.5 6 4 3 4v14c3 0 6.5 0.5 9 2 2.5-1.5 6-2 9-2V4c-3 0-6.5 0.5-9 2Z'/%3E%3Cline x1='12' y1='6' x2='12' y2='20'/%3E%3C/svg%3E"); }
+    .ph-book-open { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6C9.5 4.5 6 4 3 4v14c3 0 6.5 0.5 9 2 2.5-1.5 6-2 9-2V4c-3 0-6.5 0.5-9 2Z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6C9.5 4.5 6 4 3 4v14c3 0 6.5 0.5 9 2 2.5-1.5 6-2 9-2V4c-3 0-6.5 0.5-9 2Z'/%3E%3C/svg%3E"); }
+    .ph-users-three { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7' cy='8' r='3'/%3E%3Ccircle cx='17' cy='8' r='3'/%3E%3Cpath d='M2 21v-1a5 5 0 0 1 5-5h0a5 5 0 0 1 5 5v1'/%3E%3Cpath d='M12 21v-1a5 5 0 0 1 5-5h0a5 5 0 0 1 5 5v1'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7' cy='8' r='3'/%3E%3Ccircle cx='17' cy='8' r='3'/%3E%3Cpath d='M2 21v-1a5 5 0 0 1 5-5h0a5 5 0 0 1 5 5v1'/%3E%3Cpath d='M12 21v-1a5 5 0 0 1 5-5h0a5 5 0 0 1 5 5v1'/%3E%3C/svg%3E"); }
+    .ph-clipboard-text { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='4' width='14' height='17' rx='2'/%3E%3Crect x='9' y='2' width='6' height='4' rx='1'/%3E%3Cline x1='8' y1='11' x2='16' y2='11'/%3E%3Cline x1='8' y1='15' x2='14' y2='15'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='4' width='14' height='17' rx='2'/%3E%3Crect x='9' y='2' width='6' height='4' rx='1'/%3E%3Cline x1='8' y1='11' x2='16' y2='11'/%3E%3Cline x1='8' y1='15' x2='14' y2='15'/%3E%3C/svg%3E"); }
+    .ph-pencil-simple { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 21l1-5L16 4l4 4L8 20Z'/%3E%3Cline x1='13.5' y1='6.5' x2='17.5' y2='10.5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 21l1-5L16 4l4 4L8 20Z'/%3E%3Cline x1='13.5' y1='6.5' x2='17.5' y2='10.5'/%3E%3C/svg%3E"); }
+    .ph-scales { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='3' x2='12' y2='21'/%3E%3Cline x1='5' y1='7' x2='19' y2='7'/%3E%3Cpath d='M3 15a4 4 0 0 0 8 0L7 7Z'/%3E%3Cpath d='M13 15a4 4 0 0 0 8 0L17 7Z'/%3E%3Cline x1='8' y1='21' x2='16' y2='21'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='3' x2='12' y2='21'/%3E%3Cline x1='5' y1='7' x2='19' y2='7'/%3E%3Cpath d='M3 15a4 4 0 0 0 8 0L7 7Z'/%3E%3Cpath d='M13 15a4 4 0 0 0 8 0L17 7Z'/%3E%3Cline x1='8' y1='21' x2='16' y2='21'/%3E%3C/svg%3E"); }
+    .ph-floppy-disk { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 3h13l3 3v15H4Z'/%3E%3Crect x='7' y='3' width='7' height='5'/%3E%3Crect x='6' y='13' width='12' height='7'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 3h13l3 3v15H4Z'/%3E%3Crect x='7' y='3' width='7' height='5'/%3E%3Crect x='6' y='13' width='12' height='7'/%3E%3C/svg%3E"); }
+    .ph-clock-counter-clockwise { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='13' r='8'/%3E%3Cpolyline points='12,9 12,13 15,15'/%3E%3Cline x1='9' y1='2' x2='15' y2='2'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='13' r='8'/%3E%3Cpolyline points='12,9 12,13 15,15'/%3E%3Cline x1='9' y1='2' x2='15' y2='2'/%3E%3C/svg%3E"); }
+    .ph-trend-up { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3,17 9,11 13,15 21,6'/%3E%3Cpolyline points='15,6 21,6 21,12'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3,17 9,11 13,15 21,6'/%3E%3Cpolyline points='15,6 21,6 21,12'/%3E%3C/svg%3E"); }
+    .ph-user { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21v-1a8 8 0 0 1 16 0v1'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21v-1a8 8 0 0 1 16 0v1'/%3E%3C/svg%3E"); }
+    .ph-palette { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3a9 9 0 1 0 0 18h1.5a2 2 0 0 0 2-2 2 2 0 0 1 2-2H19a2 2 0 0 0 2-2 9 9 0 0 0 -9-12Z'/%3E%3Ccircle cx='7.5' cy='10.5' r='1.2' fill='black' stroke='none'/%3E%3Ccircle cx='12' cy='7' r='1.2' fill='black' stroke='none'/%3E%3Ccircle cx='16.5' cy='10.5' r='1.2' fill='black' stroke='none'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3a9 9 0 1 0 0 18h1.5a2 2 0 0 0 2-2 2 2 0 0 1 2-2H19a2 2 0 0 0 2-2 9 9 0 0 0 -9-12Z'/%3E%3Ccircle cx='7.5' cy='10.5' r='1.2' fill='black' stroke='none'/%3E%3Ccircle cx='12' cy='7' r='1.2' fill='black' stroke='none'/%3E%3Ccircle cx='16.5' cy='10.5' r='1.2' fill='black' stroke='none'/%3E%3C/svg%3E"); }
+    .ph-bell { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z'/%3E%3Cpath d='M10 19a2 2 0 0 0 4 0'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z'/%3E%3Cpath d='M10 19a2 2 0 0 0 4 0'/%3E%3C/svg%3E"); }
+    .ph-robot { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='8' width='14' height='11' rx='2'/%3E%3Ccircle cx='9' cy='13' r='1.3' fill='black' stroke='none'/%3E%3Ccircle cx='15' cy='13' r='1.3' fill='black' stroke='none'/%3E%3Cline x1='12' y1='8' x2='12' y2='4'/%3E%3Ccircle cx='12' cy='3' r='1.2'/%3E%3Cline x1='9' y1='17' x2='15' y2='17'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='8' width='14' height='11' rx='2'/%3E%3Ccircle cx='9' cy='13' r='1.3' fill='black' stroke='none'/%3E%3Ccircle cx='15' cy='13' r='1.3' fill='black' stroke='none'/%3E%3Cline x1='12' y1='8' x2='12' y2='4'/%3E%3Ccircle cx='12' cy='3' r='1.2'/%3E%3Cline x1='9' y1='17' x2='15' y2='17'/%3E%3C/svg%3E"); }
+    .ph-x { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='5' x2='19' y2='19'/%3E%3Cline x1='19' y1='5' x2='5' y2='19'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='5' x2='19' y2='19'/%3E%3Cline x1='19' y1='5' x2='5' y2='19'/%3E%3C/svg%3E"); }
+
+    .in-viewport { height: 100vh; overflow: hidden; position: relative; }
+    .in-track { height: 100%; transition: transform .5s cubic-bezier(.4,0,.2,1); }
+    .in-slide {
+        height: 100%; box-sizing: border-box; padding: 22px 32px 70px;
+        display: flex; flex-direction: column; justify-content: center; gap: 14px;
+        width: min(94vw, 1600px); margin: 0 auto; position: relative;
+    }
+    .slide-titulo { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); display: flex; align-items: center; gap: 10px; }
+    .slide-titulo b {
+        color: var(--text); font-size: 19px; text-transform: none; letter-spacing: -.01em; font-weight: 700;
+        font-family: var(--font-heading); display: flex; align-items: center; gap: 8px;
+    }
+    .slide-titulo b i { color: var(--navy); font-size: 17px; }
+    .slide-num {
+        display: flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+        border-radius: 50%; font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+        background: linear-gradient(135deg, var(--navy), color-mix(in srgb, var(--navy) 60%, black));
+        color: #fff; flex-shrink: 0; box-shadow: 0 3px 8px -2px color-mix(in srgb, var(--navy) 50%, transparent);
+    }
+    .slide-titulo-rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--rule-strong), transparent); }
+
+    /* ── Riel de secciones — círculos claros con anillo de color, sombra
+       suave (no resplandor). ── */
+    .in-rail {
+        position: fixed; right: max(16px, calc((100vw - min(94vw, 1600px)) / 2 - 30px)); top: 50%; transform: translateY(-50%);
+        display: flex; flex-direction: column; gap: 12px; z-index: 50; align-items: center;
+    }
+    .in-rail::before {
+        content: ''; position: absolute; left: 50%; top: 22px; bottom: 22px; width: 2px; transform: translateX(-50%);
+        background: linear-gradient(180deg, var(--rule-strong), color-mix(in srgb, var(--navy) 30%, var(--rule-strong)), var(--rule-strong));
+        z-index: -1;
+    }
+    .in-dot {
+        width: 44px; height: 44px; cursor: pointer; background: var(--card-bg);
+        border: 1px solid var(--rule-strong); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 17px;
+        transition: all .18s; box-shadow: var(--shadow-sm);
+    }
+    .in-dot.activo {
+        background: linear-gradient(135deg, var(--navy) 0%, color-mix(in srgb, var(--navy) 65%, black) 100%);
+        border-color: var(--navy); color: #fff;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--navy) 16%, transparent), var(--shadow-md);
+    }
+    .in-dot:hover:not(.activo) { border-color: var(--periwinkle); box-shadow: var(--shadow-md); transform: scale(1.06); }
+
+    .s1-grid { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+    .s3-grid { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+
+    /* ── Hero — gradiente de marca en diagonal (no color plano), patrón de
+       líneas finas + dos anillos decorativos + un ícono gigante en
+       filigrana; jerarquía limpia encima, con una fila de "estado" para
+       transmitir que la app está viva (ejercicio activo, sincronizado,
+       IA lista) sin duplicar los datos de las tarjetas de abajo. ── */
+    .in-hero {
+        background: linear-gradient(135deg, var(--navy) 0%, color-mix(in srgb, var(--navy) 78%, var(--periwinkle)) 55%, color-mix(in srgb, var(--navy) 60%, black) 100%);
+        color: #fff;
+        padding: 22px 26px; border-radius: 14px; position: relative; overflow: hidden;
+        box-shadow: var(--shadow-lg);
+    }
+    .in-hero::before {
+        content: ''; position: absolute; inset: 0;
+        background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 1px, transparent 1px 34px);
+        pointer-events: none;
+    }
+    .in-hero::after {
+        content: '';
+        position: absolute; top: -70px; right: -50px; width: 220px; height: 220px;
+        border-radius: 50%; border: 1px solid rgba(255,255,255,.14);
+        box-shadow: 0 0 0 34px rgba(255,255,255,.035);
+        pointer-events: none;
+    }
+    .in-hero-watermark {
+        position: absolute; right: -18px; bottom: -26px; width: 150px; height: 150px;
+        color: rgba(255,255,255,.08); pointer-events: none;
+    }
+    .in-hero-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; }
+    .in-hero-empresa { font-size: 19px; font-weight: 700; font-family: var(--font-heading); letter-spacing: -.01em; }
+    .in-hero-sub { font-size: 11.5px; opacity: .78; margin-top: 3px; font-family: var(--font-mono); }
+    .in-hero-switch {
+        background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.32); color: #fff;
+        padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 7px;
+        transition: all .15s; backdrop-filter: blur(6px);
+    }
+    .in-hero-switch:hover { background: rgba(255,255,255,.24); transform: translateY(-1px); }
+    .in-frase {
+        font-size: 15.5px; font-weight: 600; line-height: 1.4;
+        margin-top: 16px; position: relative; z-index: 1; max-width: 360px; opacity: .95;
+    }
+    .in-frase span { opacity: 1; text-decoration: underline; text-decoration-color: rgba(255,255,255,.45); text-underline-offset: 3px; }
+    .in-hero-status { display: flex; gap: 8px; margin-top: 14px; position: relative; z-index: 1; flex-wrap: wrap; }
+    .in-hero-pill {
+        display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 600;
+        padding: 5px 10px; border-radius: 20px; background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.92);
+    }
+    .in-hero-pill i { font-size: 11px; }
+    .in-hero-pill.ok::before { content:''; width:6px; height:6px; border-radius:50%; background:#4ade80; box-shadow:0 0 0 3px rgba(74,222,128,.25); }
+
+    /* ── Grupos — tarjetas con wash de color muy sutil (no blanco plano),
+       ícono en placa de gradiente sólido (--g → variante oscura) con sombra
+       de color propia, borde superior de acento; al pasar el mouse el
+       realce toma el color del grupo en vez de un genérico gris→azul. ── */
+    .mod-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 13px; transition: opacity .15s; }
+    .mod-group {
+        --g: var(--periwinkle); cursor: pointer; padding: 19px 21px;
+        background:
+            linear-gradient(155deg, color-mix(in srgb, var(--g) 7%, var(--card-bg)) 0%, var(--card-bg) 55%);
+        border: 1px solid var(--rule-strong); border-top: 3px solid color-mix(in srgb, var(--g) 55%, var(--rule-strong));
+        border-radius: 14px;
+        display: flex; align-items: center; gap: 15px; transition: all .18s; box-shadow: var(--shadow-sm);
+        position: relative;
+    }
+    .mod-group:hover {
+        border-color: var(--g); border-top-color: var(--g); transform: translateY(-3px);
+        box-shadow: 0 14px 28px -12px color-mix(in srgb, var(--g) 38%, transparent), var(--shadow-md);
+    }
+    .mod-group-icon {
+        width: 50px; height: 50px; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--g) 0%, color-mix(in srgb, var(--g) 65%, black) 100%);
+        color: #fff; display: grid; place-items: center; font-size: 22px;
+        border-radius: 12px;
+        box-shadow: 0 5px 12px -4px color-mix(in srgb, var(--g) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .mod-group-nombre { font-weight: 700; font-size: 15.5px; color: var(--text); font-family: var(--font-heading); }
+    .mod-group-count { font-size: 11.5px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+    .mod-group-car {
+        margin-left: auto; font-size: 14px; color: #fff; width: 25px; height: 25px; border-radius: 50%;
+        background: var(--g); display: grid; place-items: center;
+        transition: transform .18s;
+    }
+    .mod-group:hover .mod-group-car { transform: translateX(2px); }
+
+    /* ── Dock flotante — mismos círculos claros con anillo de color; el
+       activo se rellena.
+       Posición 100% con funciones (clamp/min/max/calc), nada de números de
+       margen "a ojo":
+       - Vertical: clamp(mínimo, preferido en vh, máximo) en vez de un
+         "bottom: 40px" fijo — el margen inferior crece o se achica con el
+         alto real de la ventana, entre un piso y un techo razonables.
+       - Horizontal: el ancho del margen lateral es
+         (100vw - min(94vw,1600px))/2 (la misma fórmula que ya usa .in-rail
+         al otro lado); el dock se CENTRA en ese margen restando la mitad
+         del ancho del propio círculo — antes se anclaba a una distancia fija
+         del borde, por eso no quedaba centrado en el hueco disponible. ── */
+    .mod-groups.dock-activo {
+        position: fixed;
+        /* Zona segura horizontal = el margen fuera de .in-slide MÁS el
+           padding izquierdo del propio .in-slide (32px — ver la regla
+           .in-slide más abajo) hasta donde arrancan visualmente las
+           tarjetas; el dock se centra en esa zona completa, no solo en el
+           margen exterior (que a veces es más angosto que el propio
+           círculo). */
+        --dock-margen: calc((100vw - min(94vw, 1600px)) / 2);
+        --dock-circulo: 44px;
+        --dock-zona-segura: calc(var(--dock-margen) + 32px);
+        left: max(16px, calc((var(--dock-zona-segura) - var(--dock-circulo)) / 2));
+        bottom: clamp(20px, 6vh, 56px);
+        display: flex; flex-direction: column; gap: clamp(8px, 1.4vh, 12px); width: auto; z-index: 55;
+    }
+    .mod-groups.dock-activo .mod-group {
+        position: relative; padding: 0; width: var(--dock-circulo, 44px); height: var(--dock-circulo, 44px);
+        justify-content: center; border-radius: 50%;
+        background: var(--card-bg); box-shadow: var(--shadow-sm);
+        /* Ojo: la tarjeta base trae un border-top de 3px para el acento de
+           color (ver más arriba) — acá se pisa explícito por lado (no solo
+           con el shorthand "border") porque el shorthand no lo estaba
+           reemplazando. El círculo del dock necesita el mismo grosor en
+           las 4 direcciones para que el ícono quede centrado adentro. */
+        border-width: 1px; border-style: solid; border-color: var(--rule-strong);
+    }
+    .mod-groups.dock-activo .mod-group-info,
+    .mod-groups.dock-activo .mod-group-car { display: none; }
+    .mod-groups.dock-activo .mod-group-icon {
+        /* width/height:100% de un ítem flex podía resolver a 0 según cómo
+           el navegador calculara el "flex-basis" en este contexto — en vez
+           de perseguir eso, se saca del flujo por completo y se hace
+           coincidir con el círculo por posición absoluta, a prueba de
+           cualquier cálculo de porcentaje. */
+        position: absolute; inset: 0; margin: 0;
+        border-radius: 50%; width: auto; height: auto;
+        background: transparent; color: var(--g); box-shadow: none;
+        display: grid; place-items: center;
+    }
+    .mod-groups.dock-activo .mod-group.activo {
+        border-color: var(--g);
+        background: linear-gradient(135deg, var(--g) 0%, color-mix(in srgb, var(--g) 65%, black) 100%);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--g) 20%, transparent), var(--shadow-md);
+    }
+    .mod-groups.dock-activo .mod-group.activo .mod-group-icon { color: #fff; }
+
+    /* ── Vista de módulo ── */
+    .modulo-view { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .modulo-view.abierto { display: flex; }
+    .modulo-volver {
+        align-self: flex-start; margin-bottom: 14px; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 15px; font-weight: 600; font-size: 12.5px;
+        color: var(--navy); background: color-mix(in srgb, var(--navy) 8%, var(--card-bg));
+        border: 1px solid color-mix(in srgb, var(--navy) 30%, var(--rule-strong)); border-radius: 8px;
+        transition: all .15s; box-shadow: var(--shadow-sm);
+    }
+    .modulo-volver:hover {
+        background: linear-gradient(135deg, var(--navy) 0%, color-mix(in srgb, var(--navy) 70%, black) 100%);
+        color: #fff; border-color: var(--navy); box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--navy) 55%, transparent);
+    }
+
+    /* ── Pestañas — línea inferior de color al estar activa, sombra
+       ninguna; look de tab bar de app profesional. Se siguen encogiendo
+       (flex:1 1 0 + elipsis) para entrar todas en una fila sin scroll. ── */
+    .folder-tabs { display: flex; align-items: stretch; border-bottom: 1px solid var(--rule-strong); }
+    .folder-tab {
+        flex: 1 1 0; min-width: 0; cursor: pointer; text-align: center;
+        padding: 11px 8px; margin: 0;
+        font-size: 12px; font-weight: 500;
+        color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        background: transparent; border: none; border-bottom: 2px solid transparent;
+        position: relative; z-index: 1; margin-bottom: -1px;
+        transition: color .15s, border-color .15s;
+    }
+    .folder-tab:hover:not(.activo) { color: var(--text); }
+    .folder-tab.activo {
+        color: var(--mg, var(--navy)); font-weight: 700;
+        border-bottom-color: var(--mg, var(--navy));
+    }
+    .folder-tabs-body {
+        flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; z-index: 0;
+        border: 1px solid var(--rule-strong); border-top: none; border-radius: 0 0 10px 10px;
+        background: var(--card-bg); padding: 20px 22px;
+    }
+    .modulo-view-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .modulo-view-icon {
+        width: 40px; height: 40px; display: grid; place-items: center;
+        font-size: 18px; color: #fff; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--mg, var(--navy)) 0%, color-mix(in srgb, var(--mg, var(--navy)) 65%, black) 100%);
+        box-shadow: 0 4px 10px -3px color-mix(in srgb, var(--mg, var(--navy)) 50%, transparent), inset 0 1px 0 rgba(255,255,255,.25);
+        border-radius: 10px;
+    }
+    .modulo-view-titulo { font-weight: 700; font-size: 17px; color: var(--text); font-family: var(--font-heading); }
+    .modulo-view-vacio {
+        flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
+        color: var(--text-muted); font-size: 13px; line-height: 1.7; padding: 24px;
+        border: 1px dashed var(--rule-strong); border-radius: 10px;
+        background: var(--paper-deep);
+    }
+
+    /* ═══ PROTOTIPO — Libro Diario ═══ */
+    .ld-proto { display: none; flex: 1; min-height: 0; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 4px; }
+    .ld-proto.abierto { display: flex; }
+
+    .ld-textarea {
+        width: 100%; box-sizing: border-box; resize: vertical; min-height: 44px;
+        padding: 10px 12px; font-family: inherit; font-size: 13px; color: var(--text);
+        border: 1px solid var(--rule-strong); border-radius: 8px; background: var(--paper-deep);
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .ld-textarea:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px color-mix(in srgb, var(--navy) 14%, transparent); }
+    .ld-ayuda { font-size: 11.5px; color: var(--text-muted); }
+    .ld-ayuda summary { cursor: pointer; font-weight: 600; color: var(--navy); }
+    .ld-ayuda div { padding: 6px 2px 0; line-height: 1.8; }
+
+    .ld-controles { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .ld-fecha label { font-size: 10.5px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px; }
+    .ld-fecha input {
+        padding: 7px 9px; border: 1px solid var(--rule-strong); border-radius: 7px;
+        font-family: var(--font-mono); font-size: 12.5px; background: var(--card-bg); color: var(--text);
+    }
+    .ld-botones { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ld-btn {
+        font-size: 12.5px; font-weight: 600; padding: 9px 15px; cursor: pointer;
+        border-radius: 8px; border: 1px solid transparent; transition: all .15s;
+    }
+    .ld-btn:hover { transform: translateY(-1px); }
+    .ld-btn-primary { background: linear-gradient(135deg, var(--navy) 0%, color-mix(in srgb, var(--navy) 70%, black) 100%); color: #fff; box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--navy) 55%, transparent); }
+    .ld-btn-primary:hover { box-shadow: 0 8px 18px -6px color-mix(in srgb, var(--navy) 60%, transparent); }
+    .ld-btn-secondary { background: var(--card-bg); border-color: var(--rule-strong); color: var(--text); }
+    .ld-btn-secondary:hover { border-color: var(--navy); color: var(--navy); }
+
+    .ld-tabla-wrap { border: 1px solid var(--rule-strong); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+    .ld-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ld-tabla th { text-align: left; background: var(--paper-deep); color: var(--text-muted); padding: 9px 14px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+    .ld-tabla th.monto, .ld-tabla td.monto { text-align: right; width: 140px; font-family: var(--font-mono); }
+    .ld-tabla td { padding: 9px 14px; border-bottom: 1px solid var(--rule-strong); }
+    .ld-tabla tr:last-child td { border-bottom: none; }
+    .ld-debe { font-weight: 600; color: var(--navy); }
+    .ld-haber { font-weight: 600; color: var(--coral-deep); padding-left: 30px !important; }
+
+    .ld-totales { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+    .ld-badge { font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 20px; border: 1px solid; }
+    .ld-badge.ok { background: var(--ok-tint); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+    .ld-totales-right { display: flex; align-items: center; gap: 8px; }
+    .ld-contacto {
+        padding: 7px 11px; border: 1px solid var(--rule-strong); border-radius: 7px;
+        font-size: 12.5px; background: var(--card-bg); color: var(--text); width: 170px;
+    }
+
+    .ld-historial-titulo { font-weight: 700; font-size: 12.5px; color: var(--text); flex-shrink: 0; }
+    .ld-historial { display: flex; flex-direction: column; gap: 6px; }
+    .ld-hist-item {
+        padding: 9px 13px;
+        background: var(--paper-deep);
+        border: 1px solid var(--rule-strong); border-radius: 8px; font-size: 12px;
+    }
+    .ld-hist-item summary {
+        display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none;
+    }
+    .ld-hist-item summary::-webkit-details-marker { display: none; }
+    .ld-hist-item summary::before { content: '▸'; color: var(--text-muted); font-size: 10px; flex-shrink: 0; transition: transform .15s; }
+    .ld-hist-item[open] summary::before { transform: rotate(90deg); color: var(--navy); }
+    .ld-hist-fecha { font-family: var(--font-mono); color: var(--text-muted); flex-shrink: 0; width: 74px; font-size: 11px; }
+    .ld-hist-glosa { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+    .ld-hist-monto { font-family: var(--font-mono); font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .ld-hist-tabla { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11.5px; }
+    .ld-hist-tabla th {
+        text-align: left; padding: 4px 8px; font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .04em; color: var(--text-muted); border-bottom: 1px solid var(--rule-strong);
+    }
+    .ld-hist-tabla th.monto, .ld-hist-tabla td.monto { text-align: right; width: 110px; font-family: var(--font-mono); }
+    .ld-hist-tabla td { padding: 4px 8px; border-bottom: 1px dashed var(--rule-strong); }
+    .ld-hist-tabla tr:last-child td { border-bottom: none; }
+
+    /* ═══ PROTOTIPO — Libro Mayor ═══ */
+    .lm-proto { display: none; flex: 1; min-height: 0; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 4px; }
+    .lm-proto.abierto { display: flex; }
+    .lm-toolbar { display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+    .lm-select {
+        padding: 7px 10px; border: 1px solid var(--rule-strong); border-radius: 7px;
+        font-size: 12.5px; font-weight: 500; background: var(--card-bg); color: var(--text);
+    }
+    .lm-cuentas { display: flex; flex-direction: column; gap: 12px; }
+    .lm-cuenta-card { border: 1px solid var(--rule-strong); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+    .lm-cuenta-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--paper-deep); border-bottom: 1px solid var(--rule-strong); }
+    .lm-cuenta-nombre { font-weight: 700; font-size: 12.5px; color: var(--text); }
+    .lm-cuenta-tipo { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+    .lm-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .lm-tabla th {
+        text-align: left; padding: 6px 14px; font-size: 9.5px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); border-bottom: 1px solid var(--rule-strong);
+    }
+    .lm-tabla th.monto, .lm-tabla td.monto { text-align: right; width: 120px; font-family: var(--font-mono); }
+    .lm-tabla td { padding: 6px 14px; border-bottom: 1px solid var(--rule-strong); }
+    .lm-cuenta-saldo { display: flex; justify-content: space-between; padding: 8px 14px; background: var(--paper-deep); font-weight: 700; font-size: 12px; font-family: var(--font-mono); }
+    .lm-saldo-deudor { color: var(--navy); }
+    .lm-saldo-acreedor { color: var(--coral-deep); }
+
+    /* ═══ PROTOTIPO — Balance General ═══ */
+    .bal-proto { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .bal-proto.abierto { display: flex; }
+    .bal-tabla-wrap { border: 1px solid var(--rule-strong); border-radius: 10px; overflow: auto; flex: 1; min-height: 0; }
+    .bal-tabla { width: 100%; border-collapse: collapse; font-size: 11.5px; white-space: nowrap; }
+    .bal-tabla th, .bal-tabla td { padding: 7px 11px; }
+    .bal-tabla thead th {
+        background: var(--paper-deep); color: var(--text-muted); font-size: 9.5px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .04em; text-align: right; position: sticky; top: 0;
+        border-bottom: 1px solid var(--rule-strong);
+    }
+    .bal-tabla thead th:first-child { text-align: left; }
+    .bal-grupo-fila td {
+        background: color-mix(in srgb, var(--periwinkle) 6%, var(--paper-deep)); font-weight: 700;
+        font-size: 10px; color: var(--periwinkle); text-transform: uppercase; letter-spacing: .04em; padding-top: 8px;
+    }
+    .bal-tabla tbody td { border-bottom: 1px solid var(--rule-strong); text-align: right; font-family: var(--font-mono); }
+    .bal-tabla tbody td:first-child { text-align: left; font-family: inherit; font-weight: 500; }
+    .bal-tabla tbody tr:hover td { background: color-mix(in srgb, var(--navy) 4%, transparent); }
+    .bal-tabla tfoot td { border-top: 2px solid var(--navy); font-weight: 700; background: var(--paper-deep); font-family: var(--font-mono); }
+    .bal-tabla tfoot td:first-child { text-align: left; font-family: inherit; }
+    .bal-tabla tfoot tr.bal-final td { background: var(--ok-tint); color: var(--ok); }
+
+    /* ── Centro de atención ── */
+    .centro-atencion { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .ca-card {
+        --c: var(--coral); padding: 12px 15px; border-width: 1px; border-style: solid; border-radius: 11px;
+        overflow: auto; box-shadow: var(--shadow-sm); border-left: 3px solid var(--c);
+        background: linear-gradient(160deg, color-mix(in srgb, var(--c) 6%, var(--card-bg)) 0%, var(--card-bg) 55%);
+        transition: box-shadow .18s;
+    }
+    .ca-card:hover { box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--c) 40%, transparent), var(--shadow-md); }
+    .ca-card.hallazgos { --c: var(--coral); border-color: var(--rule-strong); }
+    .ca-card.vencimientos { --c: var(--periwinkle); border-color: var(--rule-strong); }
+    .ca-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .ca-card-titulo { font-weight: 700; font-size: 12.5px; color: var(--text); display: flex; align-items: center; gap: 6px; }
+    .ca-card-titulo i { color: var(--c); }
+    .ca-count { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; color: #fff; background: var(--c); }
+    .ca-item { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--rule-strong); font-size: 12px; cursor: pointer; }
+    .ca-item:last-child { border-bottom: none; }
+    .ca-item-dot { width: 6px; height: 6px; flex-shrink: 0; margin-top: 5px; border-radius: 50%; }
+    .ca-item-dot.critico { background: var(--coral); }
+    .ca-item-dot.medio { background: var(--blue); }
+    .ca-item-dot.bajo { background: var(--text-muted); }
+    .ca-item-texto { flex: 1; min-width: 0; font-weight: 500; color: var(--text); }
+    .ca-item-cliente { font-size: 10.5px; color: var(--text-muted); font-weight: 500; }
+    .ca-item-plazo { font-size: 10px; font-weight: 700; white-space: nowrap; }
+
+    .accesos-rapidos { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; margin-bottom: 8px; }
+    .ar-titulo { font-weight: 700; font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+    .ar-btn {
+        font-size: 12px; font-weight: 600; padding: 7px 13px; cursor: pointer;
+        background: var(--card-bg); border: 1px solid var(--rule-strong); color: var(--text); border-radius: 8px;
+        transition: all .15s;
+    }
+    .ar-btn:hover { border-color: var(--navy); color: var(--navy); background: color-mix(in srgb, var(--navy) 6%, var(--card-bg)); }
+
+    /* ── Sección 2: Financiero + Actividad ── */
+    .s2-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; flex: 1; min-height: 0; }
+    .s2-col { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+    .kpi-grid-compacta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .kpi-mx {
+        --k: var(--navy); padding: 12px 14px; border-width: 1px; border-style: solid; border-radius: 11px;
+        cursor: pointer; transition: all .18s; border-color: var(--rule-strong); box-shadow: var(--shadow-sm);
+        background: linear-gradient(160deg, color-mix(in srgb, var(--k) 6%, var(--card-bg)) 0%, var(--card-bg) 60%);
+        position: relative; overflow: hidden;
+    }
+    .kpi-mx:hover { transform: translateY(-3px); box-shadow: 0 12px 24px -12px color-mix(in srgb, var(--k) 45%, transparent), var(--shadow-md); border-color: color-mix(in srgb, var(--k) 45%, var(--rule-strong)); }
+    .kpi-mx:nth-child(1) { --k: var(--navy); border-top: 3px solid var(--k); }
+    .kpi-mx:nth-child(2) { --k: var(--coral); border-top: 3px solid var(--k); }
+    .kpi-mx:nth-child(3) { --k: var(--ok); border-top: 3px solid var(--k); }
+    .kpi-mx:nth-child(4) { --k: var(--periwinkle); border-top: 3px solid var(--k); }
+    .kpi-mx-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+    .kpi-mx-row { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-top: 2px; }
+    .kpi-mx-val { font-size: 17px; font-weight: 700; font-family: var(--font-mono); color: var(--text); font-variant-numeric: tabular-nums; }
+    .kpi-mx-delta { display: flex; align-items: center; gap: 2px; font-size: 10px; font-weight: 700; font-family: var(--font-mono); }
+    .kpi-mx-delta.up { color: var(--ok); }
+    .kpi-mx-delta.down { color: var(--negative); }
+    .kpi-mx-delta i { font-size: 9px; }
+    .kpi-mx-delta.down i { transform: rotate(90deg); }
+
+    .in-card {
+        background: linear-gradient(160deg, color-mix(in srgb, var(--navy) 4%, var(--card-bg)) 0%, var(--card-bg) 50%);
+        border: 1px solid var(--rule-strong); border-radius: 11px; padding: 14px 17px; box-shadow: var(--shadow-sm);
+        position: relative;
+    }
+    .in-card.flexcol { display: flex; flex-direction: column; }
+    .donut-row { display: flex; gap: 10px; flex: 1; min-height: 0; }
+    .donut-row .in-card { flex: 1; }
+    .placeholder-box { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; border: 1px dashed var(--rule-strong); border-radius: 8px; }
+    .actividad-mini { display: flex; gap: 12px; font-size: 11.5px; }
+    .actividad-mini > div { flex: 1; }
+    .actividad-mini b { display: block; font-size: 10px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+
+    /* ── Panel flotante del selector de módulos — tarjeta blanca con sombra
+       elevada, sin efecto de vidrio ni resplandor. ── */
+    .fan-overlay { position: fixed; inset: 0; z-index: 300; display: none; }
+    .fan-overlay.abierto { display: block; }
+    .fan-bg { position: absolute; inset: 0; background: rgba(15, 23, 42, .32); }
+    .fan-panel {
+        position: absolute; background: var(--card-bg); border: 1px solid var(--rule-strong); border-radius: 16px;
+        padding: 18px 20px 20px; width: 500px; max-width: 90vw;
+        transform-origin: top center; transform: translateY(-6px) scale(.97); opacity: 0;
+        transition: transform .2s cubic-bezier(.2,.9,.3,1.2), opacity .16s;
+        box-shadow: 0 24px 56px -16px rgba(15, 23, 42, .32), 0 0 0 1px color-mix(in srgb, var(--gcolor, var(--navy)) 12%, transparent);
+        border-top: 3px solid var(--gcolor, var(--navy));
+    }
+    .fan-overlay.abierto .fan-panel { transform: translateY(0) scale(1); opacity: 1; }
+    .fan-panel-head {
+        display: flex; align-items: center; gap: 12px; margin: -18px -20px 16px; padding: 18px 20px 14px;
+        border-bottom: 1px solid var(--rule-strong); border-radius: 13px 13px 0 0;
+        background: linear-gradient(155deg, color-mix(in srgb, var(--gcolor, var(--navy)) 11%, var(--card-bg)) 0%, var(--card-bg) 85%);
+        position: relative; overflow: hidden;
+    }
+    .fan-panel-head::after {
+        content: ''; position: absolute; right: -30px; top: -40px; width: 130px; height: 130px; border-radius: 50%;
+        background: color-mix(in srgb, var(--gcolor, var(--navy)) 8%, transparent); pointer-events: none;
+    }
+    .fan-panel-icon {
+        width: 42px; height: 42px; display: grid; place-items: center;
+        font-size: 19px; color: #fff; position: relative; z-index: 1;
+        background: linear-gradient(135deg, var(--gcolor, var(--navy)) 0%, color-mix(in srgb, var(--gcolor, var(--navy)) 65%, black) 100%);
+        box-shadow: 0 4px 10px -3px color-mix(in srgb, var(--gcolor, var(--navy)) 50%, transparent), inset 0 1px 0 rgba(255,255,255,.25);
+        border-radius: 11px; flex-shrink: 0;
+    }
+    .fan-panel-titulo { font-weight: 700; font-size: 15.5px; color: var(--text); position: relative; z-index: 1; }
+    .fan-panel-hint {
+        font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 3px;
+        position: relative; z-index: 1; transition: all .12s;
+    }
+    .fan-panel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+    @keyframes fanChipIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .fan-chip {
+        display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer;
+        background: var(--paper-deep); border: 1px solid var(--rule-strong); border-radius: 9px;
+        border-left: 3px solid transparent;
+        font-size: 12.5px; font-weight: 500; color: var(--text); transition: all .15s;
+        position: relative; animation: fanChipIn .28s ease backwards; animation-delay: calc(var(--i, 0) * 28ms);
+    }
+    .fan-chip:hover {
+        border-color: var(--gcolor, var(--navy)); border-left-color: var(--gcolor, var(--navy));
+        color: var(--gcolor, var(--navy)); background: color-mix(in srgb, var(--gcolor, var(--navy)) 7%, var(--card-bg));
+        transform: translateX(2px);
+    }
+    .fan-chip-nombre { flex: 1; }
+    .fan-chip-flecha { font-size: 10px; opacity: 0; transform: translateX(-4px); transition: all .15s; }
+    .fan-chip:hover .fan-chip-flecha { opacity: 1; transform: translateX(0); }
+
+    /* ── Descripción del módulo — en vez de un tooltip flotante por chip
+       (con 2 columnas, cualquier fila que no sea la última choca con la
+       fila de abajo o con el header), la descripción se muestra en el
+       propio subtítulo del panel (#fanPanelTitulo/.fan-panel-hint) al pasar
+       el mouse — un solo lugar fijo, sin colisiones posibles sin importar
+       cuántas filas tenga el grupo. Ver el listener delegado más abajo en
+       el <script> (fanPanelGrid → mouseover/mouseleave). ── */
+    .fan-panel-hint.desc-activa {
+        color: var(--gcolor, var(--navy)); font-weight: 700; font-size: 13.5px;
+        animation: fanHintPop .18s ease;
+    }
+    @keyframes fanHintPop { from { opacity: .3; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
+    .fan-cerrar {
+        position: absolute; top: 18px; right: 24px; color: var(--text-muted); font-size: 12.5px; font-weight: 600; cursor: pointer;
+        background: var(--card-bg); border: 1px solid var(--rule-strong); padding: 8px 14px; border-radius: 8px;
+        transition: all .15s;
+    }
+    .fan-cerrar:hover { color: var(--coral-deep); border-color: var(--coral); }
+</style>
+</head>
+<body>
+
+<div class="in-viewport" id="inViewport">
+  <div class="in-track" id="inTrack">
+
+    <!-- SECCIÓN 1 — Centro de mando + Atención (fusionadas) -->
+    <div class="in-slide">
+        <div class="slide-titulo"><span class="slide-num">01</span><b><i class="ph ph-compass"></i> Centro de mando</b><span class="slide-titulo-rule"></span></div>
+        <div class="s1-grid">
+            <div class="in-hero vista-default">
+                <i class="ph ph-buildings in-hero-watermark"></i>
+                <div class="in-hero-top">
+                    <div>
+                        <div class="in-hero-empresa"><i class="ph ph-buildings"></i> Mi Empresa Ltda.</div>
+                        <div class="in-hero-sub"><i class="ph ph-identification-card"></i> 76.123.456-7 · Ejercicio 2026</div>
+                    </div>
+                    <button class="in-hero-switch">Estudio Contable Marín ▾</button>
+                </div>
+                <div class="in-frase">Todo tu estudio contable, <span>en un solo lugar.</span></div>
+                <div class="in-hero-status">
+                    <span class="in-hero-pill ok">Ejercicio 2026 abierto</span>
+                    <span class="in-hero-pill"><i class="ph ph-clock-counter-clockwise"></i> Sincronizado hace 2 min</span>
+                    <span class="in-hero-pill"><i class="ph ph-robot"></i> IA contable activa</span>
+                </div>
+            </div>
+            <div class="mod-groups">
+                <div class="mod-group" data-grupo="contabilidad" style="--g:var(--navy);" onclick="abrirPulpo('contabilidad', this)">
+                    <div class="mod-group-icon"><i class="ph ph-calculator"></i></div>
+                    <div class="mod-group-info"><div class="mod-group-nombre">Contabilidad</div><div class="mod-group-count">10 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="ventas" style="--g:var(--coral);" onclick="abrirPulpo('ventas', this)">
+                    <div class="mod-group-icon"><i class="ph ph-shopping-cart"></i></div>
+                    <div class="mod-group-info"><div class="mod-group-nombre">Ventas</div><div class="mod-group-count">9 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="compras" style="--g:var(--periwinkle);" onclick="abrirPulpo('compras', this)">
+                    <div class="mod-group-icon"><i class="ph ph-package"></i></div>
+                    <div class="mod-group-info"><div class="mod-group-nombre">Compras</div><div class="mod-group-count">5 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="inventarios" style="--g:var(--blue);" onclick="abrirPulpo('inventarios', this)">
+                    <div class="mod-group-icon"><i class="ph ph-cube"></i></div>
+                    <div class="mod-group-info"><div class="mod-group-nombre">Productos e Inventarios</div><div class="mod-group-count">8 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="tesoreria" style="--g:var(--positive);" onclick="abrirPulpo('tesoreria', this)">
+                    <div class="mod-group-icon"><i class="ph ph-bank"></i></div>
+                    <div class="mod-group-info"><div class="mod-group-nombre">Tesorería</div><div class="mod-group-count">5 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+            </div>
+            <div class="centro-atencion vista-default">
+                <div class="ca-card hallazgos">
+                    <div class="ca-card-head"><div class="ca-card-titulo"><i class="ph ph-magnifying-glass"></i> Hallazgos</div><span class="ca-count">3 abiertos</span></div>
+                    <div class="ca-item"><span class="ca-item-dot critico"></span><div class="ca-item-texto">IVA débito no cuadra con Libro de Ventas de junio</div></div>
+                    <div class="ca-item"><span class="ca-item-dot medio"></span><div class="ca-item-texto">Falta respaldo de 2 facturas de compra</div></div>
+                </div>
+                <div class="ca-card vencimientos">
+                    <div class="ca-card-head"><div class="ca-card-titulo"><i class="ph ph-calendar-check"></i> Vencimientos</div><span class="ca-count">2 esta sem.</span></div>
+                    <div class="ca-item"><span class="ca-item-dot critico"></span><div><div class="ca-item-texto">F29 — Junio 2026</div><div class="ca-item-cliente">Mi Empresa Ltda.</div></div><span class="ca-item-plazo" style="color:var(--negative);margin-left:auto;">3d</span></div>
+                    <div class="ca-item"><span class="ca-item-dot medio"></span><div><div class="ca-item-texto">Cotizaciones Previred</div><div class="ca-item-cliente">Estudio Jurídico Soto</div></div><span class="ca-item-plazo" style="color:var(--warning,#d97706);margin-left:auto;">6d</span></div>
+                </div>
+            </div>
+            <div class="accesos-rapidos vista-default">
+                <span class="ar-titulo"><i class="ph ph-lightning"></i> Accesos</span>
+                <button class="ar-btn"><i class="ph ph-book-open-text"></i> Libro Diario</button>
+                <button class="ar-btn"><i class="ph ph-bank"></i> Conciliación</button>
+                <button class="ar-btn"><i class="ph ph-users-three"></i> Remuneraciones</button>
+                <button class="ar-btn"><i class="ph ph-clipboard-text"></i> Nuevo hallazgo</button>
+            </div>
+            <div class="modulo-view">
+                <button class="modulo-volver" onclick="cerrarModulo(this.closest('.in-slide'))">‹ Volver</button>
+                <div class="folder-tabs"></div>
+                <div class="folder-tabs-body">
+                    <div class="modulo-view-header">
+                        <div class="modulo-view-icon"></div>
+                        <div class="modulo-view-titulo"></div>
+                    </div>
+                    <div class="modulo-view-vacio">Vista de prueba — este módulo aún no tiene contenido implementado.<br>Usa el dock de la izquierda para probar el cambio lateral entre grupos y módulos.</div>
+
+                    <!-- Prototipo de Libro Diario — único módulo con contenido real por ahora -->
+                    <div class="ld-proto">
+                        <textarea class="ld-textarea" rows="2"
+                            placeholder="Ej: Venta de mercadería por $120.000 con transferencia">Compra de mercadería por $300.000 a crédito</textarea>
+                        <details class="ld-ayuda">
+                            <summary>¿Cómo escribir la glosa?</summary>
+                            <div>
+                                • Venta de mercadería por $200.000 al contado &nbsp;·&nbsp;
+                                Depósito de $500.000 en banco desde caja &nbsp;·&nbsp;
+                                Pago a proveedor por $80.000 con cheque &nbsp;·&nbsp;
+                                Gasto de arriendo por $200.000 con transferencia
+                            </div>
+                        </details>
+                        <div class="ld-controles">
+                            <div class="ld-fecha"><label>Fecha</label><input type="date" value="2026-07-28"></div>
+                            <div class="ld-botones">
+                                <button class="ld-btn ld-btn-primary"
+                                    onclick="mostrarToastDraft('Vista de ejemplo — acá se conecta el parser real de la glosa (ver diario.js).')">Generar Asiento →</button>
+                                <button class="ld-btn ld-btn-secondary"
+                                    onclick="mostrarToastDraft('Asiento Manual — placeholder de este borrador.')"><i class="ph ph-pencil-simple"></i> Asiento Manual</button>
+                                <button class="ld-btn ld-btn-secondary"
+                                    onclick="abrirModulo('contabilidad', 'Plan de cuentas')">+ Agregar Cuenta</button>
+                            </div>
+                        </div>
+
+                        <div class="ld-tabla-wrap">
+                            <table class="ld-tabla">
+                                <thead><tr><th>Cuenta</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="ld-debe">Mercaderías</td><td class="monto">$252.101</td><td class="monto">—</td></tr>
+                                    <tr><td class="ld-debe">IVA Crédito Fiscal</td><td class="monto">$47.899</td><td class="monto">—</td></tr>
+                                    <tr><td class="ld-haber">Proveedores</td><td class="monto">—</td><td class="monto">$300.000</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ld-totales">
+                            <div class="ld-badge ok"><i class="ph ph-scales"></i> Cuadrado: $300.000</div>
+                            <div class="ld-totales-right">
+                                <input class="ld-contacto" placeholder="Contacto (opcional)">
+                                <button class="ld-btn ld-btn-primary" onclick="ldRegistrarEjemplo()"><i class="ph ph-floppy-disk"></i> Registrar Asiento</button>
+                            </div>
+                        </div>
+
+                        <div class="ld-historial-titulo"><i class="ph ph-clock-counter-clockwise"></i> Registros históricos</div>
+                        <div class="ld-historial" id="ldHistorial">
+                            <details class="ld-hist-item">
+                                <summary><span class="ld-hist-fecha">25/07/2026</span><span class="ld-hist-glosa">Venta de mercadería por $450.000 al contado</span><span class="ld-hist-monto">$450.000</span></summary>
+                                <table class="ld-hist-tabla">
+                                    <thead><tr><th>Cuenta</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>Caja</td><td class="monto">$450.000</td><td class="monto">—</td></tr>
+                                        <tr><td>Ingresos por Ventas</td><td class="monto">—</td><td class="monto">$378.151</td></tr>
+                                        <tr><td>IVA Débito Fiscal</td><td class="monto">—</td><td class="monto">$71.849</td></tr>
+                                    </tbody>
+                                </table>
+                            </details>
+                            <details class="ld-hist-item">
+                                <summary><span class="ld-hist-fecha">22/07/2026</span><span class="ld-hist-glosa">Pago de remuneraciones por $1.200.000</span><span class="ld-hist-monto">$1.200.000</span></summary>
+                                <table class="ld-hist-tabla">
+                                    <thead><tr><th>Cuenta</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>Gasto Remuneraciones</td><td class="monto">$1.200.000</td><td class="monto">—</td></tr>
+                                        <tr><td>Banco</td><td class="monto">—</td><td class="monto">$1.200.000</td></tr>
+                                    </tbody>
+                                </table>
+                            </details>
+                            <details class="ld-hist-item">
+                                <summary><span class="ld-hist-fecha">20/07/2026</span><span class="ld-hist-glosa">Depósito de $500.000 en banco desde caja</span><span class="ld-hist-monto">$500.000</span></summary>
+                                <table class="ld-hist-tabla">
+                                    <thead><tr><th>Cuenta</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>Banco</td><td class="monto">$500.000</td><td class="monto">—</td></tr>
+                                        <tr><td>Caja</td><td class="monto">—</td><td class="monto">$500.000</td></tr>
+                                    </tbody>
+                                </table>
+                            </details>
+                        </div>
+                    </div>
+
+                    <!-- Prototipo de Libro Mayor -->
+                    <div class="lm-proto">
+                        <div class="lm-toolbar">
+                            <select class="lm-select">
+                                <option>Todas las cuentas</option>
+                                <option>Caja</option>
+                                <option>Proveedores</option>
+                            </select>
+                            <select class="lm-select">
+                                <option>Todos los períodos</option>
+                                <option>2026-07</option>
+                                <option>2026-06</option>
+                            </select>
+                        </div>
+                        <div class="lm-cuentas">
+                            <div class="lm-cuenta-card">
+                                <div class="lm-cuenta-head">
+                                    <span class="lm-cuenta-nombre"><i class="ph ph-book-open"></i> Caja</span>
+                                    <span class="lm-cuenta-tipo">Activo</span>
+                                </div>
+                                <table class="lm-tabla">
+                                    <thead><tr><th style="width:52px;">N°</th><th style="width:100px;">Fecha</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>012</td><td>05/07/2026</td><td class="monto">$2.500.000</td><td class="monto">—</td></tr>
+                                        <tr><td>018</td><td>12/07/2026</td><td class="monto">$2.700.000</td><td class="monto">—</td></tr>
+                                        <tr><td>025</td><td>20/07/2026</td><td class="monto">—</td><td class="monto">$3.100.000</td></tr>
+                                    </tbody>
+                                </table>
+                                <div class="lm-cuenta-saldo"><span>Saldo: DEUDOR</span><span class="lm-saldo-deudor">$2.100.000</span></div>
+                            </div>
+                            <div class="lm-cuenta-card">
+                                <div class="lm-cuenta-head">
+                                    <span class="lm-cuenta-nombre"><i class="ph ph-book-open"></i> Proveedores</span>
+                                    <span class="lm-cuenta-tipo">Pasivo</span>
+                                </div>
+                                <table class="lm-tabla">
+                                    <thead><tr><th style="width:52px;">N°</th><th style="width:100px;">Fecha</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>009</td><td>03/07/2026</td><td class="monto">—</td><td class="monto">$3.300.000</td></tr>
+                                        <tr><td>015</td><td>10/07/2026</td><td class="monto">—</td><td class="monto">$2.000.000</td></tr>
+                                        <tr><td>022</td><td>18/07/2026</td><td class="monto">$2.100.000</td><td class="monto">—</td></tr>
+                                    </tbody>
+                                </table>
+                                <div class="lm-cuenta-saldo"><span>Saldo: ACREEDOR</span><span class="lm-saldo-acreedor">$3.200.000</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prototipo de Balance General -->
+                    <div class="bal-proto">
+                        <div class="bal-tabla-wrap">
+                            <table class="bal-tabla">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" style="text-align:left;">Cuenta Contable</th>
+                                        <th colspan="2">Sumas</th>
+                                        <th colspan="2">Saldos</th>
+                                        <th colspan="2">Inventario</th>
+                                        <th colspan="2">Resultados</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Debe</th><th>Haber</th>
+                                        <th>Deudor</th><th>Acreedor</th>
+                                        <th>Activo</th><th>Pasivo/Pat.</th>
+                                        <th>Pérdida</th><th>Ganancia</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bal-grupo-fila"><td colspan="9">Activo Circulante</td></tr>
+                                    <tr><td>Caja</td><td>$5.200.000</td><td>$3.100.000</td><td>$2.100.000</td><td>—</td><td>$2.100.000</td><td>—</td><td>—</td><td>—</td></tr>
+                                    <tr><td>Banco</td><td>$18.400.000</td><td>$9.600.000</td><td>$8.800.000</td><td>—</td><td>$8.800.000</td><td>—</td><td>—</td><td>—</td></tr>
+                                    <tr><td>Clientes</td><td>$6.500.000</td><td>$4.200.000</td><td>$2.300.000</td><td>—</td><td>$2.300.000</td><td>—</td><td>—</td><td>—</td></tr>
+                                    <tr><td>Mercaderías</td><td>$3.910.000</td><td>$1.500.000</td><td>$2.410.000</td><td>—</td><td>$2.410.000</td><td>—</td><td>—</td><td>—</td></tr>
+                                    <tr class="bal-grupo-fila"><td colspan="9">Pasivo Circulante</td></tr>
+                                    <tr><td>Proveedores</td><td>$2.100.000</td><td>$5.300.000</td><td>—</td><td>$3.200.000</td><td>—</td><td>$3.200.000</td><td>—</td><td>—</td></tr>
+                                    <tr class="bal-grupo-fila"><td colspan="9">Patrimonio</td></tr>
+                                    <tr><td>Capital</td><td>—</td><td>$10.000.000</td><td>—</td><td>$10.000.000</td><td>—</td><td>$10.000.000</td><td>—</td><td>—</td></tr>
+                                    <tr class="bal-grupo-fila"><td colspan="9">Pérdidas / Ganancias</td></tr>
+                                    <tr><td>Costo de Ventas</td><td>$7.440.000</td><td>—</td><td>$7.440.000</td><td>—</td><td>—</td><td>—</td><td>$7.440.000</td><td>—</td></tr>
+                                    <tr><td>Ingresos por Ventas</td><td>—</td><td>$9.850.000</td><td>—</td><td>$9.850.000</td><td>—</td><td>—</td><td>—</td><td>$9.850.000</td></tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr><td>SUBTOTALES</td><td>$43.550.000</td><td>$43.550.000</td><td>$23.050.000</td><td>$23.050.000</td><td>$15.610.000</td><td>$13.200.000</td><td>$7.440.000</td><td>$9.850.000</td></tr>
+                                    <tr><td>UTILIDAD / PÉRDIDA DEL EJERCICIO</td><td></td><td></td><td></td><td></td><td>—</td><td>$2.410.000</td><td>$2.410.000</td><td>—</td></tr>
+                                    <tr class="bal-final"><td>TOTALES IGUALES</td><td></td><td></td><td></td><td></td><td>$15.610.000</td><td>$15.610.000</td><td>$9.850.000</td><td>$9.850.000</td></tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 2 — Financiero + Actividad (fusionadas) -->
+    <div class="in-slide">
+        <div class="slide-titulo"><span class="slide-num">02</span><b><i class="ph ph-chart-bar"></i> Financiero y actividad</b><span class="slide-titulo-rule"></span></div>
+        <div class="s2-grid">
+            <div class="s2-col">
+                <div class="kpi-grid-compacta">
+                    <div class="kpi-mx"><div class="kpi-mx-lbl">Activos</div><div class="kpi-mx-row"><span class="kpi-mx-val">$48,2M</span><span class="kpi-mx-delta up"><i class="ph ph-trend-up"></i>4,2%</span></div></div>
+                    <div class="kpi-mx"><div class="kpi-mx-lbl">Pasivos</div><div class="kpi-mx-row"><span class="kpi-mx-val">$12,1M</span><span class="kpi-mx-delta down"><i class="ph ph-trend-up"></i>1,8%</span></div></div>
+                    <div class="kpi-mx"><div class="kpi-mx-lbl">Ingresos</div><div class="kpi-mx-row"><span class="kpi-mx-val">$9,85M</span><span class="kpi-mx-delta up"><i class="ph ph-trend-up"></i>7,6%</span></div></div>
+                    <div class="kpi-mx"><div class="kpi-mx-lbl">Resultado</div><div class="kpi-mx-row"><span class="kpi-mx-val">$2,41M</span><span class="kpi-mx-delta up"><i class="ph ph-trend-up"></i>12,3%</span></div></div>
+                </div>
+                <div class="in-card flexcol" style="flex:1;">
+                    <div style="font-weight:800;font-size:12.5px;margin-bottom:8px;"><i class="ph ph-chart-bar"></i> Ingresos vs Gastos — Año Actual</div>
+                    <div class="placeholder-box">[gráfico de barras real acá]</div>
+                </div>
+                <div class="in-card">
+                    <div class="actividad-mini">
+                        <div><b>Últimos asientos</b>3 registrados hoy</div>
+                        <div><b>Top cuenta</b>Banco Estado — $18,4M</div>
+                    </div>
+                </div>
+            </div>
+            <div class="s2-col">
+                <div class="in-card">
+                    <div style="font-weight:800;font-size:12.5px;"><i class="ph ph-trend-up"></i> Indicadores</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">UF $40.844,79 · UTM $71.649 · USD $946,24</div>
+                </div>
+                <div class="donut-row">
+                    <div class="in-card flexcol">
+                        <div style="font-weight:800;font-size:10.5px;margin-bottom:6px;color:var(--text-muted);text-transform:uppercase;">Estructura</div>
+                        <div class="placeholder-box">[donut]</div>
+                    </div>
+                    <div class="in-card flexcol">
+                        <div style="font-weight:800;font-size:10.5px;margin-bottom:6px;color:var(--text-muted);text-transform:uppercase;">Resultado</div>
+                        <div class="placeholder-box">[donut]</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 3 — Configuración (mismo patrón de hero + grupos que la sección 1,
+         para que tenga una vista predeterminada con sus propios módulos) -->
+    <div class="in-slide">
+        <div class="slide-titulo"><span class="slide-num">03</span><b><i class="ph ph-gear"></i> Configuración</b><span class="slide-titulo-rule"></span></div>
+        <div class="s3-grid">
+            <div class="in-hero vista-default">
+                <i class="ph ph-gear in-hero-watermark"></i>
+                <div class="in-hero-top">
+                    <div>
+                        <div class="in-hero-empresa"><i class="ph ph-gear"></i> Configuración</div>
+                        <div class="in-hero-sub">Estudio Contable Marín · Mi Empresa Ltda.</div>
+                    </div>
+                </div>
+                <div class="in-frase">Ajusta tu estudio, <span>a tu manera.</span></div>
+                <div class="in-hero-status">
+                    <span class="in-hero-pill ok">Todo al día</span>
+                    <span class="in-hero-pill"><i class="ph ph-user"></i> 3 usuarios activos</span>
+                </div>
+            </div>
+            <div class="mod-groups">
+                <div class="mod-group" data-grupo="cfg-empresa" style="--g:var(--navy);" onclick="abrirPulpo('cfg-empresa', this)">
+                    <div class="mod-group-icon"><i class="ph ph-buildings"></i></div>
+                    <div class="mod-group-info"><div class="mod-group-nombre">Empresa</div><div class="mod-group-count">4 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="cfg-usuarios" style="--g:var(--coral);" onclick="abrirPulpo('cfg-usuarios', this)">
+                    <div class="mod-group-icon"><i class="ph ph-user"></i></div>
+                    <div class="mod-group-info"><div class="mod-group-nombre">Usuarios y Permisos</div><div class="mod-group-count">3 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="cfg-apariencia" style="--g:var(--periwinkle);" onclick="abrirPulpo('cfg-apariencia', this)">
+                    <div class="mod-group-icon"><i class="ph ph-palette"></i></div>
+                    <div class="mod-group-info"><div class="mod-group-nombre">Apariencia</div><div class="mod-group-count">3 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="cfg-notificaciones" style="--g:var(--blue);" onclick="abrirPulpo('cfg-notificaciones', this)">
+                    <div class="mod-group-icon"><i class="ph ph-bell"></i></div>
+                    <div class="mod-group-info"><div class="mod-group-nombre">Notificaciones</div><div class="mod-group-count">3 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="cfg-integraciones" style="--g:var(--positive);" onclick="abrirPulpo('cfg-integraciones', this)">
+                    <div class="mod-group-icon"><i class="ph ph-robot"></i></div>
+                    <div class="mod-group-info"><div class="mod-group-nombre">Integraciones e IA</div><div class="mod-group-count">3 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+            </div>
+            <div class="modulo-view">
+                <button class="modulo-volver" onclick="cerrarModulo(this.closest('.in-slide'))">‹ Volver</button>
+                <div class="folder-tabs"></div>
+                <div class="folder-tabs-body">
+                    <div class="modulo-view-header">
+                        <div class="modulo-view-icon"></div>
+                        <div class="modulo-view-titulo"></div>
+                    </div>
+                    <div class="modulo-view-vacio">Vista de prueba — este módulo aún no tiene contenido implementado.<br>Usa el dock de la izquierda para probar el cambio lateral entre grupos y módulos.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="in-rail" id="inRail">
+    <div class="in-dot activo" onclick="irASeccion(0)" title="Centro de mando"><i class="ph ph-compass"></i></div>
+    <div class="in-dot" onclick="irASeccion(1)" title="Financiero"><i class="ph ph-chart-bar"></i></div>
+    <div class="in-dot" onclick="irASeccion(2)" title="Configuración"><i class="ph ph-gear"></i></div>
+</div>
+
+<!-- Overlay del selector de módulos -->
+<div class="fan-overlay" id="fanOverlay">
+    <div class="fan-bg" onclick="cerrarPulpo()"></div>
+    <div class="fan-cerrar" onclick="cerrarPulpo()"><i class="ph ph-x"></i> Cerrar</div>
+    <div class="fan-panel" id="fanPanel">
+        <div class="fan-panel-head">
+            <div class="fan-panel-icon" id="fanPanelIcon"></div>
+            <div>
+                <div class="fan-panel-titulo" id="fanPanelTitulo"></div>
+                <div class="fan-panel-hint" id="fanPanelHint">Pasa el mouse sobre un módulo para ver su descripción</div>
+            </div>
+        </div>
+        <div class="fan-panel-grid" id="fanPanelGrid"></div>
+    </div>
+</div>
+
+<script>
+    const TOTAL_SECCIONES = 3;
+    let seccionActual = 0;
+    let bloqueado = false;
+
+    function irASeccion(i) {
+        if (i < 0 || i >= TOTAL_SECCIONES || bloqueado) return;
+        seccionActual = i;
+        document.getElementById('inTrack').style.transform = `translateY(-${i * 100}%)`;
+        document.querySelectorAll('.in-dot').forEach((d, idx) => d.classList.toggle('activo', idx === i));
+        bloqueado = true;
+        setTimeout(() => bloqueado = false, 550);
+    }
+
+    const viewport = document.getElementById('inViewport');
+    viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (e.deltaY > 20) irASeccion(seccionActual + 1);
+        else if (e.deltaY < -20) irASeccion(seccionActual - 1);
+    }, { passive: false });
+
+    document.addEventListener('keydown', (e) => {
+        if (document.getElementById('fanOverlay').classList.contains('abierto')) {
+            if (e.key === 'Escape') cerrarPulpo();
+            return;
+        }
+        if (e.key === 'Escape') {
+            const vistaAbierta = document.querySelector('.modulo-view.abierto');
+            if (vistaAbierta) { cerrarModulo(vistaAbierta.closest('.in-slide')); return; }
+        }
+        if (['ArrowDown', 'PageDown'].includes(e.key)) { e.preventDefault(); irASeccion(seccionActual + 1); }
+        if (['ArrowUp', 'PageUp'].includes(e.key))     { e.preventDefault(); irASeccion(seccionActual - 1); }
+    });
+
+    let touchStartY = 0;
+    viewport.addEventListener('touchstart', e => touchStartY = e.touches[0].clientY);
+    viewport.addEventListener('touchend', e => {
+        const dy = touchStartY - e.changedTouches[0].clientY;
+        if (Math.abs(dy) > 50) irASeccion(seccionActual + (dy > 0 ? 1 : -1));
+    });
+
+    // ── Pulpo — 5 grupos funcionales (redistribución pedida, sobre el
+    // catálogo completo de módulos de referencia, sin eliminar ninguno; los
+    // reportes de cada dominio se agrupan en un solo tentáculo "Reportes de…"
+    // en vez de un tentáculo por reporte, para que el abanico siga siendo legible). ──
+    const GRUPOS_DATA = {
+        contabilidad: {
+            color: 'var(--navy)', icon: 'calculator',
+            modulos: [
+                'Plan de cuentas', 'Libro diario', 'Libro copiativo', 'Libro mayor',
+                'Balance general', 'Asientos manuales', 'Estado de resultado',
+                'Modif. cuentas masivo', 'Reprocesar asientos', 'Reportes',
+            ],
+        },
+        ventas: {
+            color: 'var(--coral)', icon: 'shopping-cart',
+            modulos: [
+                'Facturación', 'Cotizaciones', 'Órdenes de venta', 'Abonos', 'Cobranzas',
+                'Guía de despachos', 'Integraciones online', 'Clientes', 'Reportes',
+            ],
+        },
+        compras: {
+            color: 'var(--periwinkle)', icon: 'package',
+            modulos: ['Órdenes de compra', 'Comprobantes', 'Pagos', 'Proveedores', 'Reportes'],
+        },
+        inventarios: {
+            color: 'var(--blue)', icon: 'cube',
+            modulos: [
+                'Productos y servicios', 'Atributos de producto', 'Bodegas',
+                'Modificación de stock', 'Movim. entre Bodegas',
+                'Importación masiva', 'Actualización de stock', 'Reportes',
+            ],
+        },
+        tesoreria: {
+            color: 'var(--positive)', icon: 'bank',
+            modulos: ['Entidades', 'Cajas', 'Cheques', 'Movimientos bancarios', 'Movimiento de fondos'],
+        },
+        // ── Grupos de la sección Configuración (misma mecánica de dock) ──
+        'cfg-empresa': {
+            color: 'var(--navy)', icon: 'buildings',
+            modulos: ['Datos de la empresa', 'Ejercicio contable', 'Cambiar de empresa', 'Eliminar empresa'],
+        },
+        'cfg-usuarios': {
+            color: 'var(--coral)', icon: 'user',
+            modulos: ['Usuarios del estudio', 'Roles y permisos', 'Invitar colaborador'],
+        },
+        'cfg-apariencia': {
+            color: 'var(--periwinkle)', icon: 'palette',
+            modulos: ['Tema claro / oscuro', 'Densidad de tablas', 'Idioma'],
+        },
+        'cfg-notificaciones': {
+            color: 'var(--blue)', icon: 'bell',
+            modulos: ['Vencimientos tributarios', 'Hallazgos abiertos', 'Resumen semanal'],
+        },
+        'cfg-integraciones': {
+            color: 'var(--positive)', icon: 'robot',
+            modulos: ['API Key de IA (Gemini)', 'Proxy de Previred', 'Sincronización con la nube'],
+        },
+    };
+
+    // Descripción corta por módulo (clave "grupo::módulo") — solo para el
+    // tooltip que aparece al pasar el mouse sobre un chip del selector; no
+    // afecta ninguna lógica de apertura/cierre de módulos.
+    const MODULOS_DESC = {
+        'contabilidad::Plan de cuentas': 'Estructura y códigos de todas tus cuentas contables',
+        'contabilidad::Libro diario': 'Registra asientos día a día con glosa en lenguaje natural',
+        'contabilidad::Libro copiativo': 'Copia certificada y correlativa de todos los asientos',
+        'contabilidad::Libro mayor': 'Movimientos y saldos acumulados por cuenta',
+        'contabilidad::Balance general': 'Sumas y saldos, activo, pasivo y resultado del período',
+        'contabilidad::Asientos manuales': 'Crea asientos contables personalizados sin plantilla',
+        'contabilidad::Estado de resultado': 'Ingresos, gastos y utilidad del ejercicio',
+        'contabilidad::Modif. cuentas masivo': 'Edita o reclasifica muchas cuentas a la vez',
+        'contabilidad::Reprocesar asientos': 'Vuelve a calcular asientos tras un cambio de plan',
+        'contabilidad::Reportes': 'Informes contables listos para exportar',
+
+        'ventas::Facturación': 'Emite facturas electrónicas afectas y exentas',
+        'ventas::Cotizaciones': 'Prepara y envía cotizaciones a tus clientes',
+        'ventas::Órdenes de venta': 'Confirma pedidos antes de facturar',
+        'ventas::Abonos': 'Registra pagos parciales de tus clientes',
+        'ventas::Cobranzas': 'Da seguimiento a facturas pendientes de pago',
+        'ventas::Guía de despachos': 'Documenta el traslado de mercadería vendida',
+        'ventas::Integraciones online': 'Conecta tu tienda o plataforma de ventas',
+        'ventas::Clientes': 'Ficha, historial y datos de contacto',
+        'ventas::Reportes': 'Ventas por período, cliente o producto',
+
+        'compras::Órdenes de compra': 'Solicita mercadería o servicios a proveedores',
+        'compras::Comprobantes': 'Registra facturas y boletas de compra recibidas',
+        'compras::Pagos': 'Controla pagos realizados a proveedores',
+        'compras::Proveedores': 'Ficha, historial y condiciones comerciales',
+        'compras::Reportes': 'Compras por período o proveedor',
+
+        'inventarios::Productos y servicios': 'Catálogo con precios, costos y códigos',
+        'inventarios::Atributos de producto': 'Talla, color u otras variantes del producto',
+        'inventarios::Bodegas': 'Define tus puntos de almacenamiento',
+        'inventarios::Modificación de stock': 'Ajusta cantidades por merma o conteo',
+        'inventarios::Movim. entre Bodegas': 'Traslada stock de una bodega a otra',
+        'inventarios::Importación masiva': 'Carga productos desde una planilla',
+        'inventarios::Actualización de stock': 'Sincroniza existencias reales del inventario',
+        'inventarios::Reportes': 'Stock crítico, valorizado y rotación',
+
+        'tesoreria::Entidades': 'Bancos y otras entidades financieras',
+        'tesoreria::Cajas': 'Controla el efectivo disponible',
+        'tesoreria::Cheques': 'Emisión y seguimiento de cheques',
+        'tesoreria::Movimientos bancarios': 'Cartola y conciliación con el banco',
+        'tesoreria::Movimiento de fondos': 'Traspasos entre caja y cuentas',
+
+        'cfg-empresa::Datos de la empresa': 'Razón social, RUT y datos de contacto',
+        'cfg-empresa::Ejercicio contable': 'Abre o cierra el período contable activo',
+        'cfg-empresa::Cambiar de empresa': 'Cambia entre las empresas de tu estudio',
+        'cfg-empresa::Eliminar empresa': 'Da de baja una empresa del sistema',
+
+        'cfg-usuarios::Usuarios del estudio': 'Gestiona quién tiene acceso',
+        'cfg-usuarios::Roles y permisos': 'Define qué puede hacer cada usuario',
+        'cfg-usuarios::Invitar colaborador': 'Suma un nuevo usuario por correo',
+
+        'cfg-apariencia::Tema claro / oscuro': 'Elige la apariencia visual de la app',
+        'cfg-apariencia::Densidad de tablas': 'Ajusta el espaciado de filas y columnas',
+        'cfg-apariencia::Idioma': 'Cambia el idioma de la interfaz',
+
+        'cfg-notificaciones::Vencimientos tributarios': 'Alertas de fechas clave del SII',
+        'cfg-notificaciones::Hallazgos abiertos': 'Avisos de hallazgos pendientes de resolver',
+        'cfg-notificaciones::Resumen semanal': 'Recibe un resumen de actividad por correo',
+
+        'cfg-integraciones::API Key de IA (Gemini)': 'Conecta tu propia clave de IA',
+        'cfg-integraciones::Proxy de Previred': 'Sincroniza cotizaciones previsionales',
+        'cfg-integraciones::Sincronización con la nube': 'Respaldo automático de tus datos',
+    };
+
+    // Fila (.mod-groups) actualmente colapsada al dock — puede ser la de
+    // Centro de mando o la de Configuración, según desde dónde se haya
+    // abierto el panel; cerrarPulpo() usa esta referencia para restaurarla.
+    let grupoAbiertoEl = null;
+
+    function abrirPulpo(grupoKey, tileEl) {
+        const data = GRUPOS_DATA[grupoKey];
+        const grupos = tileEl.closest('.mod-groups');
+        grupoAbiertoEl = grupos;
+
+        // Este selector SOLO muestra los módulos del grupo — no mueve nada.
+        // La fila recién se colapsa al dock cuando se abre un módulo concreto
+        // (ver abrirModulo()), así que acá solo hace falta leer si YA estaba
+        // en modo dock (clic en un ícono del dock, viniendo de otro módulo)
+        // para decidir si el panel se ancla debajo del tile (fila normal) o
+        // como flyout a la derecha (dock ya activo).
+        const enDock = grupos.classList.contains('dock-activo');
+        const rect = tileEl.getBoundingClientRect();
+
+        const panel = document.getElementById('fanPanel');
+        panel.style.setProperty('--gcolor', data.color);
+        // El degradado + color blanco del ícono los pone .fan-panel-icon en
+        // CSS a partir de --gcolor (recién fijado arriba) — no hace falta
+        // pisar background/color acá.
+        document.getElementById('fanPanelIcon').innerHTML = `<i class="ph ph-${data.icon}"></i>`;
+        document.getElementById('fanPanelTitulo').textContent = data.modulos.length + ' módulos';
+        document.getElementById('fanPanelGrid').innerHTML = data.modulos
+            .map((m, i) => {
+                const desc = (MODULOS_DESC[`${grupoKey}::${m}`] || '').replace(/"/g, '&quot;');
+                return `<div class="fan-chip" style="--i:${i}" data-desc="${desc}"
+                    onclick="abrirModulo('${grupoKey}', '${m.replace(/'/g, "\\'")}')">
+                    <span class="fan-chip-nombre">${m}</span><span class="fan-chip-flecha">›</span>
+                </div>`;
+            }).join('');
+
+        const anchoPanel = Math.min(500, window.innerWidth * 0.92);
+        panel.style.width = anchoPanel + 'px';
+        // El overlay tiene que estar visible ANTES de medir — mientras
+        // .fan-overlay no tenga la clase "abierto" es display:none, y todo
+        // lo de adentro (incluido el panel) mide offsetHeight = 0 sin
+        // importar cuánto contenido tenga. Por eso la clase se agrega acá
+        // (no al final como antes) y recién después se mide altoPanel.
+        document.getElementById('fanOverlay').classList.add('abierto');
+        // El contenido (grid de módulos) ya está en el DOM y el panel ya es
+        // visible, así que su alto real ya se puede medir acá — hace falta
+        // para no dejar el panel colgando fuera de la pantalla cuando el
+        // grupo tiene muchos módulos (ej. Contabilidad, 10 → 5 filas) o la
+        // ventana es baja.
+        const altoPanel = panel.offsetHeight;
+
+        if (enDock) {
+            // Ya en modo dock — el panel se abre como flyout a la derecha del
+            // ícono, centrado verticalmente sobre él.
+            let top = rect.top + rect.height / 2 - 30;
+            top = Math.max(16, Math.min(top, window.innerHeight - altoPanel - 16));
+            let left = rect.right + 14;
+            left = Math.min(left, window.innerWidth - anchoPanel - 16);
+            panel.style.left = left + 'px';
+            panel.style.top = top + 'px';
+        } else {
+            // Fila normal — el panel se ancla debajo del tile, como un
+            // desplegable simple. Si no entra por abajo (panel alto o
+            // ventana baja), se ancla arriba del tile en su lugar.
+            let left = rect.left + rect.width / 2 - anchoPanel / 2;
+            left = Math.max(16, Math.min(left, window.innerWidth - anchoPanel - 16));
+            panel.style.left = left + 'px';
+
+            let top = rect.bottom + 12;
+            if (top + altoPanel > window.innerHeight - 16) {
+                top = rect.top - altoPanel - 12;
+            }
+            top = Math.max(16, Math.min(top, window.innerHeight - altoPanel - 16));
+            panel.style.top = top + 'px';
+        }
+    }
+
+    function cerrarPulpo() {
+        // Solo cierra el selector de módulos — no toca el dock ni la vista de
+        // módulo, que son independientes (ver abrirModulo()/cerrarModulo()).
+        document.getElementById('fanOverlay').classList.remove('abierto');
+    }
+
+    // Delegado una sola vez (el grid se re-renderiza pero el contenedor es
+    // siempre el mismo elemento) — al pasar el mouse por un módulo, su
+    // descripción reemplaza el hint del panel; al salir del grid completo,
+    // vuelve al texto por defecto guardado en el propio atributo.
+    const fanPanelGridEl = document.getElementById('fanPanelGrid');
+    const fanPanelHintEl = document.getElementById('fanPanelHint');
+    const FAN_HINT_DEFAULT = fanPanelHintEl.textContent;
+    fanPanelGridEl.addEventListener('mouseover', (e) => {
+        const chip = e.target.closest('.fan-chip');
+        if (!chip) return;
+        const desc = chip.dataset.desc;
+        if (!desc) return;
+        fanPanelHintEl.textContent = desc;
+        fanPanelHintEl.classList.add('desc-activa');
+    });
+    fanPanelGridEl.addEventListener('mouseleave', () => {
+        fanPanelHintEl.textContent = FAN_HINT_DEFAULT;
+        fanPanelHintEl.classList.remove('desc-activa');
+    });
+
+    // Módulos con contenido real prototipado — mapea "grupo::módulo" a la
+    // clase del bloque que reemplaza el header+vacío genérico. Agregar acá
+    // cada módulo nuevo a medida que se prototipa (ver .ld-proto/.lm-proto/
+    // .bal-proto en el CSS); el resto sigue mostrando la vista de prueba vacía.
+    const MODULOS_PROTOTIPADOS = {
+        'contabilidad::Libro diario':   '.ld-proto',
+        'contabilidad::Libro mayor':    '.lm-proto',
+        'contabilidad::Balance general':'.bal-proto',
+    };
+
+    // Se llama al elegir un módulo concreto dentro del selector — es el único
+    // momento en que la fila de grupos se colapsa al dock ("deslizamiento"),
+    // y se muestra una vista de módulo (vacía, de prueba, o prototipada) en su lugar.
+    function abrirModulo(grupoKey, moduloNombre) {
+        const data = GRUPOS_DATA[grupoKey];
+        const grupos = grupoAbiertoEl;
+        if (!grupos) return;
+
+        document.getElementById('fanOverlay').classList.remove('abierto');
+
+        grupos.classList.add('dock-activo');
+        grupos.querySelectorAll('.mod-group').forEach(el => {
+            el.classList.toggle('activo', el.dataset.grupo === grupoKey);
+        });
+
+        const slide = grupos.closest('.in-slide');
+        slide.querySelectorAll('.vista-default').forEach(el => el.style.display = 'none');
+
+        const vista = slide.querySelector('.modulo-view');
+        vista.style.setProperty('--mg', data.color);
+        vista.classList.add('abierto');
+
+        // Solo un prototipo puede estar visible a la vez — ocultar todos antes
+        // de mostrar el que corresponda (o ninguno, si el módulo no tiene uno).
+        vista.querySelectorAll('.ld-proto, .lm-proto, .bal-proto').forEach(el => el.classList.remove('abierto'));
+
+        const header = vista.querySelector('.modulo-view-header');
+        const vacio  = vista.querySelector('.modulo-view-vacio');
+        const selectorProto = MODULOS_PROTOTIPADOS[`${grupoKey}::${moduloNombre}`];
+
+        if (selectorProto) {
+            if (header) header.style.display = 'none';
+            if (vacio)  vacio.style.display  = 'none';
+            const proto = vista.querySelector(selectorProto);
+            if (proto) proto.classList.add('abierto');
+        } else {
+            if (header) {
+                header.style.display = '';
+                // El color viene de --mg (ya fijado arriba en `vista`), así que
+                // no hace falta pisar background/color inline — el degradado
+                // de .modulo-view-icon en CSS lo toma solo.
+                header.querySelector('.modulo-view-icon').innerHTML = `<i class="ph ph-${data.icon}"></i>`;
+                header.querySelector('.modulo-view-titulo').textContent = moduloNombre;
+            }
+            if (vacio)  vacio.style.display  = '';
+        }
+
+        // Pestañas con TODOS los módulos del grupo — permiten cambiar de
+        // módulo sin volver a abrir el selector lateral. title="" para poder
+        // leer el nombre completo al pasar el mouse cuando queda truncado.
+        vista.querySelector('.folder-tabs').innerHTML = data.modulos.map(m => `
+            <button class="folder-tab${m === moduloNombre ? ' activo' : ''}" title="${m}"
+                onclick="abrirModulo('${grupoKey}', '${m.replace(/'/g, "\\'")}')">${m}</button>
+        `).join('');
+    }
+
+    // "‹ Volver" dentro de la vista de módulo: restaura el contenido por
+    // defecto de la sección y expande la fila de grupos de nuevo.
+    function cerrarModulo(slideEl) {
+        slideEl.querySelectorAll('.vista-default').forEach(el => el.style.display = '');
+        slideEl.querySelector('.modulo-view').classList.remove('abierto');
+        slideEl.querySelectorAll('.ld-proto, .lm-proto, .bal-proto').forEach(el => el.classList.remove('abierto'));
+
+        const grupos = slideEl.querySelector('.mod-groups');
+        grupos.classList.remove('dock-activo');
+        grupos.querySelectorAll('.mod-group').forEach(el => el.classList.remove('activo'));
+    }
+
+    // Toast liviano propio del borrador (este mockup no carga app.js, así que
+    // no tiene mostrarToast() real) — solo para dar feedback visual a los
+    // botones de ejemplo del prototipo de Libro Diario.
+    function mostrarToastDraft(msg) {
+        let t = document.getElementById('draftToast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'draftToast';
+            t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:600;z-index:400;opacity:0;transition:opacity .25s;pointer-events:none;max-width:80vw;text-align:center;box-shadow:0 12px 32px -8px rgba(15,23,42,.35);';
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.style.opacity = '1';
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.style.opacity = '0', 2200);
+    }
+
+    // Demo de "Registrar Asiento": agrega el ejemplo de la tabla al historial,
+    // como haría guardarAsiento() en la app real (ver diario.js).
+    function ldRegistrarEjemplo() {
+        const hist = document.getElementById('ldHistorial');
+        const item = document.createElement('details');
+        item.className = 'ld-hist-item';
+        item.innerHTML = `
+            <summary><span class="ld-hist-fecha">28/07/2026</span><span class="ld-hist-glosa">Compra de mercadería por $300.000 a crédito</span><span class="ld-hist-monto">$300.000</span></summary>
+            <table class="ld-hist-tabla">
+                <thead><tr><th>Cuenta</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                <tbody>
+                    <tr><td>Mercaderías</td><td class="monto">$252.101</td><td class="monto">—</td></tr>
+                    <tr><td>IVA Crédito Fiscal</td><td class="monto">$47.899</td><td class="monto">—</td></tr>
+                    <tr><td>Proveedores</td><td class="monto">—</td><td class="monto">$300.000</td></tr>
+                </tbody>
+            </table>`;
+        hist.prepend(item);
+        mostrarToastDraft('Asiento registrado (ejemplo) — se agregó al historial debajo (desplegalo para ver el desglose Debe/Haber).');
+    }
+</script>
+</body>
+</html>
