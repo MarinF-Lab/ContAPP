@@ -46,8 +46,10 @@ function _calcularEstadoResultados(mes, anio) {
     const gastosFin   = [];
 
     Object.entries(cuentas).forEach(([nombre, mov]) => {
-        const info = (PLAN_CUENTAS && PLAN_CUENTAS[nombre]) || ESQUEMA_CUENTAS[nombre];
-        if (!info) return;
+        // obtenerInfoCuenta() clasifica por nombre las cuentas no registradas en el
+        // Plan de Cuentas (antes se descartaban y el resultado no coincidía con
+        // el "Resultado del Ejercicio" del Balance Clasificado).
+        const info = obtenerInfoCuenta(nombre);
 
         if (info.tipo === 'Ganancia') {
             const monto = mov.haber - mov.debe;

@@ -7,8 +7,8 @@
 
 let dbVentas = JSON.parse(localStorage.getItem('core_ventas')) || [];
 
-let ventasMes  = new Date().getMonth() + 1;
-let ventasAnio = new Date().getFullYear();
+let ventasMes  = periodoTrabajo().mes;
+let ventasAnio = periodoTrabajo().anio;
 
 const TIPOS_DOC_VENTA = [
     { value: 'factura',       label: 'Factura',         afecta_iva: true  },

@@ -29,9 +29,6 @@ function calcularKPIs() {
     setKPI('kpi-ingresos',   ingresos);
     setKPI('kpi-resultado',  resultado, true);
 
-    // Calcular liquidez
-    const _liq = _calcularLiquidezDash(cuentas);
-
     // Panel de onboarding si no hay datos
     const sinDatos = (!dbAsientos || dbAsientos.length === 0) && (!window.dbCompras || window.dbCompras.length === 0);
     const onbEl = document.getElementById('dash-onboarding');
@@ -74,84 +71,6 @@ function calcularKPIs() {
     _renderDashboardCharts(cuentas, ingresos, gastos, activos, pasivos, patrimonio, resultado);
     _renderUltimosAsientos();
     _renderTopCuentas(cuentas);
-    _renderLiquidezDash(_liq);
-    _renderAccesosRapidos();
-}
-
-// ── Accesos rápidos — MRU real de navegación (contapp-modulos-recientes) ───
-function _renderAccesosRapidos() {
-    const el = document.getElementById('dashAccesosRapidos');
-    if (!el) return;
-
-    let ids = [];
-    try { ids = JSON.parse(localStorage.getItem('contapp-modulos-recientes')) || []; } catch {}
-    const titulos = window.MODULO_TITULOS || {};
-    const items = ids.map(id => titulos[id] ? { id, label: titulos[id][0] } : null).filter(Boolean).slice(0, 6);
-
-    if (!items.length) {
-        el.innerHTML = `<div style="padding:10px 0;color:var(--text-muted);font-size:13px;">Todavía no visitaste otros módulos en esta sesión.</div>`;
-        return;
-    }
-
-    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;">` +
-        items.map(it => `
-            <button class="dash-quick-chip" onclick="navegar('${it.id}')">
-                <span>${it.label}</span>
-                <span class="dash-quick-chip-arrow">→</span>
-            </button>`).join('')
-        + `</div>`;
-}
-
-// ── Liquidez ──────────────────────────────────────────────────
-function _calcularLiquidezDash(cuentas) {
-    let actCirc = 0, pasCirc = 0, inv = 0;
-    const INV = ['Mercaderías','Inventario de Productos Terminados'];
-    Object.entries(cuentas).forEach(([nombre, mov]) => {
-        const info = ESQUEMA_CUENTAS[nombre] || (PLAN_CUENTAS && PLAN_CUENTAS[nombre]);
-        if (!info) return;
-        if (info.grupo === 'Activo Circulante') {
-            const s = mov.debe - mov.haber;
-            actCirc += s;
-            if (INV.includes(nombre)) inv += s;
-        }
-        if (info.grupo === 'Pasivo Circulante') pasCirc += (mov.haber - mov.debe);
-    });
-    return {
-        razonCorriente: pasCirc > 0 ? actCirc / pasCirc : null,
-        pruebaAcida:    pasCirc > 0 ? (actCirc - inv) / pasCirc : null,
-        capitalTrabajo: actCirc - pasCirc,
-    };
-}
-
-function _renderLiquidezDash(liq) {
-    const el = document.getElementById('dashLiquidez');
-    if (!el) return;
-    function sem(v, ok, warn) {
-        if (v === null) return 'var(--ink-faint)';
-        return v >= ok ? 'var(--ok)' : v >= warn ? 'var(--warn)' : 'var(--danger)';
-    }
-    el.innerHTML = `
-        <div class="dash-liq-card">
-            <div class="dash-liq-label">Razón Corriente</div>
-            <div class="dash-liq-val" style="color:${sem(liq.razonCorriente,2,1)}">
-                ${liq.razonCorriente !== null ? liq.razonCorriente.toFixed(2) : '—'}
-            </div>
-            <div class="dash-liq-meta">Ideal ≥ 2</div>
-        </div>
-        <div class="dash-liq-card">
-            <div class="dash-liq-label">Prueba Ácida</div>
-            <div class="dash-liq-val" style="color:${sem(liq.pruebaAcida,1,0.7)}">
-                ${liq.pruebaAcida !== null ? liq.pruebaAcida.toFixed(2) : '—'}
-            </div>
-            <div class="dash-liq-meta">Ideal ≥ 1</div>
-        </div>
-        <div class="dash-liq-card">
-            <div class="dash-liq-label">Capital de Trabajo</div>
-            <div class="dash-liq-val" style="color:${liq.capitalTrabajo >= 0 ? 'var(--positive)' : 'var(--negative)'}">
-                $${fmt(Math.abs(liq.capitalTrabajo))}
-            </div>
-            <div class="dash-liq-meta">${liq.capitalTrabajo >= 0 ? 'Positivo' : 'Negativo'}</div>
-        </div>`;
 }
 
 // ── Gráficos del dashboard (Chart.js — paso 6 de la integración de diseño,
@@ -297,66 +216,36 @@ function _renderDashDonut(canvasId, key, datos) {
     });
 }
 
-// Últimos 5 asientos
+// Resumen de una línea (formato .actividad-mini, igual al prototipo) — antes
+// era una lista completa de los últimos 5 asientos; se cuentan los del mes
+// actual en vez de "hoy" porque en uso real casi siempre da 0 registrados hoy.
 function _renderUltimosAsientos() {
     const el = document.getElementById('dashUltimosAsientos');
     if (!el) return;
-    const ultimos = [...(dbAsientos || [])].sort((a, b) => b.id - a.id).slice(0, 5);
-    if (!ultimos.length) {
-        el.innerHTML = `<div style="color:var(--text-muted);padding:12px;">Sin asientos registrados.</div>`;
+    const activos = (dbAsientos || []).filter(a => a.estado !== 'ANULADO');
+    if (!activos.length) {
+        el.innerHTML = `<b>Últimos asientos</b>Sin asientos registrados`;
         return;
     }
-    el.innerHTML = ultimos.map(a => {
-        const totDebe = (a.movimientos || []).reduce((s, m) => s + (m.debe || 0), 0);
-        const tag = a.estado === 'ANULADO'
-            ? `<span style="background:var(--negative-soft);color:var(--negative);padding:1px 7px;border-radius:10px;font-size:11px;">Anulado</span>`
-            : `<span style="background:var(--info-soft);color:var(--info);padding:1px 7px;border-radius:10px;font-size:11px;">Activo</span>`;
-        return `<div class="dash-asiento-row">
-            <div class="dash-asiento-info">
-                <span class="dash-asiento-num">N° ${a.numero}</span>
-                <span class="dash-asiento-fecha">${a.fecha}</span>
-                ${tag}
-            </div>
-            <div class="dash-asiento-glosa">${a.glosa}</div>
-            <div class="dash-asiento-monto">$${fmt(totDebe)}</div>
-        </div>`;
-    }).join('');
+    const mesActual = new Date().toISOString().slice(0, 7); // YYYY-MM
+    const esteMes = activos.filter(a => (_fechaAsientoOrdenable(a.fecha) || '').startsWith(mesActual));
+    el.innerHTML = `<b>Últimos asientos</b>${esteMes.length} este mes`;
 }
 
-// Top 5 cuentas por saldo
+// Resumen de una línea de la cuenta con mayor saldo (formato .actividad-mini,
+// igual al prototipo) — antes era una lista completa de las top 6 cuentas.
 function _renderTopCuentas(cuentas) {
     const el = document.getElementById('dashTopCuentas');
     if (!el) return;
 
-    const lista = Object.entries(cuentas)
+    const top = Object.entries(cuentas)
         .map(([nombre, mov]) => {
             const tipo  = ESQUEMA_CUENTAS[nombre]?.tipo || 'Activo';
             const saldo = tipo === 'Activo' ? mov.debe - mov.haber : mov.haber - mov.debe;
-            return { nombre, saldo: Math.abs(saldo), tipo };
+            return { nombre, saldo: Math.abs(saldo) };
         })
         .filter(x => x.saldo > 0)
-        .sort((a, b) => b.saldo - a.saldo)
-        .slice(0, 6);
+        .sort((a, b) => b.saldo - a.saldo)[0];
 
-    if (!lista.length) {
-        el.innerHTML = `<div style="color:var(--text-muted);padding:12px;">Sin movimientos.</div>`;
-        return;
-    }
-
-    const maxSaldo = lista[0].saldo;
-    const colores  = { Activo: 'var(--periwinkle)', Pasivo: 'var(--coral)', Patrimonio: 'var(--navy)', Ganancia: 'var(--ok)', Pérdida: 'var(--danger)' };
-
-    el.innerHTML = lista.map(x => {
-        const pct = Math.round((x.saldo / maxSaldo) * 100);
-        const clr = colores[x.tipo] || 'var(--ink-faint)';
-        return `<div class="dash-cuenta-row">
-            <div class="dash-cuenta-label">
-                <span>${x.nombre}</span>
-                <span style="font-size:11px;color:var(--text-muted);">$${fmt(x.saldo)}</span>
-            </div>
-            <div class="dash-cuenta-bar-wrap">
-                <div class="dash-cuenta-bar" style="width:${pct}%;background:${clr};"></div>
-            </div>
-        </div>`;
-    }).join('');
+    el.innerHTML = `<b>Top cuenta</b>${top ? `${top.nombre} — $${fmt(top.saldo)}` : 'Sin movimientos'}`;
 }

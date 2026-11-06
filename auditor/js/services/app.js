@@ -200,7 +200,7 @@ function navegar(modulo, elNav) {
     }
     _modulosRecientesRegistrar(modulo);
 
-    if (modulo === 'inicio')               { calcularKPIs(); renderIndicadores(); }
+    if (modulo === 'inicio')               { calcularKPIs(); renderIndicadores(); if (typeof irASeccion === 'function') irASeccion(0); }
     if (modulo === 'estructura-contable')  _fireActiveTab('view-estructura-contable');
     if (modulo === 'reportes-financieros') _fireActiveTab('view-reportes-financieros');
     if (modulo === 'egresos-ingresos')     _fireActiveTab('view-egresos-ingresos');

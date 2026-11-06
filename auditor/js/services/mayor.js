@@ -3,8 +3,8 @@ let _mayorFiltrosCuenta  = '';
 // debe mostrarse mes a mes salvo que el usuario elija explícitamente ver el
 // total acumulado con la opción "Todos los períodos".
 let _mayorFiltrosPeriodo = (() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const p = periodoTrabajo();
+    return `${p.anio}-${String(p.mes).padStart(2, '0')}`;
 })();
 
 // Filtro especial activado por "🔗 Relacionadas": en vez de una sola cuenta,
@@ -32,6 +32,8 @@ function _mayorGetPeriodos(cuentas) {
     // movimientos registrados (es el default del selector).
     const d = new Date();
     set.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    const pt = periodoTrabajo();
+    set.add(`${pt.anio}-${String(pt.mes).padStart(2, '0')}`);
     return [...set].sort().reverse();
 }
 
@@ -65,6 +67,8 @@ function _mayorRenderToolbar(cuentas) {
 function _mayorAplicarFiltro() {
     _mayorFiltrosCuenta  = document.getElementById('selMayorCuenta')?.value  || '';
     _mayorFiltrosPeriodo = document.getElementById('selMayorPeriodo')?.value || '';
+    const _mp = /^(\d{4})-(\d{2})$/.exec(_mayorFiltrosPeriodo);
+    if (_mp) guardarPeriodoTrabajo({ anio: _mp[1], mes: _mp[2] });
     // Un cambio manual en los selects reemplaza cualquier filtro de "cuentas relacionadas".
     _mayorCuentasIntervinientes = null;
     _mayorAsientoIntervinienteNumero = null;

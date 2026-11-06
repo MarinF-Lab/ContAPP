@@ -110,6 +110,40 @@ function _guardarCacheIndicadores(datos) {
 window.indicadoresEconomicos = _cargarCacheIndicadores();
 
 // ─────────────────────────────────────────────────────────────
+//  HISTORIAL UTM — para el reajuste de remanente de crédito fiscal
+// ─────────────────────────────────────────────────────────────
+// _calcularReajusteUTM() (js/services/iva-resumen.js) necesita la UTM del MES
+// EN QUE SE ORIGINÓ un remanente de IVA, no solo la del mes actual — y nada
+// más en la app registraba ese histórico (actualizarIndicadores() solo
+// guardaba la UTM vigente, sobrescribiéndola cada vez). Este bloque hace dos
+// cosas: siembra valores oficiales conocidos (tabla SII, ingresados a mano
+// cuando el usuario los aporta) y, más abajo en actualizarIndicadores(),
+// registra automáticamente la UTM del mes en curso cada vez que se consulta
+// en vivo — así el historial se sigue completando solo hacia adelante.
+//
+// Fuente: tabla UTM 2024 aportada por el usuario (SII). Para reajustar
+// remanentes originados en 2025 o antes de que la app empezara a registrar
+// el histórico solo, hace falta la misma tabla para esos meses.
+const UTM_HISTORICO_SEED = {
+    '2024-01': 64666, '2024-02': 64343, '2024-03': 64793, '2024-04': 65182,
+    '2024-05': 65443, '2024-06': 65770, '2024-07': 65967, '2024-08': 65901,
+    '2024-09': 66362, '2024-10': 66561, '2024-11': 66628, '2024-12': 67294,
+};
+
+(function _sembrarHistorialUTM() {
+    const cache = _cargarCacheIndicadores();
+    const historial = { ...(cache.utm_historial || {}) };
+    let cambiado = false;
+    Object.entries(UTM_HISTORICO_SEED).forEach(([clave, valor]) => {
+        if (historial[clave] == null) { historial[clave] = valor; cambiado = true; }
+    });
+    if (cambiado) {
+        cache.utm_historial = historial;
+        _guardarCacheIndicadores(cache);
+    }
+})();
+
+// ─────────────────────────────────────────────────────────────
 //  PARSEAR RESPUESTA MERCADO → formato interno de cards
 // ─────────────────────────────────────────────────────────────
 function _parsearMercado(mercado) {
@@ -298,6 +332,16 @@ async function actualizarIndicadores(forzar = false) {
             const fusionado = { ...cacheAct, ...mercadoDatos };
             fusionado._actualizadoEn = ahora;
             fusionado._fuente        = fuenteLabel + (previredOk ? ' + previred.com' : '');
+
+            // Registrar la UTM de HOY en el historial (ver _sembrarHistorialUTM()
+            // más arriba) — así el historial se sigue completando solo mes a mes,
+            // sin depender de que alguien lo siembre a mano.
+            if (mercadoDatos.utm?.valor) {
+                const hoy = new Date();
+                const claveHoy = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+                fusionado.utm_historial = { ...(cacheAct.utm_historial || {}), [claveHoy]: mercadoDatos.utm.valor };
+            }
+
             _guardarCacheIndicadores(fusionado);
 
             if (elFecha)  elFecha.textContent = `Última actualización: ${ahora}`;
@@ -428,6 +472,26 @@ function renderIndicadores() {
     _pvCargarTasasUI();
     _sincronizarTasasConREM();
     renderPreviredTablas();
+    _renderIndicadoresLinea();
+}
+
+// Línea compacta UF/UTM/USD del dashboard de Inicio (#indicadoresLinea) —
+// igual al prototipo (auditor copia/PLANIFICACION/kluster-rediseno.html,
+// Sección 2), que solo muestra esos 3 en vez de las 6 cards con fecha/fuente
+// individual que sí siguen disponibles en la pestaña Remuneraciones →
+// Indicadores Previsionales.
+function _renderIndicadoresLinea() {
+    const el = document.getElementById('indicadoresLinea');
+    if (!el) return;
+    const cache = window.indicadoresEconomicos || {};
+    const partes = ['uf', 'utm', 'dolar'].map(key => {
+        const dato = cache[key];
+        if (dato?.valor == null) return null;
+        const cfg = IND_CONFIG[key];
+        const v = new Intl.NumberFormat('es-CL', { minimumFractionDigits: cfg.decimales, maximumFractionDigits: cfg.decimales }).format(parseFloat(dato.valor));
+        return `${cfg.label} ${cfg.prefijo || ''}${v}${cfg.sufijo || ''}`;
+    }).filter(Boolean);
+    el.textContent = partes.length ? partes.join(' · ') : 'Sin datos cargados';
 }
 
 const _ID_SUFIJO = { uf: 'UF', utm: 'UTM', imm: 'IMM', ipc: 'IPC', dolar: 'Dolar', euro: 'Euro', tasa: 'Tasa' };

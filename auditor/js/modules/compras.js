@@ -7,8 +7,8 @@
 
 let dbCompras = JSON.parse(localStorage.getItem('core_compras')) || [];
 
-let comprasMes  = new Date().getMonth() + 1;
-let comprasAnio = new Date().getFullYear();
+let comprasMes  = periodoTrabajo().mes;
+let comprasAnio = periodoTrabajo().anio;
 
 const TIPOS_DOC_COMPRA = [
     { value: 'factura',      label: 'Factura',              afecta_iva: true  },

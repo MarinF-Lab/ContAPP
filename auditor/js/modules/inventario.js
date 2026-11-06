@@ -81,8 +81,8 @@ let _invFiltroProducto = '';
 let _invFiltroBodega = '';
 // Por defecto el mes actual — "Todos los meses" (0) es la opción explícita
 // para ver el total acumulado, igual que en Honorarios/Diario.
-let _invFiltroMes  = new Date().getMonth() + 1;
-let _invFiltroAnio = new Date().getFullYear();
+let _invFiltroMes  = periodoTrabajo().mes;
+let _invFiltroAnio = periodoTrabajo().anio;
 
 function renderMovimientosInventario() {
     const view = document.getElementById('tab-inv-movimientos');

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Clientes — propuesta maximalista</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/main.css">
+<link rel="stylesheet" href="../css/auditor.css">
+<script>
+    (function() { document.documentElement.setAttribute('data-theme', localStorage.getItem('appTheme') || 'light'); })();
+</script>
+<style>
+    body { background: var(--bg); display: block; }
+    .draft-banner {
+        background: #fef3c7; color: #92400e; padding: 6px 20px; font-size: 12px;
+        font-weight: 600; text-align: center; border-bottom: 2px solid #f59e0b;
+    }
+    .draft-banner button { margin-left: 10px; }
+
+    /* ═══════════════════════════════════════════════
+       MAXIMALISTA — diagonales + mezcla de esquinas
+       rectas y redondeadas, sobre la MISMA paleta de
+       variables del tema (--accent, --text, --card-bg…)
+    ═══════════════════════════════════════════════ */
+
+    .mc-page { max-width: 1180px; margin: 0 auto; }
+
+    /* Hero — antes era un bloque coral sólido enorme que dominaba todo.
+       Ahora es navy (color de marca, más sobrio), más bajo, con una cinta
+       diagonal coral+periwinkle como acento en vez de llenar todo de rosado. */
+    .mc-hero {
+        background: var(--navy); color: #fff; padding: 22px 32px 46px;
+        clip-path: polygon(0 0, 100% 0, 100% 78%, 0 100%);
+        position: relative; overflow: hidden;
+    }
+    .mc-hero::before {
+        content: ''; position: absolute; top: 0; right: 0; width: 46%; height: 100%;
+        background: linear-gradient(120deg, transparent 0%, var(--periwinkle) 55%, var(--coral) 100%);
+        opacity: .28; clip-path: polygon(30% 0, 100% 0, 100% 100%, 0% 100%);
+    }
+    .mc-hero::after {
+        content: ''; position: absolute; top: -30px; right: 10%; width: 160px; height: 160px;
+        background: var(--coral); opacity: .18; border-radius: 50%;
+    }
+    .mc-hero-top { display: flex; align-items: flex-start; justify-content: space-between; position: relative; z-index: 1; }
+    .mc-titulo { font-size: 26px; font-weight: 900; letter-spacing: -.01em; margin: 0; }
+    .mc-sub { font-size: 12.5px; opacity: .8; margin-top: 4px; }
+    .mc-user { text-align: right; font-size: 12px; opacity: .9; }
+    .mc-user button {
+        margin-top: 6px; background: rgba(255,255,255,.12); color: #fff; border: 2px solid var(--periwinkle);
+        padding: 6px 14px; font-size: 11px; font-weight: 800; cursor: pointer;
+        clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+    }
+    .mc-user button:hover { background: rgba(255,255,255,.22); }
+
+    /* KPIs flotando sobre el corte diagonal del hero — cada uno con su propio
+       tono (periwinkle / coral tenue / verde), no los tres iguales en blanco */
+    .mc-kpi-row { display: flex; gap: 12px; margin: -34px 32px 26px; position: relative; z-index: 2; }
+    .mc-kpi {
+        flex: 1; background: var(--periwinkle-soft); border: 2.5px solid var(--periwinkle); padding: 14px 18px;
+        text-align: center; color: var(--navy);
+    }
+    .mc-kpi:first-child  { border-radius: 20px 4px 20px 4px; }
+    .mc-kpi:nth-child(2) { background: var(--danger-tint); border-color: var(--negative); border-radius: 4px 20px 4px 20px; }
+    .mc-kpi:last-child   { background: var(--ok-tint); border-color: var(--positive); border-radius: 20px 4px 20px 4px; }
+    .mc-kpi-num { font-size: 26px; font-weight: 900; font-family: 'IBM Plex Mono', monospace; color: inherit; }
+    .mc-kpi-lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: inherit; opacity: .75; margin-top: 2px; }
+    .mc-kpi.alerta .mc-kpi-num, .mc-kpi.alerta { color: var(--negative, #dc2626); }
+    .mc-kpi.ok .mc-kpi-num, .mc-kpi.ok { color: var(--positive, #16a34a); }
+
+    /* Toolbar */
+    .mc-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 32px 22px; }
+    .mc-search {
+        flex: 1; min-width: 180px; padding: 11px 16px; font-size: 13px;
+        border: 2px solid var(--rule-strong); border-radius: 0 14px 0 14px; background: var(--card-bg); color: var(--text);
+    }
+    .mc-search:focus { outline: none; border-color: var(--periwinkle); }
+    .mc-btn {
+        font-size: 12.5px; padding: 10px 18px; font-weight: 800; cursor: pointer; white-space: nowrap;
+        border: 2px solid transparent;
+    }
+    .mc-btn-primario { background: var(--accent); color: #fff; border-color: var(--coral-deep); border-radius: 14px 0 14px 0; }
+    .mc-btn-primario:hover { opacity: .9; }
+    .mc-btn-secundario { background: var(--periwinkle-soft); color: var(--navy); border-color: var(--periwinkle); border-radius: 0 14px 0 14px; }
+    .mc-btn-secundario:hover { background: var(--periwinkle); color: #fff; }
+
+    /* Layout: lista + panel de calendario fijo al costado (ya no es una tab) */
+    .mc-body { display: grid; grid-template-columns: 1fr 300px; gap: 22px; margin: 0 32px 40px; align-items: start; }
+
+    /* Filas de cliente — esquinas mixtas + banda diagonal de color a la izquierda,
+       y un lavado de fondo tenue del mismo tono para que no quede todo blanco parejo */
+    .mc-row {
+        position: relative; display: flex; align-items: center; gap: 14px;
+        padding: 16px 18px 16px 26px; margin-bottom: 14px;
+        background: color-mix(in srgb, var(--row-accent, var(--accent)) 6%, var(--card-bg));
+        border: 2px solid var(--rule-strong);
+        border-radius: 0 20px 0 20px; overflow: hidden; cursor: pointer;
+        transition: transform .12s;
+    }
+    .mc-row:hover { transform: translateX(3px); border-color: var(--row-accent, var(--accent)); }
+    .mc-row::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 10px;
+        background: var(--row-accent, var(--accent));
+        clip-path: polygon(0 0, 100% 14px, 100% calc(100% - 14px), 0 100%);
+    }
+    .mc-avatar {
+        width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 900; color: #fff; font-size: 15px; border: 2px solid var(--card-bg);
+        box-shadow: 0 0 0 2px var(--row-accent, var(--accent));
+    }
+    .mc-info { flex: 1; min-width: 0; }
+    .mc-nombre { font-weight: 800; font-size: 14.5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .mc-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11.5px; color: var(--text-muted); margin-top: 4px; }
+
+    /* Tags como paralelogramos (skew) — el texto interno se corrige al revés */
+    .mc-tag {
+        display: inline-block; padding: 3px 12px; font-size: 10.5px; font-weight: 800;
+        transform: skewX(-10deg); border: 1.5px solid currentColor;
+    }
+    .mc-tag span { display: inline-block; transform: skewX(10deg); }
+    .mc-tag-propio  { background: var(--text); color: var(--card-bg); border-color: var(--text); }
+    .mc-tag-estado-ok      { color: var(--positive, #16a34a); background: color-mix(in srgb, var(--positive, #16a34a) 12%, transparent); }
+    .mc-tag-estado-pend    { color: var(--negative, #dc2626); background: color-mix(in srgb, var(--negative, #dc2626) 12%, transparent); }
+    .mc-tag-estado-revision{ color: #d97706; background: #d9770620; }
+    .mc-tag-cat1 { color: var(--accent); background: var(--accent-soft); }
+    .mc-tag-cat2 { color: #d97706; background: #d9770620; }
+
+    /* Panel de calendario — persistente, no es una pestaña. Fondo con un
+       lavado periwinkle tenue en vez de blanco plano. */
+    .mc-cal {
+        /* Plano, sin degradado. color-mix en vez de --periwinkle-soft fijo porque ese
+           token no cambia en modo oscuro (queda un lavanda claro fijo) — así se
+           adapta: tenue en claro, más visible/clara en oscuro sin quedar plano negro. */
+        background: color-mix(in srgb, var(--periwinkle) 18%, var(--card-bg));
+        border: 2px solid var(--periwinkle); border-radius: 20px 0 20px 0; padding: 18px;
+        position: sticky; top: 20px;
+    }
+    .mc-cal-titulo { font-weight: 900; font-size: 13px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; color: var(--navy); }
+    .mc-cal-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 2px dashed var(--rule-strong); }
+    .mc-cal-item:last-child { border-bottom: none; }
+    .mc-cal-fecha {
+        width: 42px; height: 42px; flex-shrink: 0; background: var(--navy); color: #fff;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        font-weight: 900; line-height: 1;
+        clip-path: polygon(18% 0, 100% 0, 100% 82%, 82% 100%, 0 100%, 0 18%);
+    }
+    .mc-cal-item:nth-child(3) .mc-cal-fecha { background: var(--coral); }
+    .mc-cal-fecha b { font-size: 15px; }
+    .mc-cal-fecha span { font-size: 8px; text-transform: uppercase; }
+    .mc-cal-fecha.urgente { background: var(--negative, #dc2626); }
+    .mc-cal-texto { font-size: 12px; font-weight: 700; line-height: 1.3; color: var(--text); }
+    .mc-cal-cliente { font-size: 10.5px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="draft-banner">
+    🎨 BORRADOR MAXIMALISTA — Mis Clientes. Cambios: se sacó Kanban (no se entendía su función),
+    el calendario ahora es un panel fijo al costado (no una pestaña), y el estilo visual usa
+    diagonales + mezcla de esquinas rectas/redondas sobre la misma paleta de colores del tema.
+    <button class="btn btn-secondary" style="font-size:11px;padding:3px 10px;" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')">Cambiar tema</button>
+</div>
+
+<div class="mc-page">
+
+    <div class="mc-hero">
+        <div class="mc-hero-top">
+            <div>
+                <h1 class="mc-titulo">📂 Mis Clientes</h1>
+                <div class="mc-sub">Selecciona un cliente para trabajar su contabilidad</div>
+            </div>
+            <div class="mc-user">
+                isaac.marin.flo@gmail.com
+                <div><button>Cerrar sesión</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mc-kpi-row">
+        <div class="mc-kpi">
+            <div class="mc-kpi-num">14</div>
+            <div class="mc-kpi-lbl">Clientes</div>
+        </div>
+        <div class="mc-kpi alerta">
+            <div class="mc-kpi-num">5</div>
+            <div class="mc-kpi-lbl">Obligaciones próximas</div>
+        </div>
+        <div class="mc-kpi ok">
+            <div class="mc-kpi-num">9</div>
+            <div class="mc-kpi-lbl">Cerrados julio 2026</div>
+        </div>
+    </div>
+
+    <div class="mc-toolbar">
+        <input class="mc-search" type="search" placeholder="Buscar cliente…">
+        <button class="mc-btn mc-btn-secundario">🔑 Código de invitación</button>
+        <button class="mc-btn mc-btn-primario">➕ Nuevo Cliente</button>
+    </div>
+
+    <div class="mc-body">
+        <!-- Lista de clientes -->
+        <div>
+            <div class="mc-row" style="--row-accent:#3b82f6;">
+                <div class="mc-avatar" style="background:#3b82f6;">I</div>
+                <div class="mc-info">
+                    <div class="mc-nombre">
+                        Isaac Marín (Oficina propia)
+                        <span class="mc-tag mc-tag-propio"><span>Mi Oficina</span></span>
+                        <span class="mc-tag mc-tag-estado-ok"><span>Cerrado</span></span>
+                    </div>
+                    <div class="mc-meta">
+                        <span>🪪 11.111.111-1</span>
+                        <span class="mc-tag mc-tag-cat1"><span>1ª Cat.</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mc-row" style="--row-accent:#d85a30;">
+                <div class="mc-avatar" style="background:#d85a30;">M</div>
+                <div class="mc-info">
+                    <div class="mc-nombre">
+                        Mi Empresa Ltda.
+                        <span class="mc-tag mc-tag-estado-pend"><span>Pendiente</span></span>
+                    </div>
+                    <div class="mc-meta">
+                        <span>🪪 76.123.456-7</span>
+                        <span>📋 Comercio al por menor</span>
+                        <span class="mc-tag mc-tag-cat1"><span>1ª Cat.</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mc-row" style="--row-accent:#639922;">
+                <div class="mc-avatar" style="background:#639922;">E</div>
+                <div class="mc-info">
+                    <div class="mc-nombre">
+                        Estudio Jurídico Soto
+                        <span class="mc-tag mc-tag-estado-revision"><span>En revisión</span></span>
+                    </div>
+                    <div class="mc-meta">
+                        <span>🪪 77.222.333-4</span>
+                        <span class="mc-tag mc-tag-cat2"><span>2ª Cat.</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de calendario — SIEMPRE visible, no una pestaña -->
+        <div class="mc-cal">
+            <div class="mc-cal-titulo">📅 Próximos vencimientos</div>
+            <div class="mc-cal-item">
+                <div class="mc-cal-fecha urgente"><b>30</b><span>Jul</span></div>
+                <div>
+                    <div class="mc-cal-texto">F29 — Junio 2026</div>
+                    <div class="mc-cal-cliente">Mi Empresa Ltda.</div>
+                </div>
+            </div>
+            <div class="mc-cal-item">
+                <div class="mc-cal-fecha"><b>02</b><span>Ago</span></div>
+                <div>
+                    <div class="mc-cal-texto">Pago cotizaciones Previred</div>
+                    <div class="mc-cal-cliente">Estudio Jurídico Soto</div>
+                </div>
+            </div>
+            <div class="mc-cal-item">
+                <div class="mc-cal-fecha"><b>15</b><span>Ago</span></div>
+                <div>
+                    <div class="mc-cal-texto">DJ 1879 — Honorarios 2025</div>
+                    <div class="mc-cal-cliente">3 clientes 2ª Cat.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

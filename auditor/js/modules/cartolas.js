@@ -13,8 +13,8 @@
 // ─────────────────────────────────────────────────────────────
 let _dbCartola = JSON.parse(localStorage.getItem('core_cartola_movs')) || [];
 
-let _cartolaFiltroMes   = new Date().getMonth() + 1;
-let _cartolaFiltroAnio  = new Date().getFullYear();
+let _cartolaFiltroMes   = periodoTrabajo().mes;
+let _cartolaFiltroAnio  = periodoTrabajo().anio;
 let _cartolaFiltroTipo  = 'todos';     // 'todos' | 'cargo' | 'abono'
 let _cartolaFiltroEstado = 'todos';   // 'todos' | 'pendiente' | 'clasificado' | 'ignorado'
 let _cartolaBancoSel    = 'bancochile';

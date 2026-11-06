@@ -46,6 +46,7 @@ const ESQUEMA_CUENTAS = {
     'Anticipos de Remuneraciones':       { tipo: 'Activo',    grupo: 'Activo Circulante',    orden: 11,  naturaleza: 'Debe',  subgrupo: 'Otros Activos Circulantes' },
     'IVA Crédito Fiscal':                { tipo: 'Activo',    grupo: 'Activo Circulante',    orden: 9,   naturaleza: 'Debe',  subgrupo: 'Impuestos por Recuperar' },
     'PPM':                               { tipo: 'Activo',    grupo: 'Activo Circulante',    orden: 10,  naturaleza: 'Debe',  subgrupo: 'Impuestos por Recuperar' },
+    'Remanente Crédito Fiscal IVA':      { tipo: 'Activo',    grupo: 'Activo Circulante',    orden: 13,  naturaleza: 'Debe',  subgrupo: 'Impuestos por Recuperar' },
     'Terrenos':                          { tipo: 'Activo',    grupo: 'Activo No Circulante', orden: 101, naturaleza: 'Debe',  subgrupo: 'Propiedad Planta y Equipo' },
     'Edificios':                         { tipo: 'Activo',    grupo: 'Activo No Circulante', orden: 102, naturaleza: 'Debe',  subgrupo: 'Propiedad Planta y Equipo' },
     'Muebles y Útiles':                  { tipo: 'Activo',    grupo: 'Activo No Circulante', orden: 103, naturaleza: 'Debe',  subgrupo: 'Propiedad Planta y Equipo' },
@@ -60,6 +61,7 @@ const ESQUEMA_CUENTAS = {
     'Documentos por Pagar':              { tipo: 'Pasivo',    grupo: 'Pasivo Circulante',    orden: 203, naturaleza: 'Haber', subgrupo: 'Proveedores' },
     'Letras por Pagar':                  { tipo: 'Pasivo',    grupo: 'Pasivo Circulante',    orden: 204, naturaleza: 'Haber', subgrupo: 'Proveedores' },
     'IVA Débito Fiscal':                 { tipo: 'Pasivo',    grupo: 'Pasivo Circulante',    orden: 204, naturaleza: 'Haber', subgrupo: 'Impuestos por Pagar' },
+    'IVA por Pagar':                     { tipo: 'Pasivo',    grupo: 'Pasivo Circulante',    orden: 209, naturaleza: 'Haber', subgrupo: 'Impuestos por Pagar' },
     'Remuneraciones por Pagar':          { tipo: 'Pasivo',    grupo: 'Pasivo Circulante',    orden: 205, naturaleza: 'Haber', subgrupo: 'Obligaciones Laborales' },
     'Honorarios por Pagar':              { tipo: 'Pasivo',    grupo: 'Pasivo Circulante',    orden: 206, naturaleza: 'Haber', subgrupo: 'Otros Pasivos Circulantes' },
     'Impuestos por Pagar':               { tipo: 'Pasivo',    grupo: 'Pasivo Circulante',    orden: 207, naturaleza: 'Haber', subgrupo: 'Impuestos por Pagar' },
@@ -246,8 +248,22 @@ function _inferirTipoGrupoCuenta(nombre) {
     return { tipo: 'Activo', grupo: 'Activo Circulante' };
 }
 
+// Clasificación de una cuenta para los reportes (Balance de Comprobación,
+// Balance Clasificado, Estado de Resultados). Si la cuenta no está en el Plan de
+// Cuentas (el Diario la usó sin registrarla), se infiere por nombre y se marca
+// `sinRegistrar` — antes cada reporte la trataba distinto (Comprobación la
+// ponía en Activo, Clasificado y Estado de Resultados la descartaban en
+// silencio), y el balance quedaba descuadrado sin decir por qué.
+function obtenerInfoCuenta(nombre) {
+    const info = (typeof PLAN_CUENTAS !== 'undefined' && PLAN_CUENTAS && PLAN_CUENTAS[nombre]) || ESQUEMA_CUENTAS[nombre];
+    if (info) return info;
+    const { tipo, grupo } = _inferirTipoGrupoCuenta(nombre);
+    return { tipo, grupo, subgrupo: _inferirSubgrupo(nombre, tipo, grupo), naturaleza: _naturalezaPorTipo(tipo), sinRegistrar: true };
+}
+
 window._inferirSubgrupo        = _inferirSubgrupo;
 window._inferirTipoGrupoCuenta = _inferirTipoGrupoCuenta;
+window.obtenerInfoCuenta       = obtenerInfoCuenta;
 
 // ─────────────────────────────────────────────────────────────
 //  PLAN DE CUENTAS (persistido en localStorage)

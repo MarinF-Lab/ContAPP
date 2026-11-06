@@ -626,104 +626,6 @@ async function _fbRenderHomeClientSwitch() {
 }
 window._fbRenderHomeClientSwitch = _fbRenderHomeClientSwitch;
 
-// ── Editar empresa activa ─────────────────────────────────────
-function abrirEditarEmpresa() {
-    const cfg = JSON.parse(localStorage.getItem('core_config') || '{}');
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-    set('editEmpNombre',   cfg.empresa  || '');
-    set('editEmpRut',      cfg.rut      || '');
-    set('editEmpGiro',     cfg.giro     || '');
-    set('editEmpDireccion',cfg.direccion|| '');
-    const modal = document.getElementById('modalEditarEmpresa');
-    if (modal) modal.style.display = 'flex';
-}
-
-function cerrarEditarEmpresa() {
-    const modal = document.getElementById('modalEditarEmpresa');
-    if (modal) modal.style.display = 'none';
-}
-
-async function guardarEdicionEmpresa() {
-    const nombre    = document.getElementById('editEmpNombre')?.value.trim()    || '';
-    const rut       = document.getElementById('editEmpRut')?.value.trim()       || '';
-    const giro      = document.getElementById('editEmpGiro')?.value.trim()      || '';
-    const direccion = document.getElementById('editEmpDireccion')?.value.trim() || '';
-
-    if (!nombre) { mostrarToast('El nombre de la empresa es obligatorio.', 'error'); return; }
-
-    // Actualizar localStorage
-    const cfg = JSON.parse(localStorage.getItem('core_config') || '{}');
-    cfg.empresa   = nombre;
-    cfg.rut       = rut;
-    cfg.giro      = giro;
-    cfg.direccion = direccion;
-    localStorage.setItem('core_config', JSON.stringify(cfg));
-
-    // Actualizar UI inmediatamente
-    if (typeof aplicarConfiguracion === 'function') aplicarConfiguracion(cfg);
-
-    // Persistir en Firestore si hay conexión
-    const empresaId = window.currentUser?.empresaId;
-    if (_fbDb && empresaId) {
-        try {
-            await _fbDb.collection('empresas').doc(empresaId).update({ empresa: nombre, rut, giro, direccion });
-        } catch(e) {
-            console.warn('No se pudo sincronizar con Firestore:', e.message);
-        }
-    }
-
-    // Actualizar nombre en currentUser
-    if (window.currentUser) {
-        window.currentUser.empresaNombre = nombre;
-        localStorage.setItem('_fb_perfil_local', JSON.stringify(window.currentUser));
-    }
-
-    cerrarEditarEmpresa();
-    mostrarToast('Empresa actualizada.', 'ok');
-}
-
-// ── Eliminar empresa activa ───────────────────────────────────
-async function eliminarEmpresaActual() {
-    const nombre    = window.currentUser?.empresaNombre || 'esta empresa';
-    const empresaId = window.currentUser?.empresaId;
-
-    if (!empresaId) { mostrarToast('No hay empresa activa.', 'error'); return; }
-
-    mostrarConfirm(`¿Eliminar "${nombre}"?\n\nEsta acción eliminará todos los datos de la empresa y no se puede deshacer.`, () => {
-    mostrarConfirm(`Confirma nuevamente: ¿eliminar permanentemente "${nombre}"?`, async () => {
-    try {
-        if (_fbDb && _fbUser) {
-            // Quitar empresaId del array del perfil
-            const perfRef  = _fbDb.collection('perfiles').doc(_fbUser.uid);
-            const empresas = (window.currentUser?.empresas || []).filter(id => id !== empresaId);
-            await perfRef.update({ empresas });
-
-            // Eliminar doc de la empresa (los datos de Firestore)
-            await _fbDb.collection('empresas').doc(empresaId).delete();
-        }
-
-        // Limpiar estado local
-        FB_KEYS.forEach(k => localStorage.removeItem(k));
-        localStorage.removeItem('core_config');
-        if (window.currentUser) {
-            window.currentUser.empresaId     = null;
-            window.currentUser.empresaNombre = null;
-            window.currentUser.empresas      = (window.currentUser.empresas || []).filter(id => id !== empresaId);
-            localStorage.setItem('_fb_perfil_local', JSON.stringify(window.currentUser));
-        }
-        _fbRecargarMemoria();
-
-        mostrarToast('Empresa eliminada.', 'ok');
-        // Volver al selector
-        await _fbShowEmpresaSelector();
-
-    } catch(e) {
-        mostrarToast('Error al eliminar: ' + e.message, 'error');
-    }
-    });
-    });
-}
-
 // ── Login / Register / Logout ─────────────────────────────────
 // Alternar entre los modos del login: 'sesion' | 'codigo'
 function loginModo(modo) {
@@ -933,10 +835,6 @@ function _fbErrMsg(code) {
 
 window.seleccionarEmpresa    = seleccionarEmpresa;
 window.cambiarEmpresa        = cambiarEmpresa;
-window.abrirEditarEmpresa    = abrirEditarEmpresa;
-window.cerrarEditarEmpresa   = cerrarEditarEmpresa;
-window.guardarEdicionEmpresa = guardarEdicionEmpresa;
-window.eliminarEmpresaActual = eliminarEmpresaActual;
 
 window.fbLogin          = fbLogin;
 window.fbRegister       = fbRegister;

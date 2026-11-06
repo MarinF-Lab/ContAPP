@@ -51,6 +51,60 @@ function guardarContactos() {
 // ─────────────────────────────────────────────────────────────
 //  RENDER LISTA
 // ─────────────────────────────────────────────────────────────
+function _filaContacto(c) {
+    const badge = TIPO_BADGE[c.tipo] || TIPO_BADGE.cliente;
+    const saldo = _calcularSaldo(c);
+    const tieneDeuda  = saldo.credito > 0;
+    const tieneCobrar = saldo.cobrar  > 0;
+
+    return `
+    <tr style="cursor:pointer;" onclick="verDetalleContacto(${c.id})">
+        <td style="font-family:monospace;font-size:12px;">${c.rut || '—'}</td>
+        <td>
+            <div style="font-weight:600;">${c.nombre}</div>
+            ${c.fantasia ? `<div style="font-size:11px;color:var(--text-muted);">${c.fantasia}</div>` : ''}
+        </td>
+        <td>
+            <span style="background:${badge.bg};color:${badge.color};
+                padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">
+                ${badge.label}
+            </span>
+        </td>
+        <td style="font-size:12px;">${c.tipoEmpresa || '—'}</td>
+        <td style="color:var(--text-muted);font-size:12px;">${c.giro || '—'}</td>
+        <td style="font-size:12px;">${c.telefono || c.movil || '—'}</td>
+        <td style="font-size:12px;">${c.email || '—'}</td>
+        <td class="monto" style="font-size:12px;">
+            ${tieneDeuda   ? `<span style="color:#dc2626;font-weight:700;">-$${fmt(saldo.credito)}</span><br>` : ''}
+            ${tieneCobrar  ? `<span style="color:#16a34a;font-weight:700;">+$${fmt(saldo.cobrar)}</span>`  : ''}
+            ${!tieneDeuda && !tieneCobrar ? '<span style="color:#94a3b8;">—</span>' : ''}
+        </td>
+        <td onclick="event.stopPropagation()">
+            <div class="plan-acciones">
+                <button class="btn-plan btn-plan-editar"
+                    onclick="editarContacto(${c.id})">✏️</button>
+                <button class="btn-plan btn-plan-eliminar"
+                    onclick="eliminarContacto(${c.id})">🗑️</button>
+            </div>
+        </td>
+    </tr>`;
+}
+
+// Encabezado de grupo (usado solo en la pestaña Proveedores, para separar por
+// plazo de pago) — fila de ancho completo dentro del mismo <tbody>, mismo
+// patrón visual que las filas de totales (fila-totales) ya usadas en el resto
+// de la app.
+function _filaGrupoPlazo(titulo, colorBorde, deudaTotal) {
+    return `
+    <tr>
+        <td colspan="9" style="padding:10px 14px;background:var(--table-stripe);
+            border-left:4px solid ${colorBorde};font-weight:700;font-size:12.5px;">
+            ${titulo}
+            ${deudaTotal > 0 ? `<span style="float:right;color:#dc2626;">Debe: $${fmt(deudaTotal)}</span>` : ''}
+        </td>
+    </tr>`;
+}
+
 function renderContactos() {
     const tbody = document.getElementById('tbodyContactos');
     if (!tbody) return;
@@ -77,45 +131,30 @@ function renderContactos() {
                 ${busq ? `Sin resultados para "<strong>${busq}</strong>"` : 'Sin contactos registrados. Use ➕ Nuevo Contacto.'}
             </td>
         </tr>`;
-    } else {
-        lista.forEach(c => {
-            const badge  = TIPO_BADGE[c.tipo] || TIPO_BADGE.cliente;
-            const saldo  = _calcularSaldo(c);
-            const tieneDeuda   = saldo.credito > 0;
-            const tieneCobrar  = saldo.cobrar  > 0;
+    } else if (filtroContactos === 'proveedor') {
+        // Pestaña Proveedores: se separa en 2 bloques por plazo de pago
+        // (30/60 días) — el de 30 días va primero porque tiene prioridad de
+        // pago (vence antes). Dentro de cada bloque, orden por deuda
+        // descendente: lo más urgente de pagar primero.
+        const porPlazo = (plazo) => lista
+            .filter(c => (c.plazoPago || '30') === plazo)
+            .sort((a, b) => _calcularSaldo(b).credito - _calcularSaldo(a).credito);
 
-            tbody.innerHTML += `
-            <tr style="cursor:pointer;" onclick="verDetalleContacto(${c.id})">
-                <td style="font-family:monospace;font-size:12px;">${c.rut || '—'}</td>
-                <td>
-                    <div style="font-weight:600;">${c.nombre}</div>
-                    ${c.fantasia ? `<div style="font-size:11px;color:var(--text-muted);">${c.fantasia}</div>` : ''}
-                </td>
-                <td>
-                    <span style="background:${badge.bg};color:${badge.color};
-                        padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">
-                        ${badge.label}
-                    </span>
-                </td>
-                <td style="font-size:12px;">${c.tipoEmpresa || '—'}</td>
-                <td style="color:var(--text-muted);font-size:12px;">${c.giro || '—'}</td>
-                <td style="font-size:12px;">${c.telefono || c.movil || '—'}</td>
-                <td style="font-size:12px;">${c.email || '—'}</td>
-                <td class="monto" style="font-size:12px;">
-                    ${tieneDeuda   ? `<span style="color:#dc2626;font-weight:700;">-$${fmt(saldo.credito)}</span><br>` : ''}
-                    ${tieneCobrar  ? `<span style="color:#16a34a;font-weight:700;">+$${fmt(saldo.cobrar)}</span>`  : ''}
-                    ${!tieneDeuda && !tieneCobrar ? '<span style="color:#94a3b8;">—</span>' : ''}
-                </td>
-                <td onclick="event.stopPropagation()">
-                    <div class="plan-acciones">
-                        <button class="btn-plan btn-plan-editar"
-                            onclick="editarContacto(${c.id})">✏️</button>
-                        <button class="btn-plan btn-plan-eliminar"
-                            onclick="eliminarContacto(${c.id})">🗑️</button>
-                    </div>
-                </td>
-            </tr>`;
-        });
+        const grupo30 = porPlazo('30');
+        const grupo60 = porPlazo('60');
+
+        if (grupo30.length) {
+            const deuda30 = grupo30.reduce((s, c) => s + _calcularSaldo(c).credito, 0);
+            tbody.innerHTML += _filaGrupoPlazo('🔴 Prioridad — 30 días', '#dc2626', deuda30);
+            grupo30.forEach(c => { tbody.innerHTML += _filaContacto(c); });
+        }
+        if (grupo60.length) {
+            const deuda60 = grupo60.reduce((s, c) => s + _calcularSaldo(c).credito, 0);
+            tbody.innerHTML += _filaGrupoPlazo('🟡 60 días', '#f59e0b', deuda60);
+            grupo60.forEach(c => { tbody.innerHTML += _filaContacto(c); });
+        }
+    } else {
+        lista.forEach(c => { tbody.innerHTML += _filaContacto(c); });
     }
 
     // Contadores en tabs
@@ -156,6 +195,7 @@ function editarContacto(id) {
     _cSetVal('ctcDireccion',   c.direccion   || '');
     _cSetVal('ctcComuna',      c.comuna      || '');
     _cSetVal('ctcRegion',      c.region      || '');
+    _cSetVal('ctcPlazoPago',   c.plazoPago   || '30');
 
     const notas = document.getElementById('ctcNotas');
     if (notas) notas.value = c.notas || '';
@@ -175,6 +215,7 @@ function _limpiarFormContacto() {
     _cSetVal('ctcTipoEmpresa', 'EIRL');
     _cSetVal('ctcCategoria',   '');
     _cSetVal('ctcRegion',      '');
+    _cSetVal('ctcPlazoPago',   '30');
     const notas = document.getElementById('ctcNotas');
     if (notas) notas.value = '';
 }
@@ -197,6 +238,7 @@ function guardarContacto() {
         direccion:   _cGetVal('ctcDireccion'),
         comuna:      _cGetVal('ctcComuna'),
         region:      _cGetVal('ctcRegion'),
+        plazoPago:   _cGetVal('ctcPlazoPago') || '30',
         notas:       document.getElementById('ctcNotas')?.value?.trim() || '',
         activo:      true,
     };

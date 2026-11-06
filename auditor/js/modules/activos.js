@@ -38,30 +38,121 @@ function _activoNuevoId() {
     return 'a' + Date.now() + Math.floor(Math.random() * 1000);
 }
 
+// ── Cuentas de depreciación por defecto ────────────────────────────────────────
+// Los activos que nacen sin pasar por este formulario (ej. la calculadora del
+// Diario) no traen cuenta de gasto ni de depreciación acumulada; se derivan de
+// la cuenta del activo para que igual entren al asiento de depreciación.
+// Terrenos no se deprecian (devuelve null).
+function _activoCuentasDepDefault(cuentaActivo) {
+    if (!cuentaActivo) return null;
+    var n = String(cuentaActivo).toLowerCase();
+    if (/terreno/.test(n)) return null;
+    var acum = 'Depreciación Acumulada';
+    if (/mueble|[uú]til/.test(n))            acum = 'Depreciación Acumulada Muebles';
+    else if (/veh[ií]culo/.test(n))          acum = 'Depreciación Acumulada Vehículos';
+    else if (/edificio/.test(n))             acum = 'Depreciación Acumulada Edificios';
+    else if (/maquinaria/.test(n))           acum = 'Depreciación Acumulada Maquinarias';
+    else if (/equipo|computa/.test(n))       acum = 'Depreciación Acumulada Equipos';
+    else if (/software|marca|patente/.test(n)) acum = 'Amortización Acumulada';
+    return { cuenta_dep_acumulada: acum, cuenta_gasto_dep: 'Depreciación' };
+}
+
+// Cuentas efectivas de un activo: las que tenga cargadas, o las de defecto.
+function _activoCuentasEfectivas(a) {
+    var def = _activoCuentasDepDefault(a.cuenta_activo);
+    return {
+        gasto: a.cuenta_gasto_dep     || (def && def.cuenta_gasto_dep)     || '',
+        acum:  a.cuenta_dep_acumulada || (def && def.cuenta_dep_acumulada) || '',
+    };
+}
+
 // ── Cálculo de depreciación ────────────────────────────────────────────────────
 
-function _calcDepreciacion(activo) {
-    var val  = Number(activo.valor_adquisicion) || 0;
-    var anos = Number(activo.vida_util_anos)    || 1;
-
-    if (activo.metodo === 'acelerada') {
-        anos = Math.max(1, Math.floor(anos / 3));
+// Meses (con fracción) entre dos fechas, ambas inclusive: cada mes calendario
+// aporta días_dentro_del_rango / días_del_mes, así un mes completo vale 1 y
+// uno parcial se prorratea por días (años, meses y días según corresponda).
+function _mesesDepreciables(inicio, fin) {
+    if (!inicio || !fin || fin < inicio) return 0;
+    var total = 0;
+    var y = inicio.getFullYear(), m = inicio.getMonth();
+    while (y < fin.getFullYear() || (y === fin.getFullYear() && m <= fin.getMonth())) {
+        var dim = new Date(y, m + 1, 0).getDate();
+        var di  = (y === inicio.getFullYear() && m === inicio.getMonth()) ? inicio.getDate() : 1;
+        var df  = (y === fin.getFullYear()    && m === fin.getMonth())    ? fin.getDate()    : dim;
+        total += (df - di + 1) / dim;
+        m++;
+        if (m > 11) { m = 0; y++; }
     }
+    return total;
+}
+
+function _activoVidaEfectiva(activo) {
+    var anos = Number(activo.vida_util_anos) || 1;
+    if (activo.metodo === 'acelerada') anos = Math.max(1, Math.floor(anos / 3));
+    return anos;
+}
+
+// Último día en que el activo sigue depreciando: el menor entre el fin de su
+// vida útil (ingreso + vida efectiva) y la fecha final editable (baja), si hay.
+function _activoFinDepreciacion(activo) {
+    var inicio = new Date(activo.fecha_adquisicion + 'T00:00:00');
+    var fin = new Date(inicio.getFullYear() + _activoVidaEfectiva(activo), inicio.getMonth(), inicio.getDate() - 1);
+    if (activo.fecha_fin) {
+        var ff = new Date(activo.fecha_fin + 'T00:00:00');
+        if (ff < fin) fin = ff;
+    }
+    return fin;
+}
+
+// Fecha de corte de la declaración: último día del mes/año elegido en el
+// selector de la pantalla; sin selector (formulario), hoy.
+function _activoCorteDate() {
+    var sa = document.getElementById('activo-sel-anio');
+    var sm = document.getElementById('activo-sel-mes');
+    if (sa && sm) return new Date(parseInt(sa.value, 10), parseInt(sm.value, 10) + 1, 0);
+    var h = new Date();
+    return new Date(h.getFullYear(), h.getMonth(), h.getDate());
+}
+
+// "2 años, 3 meses y 10 días" entre dos fechas (ambas inclusive).
+function _duracionTexto(inicio, fin) {
+    if (!inicio || !fin || fin < inicio) return '0 días';
+    var fa = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate() + 1);
+    var a = fa.getFullYear() - inicio.getFullYear();
+    var m = fa.getMonth() - inicio.getMonth();
+    var d = fa.getDate() - inicio.getDate();
+    if (d < 0) { m--; d += new Date(fa.getFullYear(), fa.getMonth(), 0).getDate(); }
+    if (m < 0) { a--; m += 12; }
+    var partes = [];
+    if (a) partes.push(a + (a === 1 ? ' año' : ' años'));
+    if (m) partes.push(m + (m === 1 ? ' mes' : ' meses'));
+    if (d) partes.push(d + (d === 1 ? ' día' : ' días'));
+    if (!partes.length) return '0 días';
+    return partes.length > 1 ? partes.slice(0, -1).join(', ') + ' y ' + partes[partes.length - 1] : partes[0];
+}
+
+function _calcDepreciacion(activo, corte) {
+    var val  = Number(activo.valor_adquisicion) || 0;
+    var anos = _activoVidaEfectiva(activo);
 
     var cuotaAnual   = val / anos;
     var cuotaMensual = cuotaAnual / 12;
 
-    // Meses transcurridos desde fecha_adquisicion
+    // Desde la fecha de ingreso hasta el último día de la declaración
+    // (o la fecha final del activo, si es anterior).
     var depAcumulada = 0;
     var valorLibro   = val;
+    var tiempo       = '';
 
     if (activo.activo !== false && val > 0 && activo.fecha_adquisicion) {
         var inicio = new Date(activo.fecha_adquisicion + 'T00:00:00');
-        var hoy    = new Date();
-        var meses  = (hoy.getFullYear() - inicio.getFullYear()) * 12 + (hoy.getMonth() - inicio.getMonth());
-        if (meses < 0) meses = 0;
-        depAcumulada = Math.min(cuotaMensual * meses, val);
+        var hasta  = corte || _activoCorteDate();
+        var fin    = _activoFinDepreciacion(activo);
+        if (hasta < fin) fin = hasta;
+        var meses  = _mesesDepreciables(inicio, fin);
+        depAcumulada = Math.min(Math.round(cuotaMensual * meses), val);
         valorLibro   = val - depAcumulada;
+        tiempo       = _duracionTexto(inicio, fin);
     }
 
     return {
@@ -70,32 +161,28 @@ function _calcDepreciacion(activo) {
         depAcumulada:  depAcumulada,
         valorLibro:    valorLibro,
         vidaUtilEfect: anos,
+        tiempo:        tiempo,
     };
 }
 
-// Depreciación de un mes/año específico (para asiento)
+// Depreciación de un mes/año específico (para asiento): cuota mensual ×
+// fracción del mes en que el activo estuvo depreciando (prorrata por días en
+// el mes de ingreso y en el último mes).
 function _calcDepMes(activo, anio, mes) {
     // mes: 0-indexed (JS Date style)
-    var val  = Number(activo.valor_adquisicion) || 0;
-    var anos = Number(activo.vida_util_anos)    || 1;
-
-    if (activo.metodo === 'acelerada') {
-        anos = Math.max(1, Math.floor(anos / 3));
-    }
-
-    var cuotaMensual = (val / anos) / 12;
-
+    var val = Number(activo.valor_adquisicion) || 0;
     if (activo.activo === false || val <= 0 || !activo.fecha_adquisicion) return 0;
 
+    var cuotaMensual = (val / _activoVidaEfectiva(activo)) / 12;
     var inicio = new Date(activo.fecha_adquisicion + 'T00:00:00');
-    var mesesTotales  = anos * 12;
+    var mesIni = new Date(anio, mes, 1);
+    var mesFin = new Date(anio, mes + 1, 0);
 
-    // Meses transcurridos hasta fin del mes objetivo
-    var mesesHastaMes = (anio - inicio.getFullYear()) * 12 + (mes - inicio.getMonth());
-    if (mesesHastaMes <= 0) return 0; // antes de inicio
-    if (mesesHastaMes > mesesTotales) return 0; // ya totalmente depreciado
+    var desde = inicio > mesIni ? inicio : mesIni;
+    var finAct = _activoFinDepreciacion(activo);
+    var hasta = finAct < mesFin ? finAct : mesFin;
 
-    return cuotaMensual;
+    return cuotaMensual * _mesesDepreciables(desde, hasta);
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
@@ -105,9 +192,9 @@ function renderActivos() {
     if (!view) return;
 
     if (!document.getElementById('activo-tabla-body')) {
-        var hoy    = new Date();
-        var anioD  = hoy.getFullYear();
-        var mesD   = hoy.getMonth(); // 0-indexed
+        var pt     = periodoTrabajo();
+        var anioD  = pt.anio;
+        var mesD   = pt.mes - 1; // 0-indexed
 
         // Generar opciones de años (5 atrás, 1 adelante)
         var optAnios = '';
@@ -165,6 +252,13 @@ function renderActivos() {
             '</div>';
 
         document.getElementById('activo-btn-agregar').addEventListener('click', function () { activoAbrirForm(null); });
+        // La depreciación acumulada llega hasta el último día del período elegido.
+        ['activo-sel-anio', 'activo-sel-mes'].forEach(function (sid) {
+            document.getElementById(sid).addEventListener('change', function () {
+                _activoActualizarKpis();
+                _activoActualizarTabla();
+            });
+        });
         document.getElementById('activo-btn-asiento').addEventListener('click', function () {
             var anio = parseInt(document.getElementById('activo-sel-anio').value, 10);
             var mes  = parseInt(document.getElementById('activo-sel-mes').value,  10);
@@ -252,14 +346,16 @@ function _activoActualizarTabla() {
                     (a.descripcion ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _esc(a.descripcion) + '</div>' : '') +
                     (a.proveedor_nombre ? '<div style="font-size:11px;color:var(--text-muted);">' + _esc(a.proveedor_nombre) + '</div>' : '') +
                 '</td>' +
-                '<td style="padding:10px 12px;font-size:12px;color:var(--text-muted);white-space:nowrap;">' + _esc(a.fecha_adquisicion || '—') + '</td>' +
+                '<td style="padding:10px 12px;font-size:12px;color:var(--text-muted);white-space:nowrap;">' + _esc(a.fecha_adquisicion || '—') +
+                    (a.fecha_fin ? '<div style="font-size:11px;">hasta ' + _esc(a.fecha_fin) + '</div>' : '') + '</td>' +
                 '<td style="padding:10px 12px;text-align:right;font-family:monospace;">' + _fmt(a.valor_adquisicion) + '</td>' +
                 '<td style="padding:10px 12px;text-align:center;">' +
                     '<span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;background:' + metBg + ';color:' + metColor + ';">' + metLabel + '</span>' +
                 '</td>' +
                 '<td style="padding:10px 12px;text-align:center;font-size:12px;color:var(--text-muted);">' + vidaStr + '</td>' +
                 '<td style="padding:10px 12px;text-align:right;font-family:monospace;font-size:12px;">' + _fmt(d.cuotaAnual) + '</td>' +
-                '<td style="padding:10px 12px;text-align:right;font-family:monospace;font-size:12px;color:#991b1b;">' + _fmt(d.depAcumulada) + '</td>' +
+                '<td style="padding:10px 12px;text-align:right;font-family:monospace;font-size:12px;color:#991b1b;">' + _fmt(d.depAcumulada) +
+                    (d.tiempo ? '<div style="font-size:10px;color:var(--text-muted);font-family:inherit;white-space:nowrap;">' + d.tiempo + '</div>' : '') + '</td>' +
                 '<td style="padding:10px 12px;text-align:right;font-family:monospace;font-weight:600;">' + _fmt(d.valorLibro) + '</td>' +
                 '<td style="padding:10px 12px;text-align:center;">' +
                     '<span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;background:' + staBg + ';color:' + staColor + ';">' + staLabel + '</span>' +
@@ -377,6 +473,12 @@ function activoAbrirForm(id) {
                 '</div>' +
             '</div>' +
 
+            // Fecha final editable
+            '<div style="margin-bottom:20px;">' +
+                '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Fecha final de depreciación <span style="font-size:11px;font-weight:400;color:var(--text-muted);">(opcional — baja o venta; vacío = fin de la vida útil)</span></label>' +
+                '<input id="af-fecha-fin" class="input" type="date" value="' + (activo ? _esc(activo.fecha_fin || '') : '') + '">' +
+            '</div>' +
+
             // Vida útil + método
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">' +
                 '<div>' +
@@ -472,12 +574,27 @@ function activoAbrirForm(id) {
         var anosEf = met === 'acelerada' ? Math.max(1, Math.floor(anos / 3)) : anos;
         var cuotaA = val / anosEf;
         var cuotaM = cuotaA / 12;
+        var extra = '';
+        var fIni = document.getElementById('af-fecha').value;
+        if (fIni) {
+            var sim = { valor_adquisicion: val, vida_util_anos: anos, metodo: met, fecha_adquisicion: fIni,
+                        fecha_fin: document.getElementById('af-fecha-fin').value || '', activo: true };
+            var corteSim = _activoCorteDate();
+            var dsim = _calcDepreciacion(sim, corteSim);
+            var pad = function (n) { return String(n).padStart(2, '0'); };
+            extra = '<div style="margin-top:6px;"><strong>Hasta ' + pad(corteSim.getDate()) + '/' + pad(corteSim.getMonth() + 1) + '/' + corteSim.getFullYear() +
+                    ':</strong> ' + (dsim.tiempo || '0 días') + ' depreciando · acumulada ' + _fmt(dsim.depAcumulada) +
+                    ' · valor libro ' + _fmt(dsim.valorLibro) + '</div>';
+        }
         prev.innerHTML =
             '<strong>Cuota anual:</strong> ' + _fmt(cuotaA) +
             ' &nbsp;|&nbsp; <strong>Cuota mensual:</strong> ' + _fmt(cuotaM) +
-            (met === 'acelerada' ? ' &nbsp;|&nbsp; <span style="color:#1e40af;">Vida útil efectiva: ' + anosEf + ' año' + (anosEf !== 1 ? 's' : '') + '</span>' : '');
+            (met === 'acelerada' ? ' &nbsp;|&nbsp; <span style="color:#1e40af;">Vida útil efectiva: ' + anosEf + ' año' + (anosEf !== 1 ? 's' : '') + '</span>' : '') +
+            extra;
     }
 
+    document.getElementById('af-fecha').addEventListener('change',     _actualizarPreview);
+    document.getElementById('af-fecha-fin').addEventListener('change', _actualizarPreview);
     document.getElementById('af-valor').addEventListener('input',     _actualizarPreview);
     document.getElementById('af-vida-util').addEventListener('input', _actualizarPreview);
     document.getElementById('af-metodo').addEventListener('change',   _actualizarPreview);
@@ -519,6 +636,9 @@ function activoGuardar(id) {
     var fecha = (document.getElementById('af-fecha').value || '').trim();
     if (!fecha) { mostrarToast('La fecha de adquisición es obligatoria.', 'error'); return; }
 
+    var fechaFin = (document.getElementById('af-fecha-fin').value || '').trim();
+    if (fechaFin && fechaFin < fecha) { mostrarToast('La fecha final no puede ser anterior a la de adquisición.', 'error'); return; }
+
     var valor = parseFloat(document.getElementById('af-valor').value) || 0;
     if (valor <= 0) { mostrarToast('Ingresa un valor de adquisición válido.', 'error'); return; }
 
@@ -540,6 +660,7 @@ function activoGuardar(id) {
         nombre:               nombre,
         descripcion:          (document.getElementById('af-descripcion').value || '').trim(),
         fecha_adquisicion:    fecha,
+        fecha_fin:            fechaFin,
         valor_adquisicion:    valor,
         vida_util_anos:       vidaUtil,
         metodo:               document.getElementById('af-metodo').value || 'lineal',
@@ -556,6 +677,9 @@ function activoGuardar(id) {
     var idx = arr.findIndex(function (a) { return String(a.id) === String(id); });
     if (idx >= 0) {
         registro.created_at = arr[idx].created_at;
+        // Conservar los períodos ya depreciados: sin esto, editar un activo
+        // los borraba y permitía depreciar dos veces el mismo mes.
+        if (arr[idx].periodos_depreciados) registro.periodos_depreciados = arr[idx].periodos_depreciados;
         arr[idx] = registro;
     } else {
         arr.push(registro);
@@ -588,6 +712,7 @@ function activoGenerarAsientoDepreciacion(anio, mes) {
     var periodoStr = anio + '-' + String(mes + 1).padStart(2, '0');
     var lineas = [];
     var advertencias = [];
+    var sinCuentas = [];
     activos.forEach(function (a) {
         if (a.activo === false) return;
 
@@ -600,16 +725,21 @@ function activoGenerarAsientoDepreciacion(anio, mes) {
 
         var cuota = _calcDepMes(a, anio, mes);
         if (cuota <= 0) return;
-        if (!a.cuenta_gasto_dep || !a.cuenta_dep_acumulada) return;
+        var ctas = _activoCuentasEfectivas(a);
+        if (!ctas.gasto || !ctas.acum) { sinCuentas.push(a.nombre); return; }
 
         lineas.push({
             activo_id:            a.id,
             activo_nombre:        a.nombre,
-            cuenta_debe:          a.cuenta_gasto_dep,
-            cuenta_haber:         a.cuenta_dep_acumulada,
+            cuenta_debe:          ctas.gasto,
+            cuenta_haber:         ctas.acum,
             monto:                Math.round(cuota),
         });
     });
+
+    if (sinCuentas.length > 0) {
+        mostrarToast('Sin cuentas de depreciación (edítalos y asígnalas): ' + sinCuentas.join(', '), 'error');
+    }
 
     if (advertencias.length > 0) {
         mostrarToast('Depreciación de ' + periodoStr + ' ya generada para: ' + advertencias.join(', '), 'error');

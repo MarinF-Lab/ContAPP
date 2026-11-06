@@ -4,16 +4,23 @@
 //  Contabilidad completa: libros, reportes, comercial, RRHH, tributario.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Grupos restaurados a la división histórica G1-G5 (previa a la consolidación
+// a 3 grupos de la integración de diseño — ver git 67061db "rediseño de
+// arquitectura de módulos", y PLANIFICACION/INTEGRACION_DISENO.md sección
+// "Decisión de arquitectura: 3 grupos de módulos, no 5"). El G5 original
+// también incluía "Auditoría (Informe/Hallazgos)" — ese módulo ya no existe
+// en el catálogo (no hay vista ni navegación asociada), así que Empresa
+// quedó solo con Inventario y Activos.
 const CAT1_MODULOS = [
-    { id: 'estructura-contable',   label: 'Estructura Contable (Diario/Mayor/Balance)',      grupo: 'Contabilidad', icono: '📝', defecto: true  },
-    { id: 'reportes-financieros',  label: 'Reportes Financieros',                            grupo: 'Contabilidad', icono: '📊', defecto: true  },
-    { id: 'egresos-ingresos',      label: 'Egresos e Ingresos (Compras/Ventas/Honorarios)',  grupo: 'Contabilidad', icono: '🔁', defecto: true  },
-    { id: 'tributario-1cat',       label: 'Tributario (F29 / IVA)',                          grupo: 'Contabilidad', icono: '🧾', defecto: true  },
-    { id: 'documentos',            label: 'Documentación',                                   grupo: 'Comercial',    icono: '📁', defecto: true  },
-    { id: 'conciliacion-cartolas', label: 'Conciliación y Cartolas',                          grupo: 'Comercial',    icono: '🏦', defecto: true  },
-    { id: 'clientes',              label: 'Clientes / Prov.',                                 grupo: 'Comercial',    icono: '🤝', defecto: true  },
-    { id: 'remuneraciones',        label: 'Remuneraciones',                                  grupo: 'Empresa',      icono: '👷', defecto: false },
-    { id: 'inventario-activos',    label: 'Inventario y Activos',                            grupo: 'Empresa',      icono: '📦', defecto: true  },
+    { id: 'estructura-contable',   label: 'Estructura Contable (Diario/Mayor/Balance)',      grupo: 'Contabilidad', icono: '📝', defecto: true  }, // G1
+    { id: 'reportes-financieros',  label: 'Reportes Financieros',                            grupo: 'Contabilidad', icono: '📊', defecto: true  }, // G1
+    { id: 'egresos-ingresos',      label: 'Egresos e Ingresos (Compras/Ventas/Honorarios)',  grupo: 'Comercial',    icono: '🔁', defecto: true  }, // G2
+    { id: 'tributario-1cat',       label: 'Tributario (F29 / IVA)',                          grupo: 'Comercial',    icono: '🧾', defecto: true  }, // G2
+    { id: 'documentos',            label: 'Documentación',                                   grupo: 'Datos',        icono: '📁', defecto: true  }, // G3
+    { id: 'conciliacion-cartolas', label: 'Conciliación y Cartolas',                          grupo: 'Datos',        icono: '🏦', defecto: true  }, // G3
+    { id: 'clientes',              label: 'Clientes / Prov.',                                 grupo: 'Datos',        icono: '🤝', defecto: true  }, // G3
+    { id: 'remuneraciones',        label: 'Remuneraciones',                                  grupo: 'RRHH',         icono: '👷', defecto: false }, // G4
+    { id: 'inventario-activos',    label: 'Inventario y Activos',                            grupo: 'Empresa',      icono: '📦', defecto: true  }, // G5
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────

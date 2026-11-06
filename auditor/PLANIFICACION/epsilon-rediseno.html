@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPSILON — concepto de app de escritorio (dock + pestañas de carpeta intactos)</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/main.css">
+<link rel="stylesheet" href="../css/auditor.css">
+<script>
+    (function() { document.documentElement.setAttribute('data-theme', localStorage.getItem('appTheme') || 'light'); })();
+</script>
+<style>
+    /* ═══════════════════════════════════════════════════════════════════
+       VARIANTE "EPSILON" — concepto de app de escritorio Windows nativa
+       (no página web): barra de título simulada + barra superior de app
+       arriba de todo, tema oscuro azul petróleo/grafito/púrpura eléctrico.
+       Mismo HTML/JS base que inicio-rediseno.html para TODO el sistema de
+       dock flotante + pestañas de carpeta + secciones deslizables + los 3
+       módulos ya prototipados (Libro Diario/Mayor/Balance) — eso no se
+       toca. Lo nuevo es: la barra de título, la barra superior (logo,
+       buscador, notificaciones, sync, empresa, perfil) y un panel derecho
+       persistente de alertas/IA/vencimientos en "Centro de mando" (con la
+       clase .vista-default que ya usa el JS existente, así que se
+       oculta/muestra solo al entrar/salir de un módulo sin tocar código). ══
+    ═══════════════════════════════════════════════════════════════════ */
+    :root {
+        --navy:            #14b8a6;  /* azul petróleo / teal — color de marca / Contabilidad */
+        --coral:           #fb7185;  /* rosado cálido — Ventas */
+        --coral-deep:      #f43f5e;
+        --blue:            #f59e0b;  /* ámbar — Inventarios */
+        --periwinkle:      #a78bfa;  /* púrpura eléctrico — Compras */
+        --periwinkle-soft: #2f2a4d;
+        --ok:              #34d399;  /* esmeralda — Tesorería / estados OK */
+        --ok-tint:         #0f2a22;
+        --negative:        #fb7185;
+        --danger-tint:     #341620;
+        --paper:           #0d1117;
+        --card-bg:         #161c26;
+        --paper-deep:      #10151d;
+        --rule-strong:     #262f3d;
+        --bg:              #0d1117;
+        --text:            #e7edf5;
+        --text-muted:      #7c8797;
+        --font-heading:    'Space Grotesk', 'Segoe UI', sans-serif;
+        --font-mono:       'IBM Plex Mono', 'SF Mono', monospace;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, .35);
+        --shadow-md: 0 14px 34px -10px rgba(0, 0, 0, .55);
+        --ep-titlebar-h: 34px;
+        --ep-topbar-h: 56px;
+    }
+
+    html, body { background: var(--bg); margin: 0; overscroll-behavior: none; height: 100%; }
+    body { display: flex; flex-direction: column; }
+
+    /* ── Barra de título nativa simulada — arriba de todo, look de app de
+       escritorio Windows real (no de pestaña de navegador). Los controles
+       de ventana son decorativos, no funcionales (esto vive en un browser). ── */
+    .ep-titlebar {
+        height: var(--ep-titlebar-h); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+        padding: 0 4px 0 12px; background: #090c11; border-bottom: 1px solid var(--rule-strong);
+        -webkit-user-select: none; user-select: none;
+    }
+    .ep-titlebar-left { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-muted); font-weight: 600; }
+    .ep-titlebar-logo { color: var(--navy); font-size: 13px; font-weight: 700; }
+    .ep-titlebar-controles { display: flex; align-items: stretch; height: 100%; }
+    .ep-tb-btn {
+        display: flex; align-items: center; justify-content: center; width: 44px; height: 100%;
+        color: var(--text-muted); font-size: 11px; cursor: default; transition: background .1s;
+    }
+    .ep-tb-btn:hover { background: rgba(255,255,255,.06); color: var(--text); }
+    .ep-tb-btn.ep-tb-cerrar:hover { background: #e81123; color: #fff; }
+
+    /* ── Barra superior de la app — logo con marca ε, buscador global
+       centrado, notificaciones/sync/empresa/perfil a la derecha. ── */
+    .ep-topbar {
+        height: var(--ep-topbar-h); flex-shrink: 0; display: flex; align-items: center; gap: 20px;
+        padding: 0 20px; background: var(--paper); border-bottom: 1px solid var(--rule-strong);
+    }
+    .ep-topbar-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .ep-logo-mark {
+        width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+        font-size: 17px; font-weight: 700; color: #04211c;
+        background: linear-gradient(150deg, var(--navy), var(--periwinkle));
+    }
+    .ep-logo-texto { font-family: var(--font-heading); font-weight: 700; font-size: 15px; letter-spacing: .04em; color: var(--text); }
+    .ep-topbar-buscador {
+        flex: 1; max-width: 460px; margin: 0 auto; display: flex; align-items: center; gap: 8px;
+        background: var(--card-bg); border: 1px solid var(--rule-strong); border-radius: 8px; padding: 7px 12px;
+        color: var(--text-muted); transition: border-color .15s;
+    }
+    .ep-topbar-buscador:focus-within { border-color: var(--navy); }
+    .ep-buscador-input { flex: 1; border: none; background: none; outline: none; color: var(--text); font-size: 12.5px; font-family: inherit; }
+    .ep-buscador-input::placeholder { color: var(--text-muted); }
+    .ep-buscador-atajo {
+        font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); background: var(--paper-deep);
+        border: 1px solid var(--rule-strong); border-radius: 4px; padding: 1px 6px; flex-shrink: 0;
+    }
+    .ep-topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .ep-icon-btn {
+        position: relative; width: 34px; height: 34px; border-radius: 8px; border: 1px solid transparent;
+        background: transparent; color: var(--text-muted); font-size: 15px; cursor: pointer; transition: all .15s;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .ep-icon-btn:hover { background: var(--card-bg); border-color: var(--rule-strong); color: var(--text); }
+    .ep-badge {
+        position: absolute; top: 2px; right: 2px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px;
+        background: var(--coral); color: #fff; font-size: 9px; font-weight: 700; font-family: var(--font-mono);
+        display: flex; align-items: center; justify-content: center; border: 2px solid var(--paper);
+    }
+    .ep-empresa-chip {
+        display: flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600;
+        color: var(--text); background: var(--card-bg); border: 1px solid var(--rule-strong); border-radius: 8px; cursor: pointer;
+    }
+    .ep-perfil {
+        width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 700; color: #1c1330; background: var(--periwinkle); flex-shrink: 0; cursor: pointer;
+    }
+
+    .in-viewport { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+    .in-track { height: 100%; transition: transform .5s cubic-bezier(.4,0,.2,1); }
+    .in-slide {
+        height: 100%; box-sizing: border-box; padding: 22px 32px 70px;
+        display: flex; flex-direction: column; justify-content: center; gap: 14px;
+        width: min(94vw, 1600px); margin: 0 auto; position: relative;
+    }
+    .slide-titulo { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+    .slide-titulo b { color: var(--navy); font-size: 18px; text-transform: none; letter-spacing: 0; font-weight: 700; }
+
+    /* ── Riel de secciones — ahora vive DENTRO de .in-viewport (ver HTML),
+       position:absolute relativo a él en vez de fixed relativo al viewport
+       real — así queda centrado en el alto disponible DEBAJO de la barra
+       de título + barra superior, no en la pantalla completa. ── */
+    .in-rail { position: absolute; right: max(16px, calc((100vw - min(94vw, 1600px)) / 2 - 30px)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; z-index: 50; }
+    .in-dot {
+        width: 44px; height: 44px; cursor: pointer; background: var(--card-bg);
+        border: 1px solid var(--rule-strong); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 17px;
+        transition: all .18s; box-shadow: var(--shadow-sm);
+    }
+    .in-dot.activo {
+        background: var(--navy); border-color: var(--navy); color: #04211c;
+        box-shadow: var(--shadow-md);
+    }
+    .in-dot:hover:not(.activo) { border-color: var(--periwinkle); box-shadow: var(--shadow-md); }
+
+    .s1-grid { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+    .s3-grid { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+
+    /* ── Layout de 2 columnas para "Centro de mando": el flujo principal
+       (.s1-grid, intacto) + un panel derecho persistente de alertas/IA/
+       vencimientos. El panel usa la clase .vista-default que YA maneja el
+       JS existente (abrirModulo() la oculta, cerrarModulo() la restaura),
+       así que se integra sin tocar una línea de <script>. ── */
+    .s1-layout { display: flex; gap: 16px; flex: 1; min-height: 0; }
+    .ep-panel-derecho { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; }
+    .ep-panel-titulo { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); }
+    .ep-ia-card {
+        background: linear-gradient(160deg, color-mix(in srgb, var(--periwinkle) 16%, var(--card-bg)), var(--card-bg));
+        border: 1px solid color-mix(in srgb, var(--periwinkle) 35%, var(--rule-strong)); border-radius: 10px;
+        padding: 13px 15px; font-size: 12px; line-height: 1.6; color: var(--text);
+    }
+    .ep-ia-card b { color: var(--periwinkle); }
+
+    /* ── Hero — panel de marca sólido, sin texturas ni blobs decorativos;
+       jerarquía limpia, un ícono en círculo translúcido a la derecha. ── */
+    .in-hero {
+        background: var(--navy); color: #fff;
+        padding: 20px 24px; border-radius: 12px; position: relative; overflow: hidden;
+    }
+    .in-hero::before {
+        content: ''; position: absolute; top: -60px; right: -40px; width: 200px; height: 200px;
+        background: rgba(255,255,255,.06); border-radius: 50%;
+    }
+    .in-hero::after { content: none; }
+    .in-hero-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; }
+    .in-hero-empresa { font-size: 18px; font-weight: 700; }
+    .in-hero-sub { font-size: 11.5px; opacity: .78; margin-top: 3px; font-family: var(--font-mono); }
+    .in-hero-switch {
+        background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.3); color: #fff;
+        padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 7px;
+        transition: background .15s;
+    }
+    .in-hero-switch:hover { background: rgba(255,255,255,.2); }
+    .in-frase {
+        font-size: 15px; font-weight: 600; line-height: 1.4;
+        margin-top: 16px; position: relative; z-index: 1; max-width: 340px; opacity: .92;
+    }
+    .in-frase span { opacity: 1; text-decoration: underline; text-decoration-color: rgba(255,255,255,.4); text-underline-offset: 3px; }
+
+    /* ── Grupos — tarjetas blancas, borde gris fino, acento de color en el
+       ícono; sombra suave al pasar el mouse, sin relleno tintado grande. ── */
+    .mod-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; transition: opacity .15s; }
+    .mod-group {
+        --g: var(--periwinkle); cursor: pointer; padding: 13px 16px;
+        background: var(--card-bg); border: 1px solid var(--rule-strong); border-radius: 10px;
+        display: flex; align-items: center; gap: 12px; transition: all .15s; box-shadow: var(--shadow-sm);
+    }
+    .mod-group:hover { border-color: var(--g); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .mod-group-icon {
+        width: 36px; height: 36px; flex-shrink: 0; background: color-mix(in srgb, var(--g) 12%, var(--card-bg));
+        color: var(--g); display: flex; align-items: center; justify-content: center; font-size: 16px;
+        border-radius: 8px;
+    }
+    .mod-group-nombre { font-weight: 700; font-size: 13.5px; color: var(--text); }
+    .mod-group-count { font-size: 10.5px; color: var(--text-muted); font-weight: 500; }
+    .mod-group-car { margin-left: auto; font-size: 13px; color: var(--g); }
+
+    /* ── Dock flotante — mismos círculos claros con anillo de color; el
+       activo se rellena. ── */
+    .mod-groups.dock-activo {
+        position: fixed;
+        left: max(16px, calc((100vw - min(94vw, 1600px)) / 2 - 30px));
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex; flex-direction: column; gap: 10px; width: auto; z-index: 55;
+    }
+    .mod-groups.dock-activo .mod-group {
+        padding: 0; width: 44px; height: 44px; justify-content: center; border-radius: 50%;
+        background: var(--card-bg); border: 1px solid var(--rule-strong); box-shadow: var(--shadow-sm);
+    }
+    .mod-groups.dock-activo .mod-group-nombre,
+    .mod-groups.dock-activo .mod-group-count,
+    .mod-groups.dock-activo .mod-group-car { display: none; }
+    .mod-groups.dock-activo .mod-group-icon {
+        border-radius: 50%; width: 100%; height: 100%; margin: 0;
+        background: transparent;
+    }
+    .mod-groups.dock-activo .mod-group.activo {
+        border-color: var(--g); background: color-mix(in srgb, var(--g) 10%, var(--card-bg));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--g) 18%, transparent), var(--shadow-md);
+    }
+
+    /* ── Vista de módulo ── */
+    .modulo-view { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .modulo-view.abierto { display: flex; }
+    .modulo-volver {
+        align-self: flex-start; margin-bottom: 14px; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 15px; font-weight: 600; font-size: 12.5px;
+        color: var(--navy); background: color-mix(in srgb, var(--navy) 8%, var(--card-bg));
+        border: 1px solid color-mix(in srgb, var(--navy) 30%, var(--rule-strong)); border-radius: 8px;
+        transition: all .15s;
+    }
+    .modulo-volver:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+    /* ── Pestañas — línea inferior de color al estar activa, sombra
+       ninguna; look de tab bar de app profesional. Se siguen encogiendo
+       (flex:1 1 0 + elipsis) para entrar todas en una fila sin scroll. ── */
+    .folder-tabs { display: flex; align-items: stretch; border-bottom: 1px solid var(--rule-strong); }
+    .folder-tab {
+        flex: 1 1 0; min-width: 0; cursor: pointer; text-align: center;
+        padding: 11px 8px; margin: 0;
+        font-size: 12px; font-weight: 500;
+        color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        background: transparent; border: none; border-bottom: 2px solid transparent;
+        position: relative; z-index: 1; margin-bottom: -1px;
+        transition: color .15s, border-color .15s;
+    }
+    .folder-tab:hover:not(.activo) { color: var(--text); }
+    .folder-tab.activo {
+        color: var(--mg, var(--navy)); font-weight: 700;
+        border-bottom-color: var(--mg, var(--navy));
+    }
+    .folder-tabs-body {
+        flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; z-index: 0;
+        border: 1px solid var(--rule-strong); border-top: none; border-radius: 0 0 10px 10px;
+        background: var(--card-bg); padding: 20px 22px;
+    }
+    .modulo-view-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .modulo-view-icon {
+        width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+        font-size: 18px; color: var(--mg, var(--navy)); background: color-mix(in srgb, var(--mg, var(--navy)) 12%, var(--card-bg)); flex-shrink: 0;
+        border-radius: 9px;
+    }
+    .modulo-view-titulo { font-weight: 700; font-size: 17px; color: var(--text); }
+    .modulo-view-vacio {
+        flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
+        color: var(--text-muted); font-size: 13px; line-height: 1.7; padding: 24px;
+        border: 1px dashed var(--rule-strong); border-radius: 10px;
+        background: var(--paper-deep);
+    }
+
+    /* ═══ PROTOTIPO — Libro Diario ═══ */
+    .ld-proto { display: none; flex: 1; min-height: 0; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 4px; }
+    .ld-proto.abierto { display: flex; }
+
+    .ld-textarea {
+        width: 100%; box-sizing: border-box; resize: vertical; min-height: 44px;
+        padding: 10px 12px; font-family: inherit; font-size: 13px; color: var(--text);
+        border: 1px solid var(--rule-strong); border-radius: 8px; background: var(--paper-deep);
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .ld-textarea:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px color-mix(in srgb, var(--navy) 14%, transparent); }
+    .ld-ayuda { font-size: 11.5px; color: var(--text-muted); }
+    .ld-ayuda summary { cursor: pointer; font-weight: 600; color: var(--navy); }
+    .ld-ayuda div { padding: 6px 2px 0; line-height: 1.8; }
+
+    .ld-controles { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .ld-fecha label { font-size: 10.5px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px; }
+    .ld-fecha input {
+        padding: 7px 9px; border: 1px solid var(--rule-strong); border-radius: 7px;
+        font-family: var(--font-mono); font-size: 12.5px; background: var(--card-bg); color: var(--text);
+    }
+    .ld-botones { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ld-btn {
+        font-size: 12.5px; font-weight: 600; padding: 9px 15px; cursor: pointer;
+        border-radius: 8px; border: 1px solid transparent; transition: all .15s;
+    }
+    .ld-btn:hover { transform: translateY(-1px); }
+    .ld-btn-primary { background: var(--navy); color: #fff; box-shadow: var(--shadow-sm); }
+    .ld-btn-primary:hover { background: color-mix(in srgb, var(--navy) 85%, black); box-shadow: var(--shadow-md); }
+    .ld-btn-secondary { background: var(--card-bg); border-color: var(--rule-strong); color: var(--text); }
+    .ld-btn-secondary:hover { border-color: var(--navy); color: var(--navy); }
+
+    .ld-tabla-wrap { border: 1px solid var(--rule-strong); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+    .ld-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ld-tabla th { text-align: left; background: var(--paper-deep); color: var(--text-muted); padding: 9px 14px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+    .ld-tabla th.monto, .ld-tabla td.monto { text-align: right; width: 140px; font-family: var(--font-mono); }
+    .ld-tabla td { padding: 9px 14px; border-bottom: 1px solid var(--rule-strong); }
+    .ld-tabla tr:last-child td { border-bottom: none; }
+    .ld-debe { font-weight: 600; color: var(--navy); }
+    .ld-haber { font-weight: 600; color: var(--coral-deep); padding-left: 30px !important; }
+
+    .ld-totales { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+    .ld-badge { font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 20px; border: 1px solid; }
+    .ld-badge.ok { background: var(--ok-tint); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+    .ld-totales-right { display: flex; align-items: center; gap: 8px; }
+    .ld-contacto {
+        padding: 7px 11px; border: 1px solid var(--rule-strong); border-radius: 7px;
+        font-size: 12.5px; background: var(--card-bg); color: var(--text); width: 170px;
+    }
+
+    .ld-historial-titulo { font-weight: 700; font-size: 12.5px; color: var(--text); flex-shrink: 0; }
+    .ld-historial { display: flex; flex-direction: column; gap: 6px; }
+    .ld-hist-item {
+        padding: 9px 13px;
+        background: var(--paper-deep);
+        border: 1px solid var(--rule-strong); border-radius: 8px; font-size: 12px;
+    }
+    .ld-hist-item summary {
+        display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none;
+    }
+    .ld-hist-item summary::-webkit-details-marker { display: none; }
+    .ld-hist-item summary::before { content: '▸'; color: var(--text-muted); font-size: 10px; flex-shrink: 0; transition: transform .15s; }
+    .ld-hist-item[open] summary::before { transform: rotate(90deg); color: var(--navy); }
+    .ld-hist-fecha { font-family: var(--font-mono); color: var(--text-muted); flex-shrink: 0; width: 74px; font-size: 11px; }
+    .ld-hist-glosa { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+    .ld-hist-monto { font-family: var(--font-mono); font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .ld-hist-tabla { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11.5px; }
+    .ld-hist-tabla th {
+        text-align: left; padding: 4px 8px; font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .04em; color: var(--text-muted); border-bottom: 1px solid var(--rule-strong);
+    }
+    .ld-hist-tabla th.monto, .ld-hist-tabla td.monto { text-align: right; width: 110px; font-family: var(--font-mono); }
+    .ld-hist-tabla td { padding: 4px 8px; border-bottom: 1px dashed var(--rule-strong); }
+    .ld-hist-tabla tr:last-child td { border-bottom: none; }
+
+    /* ═══ PROTOTIPO — Libro Mayor ═══ */
+    .lm-proto { display: none; flex: 1; min-height: 0; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 4px; }
+    .lm-proto.abierto { display: flex; }
+    .lm-toolbar { display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+    .lm-select {
+        padding: 7px 10px; border: 1px solid var(--rule-strong); border-radius: 7px;
+        font-size: 12.5px; font-weight: 500; background: var(--card-bg); color: var(--text);
+    }
+    .lm-cuentas { display: flex; flex-direction: column; gap: 12px; }
+    .lm-cuenta-card { border: 1px solid var(--rule-strong); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+    .lm-cuenta-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--paper-deep); border-bottom: 1px solid var(--rule-strong); }
+    .lm-cuenta-nombre { font-weight: 700; font-size: 12.5px; color: var(--text); }
+    .lm-cuenta-tipo { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+    .lm-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .lm-tabla th {
+        text-align: left; padding: 6px 14px; font-size: 9.5px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); border-bottom: 1px solid var(--rule-strong);
+    }
+    .lm-tabla th.monto, .lm-tabla td.monto { text-align: right; width: 120px; font-family: var(--font-mono); }
+    .lm-tabla td { padding: 6px 14px; border-bottom: 1px solid var(--rule-strong); }
+    .lm-cuenta-saldo { display: flex; justify-content: space-between; padding: 8px 14px; background: var(--paper-deep); font-weight: 700; font-size: 12px; font-family: var(--font-mono); }
+    .lm-saldo-deudor { color: var(--navy); }
+    .lm-saldo-acreedor { color: var(--coral-deep); }
+
+    /* ═══ PROTOTIPO — Balance General ═══ */
+    .bal-proto { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .bal-proto.abierto { display: flex; }
+    .bal-tabla-wrap { border: 1px solid var(--rule-strong); border-radius: 10px; overflow: auto; flex: 1; min-height: 0; }
+    .bal-tabla { width: 100%; border-collapse: collapse; font-size: 11.5px; white-space: nowrap; }
+    .bal-tabla th, .bal-tabla td { padding: 7px 11px; }
+    .bal-tabla thead th {
+        background: var(--paper-deep); color: var(--text-muted); font-size: 9.5px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .04em; text-align: right; position: sticky; top: 0;
+        border-bottom: 1px solid var(--rule-strong);
+    }
+    .bal-tabla thead th:first-child { text-align: left; }
+    .bal-grupo-fila td {
+        background: color-mix(in srgb, var(--periwinkle) 6%, var(--paper-deep)); font-weight: 700;
+        font-size: 10px; color: var(--periwinkle); text-transform: uppercase; letter-spacing: .04em; padding-top: 8px;
+    }
+    .bal-tabla tbody td { border-bottom: 1px solid var(--rule-strong); text-align: right; font-family: var(--font-mono); }
+    .bal-tabla tbody td:first-child { text-align: left; font-family: inherit; font-weight: 500; }
+    .bal-tabla tbody tr:hover td { background: color-mix(in srgb, var(--navy) 4%, transparent); }
+    .bal-tabla tfoot td { border-top: 2px solid var(--navy); font-weight: 700; background: var(--paper-deep); font-family: var(--font-mono); }
+    .bal-tabla tfoot td:first-child { text-align: left; font-family: inherit; }
+    .bal-tabla tfoot tr.bal-final td { background: var(--ok-tint); color: var(--ok); }
+
+    /* ── Centro de atención ── */
+    .centro-atencion { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .ca-card { padding: 12px 15px; border-width: 1px; border-style: solid; border-radius: 10px; overflow: auto; background: var(--card-bg); box-shadow: var(--shadow-sm); }
+    .ca-card.hallazgos { border-color: var(--rule-strong); border-left: 3px solid var(--coral); }
+    .ca-card.vencimientos { border-color: var(--rule-strong); border-left: 3px solid var(--periwinkle); }
+    .ca-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .ca-card-titulo { font-weight: 700; font-size: 12.5px; color: var(--text); display: flex; align-items: center; gap: 6px; }
+    .ca-count { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+    .ca-card.hallazgos .ca-count { background: var(--danger-tint); color: var(--coral-deep); }
+    .ca-card.vencimientos .ca-count { background: var(--periwinkle-soft); color: var(--periwinkle); }
+    .ca-item { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--rule-strong); font-size: 12px; cursor: pointer; }
+    .ca-item:last-child { border-bottom: none; }
+    .ca-item-dot { width: 6px; height: 6px; flex-shrink: 0; margin-top: 5px; border-radius: 50%; }
+    .ca-item-dot.critico { background: var(--coral); }
+    .ca-item-dot.medio { background: var(--blue); }
+    .ca-item-dot.bajo { background: var(--text-muted); }
+    .ca-item-texto { flex: 1; min-width: 0; font-weight: 500; color: var(--text); }
+    .ca-item-cliente { font-size: 10.5px; color: var(--text-muted); font-weight: 500; }
+    .ca-item-plazo { font-size: 10px; font-weight: 700; white-space: nowrap; }
+
+    .accesos-rapidos { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; margin-bottom: 8px; }
+    .ar-titulo { font-weight: 700; font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+    .ar-btn {
+        font-size: 12px; font-weight: 600; padding: 7px 13px; cursor: pointer;
+        background: var(--card-bg); border: 1px solid var(--rule-strong); color: var(--text); border-radius: 8px;
+        transition: all .15s;
+    }
+    .ar-btn:hover { border-color: var(--navy); color: var(--navy); background: color-mix(in srgb, var(--navy) 6%, var(--card-bg)); }
+
+    /* ── Sección 2: Financiero + Actividad ── */
+    .s2-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; flex: 1; min-height: 0; }
+    .s2-col { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+    .kpi-grid-compacta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .kpi-mx { padding: 11px 13px; border-width: 1px; border-style: solid; border-radius: 10px; cursor: pointer; transition: all .15s; background: var(--card-bg); border-color: var(--rule-strong); box-shadow: var(--shadow-sm); }
+    .kpi-mx:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .kpi-mx:nth-child(1) { border-top: 3px solid var(--navy); }
+    .kpi-mx:nth-child(2) { border-top: 3px solid var(--coral); }
+    .kpi-mx:nth-child(3) { border-top: 3px solid var(--ok); }
+    .kpi-mx:nth-child(4) { border-top: 3px solid var(--periwinkle); }
+    .kpi-mx-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+    .kpi-mx-val { font-size: 16px; font-weight: 700; font-family: var(--font-mono); margin-top: 2px; color: var(--text); }
+
+    .in-card { background: var(--card-bg); border: 1px solid var(--rule-strong); border-radius: 10px; padding: 14px 17px; box-shadow: var(--shadow-sm); }
+    .in-card.flexcol { display: flex; flex-direction: column; }
+    .donut-row { display: flex; gap: 10px; flex: 1; min-height: 0; }
+    .donut-row .in-card { flex: 1; }
+    .placeholder-box { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; border: 1px dashed var(--rule-strong); border-radius: 8px; }
+    .actividad-mini { display: flex; gap: 12px; font-size: 11.5px; }
+    .actividad-mini > div { flex: 1; }
+    .actividad-mini b { display: block; font-size: 10px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+
+    /* ── Panel flotante del selector de módulos — tarjeta blanca con sombra
+       elevada, sin efecto de vidrio ni resplandor. ── */
+    .fan-overlay { position: fixed; inset: 0; z-index: 300; display: none; }
+    .fan-overlay.abierto { display: block; }
+    .fan-bg { position: absolute; inset: 0; background: rgba(15, 23, 42, .32); }
+    .fan-panel {
+        position: absolute; background: var(--card-bg); border: 1px solid var(--rule-strong); border-radius: 14px;
+        padding: 18px 20px; width: 460px; max-width: 90vw;
+        transform-origin: top center; transform: translateY(-6px) scale(.98); opacity: 0;
+        transition: transform .18s ease, opacity .15s;
+        box-shadow: 0 20px 48px -14px rgba(15, 23, 42, .28);
+        border-top: 3px solid var(--gcolor, var(--navy));
+    }
+    .fan-overlay.abierto .fan-panel { transform: translateY(0) scale(1); opacity: 1; }
+    .fan-panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--rule-strong); }
+    .fan-panel-icon {
+        width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+        font-size: 17px; color: var(--gcolor, var(--navy)); background: color-mix(in srgb, var(--gcolor, var(--navy)) 12%, var(--card-bg));
+        border-radius: 9px; flex-shrink: 0;
+    }
+    .fan-panel-titulo { font-weight: 700; font-size: 15px; color: var(--text); }
+    .fan-panel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .fan-chip {
+        display: flex; align-items: center; gap: 6px; padding: 9px 12px; cursor: pointer;
+        background: var(--paper-deep); border: 1px solid var(--rule-strong); border-radius: 8px;
+        font-size: 12.5px; font-weight: 500; color: var(--text); transition: all .15s;
+    }
+    .fan-chip:hover { border-color: var(--gcolor, var(--navy)); color: var(--gcolor, var(--navy)); background: color-mix(in srgb, var(--gcolor, var(--navy)) 6%, var(--card-bg)); }
+    .fan-cerrar {
+        position: absolute; top: 18px; right: 24px; color: var(--text-muted); font-size: 12.5px; font-weight: 600; cursor: pointer;
+        background: var(--card-bg); border: 1px solid var(--rule-strong); padding: 8px 14px; border-radius: 8px;
+        transition: all .15s;
+    }
+    .fan-cerrar:hover { color: var(--coral-deep); border-color: var(--coral); }
+</style>
+</head>
+<body>
+
+<div class="ep-titlebar">
+    <div class="ep-titlebar-left"><span class="ep-titlebar-logo">ε</span> EPSILON — Software Contable</div>
+    <div class="ep-titlebar-controles">
+        <span class="ep-tb-btn">─</span>
+        <span class="ep-tb-btn">☐</span>
+        <span class="ep-tb-btn ep-tb-cerrar">✕</span>
+    </div>
+</div>
+
+<div class="ep-topbar">
+    <div class="ep-topbar-left">
+        <div class="ep-logo-mark">ε</div>
+        <div class="ep-logo-texto">EPSILON</div>
+    </div>
+    <div class="ep-topbar-buscador">
+        <span>🔍</span>
+        <input type="text" class="ep-buscador-input" placeholder="Buscar clientes, asientos, documentos…">
+        <span class="ep-buscador-atajo">Ctrl K</span>
+    </div>
+    <div class="ep-topbar-right">
+        <button class="ep-icon-btn" title="Sincronización">🔄</button>
+        <button class="ep-icon-btn" title="Notificaciones">🔔<span class="ep-badge">3</span></button>
+        <div class="ep-empresa-chip">🏢 Mi Empresa Ltda. ▾</div>
+        <div class="ep-perfil" title="Isaac Marín">IM</div>
+    </div>
+</div>
+
+<div class="in-viewport" id="inViewport">
+  <div class="in-track" id="inTrack">
+
+    <!-- SECCIÓN 1 — Centro de mando + Atención (fusionadas) -->
+    <div class="in-slide">
+        <div class="slide-titulo"><b>🧭 Centro de mando</b></div>
+        <div class="s1-layout">
+        <div class="s1-grid">
+            <div class="in-hero vista-default">
+                <div class="in-hero-top">
+                    <div>
+                        <div class="in-hero-empresa">🏢 Mi Empresa Ltda.</div>
+                        <div class="in-hero-sub">🪪 76.123.456-7 · Ejercicio 2026</div>
+                    </div>
+                    <button class="in-hero-switch">Estudio Contable Marín ▾</button>
+                </div>
+                <div class="in-frase">Todo tu estudio contable, <span>en un solo lugar.</span></div>
+            </div>
+            <div class="mod-groups">
+                <div class="mod-group" data-grupo="contabilidad" style="--g:var(--navy);" onclick="abrirPulpo('contabilidad', this)">
+                    <div class="mod-group-icon">📝</div>
+                    <div><div class="mod-group-nombre">Contabilidad</div><div class="mod-group-count">10 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="ventas" style="--g:var(--coral);" onclick="abrirPulpo('ventas', this)">
+                    <div class="mod-group-icon">🛒</div>
+                    <div><div class="mod-group-nombre">Ventas</div><div class="mod-group-count">9 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="compras" style="--g:var(--periwinkle);" onclick="abrirPulpo('compras', this)">
+                    <div class="mod-group-icon">📦</div>
+                    <div><div class="mod-group-nombre">Compras</div><div class="mod-group-count">5 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="inventarios" style="--g:var(--blue);" onclick="abrirPulpo('inventarios', this)">
+                    <div class="mod-group-icon">🏷</div>
+                    <div><div class="mod-group-nombre">Productos e Inventarios</div><div class="mod-group-count">8 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="tesoreria" style="--g:var(--positive);" onclick="abrirPulpo('tesoreria', this)">
+                    <div class="mod-group-icon">🏦</div>
+                    <div><div class="mod-group-nombre">Tesorería</div><div class="mod-group-count">5 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+            </div>
+            <div class="accesos-rapidos vista-default">
+                <span class="ar-titulo">⚡ Accesos</span>
+                <button class="ar-btn">📝 Libro Diario</button>
+                <button class="ar-btn">🏦 Conciliación</button>
+                <button class="ar-btn">👷 Remuneraciones</button>
+                <button class="ar-btn">📋 Nuevo hallazgo</button>
+            </div>
+            <div class="modulo-view">
+                <button class="modulo-volver" onclick="cerrarModulo(this.closest('.in-slide'))">‹ Volver</button>
+                <div class="folder-tabs"></div>
+                <div class="folder-tabs-body">
+                    <div class="modulo-view-header">
+                        <div class="modulo-view-icon"></div>
+                        <div class="modulo-view-titulo"></div>
+                    </div>
+                    <div class="modulo-view-vacio">Vista de prueba — este módulo aún no tiene contenido implementado.<br>Usa el dock de la izquierda para probar el cambio lateral entre grupos y módulos.</div>
+
+                    <!-- Prototipo de Libro Diario — único módulo con contenido real por ahora -->
+                    <div class="ld-proto">
+                        <textarea class="ld-textarea" rows="2"
+                            placeholder="Ej: Venta de mercadería por $120.000 con transferencia">Compra de mercadería por $300.000 a crédito</textarea>
+                        <details class="ld-ayuda">
+                            <summary>¿Cómo escribir la glosa?</summary>
+                            <div>
+                                • Venta de mercadería por $200.000 al contado &nbsp;·&nbsp;
+                                Depósito de $500.000 en banco desde caja &nbsp;·&nbsp;
+                                Pago a proveedor por $80.000 con cheque &nbsp;·&nbsp;
+                                Gasto de arriendo por $200.000 con transferencia
+                            </div>
+                        </details>
+                        <div class="ld-controles">
+                            <div class="ld-fecha"><label>Fecha</label><input type="date" value="2026-07-28"></div>
+                            <div class="ld-botones">
+                                <button class="ld-btn ld-btn-primary"
+                                    onclick="mostrarToastDraft('Vista de ejemplo — acá se conecta el parser real de la glosa (ver diario.js).')">Generar Asiento →</button>
+                                <button class="ld-btn ld-btn-secondary"
+                                    onclick="mostrarToastDraft('✏ Asiento Manual — placeholder de este borrador.')">✏ Asiento Manual</button>
+                                <button class="ld-btn ld-btn-secondary"
+                                    onclick="abrirModulo('contabilidad', 'Plan de cuentas')">+ Agregar Cuenta</button>
+                            </div>
+                        </div>
+
+                        <div class="ld-tabla-wrap">
+                            <table class="ld-tabla">
+                                <thead><tr><th>Cuenta</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="ld-debe">Mercaderías</td><td class="monto">$252.101</td><td class="monto">—</td></tr>
+                                    <tr><td class="ld-debe">IVA Crédito Fiscal</td><td class="monto">$47.899</td><td class="monto">—</td></tr>
+                                    <tr><td class="ld-haber">Proveedores</td><td class="monto">—</td><td class="monto">$300.000</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ld-totales">
+                            <div class="ld-badge ok">⚖️ Cuadrado: $300.000</div>
+                            <div class="ld-totales-right">
+                                <input class="ld-contacto" placeholder="👤 Contacto (opcional)">
+                                <button class="ld-btn ld-btn-primary" onclick="ldRegistrarEjemplo()">💾 Registrar Asiento</button>
+                            </div>
+                        </div>
+
+                        <div class="ld-historial-titulo">📚 Registros históricos</div>
+                        <div class="ld-historial" id="ldHistorial">
+                            <details class="ld-hist-item">
+                                <summary><span class="ld-hist-fecha">25/07/2026</span><span class="ld-hist-glosa">Venta de mercadería por $450.000 al contado</span><span class="ld-hist-monto">$450.000</span></summary>
+                                <table class="ld-hist-tabla">
+                                    <thead><tr><th>Cuenta</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>Caja</td><td class="monto">$450.000</td><td class="monto">—</td></tr>
+                                        <tr><td>Ingresos por Ventas</td><td class="monto">—</td><td class="monto">$378.151</td></tr>
+                                        <tr><td>IVA Débito Fiscal</td><td class="monto">—</td><td class="monto">$71.849</td></tr>
+                                    </tbody>
+                                </table>
+                            </details>
+                            <details class="ld-hist-item">
+                                <summary><span class="ld-hist-fecha">22/07/2026</span><span class="ld-hist-glosa">Pago de remuneraciones por $1.200.000</span><span class="ld-hist-monto">$1.200.000</span></summary>
+                                <table class="ld-hist-tabla">
+                                    <thead><tr><th>Cuenta</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>Gasto Remuneraciones</td><td class="monto">$1.200.000</td><td class="monto">—</td></tr>
+                                        <tr><td>Banco</td><td class="monto">—</td><td class="monto">$1.200.000</td></tr>
+                                    </tbody>
+                                </table>
+                            </details>
+                            <details class="ld-hist-item">
+                                <summary><span class="ld-hist-fecha">20/07/2026</span><span class="ld-hist-glosa">Depósito de $500.000 en banco desde caja</span><span class="ld-hist-monto">$500.000</span></summary>
+                                <table class="ld-hist-tabla">
+                                    <thead><tr><th>Cuenta</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>Banco</td><td class="monto">$500.000</td><td class="monto">—</td></tr>
+                                        <tr><td>Caja</td><td class="monto">—</td><td class="monto">$500.000</td></tr>
+                                    </tbody>
+                                </table>
+                            </details>
+                        </div>
+                    </div>
+
+                    <!-- Prototipo de Libro Mayor -->
+                    <div class="lm-proto">
+                        <div class="lm-toolbar">
+                            <select class="lm-select">
+                                <option>Todas las cuentas</option>
+                                <option>Caja</option>
+                                <option>Proveedores</option>
+                            </select>
+                            <select class="lm-select">
+                                <option>Todos los períodos</option>
+                                <option>2026-07</option>
+                                <option>2026-06</option>
+                            </select>
+                        </div>
+                        <div class="lm-cuentas">
+                            <div class="lm-cuenta-card">
+                                <div class="lm-cuenta-head">
+                                    <span class="lm-cuenta-nombre">📖 Caja</span>
+                                    <span class="lm-cuenta-tipo">Activo</span>
+                                </div>
+                                <table class="lm-tabla">
+                                    <thead><tr><th style="width:52px;">N°</th><th style="width:100px;">Fecha</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>012</td><td>05/07/2026</td><td class="monto">$2.500.000</td><td class="monto">—</td></tr>
+                                        <tr><td>018</td><td>12/07/2026</td><td class="monto">$2.700.000</td><td class="monto">—</td></tr>
+                                        <tr><td>025</td><td>20/07/2026</td><td class="monto">—</td><td class="monto">$3.100.000</td></tr>
+                                    </tbody>
+                                </table>
+                                <div class="lm-cuenta-saldo"><span>Saldo: DEUDOR</span><span class="lm-saldo-deudor">$2.100.000</span></div>
+                            </div>
+                            <div class="lm-cuenta-card">
+                                <div class="lm-cuenta-head">
+                                    <span class="lm-cuenta-nombre">📖 Proveedores</span>
+                                    <span class="lm-cuenta-tipo">Pasivo</span>
+                                </div>
+                                <table class="lm-tabla">
+                                    <thead><tr><th style="width:52px;">N°</th><th style="width:100px;">Fecha</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>009</td><td>03/07/2026</td><td class="monto">—</td><td class="monto">$3.300.000</td></tr>
+                                        <tr><td>015</td><td>10/07/2026</td><td class="monto">—</td><td class="monto">$2.000.000</td></tr>
+                                        <tr><td>022</td><td>18/07/2026</td><td class="monto">$2.100.000</td><td class="monto">—</td></tr>
+                                    </tbody>
+                                </table>
+                                <div class="lm-cuenta-saldo"><span>Saldo: ACREEDOR</span><span class="lm-saldo-acreedor">$3.200.000</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prototipo de Balance General -->
+                    <div class="bal-proto">
+                        <div class="bal-tabla-wrap">
+                            <table class="bal-tabla">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" style="text-align:left;">Cuenta Contable</th>
+                                        <th colspan="2">Sumas</th>
+                                        <th colspan="2">Saldos</th>
+                                        <th colspan="2">Inventario</th>
+                                        <th colspan="2">Resultados</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Debe</th><th>Haber</th>
+                                        <th>Deudor</th><th>Acreedor</th>
+                                        <th>Activo</th><th>Pasivo/Pat.</th>
+                                        <th>Pérdida</th><th>Ganancia</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bal-grupo-fila"><td colspan="9">Activo Circulante</td></tr>
+                                    <tr><td>Caja</td><td>$5.200.000</td><td>$3.100.000</td><td>$2.100.000</td><td>—</td><td>$2.100.000</td><td>—</td><td>—</td><td>—</td></tr>
+                                    <tr><td>Banco</td><td>$18.400.000</td><td>$9.600.000</td><td>$8.800.000</td><td>—</td><td>$8.800.000</td><td>—</td><td>—</td><td>—</td></tr>
+                                    <tr><td>Clientes</td><td>$6.500.000</td><td>$4.200.000</td><td>$2.300.000</td><td>—</td><td>$2.300.000</td><td>—</td><td>—</td><td>—</td></tr>
+                                    <tr><td>Mercaderías</td><td>$3.910.000</td><td>$1.500.000</td><td>$2.410.000</td><td>—</td><td>$2.410.000</td><td>—</td><td>—</td><td>—</td></tr>
+                                    <tr class="bal-grupo-fila"><td colspan="9">Pasivo Circulante</td></tr>
+                                    <tr><td>Proveedores</td><td>$2.100.000</td><td>$5.300.000</td><td>—</td><td>$3.200.000</td><td>—</td><td>$3.200.000</td><td>—</td><td>—</td></tr>
+                                    <tr class="bal-grupo-fila"><td colspan="9">Patrimonio</td></tr>
+                                    <tr><td>Capital</td><td>—</td><td>$10.000.000</td><td>—</td><td>$10.000.000</td><td>—</td><td>$10.000.000</td><td>—</td><td>—</td></tr>
+                                    <tr class="bal-grupo-fila"><td colspan="9">Pérdidas / Ganancias</td></tr>
+                                    <tr><td>Costo de Ventas</td><td>$7.440.000</td><td>—</td><td>$7.440.000</td><td>—</td><td>—</td><td>—</td><td>$7.440.000</td><td>—</td></tr>
+                                    <tr><td>Ingresos por Ventas</td><td>—</td><td>$9.850.000</td><td>—</td><td>$9.850.000</td><td>—</td><td>—</td><td>—</td><td>$9.850.000</td></tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr><td>SUBTOTALES</td><td>$43.550.000</td><td>$43.550.000</td><td>$23.050.000</td><td>$23.050.000</td><td>$15.610.000</td><td>$13.200.000</td><td>$7.440.000</td><td>$9.850.000</td></tr>
+                                    <tr><td>UTILIDAD / PÉRDIDA DEL EJERCICIO</td><td></td><td></td><td></td><td></td><td>—</td><td>$2.410.000</td><td>$2.410.000</td><td>—</td></tr>
+                                    <tr class="bal-final"><td>TOTALES IGUALES</td><td></td><td></td><td></td><td></td><td>$15.610.000</td><td>$15.610.000</td><td>$9.850.000</td><td>$9.850.000</td></tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <aside class="ep-panel-derecho vista-default">
+            <div class="ep-panel-titulo">🤖 IA Contable</div>
+            <div class="ep-ia-card"><b>Insight del período:</b> el margen bruto de julio subió 4pts vs. junio, impulsado por menor costo de ventas. Sin anomalías de cuadratura detectadas.</div>
+            <div class="ep-panel-titulo">Alertas y vencimientos</div>
+            <div class="ca-card hallazgos">
+                <div class="ca-card-head"><div class="ca-card-titulo">🔎 Hallazgos</div><span class="ca-count">3 abiertos</span></div>
+                <div class="ca-item"><span class="ca-item-dot critico"></span><div class="ca-item-texto">IVA débito no cuadra con Libro de Ventas de junio</div></div>
+                <div class="ca-item"><span class="ca-item-dot medio"></span><div class="ca-item-texto">Falta respaldo de 2 facturas de compra</div></div>
+            </div>
+            <div class="ca-card vencimientos">
+                <div class="ca-card-head"><div class="ca-card-titulo">📅 Vencimientos</div><span class="ca-count">2 esta sem.</span></div>
+                <div class="ca-item"><span class="ca-item-dot critico"></span><div><div class="ca-item-texto">F29 — Junio 2026</div><div class="ca-item-cliente">Mi Empresa Ltda.</div></div><span class="ca-item-plazo" style="color:var(--negative);margin-left:auto;">3d</span></div>
+                <div class="ca-item"><span class="ca-item-dot medio"></span><div><div class="ca-item-texto">Cotizaciones Previred</div><div class="ca-item-cliente">Estudio Jurídico Soto</div></div><span class="ca-item-plazo" style="color:var(--warning,#d97706);margin-left:auto;">6d</span></div>
+            </div>
+        </aside>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 2 — Financiero + Actividad (fusionadas) -->
+    <div class="in-slide">
+        <div class="slide-titulo"><b>📊 Financiero y actividad</b></div>
+        <div class="s2-grid">
+            <div class="s2-col">
+                <div class="kpi-grid-compacta">
+                    <div class="kpi-mx"><div class="kpi-mx-lbl">Activos</div><div class="kpi-mx-val">$48,2M</div></div>
+                    <div class="kpi-mx"><div class="kpi-mx-lbl">Pasivos</div><div class="kpi-mx-val">$12,1M</div></div>
+                    <div class="kpi-mx"><div class="kpi-mx-lbl">Ingresos</div><div class="kpi-mx-val">$9,85M</div></div>
+                    <div class="kpi-mx"><div class="kpi-mx-lbl">Resultado</div><div class="kpi-mx-val">$2,41M</div></div>
+                </div>
+                <div class="in-card flexcol" style="flex:1;">
+                    <div style="font-weight:800;font-size:12.5px;margin-bottom:8px;">📊 Ingresos vs Gastos — Año Actual</div>
+                    <div class="placeholder-box">[gráfico de barras real acá]</div>
+                </div>
+                <div class="in-card">
+                    <div class="actividad-mini">
+                        <div><b>Últimos asientos</b>3 registrados hoy</div>
+                        <div><b>Top cuenta</b>Banco Estado — $18,4M</div>
+                    </div>
+                </div>
+            </div>
+            <div class="s2-col">
+                <div class="in-card">
+                    <div style="font-weight:800;font-size:12.5px;">📈 Indicadores</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">UF $40.844,79 · UTM $71.649 · USD $946,24</div>
+                </div>
+                <div class="donut-row">
+                    <div class="in-card flexcol">
+                        <div style="font-weight:800;font-size:10.5px;margin-bottom:6px;color:var(--text-muted);text-transform:uppercase;">Estructura</div>
+                        <div class="placeholder-box">[donut]</div>
+                    </div>
+                    <div class="in-card flexcol">
+                        <div style="font-weight:800;font-size:10.5px;margin-bottom:6px;color:var(--text-muted);text-transform:uppercase;">Resultado</div>
+                        <div class="placeholder-box">[donut]</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 3 — Configuración (mismo patrón de hero + grupos que la sección 1,
+         para que tenga una vista predeterminada con sus propios módulos) -->
+    <div class="in-slide">
+        <div class="slide-titulo"><b>⚙️ Configuración</b></div>
+        <div class="s3-grid">
+            <div class="in-hero vista-default">
+                <div class="in-hero-top">
+                    <div>
+                        <div class="in-hero-empresa">⚙️ Configuración</div>
+                        <div class="in-hero-sub">Estudio Contable Marín · Mi Empresa Ltda.</div>
+                    </div>
+                </div>
+                <div class="in-frase">Ajusta tu estudio, <span>a tu manera.</span></div>
+            </div>
+            <div class="mod-groups">
+                <div class="mod-group" data-grupo="cfg-empresa" style="--g:var(--navy);" onclick="abrirPulpo('cfg-empresa', this)">
+                    <div class="mod-group-icon">🏢</div>
+                    <div><div class="mod-group-nombre">Empresa</div><div class="mod-group-count">4 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="cfg-usuarios" style="--g:var(--coral);" onclick="abrirPulpo('cfg-usuarios', this)">
+                    <div class="mod-group-icon">👤</div>
+                    <div><div class="mod-group-nombre">Usuarios y Permisos</div><div class="mod-group-count">3 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="cfg-apariencia" style="--g:var(--periwinkle);" onclick="abrirPulpo('cfg-apariencia', this)">
+                    <div class="mod-group-icon">🎨</div>
+                    <div><div class="mod-group-nombre">Apariencia</div><div class="mod-group-count">3 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="cfg-notificaciones" style="--g:var(--blue);" onclick="abrirPulpo('cfg-notificaciones', this)">
+                    <div class="mod-group-icon">🔔</div>
+                    <div><div class="mod-group-nombre">Notificaciones</div><div class="mod-group-count">3 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+                <div class="mod-group" data-grupo="cfg-integraciones" style="--g:var(--positive);" onclick="abrirPulpo('cfg-integraciones', this)">
+                    <div class="mod-group-icon">🤖</div>
+                    <div><div class="mod-group-nombre">Integraciones e IA</div><div class="mod-group-count">3 módulos</div></div>
+                    <span class="mod-group-car">›</span>
+                </div>
+            </div>
+            <div class="modulo-view">
+                <button class="modulo-volver" onclick="cerrarModulo(this.closest('.in-slide'))">‹ Volver</button>
+                <div class="folder-tabs"></div>
+                <div class="folder-tabs-body">
+                    <div class="modulo-view-header">
+                        <div class="modulo-view-icon"></div>
+                        <div class="modulo-view-titulo"></div>
+                    </div>
+                    <div class="modulo-view-vacio">Vista de prueba — este módulo aún no tiene contenido implementado.<br>Usa el dock de la izquierda para probar el cambio lateral entre grupos y módulos.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </div>
+    <div class="in-rail" id="inRail">
+        <div class="in-dot activo" onclick="irASeccion(0)" title="Centro de mando">🧭</div>
+        <div class="in-dot" onclick="irASeccion(1)" title="Financiero">📊</div>
+        <div class="in-dot" onclick="irASeccion(2)" title="Configuración">⚙️</div>
+    </div>
+</div>
+
+<!-- Overlay del selector de módulos -->
+<div class="fan-overlay" id="fanOverlay">
+    <div class="fan-bg" onclick="cerrarPulpo()"></div>
+    <div class="fan-cerrar" onclick="cerrarPulpo()">✕ Cerrar</div>
+    <div class="fan-panel" id="fanPanel">
+        <div class="fan-panel-head">
+            <div class="fan-panel-icon" id="fanPanelIcon"></div>
+            <div class="fan-panel-titulo" id="fanPanelTitulo"></div>
+        </div>
+        <div class="fan-panel-grid" id="fanPanelGrid"></div>
+    </div>
+</div>
+
+<script>
+    const TOTAL_SECCIONES = 3;
+    let seccionActual = 0;
+    let bloqueado = false;
+
+    function irASeccion(i) {
+        if (i < 0 || i >= TOTAL_SECCIONES || bloqueado) return;
+        seccionActual = i;
+        document.getElementById('inTrack').style.transform = `translateY(-${i * 100}%)`;
+        document.querySelectorAll('.in-dot').forEach((d, idx) => d.classList.toggle('activo', idx === i));
+        bloqueado = true;
+        setTimeout(() => bloqueado = false, 550);
+    }
+
+    // EPSILON agrega barra de título + barra superior arriba de .in-viewport,
+    // así que .in-viewport ya no es 100vh (ver CSS: flex:1 dentro de un body
+    // en columna). El dock (.mod-groups.dock-activo) usa position:fixed pero
+    // queda "atrapado" dentro de .in-track (que sí ocupa 100% de ese alto
+    // ajustado) apenas .in-track tenga CUALQUIER transform aplicado — fijar
+    // uno inerte acá, en vez de esperar al primer cambio de sección, evita
+    // que el dock se centre mal la primera vez que se abre un módulo sin
+    // haber navegado antes entre secciones.
+    document.getElementById('inTrack').style.transform = 'translateY(0%)';
+
+    const viewport = document.getElementById('inViewport');
+    viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (e.deltaY > 20) irASeccion(seccionActual + 1);
+        else if (e.deltaY < -20) irASeccion(seccionActual - 1);
+    }, { passive: false });
+
+    document.addEventListener('keydown', (e) => {
+        if (document.getElementById('fanOverlay').classList.contains('abierto')) {
+            if (e.key === 'Escape') cerrarPulpo();
+            return;
+        }
+        if (e.key === 'Escape') {
+            const vistaAbierta = document.querySelector('.modulo-view.abierto');
+            if (vistaAbierta) { cerrarModulo(vistaAbierta.closest('.in-slide')); return; }
+        }
+        if (['ArrowDown', 'PageDown'].includes(e.key)) { e.preventDefault(); irASeccion(seccionActual + 1); }
+        if (['ArrowUp', 'PageUp'].includes(e.key))     { e.preventDefault(); irASeccion(seccionActual - 1); }
+    });
+
+    let touchStartY = 0;
+    viewport.addEventListener('touchstart', e => touchStartY = e.touches[0].clientY);
+    viewport.addEventListener('touchend', e => {
+        const dy = touchStartY - e.changedTouches[0].clientY;
+        if (Math.abs(dy) > 50) irASeccion(seccionActual + (dy > 0 ? 1 : -1));
+    });
+
+    // ── Pulpo — 5 grupos funcionales (redistribución pedida, sobre el
+    // catálogo completo de módulos de referencia, sin eliminar ninguno; los
+    // reportes de cada dominio se agrupan en un solo tentáculo "Reportes de…"
+    // en vez de un tentáculo por reporte, para que el abanico siga siendo legible). ──
+    const GRUPOS_DATA = {
+        contabilidad: {
+            color: 'var(--navy)', icon: '📝',
+            modulos: [
+                'Plan de cuentas', 'Libro diario', 'Libro copiativo', 'Libro mayor',
+                'Balance general', 'Asientos manuales', 'Estado de resultado',
+                'Modif. cuentas masivo', 'Reprocesar asientos', '📊 Reportes',
+            ],
+        },
+        ventas: {
+            color: 'var(--coral)', icon: '🛒',
+            modulos: [
+                'Facturación', 'Cotizaciones', 'Órdenes de venta', 'Abonos', 'Cobranzas',
+                'Guía de despachos', 'Integraciones online', 'Clientes', '📊 Reportes',
+            ],
+        },
+        compras: {
+            color: 'var(--periwinkle)', icon: '📦',
+            modulos: ['Órdenes de compra', 'Comprobantes', 'Pagos', 'Proveedores', '📊 Reportes'],
+        },
+        inventarios: {
+            color: 'var(--blue)', icon: '🏷',
+            modulos: [
+                'Productos y servicios', 'Atributos de producto', 'Bodegas',
+                'Modificación de stock', 'Movim. entre Bodegas',
+                'Importación masiva', 'Actualización de stock', '📊 Reportes',
+            ],
+        },
+        tesoreria: {
+            color: 'var(--positive)', icon: '🏦',
+            modulos: ['Entidades', 'Cajas', 'Cheques', 'Movimientos bancarios', 'Movimiento de fondos'],
+        },
+        // ── Grupos de la sección Configuración (misma mecánica de dock) ──
+        'cfg-empresa': {
+            color: 'var(--navy)', icon: '🏢',
+            modulos: ['Datos de la empresa', 'Ejercicio contable', 'Cambiar de empresa', 'Eliminar empresa'],
+        },
+        'cfg-usuarios': {
+            color: 'var(--coral)', icon: '👤',
+            modulos: ['Usuarios del estudio', 'Roles y permisos', 'Invitar colaborador'],
+        },
+        'cfg-apariencia': {
+            color: 'var(--periwinkle)', icon: '🎨',
+            modulos: ['Tema claro / oscuro', 'Densidad de tablas', 'Idioma'],
+        },
+        'cfg-notificaciones': {
+            color: 'var(--blue)', icon: '🔔',
+            modulos: ['Vencimientos tributarios', 'Hallazgos abiertos', 'Resumen semanal'],
+        },
+        'cfg-integraciones': {
+            color: 'var(--positive)', icon: '🤖',
+            modulos: ['API Key de IA (Gemini)', 'Proxy de Previred', 'Sincronización con la nube'],
+        },
+    };
+
+    // Fila (.mod-groups) actualmente colapsada al dock — puede ser la de
+    // Centro de mando o la de Configuración, según desde dónde se haya
+    // abierto el panel; cerrarPulpo() usa esta referencia para restaurarla.
+    let grupoAbiertoEl = null;
+
+    function abrirPulpo(grupoKey, tileEl) {
+        const data = GRUPOS_DATA[grupoKey];
+        const grupos = tileEl.closest('.mod-groups');
+        grupoAbiertoEl = grupos;
+
+        // Este selector SOLO muestra los módulos del grupo — no mueve nada.
+        // La fila recién se colapsa al dock cuando se abre un módulo concreto
+        // (ver abrirModulo()), así que acá solo hace falta leer si YA estaba
+        // en modo dock (clic en un ícono del dock, viniendo de otro módulo)
+        // para decidir si el panel se ancla debajo del tile (fila normal) o
+        // como flyout a la derecha (dock ya activo).
+        const enDock = grupos.classList.contains('dock-activo');
+        const rect = tileEl.getBoundingClientRect();
+
+        const panel = document.getElementById('fanPanel');
+        panel.style.setProperty('--gcolor', data.color);
+        document.getElementById('fanPanelIcon').textContent = data.icon;
+        document.getElementById('fanPanelIcon').style.background = data.color;
+        document.getElementById('fanPanelTitulo').textContent = data.modulos.length + ' módulos';
+        document.getElementById('fanPanelGrid').innerHTML = data.modulos
+            .map(m => `<div class="fan-chip" onclick="abrirModulo('${grupoKey}', '${m.replace(/'/g, "\\'")}')">${m}</div>`).join('');
+
+        const anchoPanel = Math.min(460, window.innerWidth * 0.9);
+        panel.style.width = anchoPanel + 'px';
+
+        if (enDock) {
+            // Ya en modo dock — el panel se abre como flyout a la derecha del
+            // ícono, centrado verticalmente sobre él.
+            let top = rect.top + rect.height / 2 - 30;
+            top = Math.max(16, Math.min(top, window.innerHeight - 220));
+            panel.style.left = (rect.right + 14) + 'px';
+            panel.style.top = top + 'px';
+        } else {
+            // Fila normal — el panel se ancla debajo del tile, como un
+            // desplegable simple. Nada se colapsa todavía.
+            let left = rect.left + rect.width / 2 - anchoPanel / 2;
+            left = Math.max(16, Math.min(left, window.innerWidth - anchoPanel - 16));
+            panel.style.left = left + 'px';
+            panel.style.top = (rect.bottom + 12) + 'px';
+        }
+
+        document.getElementById('fanOverlay').classList.add('abierto');
+    }
+
+    function cerrarPulpo() {
+        // Solo cierra el selector de módulos — no toca el dock ni la vista de
+        // módulo, que son independientes (ver abrirModulo()/cerrarModulo()).
+        document.getElementById('fanOverlay').classList.remove('abierto');
+    }
+
+    // Módulos con contenido real prototipado — mapea "grupo::módulo" a la
+    // clase del bloque que reemplaza el header+vacío genérico. Agregar acá
+    // cada módulo nuevo a medida que se prototipa (ver .ld-proto/.lm-proto/
+    // .bal-proto en el CSS); el resto sigue mostrando la vista de prueba vacía.
+    const MODULOS_PROTOTIPADOS = {
+        'contabilidad::Libro diario':   '.ld-proto',
+        'contabilidad::Libro mayor':    '.lm-proto',
+        'contabilidad::Balance general':'.bal-proto',
+    };
+
+    // Se llama al elegir un módulo concreto dentro del selector — es el único
+    // momento en que la fila de grupos se colapsa al dock ("deslizamiento"),
+    // y se muestra una vista de módulo (vacía, de prueba, o prototipada) en su lugar.
+    function abrirModulo(grupoKey, moduloNombre) {
+        const data = GRUPOS_DATA[grupoKey];
+        const grupos = grupoAbiertoEl;
+        if (!grupos) return;
+
+        document.getElementById('fanOverlay').classList.remove('abierto');
+
+        grupos.classList.add('dock-activo');
+        grupos.querySelectorAll('.mod-group').forEach(el => {
+            el.classList.toggle('activo', el.dataset.grupo === grupoKey);
+        });
+
+        const slide = grupos.closest('.in-slide');
+        slide.querySelectorAll('.vista-default').forEach(el => el.style.display = 'none');
+
+        const vista = slide.querySelector('.modulo-view');
+        vista.style.setProperty('--mg', data.color);
+        vista.classList.add('abierto');
+
+        // Solo un prototipo puede estar visible a la vez — ocultar todos antes
+        // de mostrar el que corresponda (o ninguno, si el módulo no tiene uno).
+        vista.querySelectorAll('.ld-proto, .lm-proto, .bal-proto').forEach(el => el.classList.remove('abierto'));
+
+        const header = vista.querySelector('.modulo-view-header');
+        const vacio  = vista.querySelector('.modulo-view-vacio');
+        const selectorProto = MODULOS_PROTOTIPADOS[`${grupoKey}::${moduloNombre}`];
+
+        if (selectorProto) {
+            if (header) header.style.display = 'none';
+            if (vacio)  vacio.style.display  = 'none';
+            const proto = vista.querySelector(selectorProto);
+            if (proto) proto.classList.add('abierto');
+        } else {
+            if (header) { header.style.display = ''; header.querySelector('.modulo-view-icon').textContent = data.icon; header.querySelector('.modulo-view-icon').style.background = data.color; header.querySelector('.modulo-view-titulo').textContent = moduloNombre; }
+            if (vacio)  vacio.style.display  = '';
+        }
+
+        // Pestañas con TODOS los módulos del grupo — permiten cambiar de
+        // módulo sin volver a abrir el selector lateral. title="" para poder
+        // leer el nombre completo al pasar el mouse cuando queda truncado.
+        vista.querySelector('.folder-tabs').innerHTML = data.modulos.map(m => `
+            <button class="folder-tab${m === moduloNombre ? ' activo' : ''}" title="${m}"
+                onclick="abrirModulo('${grupoKey}', '${m.replace(/'/g, "\\'")}')">${m}</button>
+        `).join('');
+    }
+
+    // "‹ Volver" dentro de la vista de módulo: restaura el contenido por
+    // defecto de la sección y expande la fila de grupos de nuevo.
+    function cerrarModulo(slideEl) {
+        slideEl.querySelectorAll('.vista-default').forEach(el => el.style.display = '');
+        slideEl.querySelector('.modulo-view').classList.remove('abierto');
+        slideEl.querySelectorAll('.ld-proto, .lm-proto, .bal-proto').forEach(el => el.classList.remove('abierto'));
+
+        const grupos = slideEl.querySelector('.mod-groups');
+        grupos.classList.remove('dock-activo');
+        grupos.querySelectorAll('.mod-group').forEach(el => el.classList.remove('activo'));
+    }
+
+    // Toast liviano propio del borrador (este mockup no carga app.js, así que
+    // no tiene mostrarToast() real) — solo para dar feedback visual a los
+    // botones de ejemplo del prototipo de Libro Diario.
+    function mostrarToastDraft(msg) {
+        let t = document.getElementById('draftToast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'draftToast';
+            t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:600;z-index:400;opacity:0;transition:opacity .25s;pointer-events:none;max-width:80vw;text-align:center;box-shadow:0 12px 32px -8px rgba(15,23,42,.35);';
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.style.opacity = '1';
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.style.opacity = '0', 2200);
+    }
+
+    // Demo de "Registrar Asiento": agrega el ejemplo de la tabla al historial,
+    // como haría guardarAsiento() en la app real (ver diario.js).
+    function ldRegistrarEjemplo() {
+        const hist = document.getElementById('ldHistorial');
+        const item = document.createElement('details');
+        item.className = 'ld-hist-item';
+        item.innerHTML = `
+            <summary><span class="ld-hist-fecha">28/07/2026</span><span class="ld-hist-glosa">Compra de mercadería por $300.000 a crédito</span><span class="ld-hist-monto">$300.000</span></summary>
+            <table class="ld-hist-tabla">
+                <thead><tr><th>Cuenta</th><th class="monto">Debe</th><th class="monto">Haber</th></tr></thead>
+                <tbody>
+                    <tr><td>Mercaderías</td><td class="monto">$252.101</td><td class="monto">—</td></tr>
+                    <tr><td>IVA Crédito Fiscal</td><td class="monto">$47.899</td><td class="monto">—</td></tr>
+                    <tr><td>Proveedores</td><td class="monto">—</td><td class="monto">$300.000</td></tr>
+                </tbody>
+            </table>`;
+        hist.prepend(item);
+        mostrarToastDraft('💾 Asiento registrado (ejemplo) — se agregó al historial debajo (desplegalo para ver el desglose Debe/Haber).');
+    }
+</script>
+</body>
+</html>

@@ -14,7 +14,12 @@
         function _calcularBalance() {
             const mes  = parseInt(document.getElementById('selBalanceMes')?.value)  || (new Date().getMonth() + 1);
             const anio = parseInt(document.getElementById('selBalanceAnio')?.value) || new Date().getFullYear();
-            const cuentas = recopilarMovimientosPorCuenta(_finDeMesOrdenable(mes, anio));
+            // "mes" = solo movimientos del mes elegido (balance de movimientos del
+            // período); "acumulado" (default) = saldo al fin de ese mes.
+            const base = document.getElementById('selBalanceBase')?.value || 'acumulado';
+            const cuentas = base === 'mes'
+                ? _erRecopilarCuentasPeriodo(mes, anio)
+                : recopilarMovimientosPorCuenta(_finDeMesOrdenable(mes, anio));
 
             let tDebe = 0, tHaber = 0, tDeudor = 0, tAcreedor = 0;
             let tActivo = 0, tPasivo = 0, tPerdida = 0, tGanancia = 0;
@@ -28,7 +33,7 @@
                 })
                 .forEach(cName => {
                     const c    = cuentas[cName];
-                    const tipo = (PLAN_CUENTAS?.[cName] ?? ESQUEMA_CUENTAS[cName])?.tipo ?? 'Activo';
+                    const tipo = obtenerInfoCuenta(cName).tipo;
 
                     // Saldos del mayor (siempre positivos)
                     const sDeudor   = c.debe > c.haber ? c.debe - c.haber : 0;

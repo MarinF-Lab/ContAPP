@@ -90,8 +90,8 @@ function renderReconciliacion() {
 
     // Periodo por defecto: mes actual
     if (!_recState.periodo) {
-        const hoy = new Date();
-        _recState.periodo = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+        const pt = periodoTrabajo();
+        _recState.periodo = `${pt.anio}-${String(pt.mes).padStart(2, '0')}`;
     }
 
     // Cuentas bancarias disponibles (plan de cuentas, tipo Activo)
