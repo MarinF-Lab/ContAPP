@@ -33,7 +33,7 @@ let docState = {
     filtroCategoria: 'todos',
     buscar:          '',
     mesFiltro:       0,     // 0 = todos los meses
-    anioFiltro:      new Date().getFullYear(),
+    anioFiltro:      periodoTrabajo().anio,
     adjuntoTemp:     null,
 };
 
@@ -588,8 +588,8 @@ function docAbrirAdjunto(id) {
 // ─────────────────────────────────────────────────────────────
 function docSetCategoria(v) { docState.filtroCategoria = v; renderDocumentos(); }
 function docBuscar(v)       { docState.buscar = v; renderDocumentos(); }
-function docSetMes(v)       { docState.mesFiltro  = parseInt(v) || 0; renderDocumentos(); }
-function docSetAnio(v)      { docState.anioFiltro = parseInt(v) || 0; renderDocumentos(); }
+function docSetMes(v)       { docState.mesFiltro  = parseInt(v) || 0; if (docState.mesFiltro) guardarPeriodoTrabajo({ mes: docState.mesFiltro }); renderDocumentos(); }
+function docSetAnio(v)      { docState.anioFiltro = parseInt(v) || 0; if (docState.anioFiltro) guardarPeriodoTrabajo({ anio: docState.anioFiltro }); renderDocumentos(); }
 
 window.editarDocumento      = editarDocumento;
 window.renderDocumentos     = renderDocumentos;

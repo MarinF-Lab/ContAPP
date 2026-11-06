@@ -82,8 +82,12 @@ function generarIvaResumen() {
     const tasaPPM    = _cargarTasaPPM();
     const ppmMonto   = Math.round(movVentas.neto * tasaPPM / 100);
 
+    // ── 7. Retenciones (se declaran y pagan en el mismo F29) ───
+    const ret = _ivaRetencionesPeriodo(cuentas, mes, anio);
+
     // ── Render ────────────────────────────────────────────────
     _renderIvaResumen({
+        retenciones: ret.total, retDetalle: ret.detalle,
         mes, anio,
         ivaDebito, ivaCredito,
         remanente, reajuste, reajusteDetalle, remanenteReajustado,
@@ -99,7 +103,7 @@ function generarIvaResumen() {
     _ivaSetKPI('ivaKpiCredito',   ivaCredito);
     _ivaSetKPI('ivaKpiRemanente', remanenteReajustado);
     _ivaSetKPI('ivaKpiPpm',       ppmMonto);
-    _ivaSetKPI('ivaKpiNeto',      ivaAPagar + ppmMonto, true);
+    _ivaSetKPI('ivaKpiNeto',      ivaAPagar + ppmMonto + ret.total, true);
 }
 
 // Movimiento neto (debe/haber) de una cuenta del Mayor dentro de un mes/año —
@@ -148,6 +152,35 @@ function _ivaVentasNetasPeriodo(cuentas, mes, anio) {
         n += mov.n;
     });
     return { neto, n };
+}
+
+// Retenciones del período que se declaran en el mismo F29 (hoy la única que
+// llega al Mayor en primera categoría es el Impuesto Único de los
+// trabajadores, que registra Remuneraciones, más cualquier cuenta cuyo nombre
+// empiece con "Retención"). Se toma el saldo del período (Haber − Debe) de
+// cada cuenta; si una cuenta no tiene saldo a favor del fisco ese mes, no suma.
+function _ivaRetencionesPeriodo(cuentas, mes, anio) {
+    const detalle = [];
+    Object.keys(cuentas).forEach(nombre => {
+        if (nombre !== 'Impuesto Único por pagar' && !/^retenci[oó]n/i.test(nombre)) return;
+        const mov = _ivaMovimientoCuentaPeriodo(cuentas, nombre, mes, anio);
+        const monto = mov.haber - mov.debe;
+        if (monto > 0) detalle.push({ cuenta: nombre, monto, n: mov.n });
+    });
+    return { total: detalle.reduce((s, d) => s + d.monto, 0), detalle };
+}
+
+// Líneas comunes a los dos asientos de cierre del F29: PPM (Debe "PPM") y
+// retenciones (Debe en su propia cuenta de pasivo, que se cancela) contra un
+// único Haber "Impuestos por Pagar" — el F29 consolida todo en un solo pago.
+function _ivaMovimientosPPMyRetenciones(mes, anio, ppmMonto) {
+    const ret = _ivaRetencionesPeriodo(recopilarMovimientosPorCuenta(), mes, anio);
+    const movs = [];
+    if (ppmMonto > 0) movs.push({ cuenta: 'PPM', debe: ppmMonto, haber: 0 });
+    ret.detalle.forEach(d => movs.push({ cuenta: d.cuenta, debe: d.monto, haber: 0 }));
+    const haber = (ppmMonto > 0 ? ppmMonto : 0) + ret.total;
+    if (haber > 0) movs.push({ cuenta: 'Impuestos por Pagar', debe: 0, haber });
+    return movs;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -419,9 +452,18 @@ function _renderIvaResumen(d) {
     </div>`;
     html += fila('PPM determinado', d.ppmMonto, null, 'var(--negative)');
 
-    const totalDeclarar = d.ivaAPagar + d.ppmMonto;
+    html += divider('Retenciones');
+    if (d.retDetalle.length) {
+        d.retDetalle.forEach(r => {
+            html += fila(r.cuenta, r.monto, `${r.n} movimiento${r.n === 1 ? '' : 's'} en el Mayor`, 'var(--negative)');
+        });
+    } else {
+        html += `<div style="font-size:12px;color:var(--text-muted);padding:6px 0;">Sin retenciones en el período.</div>`;
+    }
+
+    const totalDeclarar = d.ivaAPagar + d.ppmMonto + d.retenciones;
     html += `<div class="iva-total-box iva-total-pagar" style="margin-top:10px;">
-        <span>Total a pagar en el F29 (IVA + PPM)</span>
+        <span>Total a pagar en el F29 (IVA + PPM + retenciones)</span>
         <span style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:800;">
             $${fmt(totalDeclarar)}
         </span>
@@ -517,10 +559,7 @@ function generarAsientoPagoIVA(mes, anio, ivaDebito, ivaCredito, remanente, reaj
     if (remanente > 0)  movimientos.push({ cuenta: 'Remanente Crédito Fiscal IVA', debe: 0, haber: remanente });
     movimientos.push(..._ivaMovimientosReajuste(reajuste));
     movimientos.push({ cuenta: 'IVA por Pagar', debe: 0, haber: ivaAPagar });
-    if (ppmMonto > 0) {
-        movimientos.push({ cuenta: 'PPM', debe: ppmMonto, haber: 0 });
-        movimientos.push({ cuenta: 'Impuestos por Pagar', debe: 0, haber: ppmMonto });
-    }
+    movimientos.push(..._ivaMovimientosPPMyRetenciones(mes, anio, ppmMonto));
 
     const glosaBase = `${IVA_GLOSA_PAGO_PREFIJO}${_nombreMes(mes)} ${anio}`;
     _ivaEscribirAsientoCierre(glosaBase, _ivaFechaAsientoElegida(mes, anio), movimientos);
@@ -557,10 +596,7 @@ function generarAsientoRemanenteIVA(mes, anio, ivaDebito, ivaCredito, remanente,
     const netoRemanente = nuevoRemanente - remanente;
     if (netoRemanente > 0) movimientos.push({ cuenta: 'Remanente Crédito Fiscal IVA', debe: netoRemanente, haber: 0 });
     if (netoRemanente < 0) movimientos.push({ cuenta: 'Remanente Crédito Fiscal IVA', debe: 0, haber: -netoRemanente });
-    if (ppmMonto > 0) {
-        movimientos.push({ cuenta: 'PPM', debe: ppmMonto, haber: 0 });
-        movimientos.push({ cuenta: 'Impuestos por Pagar', debe: 0, haber: ppmMonto });
-    }
+    movimientos.push(..._ivaMovimientosPPMyRetenciones(mes, anio, ppmMonto));
 
     const glosaBase = `${IVA_GLOSA_REMANENTE_PREFIJO}${_nombreMes(mes)} ${anio}`;
     _ivaEscribirAsientoCierre(glosaBase, _ivaFechaAsientoElegida(mes, anio), movimientos);

@@ -248,8 +248,22 @@ function _inferirTipoGrupoCuenta(nombre) {
     return { tipo: 'Activo', grupo: 'Activo Circulante' };
 }
 
+// Clasificación de una cuenta para los reportes (Balance de Comprobación,
+// Balance Clasificado, Estado de Resultados). Si la cuenta no está en el Plan de
+// Cuentas (el Diario la usó sin registrarla), se infiere por nombre y se marca
+// `sinRegistrar` — antes cada reporte la trataba distinto (Comprobación la
+// ponía en Activo, Clasificado y Estado de Resultados la descartaban en
+// silencio), y el balance quedaba descuadrado sin decir por qué.
+function obtenerInfoCuenta(nombre) {
+    const info = (typeof PLAN_CUENTAS !== 'undefined' && PLAN_CUENTAS && PLAN_CUENTAS[nombre]) || ESQUEMA_CUENTAS[nombre];
+    if (info) return info;
+    const { tipo, grupo } = _inferirTipoGrupoCuenta(nombre);
+    return { tipo, grupo, subgrupo: _inferirSubgrupo(nombre, tipo, grupo), naturaleza: _naturalezaPorTipo(tipo), sinRegistrar: true };
+}
+
 window._inferirSubgrupo        = _inferirSubgrupo;
 window._inferirTipoGrupoCuenta = _inferirTipoGrupoCuenta;
+window.obtenerInfoCuenta       = obtenerInfoCuenta;
 
 // ─────────────────────────────────────────────────────────────
 //  PLAN DE CUENTAS (persistido en localStorage)

@@ -464,6 +464,10 @@ body {
 ══════════════════════════════════════════ */
 .table-wrapper { overflow-x: auto; }
 
+/* Asiento manual con muchas líneas: la tabla scrollea dentro del modal y el
+   encabezado queda fijo; los botones y totales siguen a la vista. */
+#modalManual .cont-table thead th { position: sticky; top: 0; z-index: 2; }
+
 .cont-table {
     width: 100%;
     border-collapse: collapse;

@@ -34,25 +34,32 @@ function _calcularBalanceClasificado() {
     };
 
     let totalResultadoEjercicio = 0;
+    // Cuentas usadas en el Diario que no están en el Plan de Cuentas: se
+    // clasifican por nombre (obtenerInfoCuenta) en vez de descartarse — antes
+    // desaparecían en silencio y el balance quedaba descuadrado por su saldo.
+    const sinRegistrar = [];
 
     Object.entries(cuentas).forEach(([nombre, mov]) => {
-        const info = (PLAN_CUENTAS && PLAN_CUENTAS[nombre]) || ESQUEMA_CUENTAS[nombre];
-        if (!info) return;
+        const info = obtenerInfoCuenta(nombre);
+        if (info.sinRegistrar) sinRegistrar.push(nombre);
 
         const tipo  = info.tipo;
-        const grupo = info.grupo;
+        // Un grupo fuera de las 5 secciones del balance (cuenta personalizada con
+        // grupo inválido) tampoco puede perderse: cae en la sección por defecto de su tipo.
+        const grupo = secciones[info.grupo] ? info.grupo
+            : (tipo === 'Activo' ? 'Activo Circulante' : tipo === 'Pasivo' ? 'Pasivo Circulante' : 'Patrimonio');
 
         // ── Cuentas normales ──────────────────────────────────
         if (tipo === 'Activo') {
             const saldo = mov.debe - mov.haber; // positivo = normal, negativo = anomalía
-            if (saldo !== 0 && secciones[grupo]) {
-                secciones[grupo].items.push({ nombre, saldo, esAnomalio: saldo < 0 });
+            if (saldo !== 0) {
+                secciones[grupo].items.push({ nombre, saldo, esAnomalio: saldo < 0, sinRegistrar: !!info.sinRegistrar });
                 secciones[grupo].total += saldo;
             }
         } else if (tipo === 'Pasivo' || tipo === 'Patrimonio') {
             const saldo = mov.haber - mov.debe; // positivo = normal, negativo = anomalía
-            if (saldo !== 0 && secciones[grupo]) {
-                secciones[grupo].items.push({ nombre, saldo, esAnomalio: saldo < 0 });
+            if (saldo !== 0) {
+                secciones[grupo].items.push({ nombre, saldo, esAnomalio: saldo < 0, sinRegistrar: !!info.sinRegistrar });
                 secciones[grupo].total += saldo;
             }
         } else if (tipo === 'Ganancia') {
@@ -115,14 +122,14 @@ function _calcularBalanceClasificado() {
 
     return {
         mes, anio, secciones,
-        totalActivo, totalPasivo, totalPatrim, totalPasPat, cuadra,
+        totalActivo, totalPasivo, totalPatrim, totalPasPat, cuadra, sinRegistrar,
         liquidez: { razonCorriente, pruebaAcida, capitalTrabajo },
     };
 }
 window._calcularBalanceClasificado = _calcularBalanceClasificado;
 
 function generarBalanceClasificado() {
-    const { secciones, totalActivo, totalPasPat, cuadra, liquidez } = _calcularBalanceClasificado();
+    const { secciones, totalActivo, totalPasPat, cuadra, sinRegistrar, liquidez } = _calcularBalanceClasificado();
     const { razonCorriente, pruebaAcida, capitalTrabajo } = liquidez;
 
     function htmlSeccion(titulo, seccion, claseHeader) {
@@ -148,8 +155,9 @@ function generarBalanceClasificado() {
                     prefijoMonto  = '(';
                 }
                 const montoStr = `$${fmt(Math.abs(it.saldo))}${esAnom && !esContra ? ')' : ''}`;
+                const marcaSinReg = it.sinRegistrar ? ' <span title="Cuenta no registrada en el Plan de Cuentas — clasificada automáticamente" style="font-size:10px;color:#d97706;">(sin registrar)</span>' : '';
                 return `<div class="bc-fila" style="${(esContra || esAnom) ? 'opacity:.9;' : ''}">
-                    <span class="bc-cuenta" style="${colorCuenta}">${prefijoCuenta}${it.nombre}</span>
+                    <span class="bc-cuenta" style="${colorCuenta}">${prefijoCuenta}${it.nombre}${marcaSinReg}</span>
                     <span class="bc-monto"  style="${colorMonto}">${prefijoMonto}${montoStr}</span>
                 </div>`;
             }).join('');
@@ -221,10 +229,18 @@ function generarBalanceClasificado() {
     const cont = document.getElementById('balanceClasificadoCont');
     if (!cont) return;
 
+    const avisoSinRegistrar = sinRegistrar.length ? `
+        <div class="bc-cuadratura" style="background:#fffbeb;color:#92400e;border:1px solid #fcd34d;">
+            ⚠ ${sinRegistrar.length} cuenta(s) usada(s) en el Diario no están en el Plan de Cuentas y se clasificaron
+            automáticamente: <strong>${sinRegistrar.join(', ')}</strong>.
+            Regístralas en Plan de Cuentas → «Auditar cuentas faltantes» para confirmar su clasificación.
+        </div>` : '';
+
     cont.innerHTML = `
         <div class="bc-cuadratura ${cuadra ? 'bc-ok' : 'bc-error'}">
-            ${cuadra ? '⚖️ Cuadrado' : '❌ Descuadrado'} — Activo: $${fmt(totalActivo)}  |  Pasivo+Patrimonio: $${fmt(totalPasPat)}
+            ${cuadra ? '⚖️ Cuadrado' : '❌ Descuadrado'} — Activo: $${fmt(totalActivo)}  |  Pasivo+Patrimonio: $${fmt(totalPasPat)}${cuadra ? '' : `  |  Diferencia: $${fmt(Math.abs(totalActivo - totalPasPat))}`}
         </div>
+        ${avisoSinRegistrar}
         ${htmlLiquidez}
         <div class="bc-grid">
             <div class="bc-col">${colActivo}</div>

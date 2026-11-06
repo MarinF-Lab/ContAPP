@@ -31,7 +31,7 @@
     </script>
 
     <link rel="stylesheet" href="css/variables.css?v=1">
-    <link rel="stylesheet" href="css/main.css?v=13">
+    <link rel="stylesheet" href="css/main.css?v=14">
     <link rel="stylesheet" href="css/home-hub.css?v=2">
     <link rel="stylesheet" href="css/remuneraciones.css?v=1">
     <link rel="stylesheet" href="css/auditor.css?v=2">
@@ -469,6 +469,10 @@
                         <option value="2023">2023</option><option value="2024">2024</option>
                         <option value="2025">2025</option><option value="2026" selected>2026</option>
                         <option value="2027">2027</option>
+                    </select>
+                    <select id="selBalanceBase" class="sel-periodo" onchange="generarBalanceGeneral()" title="Acumulado: saldo al fin del mes. Solo el mes: únicamente los movimientos de ese mes.">
+                        <option value="acumulado" selected>Acumulado al fin del mes</option>
+                        <option value="mes">Solo movimientos del mes</option>
                     </select>
                 </div>
             </div>
@@ -2480,7 +2484,7 @@
      MODAL — ASIENTO MANUAL
 ════════════════════════════════════════════════════════ -->
 <div id="modalManual" class="modal-overlay">
-    <div class="modal-box" style="width:850px;">
+    <div class="modal-box" style="width:850px;max-height:92vh;display:flex;flex-direction:column;">
         <h2 id="modalManualTitulo">✏️ Asiento Manual</h2>
         <div id="manualDisponibleIndicador" class="disponible-indicador"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;">
@@ -2508,7 +2512,7 @@
                 <datalist id="listaContactosManual"></datalist>
             </div>
         </div>
-        <div class="table-wrapper">
+        <div class="table-wrapper" style="flex:1 1 auto;min-height:120px;overflow-y:auto;">
             <table class="cont-table">
                 <thead>
                     <tr>
@@ -2521,8 +2525,9 @@
                 <tbody id="tbodyManual"></tbody>
             </table>
         </div>
-        <div style="margin:12px 0;">
+        <div style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;">
             <button class="btn btn-secondary" onclick="agregarFilaManual()">➕ Agregar Línea</button>
+            <button class="btn btn-secondary" onclick="ordenarFilasManual()" title="Debe primero, luego Haber, cada grupo por orden del plan de cuentas">↕ Ordenar cuentas</button>
         </div>
         <div class="totales-bar" style="border-top:1px solid var(--border);">
             <div id="badgeManual" class="totales-badge error">Descuadrado</div>
@@ -2988,34 +2993,35 @@
 <script src="js/core/db.js?v=1"></script>
 <script src="js/core/autocomplete.js?v=2"></script>
 <script src="js/core/helpers.js?v=1"></script>
+<script src="js/core/periodo.js?v=1"></script>
 <script src="js/core/parser.js?v=1"></script>
 <script src="js/core/parser-sii.js?v=1"></script>
-<script src="js/core/plan-cuentas.js?v=4"></script>
+<script src="js/core/plan-cuentas.js?v=5"></script>
 <script src="js/core/contabilidad.js?v=4"></script>
 
-<script src="js/services/diario.js?v=30"></script>
-<script src="js/services/mayor.js?v=9"></script>
-<script src="js/services/balance.js?v=4"></script>
+<script src="js/services/diario.js?v=34"></script>
+<script src="js/services/mayor.js?v=10"></script>
+<script src="js/services/balance.js?v=6"></script>
 <script src="js/services/dashboard.js?v=6"></script>
 <script src="js/services/flujo-caja.js?v=3"></script>
-<script src="js/services/balance-clasificado.js?v=3"></script>
-<script src="js/services/estado-resultados.js?v=3"></script>
+<script src="js/services/balance-clasificado.js?v=4"></script>
+<script src="js/services/estado-resultados.js?v=4"></script>
 <script src="js/services/indicadores.js?v=5"></script>
 <script src="js/services/previred-scraper.js?v=2"></script>
-<script src="js/services/iva-resumen.js?v=11"></script>
-<script src="js/services/reconciliacion.js?v=3"></script>
+<script src="js/services/iva-resumen.js?v=12"></script>
+<script src="js/services/reconciliacion.js?v=4"></script>
 <script src="js/services/sii-rcv.js?v=1"></script>
 
-<script src="js/modules/compras.js?v=1"></script>
-<script src="js/modules/ventas.js?v=1"></script>
-<script src="js/modules/documentos.js?v=2"></script>
+<script src="js/modules/compras.js?v=2"></script>
+<script src="js/modules/ventas.js?v=2"></script>
+<script src="js/modules/documentos.js?v=3"></script>
 <script src="js/modules/clientes.js?v=2"></script>
 <script src="js/modules/productos.js?v=3"></script>
 <script src="js/modules/centros-costo.js?v=2"></script>
 <script src="js/modules/bodegas.js?v=2"></script>
-<script src="js/modules/inventario.js?v=2"></script>
-<script src="js/modules/activos.js?v=4"></script>
-<script src="js/modules/cartolas.js?v=3"></script>
+<script src="js/modules/inventario.js?v=3"></script>
+<script src="js/modules/activos.js?v=8"></script>
+<script src="js/modules/cartolas.js?v=4"></script>
 <script src="js/modules/remuneraciones.js?v=2"></script>
 <script src="js/modules/segunda-categoria.js?v=4"></script>
 

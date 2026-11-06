@@ -7,8 +7,8 @@ let asientoEditando = null;
 // (que es un acumulado a un momento dado, ver js/services/balance.js), el
 // historial del Diario es una lista de asientos: filtrar por mes muestra
 // solo los asientos CON FECHA EN ese mes, no un acumulado.
-let diarioHistMes  = new Date().getMonth() + 1;
-let diarioHistAnio = new Date().getFullYear();
+let diarioHistMes  = periodoTrabajo().mes;
+let diarioHistAnio = periodoTrabajo().anio;
 
 // ─────────────────────────────────────────────────────────────
 //  MAPA DE PALABRAS CLAVE → CUENTA CONTABLE (inicio actividades)
@@ -58,7 +58,7 @@ const _CUENTA_KEYWORDS = [
     { re: /inmueble|edificio|propiedad|local\s+comercial|oficina|bodega/i,             cuenta: 'Edificios'                   },
     { re: /mueble|escritorio|silla|estanter[ií]a|mobiliario/i,                        cuenta: 'Muebles y Útiles'            },
     { re: /computador|notebook|tablet|laptop|\bpc\b/i,                                 cuenta: 'Equipos Computacionales'     },
-    { re: /veh[ií]culo|auto|camioneta|furg[oó]n|cami[oó]n|moto/i,                    cuenta: 'Vehículos'                   },
+    { re: /veh[ií]culo|\bauto(?:m[oó]vil)?s?\b|camioneta|furg[oó]n|cami[oó]n|\bmoto(?:cicleta)?s?\b|\bbus\b|tracto|acoplado/i, cuenta: 'Vehículos' },
     { re: /maquinaria|m[aá]quina|equipo\s+industrial/i,                               cuenta: 'Maquinarias'                 },
     { re: /software|licencia|sistema\s+inform[aá]tico/i,                              cuenta: 'Software'                    },
     { re: /marca|patente|propiedad\s+intelectual/i,                                   cuenta: 'Marcas y Patentes'           },
@@ -1137,6 +1137,7 @@ function _persistirAsientoDiario(asiento) {
         if (activosNuevos.length) {
             const arr = getActivos();
             activosNuevos.forEach(a => {
+                const ctasDep = (typeof _activoCuentasDepDefault === 'function' && _activoCuentasDepDefault(a.cuenta)) || {};
                 arr.push({
                     id: _activoNuevoId(),
                     nombre: `${a.nombre} (x${a.cantidad})`,
@@ -1146,8 +1147,8 @@ function _persistirAsientoDiario(asiento) {
                     vida_util_anos: 7,
                     metodo: 'lineal',
                     cuenta_activo: a.cuenta,
-                    cuenta_dep_acumulada: '',
-                    cuenta_gasto_dep: '',
+                    cuenta_dep_acumulada: ctasDep.cuenta_dep_acumulada || '',
+                    cuenta_gasto_dep: ctasDep.cuenta_gasto_dep || '',
                     proveedor_id: '',
                     proveedor_nombre: '',
                     activo: true,
@@ -1263,10 +1264,12 @@ function editarAsiento(id) {
         document.getElementById('btnCalcAbrir').style.display = 'none';
         calcRenderItems();
         mostrarToast('Este asiento se armó con la calculadora — podés editar cada producto y volver a generar.', 'info');
-    } else if (asiento._origenManual) {
-        // Se creó con "✏ Asiento Manual" — se reabre ese mismo modal con sus
-        // líneas cuenta/debe/haber editables, en vez de la vista de glosa de
-        // texto (que no puede reconstruir líneas armadas a mano).
+    } else {
+        // Cualquier asiento que no venga de la calculadora (manual, por glosa,
+        // o generado por otro módulo: Compras, Ventas, F29, Cartolas…) se
+        // edita en el modal manual, con sus líneas cuenta/debe/haber
+        // editables — la vista de glosa de texto no puede reconstruir líneas
+        // que no salieron de parsear esa glosa.
         _abrirAsientoManualParaEditar(asiento);
     }
 
@@ -1279,6 +1282,16 @@ function editarAsiento(id) {
         "btnGuardarAsiento"
     ).disabled = false;
 }
+
+// Fuerza el editor de líneas manual también para asientos hechos con la
+// calculadora (editarAsiento() los reabre en la calculadora por defecto).
+function editarAsientoManual(id) {
+    const asiento = dbAsientos.find(a => a.id === id);
+    if (!asiento) return;
+    asientoEditando = id;
+    _abrirAsientoManualParaEditar(asiento);
+}
+window.editarAsientoManual = editarAsientoManual;
 
 function anularAsiento(id){
 
@@ -1486,6 +1499,7 @@ function renderHistorialDiario() {
             ${!anulado ? `
             <div style="padding:8px 12px;display:flex;gap:8px;border-bottom:1px solid var(--border);">
                 <button class="btn btn-primary" onclick="editarAsiento(${as.id})">✏️ Editar</button>
+                ${as._calcOrigen ? `<button class="btn btn-secondary" onclick="editarAsientoManual(${as.id})" title="Editar las líneas cuenta/debe/haber directamente">✏️ Líneas manual</button>` : ''}
                 <button class="btn btn-secondary" onclick="anularAsiento(${as.id})">🚫 Anular</button>
             </div>` : `
             <div style="padding:8px 12px;display:flex;gap:8px;border-bottom:1px solid var(--border);">
@@ -1644,6 +1658,24 @@ function cerrarModalManual() {
     document.getElementById('modalManual').style.display = 'none';
 }
 
+// Ordena las líneas del asiento manual: primero las del Debe, luego las del
+// Haber; dentro de cada grupo por el orden del plan de cuentas (y nombre).
+// Las filas sin cuenta quedan al final.
+function ordenarFilasManual() {
+    const ord = (c) => (typeof obtenerOrdenCuenta === 'function' ? obtenerOrdenCuenta(c) : 0);
+    const grupo = (f) => !f.cuenta ? 2 : ((f.debe || 0) > 0 ? 0 : 1);
+    filasManual = filasManual
+        .map((f, i) => ({ f, i }))
+        .sort((a, b) =>
+            grupo(a.f) - grupo(b.f) ||
+            ord(a.f.cuenta) - ord(b.f.cuenta) ||
+            (a.f.cuenta || '').localeCompare(b.f.cuenta || '') ||
+            a.i - b.i)
+        .map(x => x.f);
+    renderFilasManual();
+}
+window.ordenarFilasManual = ordenarFilasManual;
+
 function agregarFilaManual() {
     filasManual.push({ cuenta: '', debe: 0, haber: 0 });
     renderFilasManual();
@@ -1781,7 +1813,14 @@ function guardarAsientoManual() {
 
     const f = fecha.split('-');
     const _contactoManualVal = (document.getElementById('contactoManual')?.value || '').trim();
+    // Al editar se conservan los campos propios del asiento original (origen,
+    // referencias de otros módulos como Cartolas/Remuneraciones…), salvo
+    // _calcOrigen: sus líneas ya no corresponden a los ítems de la calculadora.
+    const _previo = asientoEditando ? dbAsientos.find(a => a.id === asientoEditando) : null;
+    const _extraPrevio = _previo ? { ..._previo } : {};
+    delete _extraPrevio._calcOrigen;
     const asiento = {
+        ..._extraPrevio,
         id:
             asientoEditando || Date.now(),
         numero:
@@ -2016,6 +2055,22 @@ function calcRenderItems() {
                 }
             }
         });
+        // En una compra, si el nombre del producto es un activo fijo reconocible
+        // (vehículo, mueble, computador…) y el usuario no eligió cuenta a mano,
+        // se sugiere esa cuenta de Activo No Circulante — así entra al módulo
+        // Activos y a la depreciación. Se evalúa al salir del campo (no en cada
+        // tecla, "auto" sería "automático" a medio escribir).
+        inProducto.addEventListener('blur', () => {
+            if (calcTipoActual !== 'compra') return;
+            const f = filasCalculadora[i];
+            if (f.cuenta && !f._cuentaAuto) return;
+            const sug = _clasificarCuentaInicial(f.producto || '');
+            if (sug && window.PLAN_CUENTAS?.[sug] && _calcGrupoCuenta(sug) === 'Activo No Circulante') {
+                f.cuenta = sug; f._cuentaAuto = true; inCuenta.value = sug;
+            } else if (f._cuentaAuto) {
+                f.cuenta = ''; f._cuentaAuto = false; inCuenta.value = '';
+            }
+        });
         head.appendChild(inProducto);
         const btnEliminar = document.createElement('button');
         btnEliminar.type = 'button';
@@ -2052,11 +2107,15 @@ function calcRenderItems() {
         inCuenta.value = fila.cuenta || '';
         inCuenta.placeholder = 'Cuenta (ej: Mercaderías)';
         inCuenta.setAttribute('autocomplete', 'off');
-        inCuenta.addEventListener('blur', () => { filasCalculadora[i].cuenta = inCuenta.value.trim(); });
+        inCuenta.addEventListener('blur', () => {
+            const v = inCuenta.value.trim();
+            if (v !== filasCalculadora[i].cuenta) filasCalculadora[i]._cuentaAuto = false;
+            filasCalculadora[i].cuenta = v;
+        });
         initAutocomplete(
             inCuenta,
             () => Object.keys(PLAN_CUENTAS).filter(c => PLAN_CUENTAS[c].estado !== 'INACTIVA'),
-            (val) => { filasCalculadora[i].cuenta = val; }
+            (val) => { filasCalculadora[i].cuenta = val; filasCalculadora[i]._cuentaAuto = false; }
         );
         card.appendChild(inCuenta);
 
