@@ -68,6 +68,10 @@
                     <button class="hcs-all" onclick="cambiarEmpresa()">🏢 Ver todos mis clientes</button>
                 </div>
             </div>
+            <!-- Fase 3: avance de cierre del mes (abre el checklist) -->
+            <span class="hg-sep" id="homeCierreSep" style="display:none;">·</span>
+            <span class="hg-sub" id="homeCierre" style="display:none;cursor:pointer;" onclick="cierreAbrirChecklist()"
+                  title="Ver el checklist de cierre del mes"></span>
         </div>
         <div class="home-actions">
             <button class="icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema claro/oscuro">
@@ -102,6 +106,10 @@
             <!-- Contexto real (empresa/ejercicio/período) -->
             <div class="field"><label>Empresa</label><div class="val" id="fieldEmpresa">—</div></div>
             <div class="field"><label>Ejercicio</label><div class="val" id="fieldEjercicio">—</div></div>
+            <!-- Fase 3: avance de cierre del mes de trabajo; abre el checklist -->
+            <div class="field" id="fieldCierreBox" style="cursor:pointer;display:none;" onclick="cierreAbrirChecklist()" title="Ver el checklist de cierre del mes">
+                <label>Cierre</label><div class="val" id="fieldCierre">—</div>
+            </div>
 
             <div class="float-search" onclick="busquedaGlobalAbrir()" title="Búsqueda global (Ctrl+K)">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-3.6-3.6"/></svg>
@@ -3120,7 +3128,7 @@
 <script src="js/modules/remuneraciones.js?v=5"></script>
 <script src="js/modules/segunda-categoria.js?v=5"></script>
 <script src="js/core/conexiones.js?v=2"></script>
-<script src="js/core/cierre.js?v=1"></script>
+<script src="js/core/cierre.js?v=3"></script>
 
 <script src="js/services/app.js?v=11"></script>
 

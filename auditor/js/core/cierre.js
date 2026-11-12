@@ -432,11 +432,44 @@ const _ciEsc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/<
 
 let _ciAbierta = false;
 
+// Campo "Cierre" de la barra superior: visible en todas las pantallas.
+// También en la cabecera de Inicio ("Bienvenido de nuevo · Cliente · Cierre …").
+function _ciRenderCampoTopbar(c) {
+    const box  = document.getElementById('fieldCierreBox');
+    const val  = document.getElementById('fieldCierre');
+    const home = document.getElementById('homeCierre');
+    const sep  = document.getElementById('homeCierreSep');
+    if (!c) {
+        [box, home, sep].forEach(e => { if (e) e.style.display = 'none'; });
+        return;
+    }
+    const [y, m] = c.periodo.split('-');
+    const mes = (CI_MESES[parseInt(m, 10) - 1] || '').slice(0, 3);
+    const color = c.cerrado || c.avance === 100 ? 'var(--positive)' : 'var(--warning)';
+    const estado = `<strong style="color:${color};">${c.cerrado ? '🔒 cerrado' : c.avance + '%'}</strong>`;
+    const titulo = c.pendientes.length ? 'Falta: ' + c.pendientes.join(' · ') : 'Ver el checklist de cierre del mes';
+    if (box && val) { val.innerHTML = `${mes} ${y} · ${estado}`; box.title = titulo; box.style.display = ''; }
+    if (home) { home.innerHTML = `Cierre ${mes} ${y}: ${estado}`; home.title = titulo; home.style.display = ''; }
+    if (sep) sep.style.display = '';
+}
+
+/** Lleva a Inicio → sección "Financiero y actividad" con el checklist desplegado. */
+function cierreAbrirChecklist() {
+    _ciAbierta = true;
+    if (typeof navegar === 'function') navegar('inicio');
+    cierreRenderTarjeta();
+    setTimeout(() => {
+        if (typeof irASeccion === 'function') irASeccion(1);
+        else document.getElementById('cierreCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+}
+
 function cierreRenderTarjeta() {
     const el = document.getElementById('cierreCard');
-    if (!el) return;
-    if (!window.currentUser) { el.innerHTML = ''; return; }
+    if (!window.currentUser) { if (el) el.innerHTML = ''; _ciRenderCampoTopbar(null); return; }
     const c = cierreChecklist();
+    _ciRenderCampoTopbar(c);
+    if (!el) return;
     const color = c.cerrado ? 'var(--positive)' : c.avance === 100 ? 'var(--positive)' : 'var(--warning)';
     const filas = c.items.map(i => `
         <div style="display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:start;padding:7px 0;border-top:1px solid var(--border);">
@@ -540,5 +573,6 @@ window.cierreResumenDeCliente     = cierreResumenDeCliente;
 window.cierreIrAOrigen            = cierreIrAOrigen;
 window.cierreRenderTarjeta        = cierreRenderTarjeta;
 window.cierreToggleTarjeta        = cierreToggleTarjeta;
+window.cierreAbrirChecklist       = cierreAbrirChecklist;
 window.cierreAccionCerrar         = cierreAccionCerrar;
 window.cierreAccionReabrir        = cierreAccionReabrir;

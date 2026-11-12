@@ -270,6 +270,10 @@ check('Diario y Mayor tienen "Ver origen"',
 check('Panel del estudio muestra el avance y propone el estado',
     tieneFunc('js/auditor/panel-estudio.js', '_panelAvanceHtml') && tieneString('js/auditor/panel-estudio.js', 'cierreResumenDeCliente('));
 
+check('el avance de cierre se ve en la barra superior y en la cabecera de Inicio',
+    tieneString('index.html', 'id="fieldCierreBox"') && tieneString('index.html', 'id="homeCierre"') &&
+    tieneFunc('js/core/cierre.js', 'cierreAbrirChecklist'));
+
 check('Inicio tiene la tarjeta de cierre y cierre.js se carga después de conexiones.js',
     tieneString('index.html', 'id="cierreCard"') &&
     (() => { const h = leer('index.html'); return h.indexOf('<script src="js/core/cierre.js') > h.indexOf('<script src="js/core/conexiones.js'); })());

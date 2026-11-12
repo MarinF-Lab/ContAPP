@@ -194,7 +194,7 @@ node PLANIFICACION/test-fase2.js    # 33 pruebas (usa remuneraciones.js, contabi
 ## Piezas
 | # | Pieza | Dónde se ve |
 |---|-------|-------------|
-| 1 | **Checklist de cierre** del mes de trabajo, calculado solo | Inicio → "Financiero y actividad": tarjeta **✅ Cierre de {mes}** (se despliega; cada pendiente tiene botón **Ir**) |
+| 1 | **Checklist de cierre** del mes de trabajo, calculado solo | Indicador **"Cierre {mes}: X%"** en la barra superior (todas las pantallas) y en la cabecera de Inicio; al hacer clic abre la tarjeta **✅ Cierre de {mes}** (Inicio → "Financiero y actividad"), con botón **Ir** en cada pendiente |
 | 2 | **Resumen en Firebase** `empresas/{id}.cierreResumen.{AAAA-MM}` = avance, pendientes, cerrado, cambios tras el cierre | Panel del estudio: línea "Cierre {mes}: X% · Falta: …" en lista y tablero |
 | 3 | **Estado propuesto** en el tablero: cerrado → Cerrado · 100% → Por revisar · >0% → En proceso · 0% → Pendiente. El estado elegido a mano manda. | Panel del estudio |
 | 4 | **Cierre del período** (botón en la tarjeta, rol contador). Modificar algo de un mes cerrado **se guarda igual** y muestra un aviso; queda contado ("N cambios tras el cierre"). Se puede reabrir. | Tarjeta de cierre, aviso en pantalla, panel |
