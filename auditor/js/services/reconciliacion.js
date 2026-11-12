@@ -53,6 +53,13 @@ let _recState = {
     conciliados:  {},           // { idBanco: asientoId }
 };
 
+// Estado inicial (para volver a él al cambiar de cliente)
+const _REC_STATE_INICIAL = JSON.parse(JSON.stringify(_recState));
+ContappEventos.escuchar('cliente:datos-cargados', () => {
+    _recState = JSON.parse(JSON.stringify(_REC_STATE_INICIAL));
+    _recCargar();
+});
+
 // ── Persistencia ──────────────────────────────────────────────
 
 function _recGuardar() {

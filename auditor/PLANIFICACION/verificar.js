@@ -132,6 +132,54 @@ check('helpers.js tiene logger condicional (const log o const DEBUG)',
     tieneString('js/core/helpers.js', 'const DEBUG'));
 
 // ─────────────────────────────────────────────────────────────
+console.log('\n══ FASE 0 — Conectividad entre módulos (ver CONECTIVIDAD.md) ══');
+
+check('datos-cliente.js define la lista única de datos por cliente',
+    tieneString('js/core/datos-cliente.js', 'DATOS_CLIENTE_DOCS'));
+
+for (const k of ['core_activos', 'core_cartola_movs', 'core_inventario_movimientos', 'hon_boletas', 'doc_pagar']) {
+    check(`"${k}" se sincroniza por cliente`, tieneString('js/core/datos-cliente.js', `'${k}'`));
+}
+
+check('firebase-service.js usa la lista única (no una lista propia)',
+    tieneString('js/services/firebase-service.js', 'DATOS_CLIENTE_KEYS'));
+
+check('seleccionarEmpresa() suelta los datos del cliente anterior',
+    tieneFunc('js/services/firebase-service.js', '_fbSoltarDatosDeOtroCliente') &&
+    tieneString('js/services/firebase-service.js', 'await _fbSoltarDatosDeOtroCliente(empresaId)'));
+
+check('respaldo del cliente: exportar e importar',
+    tieneFunc('js/core/datos-cliente.js', 'exportarRespaldoCliente') &&
+    tieneFunc('js/core/datos-cliente.js', 'importarRespaldoCliente'));
+
+check('registro único de asientos implementado',
+    tieneFunc('js/core/asientos.js', 'registrarAsiento') &&
+    tieneFunc('js/core/asientos.js', 'anularAsientosPorOrigen'));
+
+for (const m of ['compras', 'ventas', 'remuneraciones', 'activos', 'cartolas']) {
+    check(`${m}.js registra sus asientos por registrarAsiento()`,
+        tieneString(`js/modules/${m}.js`, 'registrarAsiento('));
+}
+
+check('ningún módulo escribe core_asientos directo',
+    ['compras', 'ventas', 'remuneraciones', 'activos', 'cartolas']
+        .every(m => !tieneString(`js/modules/${m}.js`, "setItem('core_asientos'")));
+
+check('contactos únicos por RUT (contactoAsegurar)',
+    tieneFunc('js/modules/clientes.js', 'contactoAsegurar'));
+
+check('prestadores enlazados con Contactos',
+    tieneString('js/modules/segunda-categoria.js', "contactoAsegurar("));
+
+check('index.html carga datos-cliente.js y asientos.js antes de los módulos',
+    (() => {
+        const html = leer('index.html');
+        const iD = html.indexOf('js/core/datos-cliente.js'), iA = html.indexOf('js/core/asientos.js');
+        const iM = html.indexOf('js/modules/compras.js');
+        return iD > 0 && iA > 0 && iD < iM && iA < iM;
+    })());
+
+// ─────────────────────────────────────────────────────────────
 console.log('\n' + '─'.repeat(50));
 console.log(`Resultado: ${ok} ✅  |  ${errores} ❌`);
 

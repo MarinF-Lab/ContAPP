@@ -13,6 +13,14 @@
 // ─────────────────────────────────────────────────────────────
 let _dbCartola = JSON.parse(localStorage.getItem('core_cartola_movs')) || [];
 
+// Al cambiar de cliente (o restaurar un respaldo) recargar los movimientos
+// del cliente nuevo; si no, se seguían mostrando y guardando los del anterior.
+ContappEventos.escuchar('cliente:datos-cargados', () => {
+    try { _dbCartola = JSON.parse(localStorage.getItem('core_cartola_movs')) || []; }
+    catch (e) { _dbCartola = []; }
+    window.dbCartolaMov = _dbCartola;
+});
+
 let _cartolaFiltroMes   = periodoTrabajo().mes;
 let _cartolaFiltroAnio  = periodoTrabajo().anio;
 let _cartolaFiltroTipo  = 'todos';     // 'todos' | 'cargo' | 'abono'
@@ -369,9 +377,8 @@ function cartolasGenerarAsientos() {
         return;
     }
 
-    if (!window.dbAsientos) window.dbAsientos = [];
-
     let generados = 0;
+    const creados = [];
     clasificados.forEach(function (mv) {
         let debe, haber, monto;
         if (mv.cargo > 0) {
@@ -394,22 +401,23 @@ function cartolasGenerarAsientos() {
             ? partesFecha[2] + '/' + partesFecha[1] + '/' + partesFecha[0]
             : mv.fecha;
 
-        const asiento = {
-            id:         Date.now() + Math.floor(Math.random() * 1000),
-            numero:     _nextNumeroAsiento(),
-            estado:     'ACTIVO',
-            fecha:      fechaDMA,
-            glosa:      mv.descripcion + ' [cartola ' + mv.banco + ']',
+        // Registro único (en lote): ref = id del movimiento. Si el movimiento ya
+        // tenía asiento, se actualiza en vez de crear otro.
+        const res = registrarAsiento({
+            origen:      'cartola',
+            ref:         mv.id,
+            fecha:       fechaDMA,
+            glosa:       mv.descripcion + ' [cartola ' + mv.banco + ']',
             movimientos: [
                 { cuenta: debe,  debe: monto, haber: 0 },
                 { cuenta: haber, debe: 0,     haber: monto },
             ],
-            origen:     'cartola',
-            ref_mv:     mv.id,
-            created_at: Date.now()
-        };
-
-        window.dbAsientos.push(asiento);
+            extra:       { ref_mv: mv.id },
+            buscarLegacy: function (a) { return a.ref_mv === mv.id; },
+            silencioso:  true,
+        });
+        if (!res.ok) return;
+        creados.push(res.asiento);
 
         // Marcar movimiento como procesado
         const idx = _dbCartola.findIndex(function (x) { return x.id === mv.id; });
@@ -418,8 +426,8 @@ function cartolasGenerarAsientos() {
         generados++;
     });
 
-    // Persistir
-    localStorage.setItem('core_asientos', JSON.stringify(window.dbAsientos));
+    // Persistir (un solo guardado y un solo aviso para todo el lote)
+    if (creados.length) confirmarLoteAsientos('cartola', creados);
     _guardarCartola();
 
     mostrarToast(generados + ' asiento(s) generado(s) correctamente.', 'ok');

@@ -473,34 +473,21 @@ function generarAsientoVentas() {
         : `${clientesUnicos.length} clientes`;
 
     const glosaBase = `Centralización Ventas ${_vNombreMes(ventasMes)} ${ventasAnio}`;
-    const idxExist  = dbAsientos.findIndex(a => a.glosa && a.glosa.startsWith(glosaBase));
 
-    let asiento;
-    if (idxExist >= 0) {
-        asiento = Object.assign(dbAsientos[idxExist], {
-            fecha:       fechaUltimo,
-            glosa:       `${glosaBase} — ${datos.length} doc(s)`,
-            contacto:    contactoResumen,
-            movimientos,
-        });
-        mostrarToast(`Asiento N°${asiento.numero} actualizado en el Libro Diario.`, 'ok');
-    } else {
-        asiento = {
-            id:          Date.now(),
-            numero:      _nextNumeroAsiento(),
-            estado:      'ACTIVO',
-            fecha:       fechaUltimo,
-            glosa:       `${glosaBase} — ${datos.length} doc(s)`,
-            contacto:    contactoResumen,
-            movimientos,
-        };
-        dbAsientos.push(asiento);
-        mostrarToast(`Asiento N°${asiento.numero} creado en el Libro Diario.`, 'ok');
-    }
-
-    localStorage.setItem('core_asientos', JSON.stringify(dbAsientos));
-    if (typeof renderHistorialDiario === 'function') renderHistorialDiario();
-    if (typeof generarLibroMayor     === 'function') generarLibroMayor();
+    // Registro único: un asiento por mes (origen 'ventas', ref 'AAAA-MM').
+    // Reenviar actualiza el mismo asiento. buscarLegacy reconoce los asientos
+    // creados antes de que existiera `origen` (se identificaban por la glosa).
+    const res = registrarAsiento({
+        origen:       'ventas',
+        ref:          `${ventasAnio}-${String(ventasMes).padStart(2, '0')}`,
+        fecha:        fechaUltimo,
+        glosa:        `${glosaBase} — ${datos.length} doc(s)`,
+        movimientos,
+        extra:        { contacto: contactoResumen },
+        buscarLegacy: a => a.glosa && a.glosa.startsWith(glosaBase),
+    });
+    if (!res.ok) return mostrarToast(res.error, 'error');
+    mostrarToast(`Asiento N°${res.asiento.numero} ${res.actualizado ? 'actualizado' : 'creado'} en el Libro Diario.`, 'ok');
 }
 
 // ─────────────────────────────────────────────────────────────

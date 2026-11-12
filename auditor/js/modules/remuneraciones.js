@@ -109,6 +109,15 @@ function getLiqs()   { try { return JSON.parse(localStorage.getItem('rem_liquida
 function saveTrab(a) { localStorage.setItem('rem_trabajadores', JSON.stringify(a)); }
 function saveLiqs(a) { localStorage.setItem('rem_liquidaciones', JSON.stringify(a)); }
 
+// Al cambiar de cliente recargar trabajadores y liquidaciones del nuevo.
+ContappEventos.escuchar('cliente:datos-cargados', () => {
+    remState.trabajadores  = getTrab();
+    remState.liquidaciones = getLiqs();
+    remState.borrador      = {};
+    remState.trabSelId     = null;
+    remState.modalData     = null;
+});
+
 // ── Borrador (variables del período por trabajador) ────────────
 function getBorrador(trabId) {
     if (!remState.borrador[trabId]) {
@@ -1363,25 +1372,23 @@ function remEnviarAsiento(trabId) {
             movs.push(h('Anticipos de Remuneraciones',   liq.anticipos));
         movs.push(h('Banco',                             liq.liquido));
 
-        // Persistir en localStorage
-        const arr = JSON.parse(localStorage.getItem('core_asientos') || '[]');
-        const _nums = arr.map(a => a.numero).filter(n => typeof n === 'number' && !isNaN(n) && isFinite(n));
-        const _nextNum = _nums.length ? Math.max(..._nums) + 1 : 1;
-        arr.push({
-            id: Date.now(), numero: _nextNum, fecha, tipo: 'remuneraciones',
-            glosa: `Remuneraciones ${liq.nombre} ${remState.periodo}`,
-            movimientos: movs, estado: 'ACTIVO',
+        // Registro único: un asiento por trabajador y período. Antes cada clic
+        // en "enviar al Diario" agregaba otro asiento y duplicaba el gasto.
+        const glosaLiq = `Remuneraciones ${liq.nombre} ${remState.periodo}`;
+        const res = registrarAsiento({
+            origen:       'remuneraciones',
+            ref:          `${trabId}|${remState.periodo}`,
+            tipo:         'remuneraciones',
+            fecha,
+            glosa:        glosaLiq,
+            movimientos:  movs,
+            extra:        { trabajador_id: trabId, trabajador_rut: t.rut || '', periodo: remState.periodo },
+            buscarLegacy: a => a.tipo === 'remuneraciones' && a.glosa === glosaLiq,
         });
-        localStorage.setItem('core_asientos', JSON.stringify(arr));
-
-        // Sincronizar array en memoria y refrescar vista sin recargar
-        if (window.dbAsientos) {
-            window.dbAsientos.length = 0;
-            arr.forEach(a => window.dbAsientos.push(a));
-        }
-        if (typeof renderHistorialDiario === 'function') renderHistorialDiario();
-
-        mostrarToast('Asiento de remuneraciones generado correctamente.', 'ok');
+        if (!res.ok) { mostrarToast(res.error, 'error'); return; }
+        mostrarToast(res.actualizado
+            ? `Asiento N°${res.asiento.numero} de remuneraciones actualizado (no se duplicó).`
+            : 'Asiento de remuneraciones generado correctamente.', 'ok');
     } catch(e) { console.error(e); mostrarToast('Error al generar el asiento.', 'err'); }
 }
 
@@ -2145,8 +2152,6 @@ function remFiqAsiento(trabId, fechaTermino, causal, avisoPrevio) {
     const [y, m, d] = fechaTermino.split('-');
     const fecha = `${d}/${m}/${y}`;
 
-    const asientos = JSON.parse(localStorage.getItem('core_asientos') || '[]');
-    const nextNum  = asientos.length ? Math.max(...asientos.map(a => a.numero || 0)) + 1 : 1;
 
     const movs = [];
     const deb = (cuenta, monto) => movs.push({ cuenta, debe: Math.round(monto), haber: 0 });
@@ -2166,14 +2171,16 @@ function remFiqAsiento(trabId, fechaTermino, causal, avisoPrevio) {
     const habTotal = movs.filter(m=>m.haber>0).reduce((s,m)=>s+m.haber,0);
     if (gastoTotal > habTotal) hab('Banco', gastoTotal - habTotal);
 
-    asientos.push({
-        id: Date.now(), numero: nextNum, fecha,
-        tipo: 'finiquito',
-        glosa: `Finiquito ${t.nombre} — ${CAUSALES.find(c=>c.value===causal)?.label || causal}`,
-        movimientos: movs, estado: 'ACTIVO',
+    const res = registrarAsiento({
+        origen:      'finiquito',
+        ref:         `${trabId}|${fechaTermino}`,
+        tipo:        'finiquito',
+        fecha,
+        glosa:       `Finiquito ${t.nombre} — ${CAUSALES.find(c=>c.value===causal)?.label || causal}`,
+        movimientos: movs,
+        extra:       { trabajador_id: trabId, trabajador_rut: t.rut || '' },
     });
-    localStorage.setItem('core_asientos', JSON.stringify(asientos));
-    if (window.dbAsientos) { window.dbAsientos.length = 0; asientos.forEach(a => window.dbAsientos.push(a)); }
+    if (!res.ok) { mostrarToast(res.error, 'error'); return; }
     if (typeof renderHistorialDiario === 'function') renderHistorialDiario();
     mostrarToast('Asiento de finiquito generado.', 'ok');
 }

@@ -719,3 +719,69 @@ function _parsearRespuestaSII(doc) {
         comuna:      _buscar(['comuna'])                        || null,
     };
 }
+
+// ─────────────────────────────────────────────────────────────
+//  CONTACTOS ÚNICOS — Fase 0 de conectividad
+//  Un mismo RUT existe una sola vez en core_contactos y puede tener varios
+//  roles: cliente, proveedor, prestador (2ª categoría). Trabajadores NO se
+//  copian aquí (tienen demasiados datos laborales): se enlazan por RUT con
+//  contactoPorRut().
+// ─────────────────────────────────────────────────────────────
+function normalizarRut(rut) {
+    return String(rut || '').replace(/[^0-9kK]/g, '').toUpperCase();
+}
+
+function contactoPorRut(rut) {
+    const n = normalizarRut(rut);
+    if (!n) return null;
+    return dbContactos.find(c => c.activo !== false && normalizarRut(c.rut) === n) || null;
+}
+
+/** Roles efectivos de un contacto (combina el campo antiguo `tipo` con `roles`). */
+function contactoRoles(c) {
+    if (!c) return [];
+    const roles = new Set(Array.isArray(c.roles) ? c.roles : []);
+    if (c.tipo === 'cliente' || c.tipo === 'ambos')   roles.add('cliente');
+    if (c.tipo === 'proveedor' || c.tipo === 'ambos') roles.add('proveedor');
+    return [...roles];
+}
+
+/**
+ * Crea o actualiza el contacto de un RUT y le agrega un rol.
+ * No sobrescribe datos que el contacto ya tenga; solo completa vacíos.
+ * @returns {Object|null} el contacto
+ */
+function contactoAsegurar(datos, rol) {
+    const rut = (datos && datos.rut) || '';
+    if (!normalizarRut(rut) || !datos.nombre) return null;
+    let c = contactoPorRut(rut);
+    if (c) {
+        const roles = new Set(contactoRoles(c));
+        if (rol) roles.add(rol);
+        c.roles = [...roles];
+        if (!c.email && datos.email) c.email = datos.email;
+        if (!c.nombre) c.nombre = datos.nombre;
+    } else {
+        c = {
+            id:        Date.now() + Math.floor(Math.random() * 1000),
+            rut,
+            nombre:    datos.nombre,
+            email:     datos.email || '',
+            tipo:      rol === 'cliente' ? 'cliente' : 'proveedor',
+            roles:     rol ? [rol] : [],
+            plazoPago: '30',
+            notas:     '',
+            activo:    true,
+            creado_desde: datos.origen || rol || '',
+        };
+        dbContactos.push(c);
+    }
+    guardarContactos();
+    ContappEventos.emitir('contacto:actualizado', { contacto: c, rol });
+    return c;
+}
+
+window.normalizarRut    = normalizarRut;
+window.contactoPorRut   = contactoPorRut;
+window.contactoRoles    = contactoRoles;
+window.contactoAsegurar = contactoAsegurar;
