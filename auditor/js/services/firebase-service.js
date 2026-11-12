@@ -348,6 +348,7 @@ function _fbRefrescarUI() {
     if (typeof renderCompras         === 'function') renderCompras();
     if (typeof renderVentas          === 'function') renderVentas();
     if (typeof cargarConfiguracion   === 'function') cargarConfiguracion();
+    if (typeof cierreRenderTarjeta   === 'function') cierreRenderTarjeta();
 }
 
 function _fbShowApp(user) {

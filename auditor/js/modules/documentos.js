@@ -558,6 +558,7 @@ function guardarDocumento() {
 
     dbDocumentos.push(doc);
     guardarDocumentos();
+    if (typeof cierreAvisarSiCerrado === 'function') cierreAvisarSiCerrado(doc.fecha, 'Documentos');
     cerrarModalDocumento();
     renderDocumentos();
     mostrarToast('Documento registrado correctamente.', 'ok');

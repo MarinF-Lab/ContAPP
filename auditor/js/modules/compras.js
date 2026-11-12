@@ -505,7 +505,7 @@ function generarAsientoCompras() {
         fecha:        fechaUltimo,
         glosa:        `${glosaBase} — ${datos.length} doc(s)`,
         movimientos,
-        extra:        { contacto: contactoResumen },
+        extra:        { contacto: contactoResumen, firma: (typeof cierreFirmaLibro === 'function' ? cierreFirmaLibro(datos) : null) },
         buscarLegacy: a => a.glosa && a.glosa.startsWith(glosaBase),
     });
     if (!res.ok) return mostrarToast(res.error, 'error');

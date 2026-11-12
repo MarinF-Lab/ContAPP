@@ -58,7 +58,27 @@ const KANBAN_ESTADOS = [
 
 function panelKanbanGetEstado(cliente) {
     const estados = cliente.kanbanEstados || {};
-    return estados[_panelPeriodo()] || 'pendiente';
+    if (estados[_panelPeriodo()]) return estados[_panelPeriodo()];   // elegido a mano: manda
+    // Fase 3: estado propuesto según el checklist de cierre del cliente
+    const r = typeof cierreResumenDeCliente === 'function' ? cierreResumenDeCliente(cliente, _panelPeriodo()) : null;
+    if (!r || r.periodo !== _panelPeriodo()) return 'pendiente';
+    if (r.cerrado)          return 'cerrado';
+    if (r.avance >= 100)    return 'por-revisar';
+    if (r.avance > 0)       return 'en-proceso';
+    return 'pendiente';
+}
+
+// Línea de avance de cierre (Fase 3) para tarjetas de cliente
+function _panelAvanceHtml(cliente) {
+    const r = typeof cierreResumenDeCliente === 'function' ? cierreResumenDeCliente(cliente, _panelPeriodo()) : null;
+    if (!r) return '';
+    const color = r.cerrado || r.avance >= 100 ? 'var(--positive)' : 'var(--warning)';
+    const lbl = typeof ciEtiquetaPeriodo === 'function' ? ciEtiquetaPeriodo(r.periodo) : r.periodo;
+    const pend = (r.pendientes || []).length ? ` · Falta: ${(r.pendientes || []).slice(0, 2).join(', ')}${r.pendientes.length > 2 ? '…' : ''}` : '';
+    return `<div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;" title="${(r.pendientes || []).join(' · ')}">
+        Cierre ${lbl}: <strong style="color:${color};">${r.cerrado ? 'cerrado' : r.avance + '%'}</strong>${pend}
+        ${r.modificaciones ? ` · <span style="color:var(--warning);">⚠️ ${r.modificaciones} cambio(s) tras el cierre</span>` : ''}
+    </div>`;
 }
 
 async function panelKanbanSetEstado(clienteId, estado) {
@@ -225,6 +245,7 @@ function panelRenderTarjeta(cliente, alertas, modoKanban) {
                 <span class="aud-cat-badge aud-cat-${cat}">${cat === 'primera' ? '1ª Cat.' : '2ª Cat.'}</span>
                 ${minHoy ? `<span class="panel-tt-badge ${esTimer?'panel-tt-activo':''}">⏱ ${_ttFmt(minHoy)} hoy</span>` : ''}
             </div>
+            ${_panelAvanceHtml(cliente)}
             ${alertaBadges ? `<div class="panel-alertas-row">${alertaBadges}</div>` : ''}
         </div>
         <div class="panel-card-actions" onclick="event.stopPropagation()">
@@ -270,6 +291,7 @@ function panelRenderKanban(clientes) {
                         <div style="font-size:11px;color:var(--text-muted);">${c.rut||''}</div>
                     </div>
                 </div>
+                ${_panelAvanceHtml(c)}
                 <div class="panel-kanban-card-footer" onclick="event.stopPropagation()">
                     <select class="panel-kanban-select panel-kanban-select-sm"
                             onchange="panelKanbanSetEstado('${c.id}', this.value)">

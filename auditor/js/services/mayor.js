@@ -226,7 +226,12 @@ function mayorAbrirDetalle(idAsiento, filaEl) {
         _mayorPopoverListenerRegistrado = true;
     }
 }
+function mayorVerOrigen() {
+    if (_mayorDetalleAbiertoId != null && typeof cierreIrAOrigen === 'function') cierreIrAOrigen(_mayorDetalleAbiertoId);
+}
+
 window.mayorAbrirDetalle = mayorAbrirDetalle;
+window.mayorVerOrigen    = mayorVerOrigen;
 
 let _mayorPopoverListenerRegistrado = false;
 

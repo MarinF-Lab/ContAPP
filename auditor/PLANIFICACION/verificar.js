@@ -245,6 +245,36 @@ check('P5 · trabajador enlazado con contacto por RUT',
     tieneFunc('js/core/conexiones.js', 'conexTrabajadorEnlazar') && tieneString('js/modules/remuneraciones.js', 'conexTrabajadorEnlazar('));
 
 // ─────────────────────────────────────────────────────────────
+console.log('\n══ FASE 3 — Cierre y trazabilidad (ver CONECTIVIDAD.md) ══');
+
+check('cierre.js: checklist, resumen, cierre del período y trazabilidad',
+    ['cierreChecklist', 'cierreSincronizarResumen', 'cierreCerrarPeriodo', 'cierreAvisarSiCerrado', 'cierreIrAOrigen']
+        .every(f => tieneFunc('js/core/cierre.js', f)));
+
+check('el cierre solo AVISA (no bloquea) al modificar un mes cerrado',
+    tieneString('js/core/cierre.js', 'se guardó, pero modifica un período ya cerrado'));
+
+check('los cierres se guardan por cliente y se respaldan',
+    tieneString('js/core/datos-cliente.js', "'core_cierres'"));
+
+check('Compras/Ventas guardan la firma del libro en el asiento centralizado',
+    tieneString('js/modules/compras.js', 'cierreFirmaLibro(') && tieneString('js/modules/ventas.js', 'cierreFirmaLibro('));
+
+check('Conciliación expone su estado por período',
+    tieneFunc('js/services/reconciliacion.js', 'recEstadoPeriodo'));
+
+check('Diario y Mayor tienen "Ver origen"',
+    tieneString('js/services/diario.js', 'cierreIrAOrigen(') && tieneFunc('js/services/mayor.js', 'mayorVerOrigen') &&
+    tieneString('index.html', 'mayorVerOrigen()'));
+
+check('Panel del estudio muestra el avance y propone el estado',
+    tieneFunc('js/auditor/panel-estudio.js', '_panelAvanceHtml') && tieneString('js/auditor/panel-estudio.js', 'cierreResumenDeCliente('));
+
+check('Inicio tiene la tarjeta de cierre y cierre.js se carga después de conexiones.js',
+    tieneString('index.html', 'id="cierreCard"') &&
+    (() => { const h = leer('index.html'); return h.indexOf('<script src="js/core/cierre.js') > h.indexOf('<script src="js/core/conexiones.js'); })());
+
+// ─────────────────────────────────────────────────────────────
 console.log('\n' + '─'.repeat(50));
 console.log(`Resultado: ${ok} ✅  |  ${errores} ❌`);
 

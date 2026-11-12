@@ -1,4 +1,4 @@
-# Conectividad entre módulos — Fases 0, 1 y 2
+# Conectividad entre módulos — Fases 0 a 3
 
 > Fecha: 2026-11-12 · Alcance: solo conexiones y funciones. **No se cambió el diseño**
 > (no hay pantallas ni botones nuevos; los avisos usan `mostrarConfirm`/`mostrarToast` existentes).
@@ -184,7 +184,40 @@ node PLANIFICACION/verificar.js     # incluye sección Fase 2
 node PLANIFICACION/test-fase2.js    # 33 pruebas (usa remuneraciones.js, contabilidad.js e iva-resumen.js reales)
 ```
 
+---
+
+# Fase 3 — Cierre y trazabilidad
+
+> Fecha: 2026-11-12 · Lógica en `js/core/cierre.js` (se carga después de `conexiones.js`).
+> Decisiones aprobadas: guardar el resumen en Firebase · cierre del período que **solo avisa**.
+
+## Piezas
+| # | Pieza | Dónde se ve |
+|---|-------|-------------|
+| 1 | **Checklist de cierre** del mes de trabajo, calculado solo | Inicio → "Financiero y actividad": tarjeta **✅ Cierre de {mes}** (se despliega; cada pendiente tiene botón **Ir**) |
+| 2 | **Resumen en Firebase** `empresas/{id}.cierreResumen.{AAAA-MM}` = avance, pendientes, cerrado, cambios tras el cierre | Panel del estudio: línea "Cierre {mes}: X% · Falta: …" en lista y tablero |
+| 3 | **Estado propuesto** en el tablero: cerrado → Cerrado · 100% → Por revisar · >0% → En proceso · 0% → Pendiente. El estado elegido a mano manda. | Panel del estudio |
+| 4 | **Cierre del período** (botón en la tarjeta, rol contador). Modificar algo de un mes cerrado **se guarda igual** y muestra un aviso; queda contado ("N cambios tras el cierre"). Se puede reabrir. | Tarjeta de cierre, aviso en pantalla, panel |
+| 5 | **Trazabilidad**: Balance → Mayor (ya existía) → asiento → **📄 Ver origen** (factura del mes, boleta, liquidación, activo, movimiento de cartola) | Botón en cada asiento del Diario y en el detalle del Mayor |
+
+## Puntos del checklist
+**1ª categoría:** compras centralizadas · ventas centralizadas · documentos en libros (facturas pasadas, boletas contabilizadas) ·
+cartola importada y procesada · conciliación cuadrada · sueldos de trabajadores vigentes enviados · Previred pagado ·
+depreciación del mes · F29 registrado · balance cuadrado. Los que no aplican (p. ej. sin trabajadores) no cuentan para el %.
+**2ª categoría:** boletas del mes · PPM registrado · cartola procesada.
+
+Detalles:
+- "Centralizada" compara una **firma** (cantidad + total) guardada en el asiento al centralizar: si después se agrega o edita una factura del mes, vuelve a pendiente.
+- La conciliación trabaja un mes a la vez; su resultado se guarda por período (`recEstadoPeriodo`) para que el checklist lo recuerde.
+- Los cierres se guardan por cliente en `core_cierres` (se respalda y se separa por cliente; la lista de datos por cliente queda en 24 claves).
+- Firebase: las reglas actuales ya permiten que un miembro con escritura actualice la ficha del cliente; no se cambiaron.
+
+## Verificación
+```bash
+node PLANIFICACION/verificar.js     # incluye sección Fase 3
+node PLANIFICACION/test-fase3.js    # 46 pruebas (compras, ventas, remuneraciones, conciliación y panel reales)
+```
+
 ## Pendiente
 - Paso 4b (Fase 0): dividir documentos grandes por año.
-- Fase 3: checklist de cierre por cliente y trazabilidad Balance → asiento → documento.
 - Diseño: aplicar el diseño de los artefactos (al final, con aprobación).

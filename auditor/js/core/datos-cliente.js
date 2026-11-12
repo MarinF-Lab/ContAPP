@@ -46,6 +46,8 @@ const DATOS_CLIENTE_DOCS = {
     'hon_ppm':                     'hon_ppm',
     'hon_prestadores':             'hon_prestadores',
     'hon_retenciones':             'hon_retenciones',
+    // Fase 3
+    'core_cierres':                'cierres',
 };
 const DATOS_CLIENTE_KEYS = Object.keys(DATOS_CLIENTE_DOCS);
 
