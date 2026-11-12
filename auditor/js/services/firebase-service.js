@@ -19,7 +19,7 @@ const FB_CONFIG = {
 
 // Lista única de datos por cliente: vive en js/core/datos-cliente.js
 // (DATOS_CLIENTE_DOCS). Se agregaron activos, cartolas, inventario, bodegas,
-// centros de costo, 2ª categoría y cuentas por cobrar/pagar, que antes no se
+// centros de costo y 2ª categoría, que antes no se
 // respaldaban y quedaban "pegados" al cambiar de cliente.
 const FB_KEY_TO_DOC = DATOS_CLIENTE_DOCS;
 const FB_KEYS       = DATOS_CLIENTE_KEYS;

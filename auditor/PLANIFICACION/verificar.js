@@ -137,7 +137,7 @@ console.log('\n══ FASE 0 — Conectividad entre módulos (ver CONECTIVIDAD.m
 check('datos-cliente.js define la lista única de datos por cliente',
     tieneString('js/core/datos-cliente.js', 'DATOS_CLIENTE_DOCS'));
 
-for (const k of ['core_activos', 'core_cartola_movs', 'core_inventario_movimientos', 'hon_boletas', 'doc_pagar']) {
+for (const k of ['core_activos', 'core_cartola_movs', 'core_inventario_movimientos', 'hon_boletas', 'hon_prestadores']) {
     check(`"${k}" se sincroniza por cliente`, tieneString('js/core/datos-cliente.js', `'${k}'`));
 }
 
@@ -178,6 +178,44 @@ check('index.html carga datos-cliente.js y asientos.js antes de los módulos',
         const iM = html.indexOf('js/modules/compras.js');
         return iD > 0 && iA > 0 && iD < iM && iA < iM;
     })());
+
+// ─────────────────────────────────────────────────────────────
+console.log('\n══ FASE 1 — Circuito comercial (ver CONECTIVIDAD.md) ══');
+
+check('conexiones.js implementa las 5 conexiones',
+    ['conexDocPasarALibro', 'conexCartolaAplicarDocumento', 'conexSincronizarInventario',
+     'conexSincronizarActivo', 'conexCuentaCargoCompra'].every(f => tieneFunc('js/core/conexiones.js', f)));
+
+check('C1 · Documentos tiene "Pasar al libro" y sincroniza ediciones',
+    tieneFunc('js/modules/documentos.js', 'docPasarALibro') && tieneString('js/modules/documentos.js', 'conexDocSincronizar('));
+
+check('C1 · anular en Compras/Ventas anula el documento enlazado',
+    tieneString('js/modules/compras.js', "conexLibroAnulado('compras'") && tieneString('js/modules/ventas.js', "conexLibroAnulado('ventas'"));
+
+check('C2 · Cartolas sugiere facturas pendientes en el panel',
+    tieneFunc('js/modules/cartolas.js', '_cartolaPanelSugerencias'));
+
+check('C3 · Inventario registra movimientos por documento (origen + ref)',
+    tieneFunc('js/modules/inventario.js', 'invRegistrarPorOrigen') && tieneFunc('js/modules/inventario.js', 'invEliminarPorOrigen'));
+
+check('C3 · Ventas incluye costo de venta en la centralización',
+    tieneString('js/modules/ventas.js', 'conexCostoVenta('));
+
+check('C4/C5 · Compras usa cuenta por línea y centro de costo',
+    tieneString('js/modules/compras.js', 'conexCuentaCargoCompra(') && tieneString('js/modules/compras.js', 'centroCosto'));
+
+check('C5 · Remuneraciones lleva el centro de costo del trabajador al asiento',
+    tieneString('js/modules/remuneraciones.js', "'centroCosto'") && tieneString('js/modules/remuneraciones.js', 'centroCosto: cc'));
+
+check('Formularios de Compra/Venta tienen producto, cantidad, bodega y centro de costo',
+    ['compraProductoId', 'compraCantidad', 'compraBodega', 'compraCentroCosto', 'compraEsActivo',
+     'ventaProductoId', 'ventaCantidad', 'ventaBodega', 'ventaCentroCosto'].every(id => tieneString('index.html', `id="${id}"`)));
+
+check('Configuración tiene respaldo del cliente',
+    tieneString('index.html', 'exportarRespaldoCliente()') && tieneString('index.html', 'importarRespaldoCliente('));
+
+check('index.html carga conexiones.js después de los módulos',
+    (() => { const h = leer('index.html'); return h.indexOf('js/core/conexiones.js') > h.indexOf('js/modules/segunda-categoria.js'); })());
 
 // ─────────────────────────────────────────────────────────────
 console.log('\n' + '─'.repeat(50));

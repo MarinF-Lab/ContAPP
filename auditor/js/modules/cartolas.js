@@ -541,12 +541,69 @@ function _abrirPanelClasificacion(mvId) {
     div.appendChild(btnCancelar);
 
     td.appendChild(div);
+    const sug = _cartolaPanelSugerencias(mv);
+    if (sug) td.appendChild(sug);
     panelTr.appendChild(td);
     fila.after(panelTr);
 }
 
+// ── Facturas pendientes que este movimiento puede pagar/cobrar (Fase 1) ──
+function _cartolaPanelSugerencias(mv) {
+    if (typeof conexCartolaSugerencias !== 'function') return null;
+    const box = document.createElement('div');
+    box.className = 'cartola-panel-cuerpo';
+    box.style.cssText = 'flex-direction:column;align-items:stretch;gap:6px;margin-top:6px;';
+
+    if (mv.doc_vinculado) {
+        const v = mv.doc_vinculado;
+        const fila = document.createElement('div');
+        fila.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;';
+        fila.innerHTML = '<span>🔗 ' + (v.libro === 'compras' ? 'Paga' : 'Cobra') + ' la factura N°' +
+            _cEsc(v.numero_doc || '—') + ' de ' + _cEsc(v.nombre || '') + '</span>';
+        const btn = document.createElement('button');
+        btn.className = 'btn-cl-cancelar';
+        btn.textContent = 'Quitar vínculo';
+        btn.addEventListener('click', function () {
+            conexCartolaDesvincular(mv.id);
+            _cartolaRefrescar();
+            mostrarToast('Vínculo quitado: la factura volvió a pendiente.', 'ok');
+        });
+        fila.appendChild(btn);
+        box.appendChild(fila);
+        return box;
+    }
+
+    const lista = conexCartolaSugerencias(mv);
+    if (!lista.length) return null;
+    const titulo = document.createElement('div');
+    titulo.style.cssText = 'font-size:12px;font-weight:700;color:var(--text-muted);';
+    titulo.textContent = (mv.cargo > 0 ? 'Facturas de compra pendientes' : 'Facturas de venta pendientes') + ' por el mismo monto:';
+    box.appendChild(titulo);
+    lista.forEach(function (s) {
+        const fila = document.createElement('div');
+        fila.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;';
+        fila.innerHTML = '<span>N°' + _cEsc(s.numero_doc || '—') + ' · ' + _cEsc(s.nombre) +
+            ' · ' + _cEsc(s.fecha || '') + ' · ' + _cFmt(s.total) + '</span>';
+        const btn = document.createElement('button');
+        btn.className = 'btn-cl-aplicar';
+        btn.textContent = mv.cargo > 0 ? '✓ Es este pago' : '✓ Es este cobro';
+        btn.addEventListener('click', function () {
+            const r = conexCartolaAplicarDocumento(mv.id, s.libro, s.id);
+            if (!r.ok) { mostrarToast(r.error, 'error'); return; }
+            _cartolaFilaAbierta = null;
+            _cartolaRefrescar();
+            mostrarToast('Movimiento clasificado y factura N°' + (s.numero_doc || '—') + ' marcada como pagada.', 'ok');
+        });
+        fila.appendChild(btn);
+        box.appendChild(fila);
+    });
+    return box;
+}
+
 /** Marca un movimiento como ignorado */
 function _ignorarMovimiento(mvId) {
+    // Un movimiento ignorado no paga ninguna factura
+    if (typeof conexCartolaDesvincular === 'function') conexCartolaDesvincular(mvId);
     const idx = _dbCartola.findIndex(function (x) { return x.id === mvId; });
     if (idx !== -1) {
         _dbCartola[idx].estado = 'ignorado';
@@ -557,6 +614,7 @@ function _ignorarMovimiento(mvId) {
 
 /** Elimina un movimiento */
 function _eliminarMovimiento(mvId) {
+    if (typeof conexCartolaDesvincular === 'function') conexCartolaDesvincular(mvId);
     _dbCartola = _dbCartola.filter(function (x) { return x.id !== mvId; });
     _guardarCartola();
     _cartolaRefrescar();

@@ -959,6 +959,20 @@
             </div>
 
             <!-- Certificado Digital (4.4) -->
+            <div class="card" id="cfgCardRespaldo" style="padding:24px;" data-requiere-rol="contador">
+                <h2 style="margin-bottom:4px;">💾 Respaldo del cliente</h2>
+                <p style="color:var(--text-muted);font-size:13px;margin:0 0 16px;">
+                    Descarga todos los datos de este cliente en un archivo (.json) o restaura uno anterior.
+                    Restaurar reemplaza los datos del cliente abierto.
+                </p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                    <button class="btn btn-primary" onclick="exportarRespaldoCliente()">⬇️ Descargar respaldo</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('cfgRespaldoArchivo').click()">⬆️ Restaurar respaldo</button>
+                    <input type="file" id="cfgRespaldoArchivo" accept=".json,application/json" style="display:none;"
+                        onchange="if (this.files[0]) importarRespaldoCliente(this.files[0]); this.value='';">
+                </div>
+            </div>
+
             <div class="card" id="cfgCardCertificado" style="padding:24px;" data-requiere-rol="admin">
                 <h2 style="margin-bottom:4px;">🔐 Certificado Digital</h2>
                 <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
@@ -2630,6 +2644,52 @@
                 <input type="text" id="compraGlosa" placeholder="Opcional">
             </div>
 
+            <!-- Conexiones (Fase 1): producto → Inventario, centro de costo → asiento -->
+            <div class="form-libro-fila3">
+                <div>
+                    <label style="display:flex;justify-content:space-between;align-items:center;">
+                        Producto <small style="color:var(--text-muted);">mueve el stock</small>
+                    </label>
+                    <div style="display:flex;gap:6px;">
+                        <input type="hidden" id="compraProductoId">
+                        <input type="text" id="compraProductoNombre" placeholder="Sin producto" readonly
+                            onclick="prodAbrirSelector(p => conexFormProducto('compra', p))" style="cursor:pointer;">
+                        <button type="button" class="btn btn-secondary" style="padding:2px 10px;height:auto;" title="Quitar producto"
+                            onclick="conexFormProducto('compra', null)">✕</button>
+                    </div>
+                </div>
+                <div>
+                    <label>Cantidad</label>
+                    <input type="number" id="compraCantidad" min="0" step="any" placeholder="0">
+                </div>
+                <div>
+                    <label>Bodega</label>
+                    <select id="compraBodega"><option value="">Sin bodega</option></select>
+                </div>
+            </div>
+
+            <div>
+                <label>Centro de costo</label>
+                <select id="compraCentroCosto"><option value="">Sin centro de costo</option></select>
+            </div>
+
+            <div>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" id="compraEsActivo" onchange="conexFormToggleActivo()" style="width:auto;">
+                    Es activo fijo <small style="color:var(--text-muted);">→ crea la ficha en Activos Fijos para depreciar</small>
+                </label>
+            </div>
+            <div class="form-libro-fila2" id="compraActivoCampos" style="display:none;">
+                <div>
+                    <label>Cuenta del activo</label>
+                    <select id="compraActivoCuenta" onchange="conexFormToggleActivo()"></select>
+                </div>
+                <div>
+                    <label>Vida útil (años) <small style="color:var(--text-muted);">vacío = sugerida SII</small></label>
+                    <input type="number" id="compraActivoVida" min="1" placeholder="7">
+                </div>
+            </div>
+
             <div>
                 <label>Estado</label>
                 <select id="compraEstado">
@@ -2743,6 +2803,35 @@
             <div>
                 <label>Glosa / Observación</label>
                 <input type="text" id="ventaGlosa" placeholder="Opcional">
+            </div>
+
+            <!-- Conexiones (Fase 1): producto → Inventario, centro de costo → asiento -->
+            <div class="form-libro-fila3">
+                <div>
+                    <label style="display:flex;justify-content:space-between;align-items:center;">
+                        Producto <small style="color:var(--text-muted);">mueve el stock</small>
+                    </label>
+                    <div style="display:flex;gap:6px;">
+                        <input type="hidden" id="ventaProductoId">
+                        <input type="text" id="ventaProductoNombre" placeholder="Sin producto" readonly
+                            onclick="prodAbrirSelector(p => conexFormProducto('venta', p))" style="cursor:pointer;">
+                        <button type="button" class="btn btn-secondary" style="padding:2px 10px;height:auto;" title="Quitar producto"
+                            onclick="conexFormProducto('venta', null)">✕</button>
+                    </div>
+                </div>
+                <div>
+                    <label>Cantidad</label>
+                    <input type="number" id="ventaCantidad" min="0" step="any" placeholder="0">
+                </div>
+                <div>
+                    <label>Bodega</label>
+                    <select id="ventaBodega"><option value="">Sin bodega</option></select>
+                </div>
+            </div>
+
+            <div>
+                <label>Centro de costo</label>
+                <select id="ventaCentroCosto"><option value="">Sin centro de costo</option></select>
             </div>
 
             <div>
@@ -2994,7 +3083,7 @@
 <script src="js/core/autocomplete.js?v=2"></script>
 <script src="js/core/helpers.js?v=1"></script>
 <script src="js/core/periodo.js?v=1"></script>
-<script src="js/core/datos-cliente.js?v=1"></script>
+<script src="js/core/datos-cliente.js?v=2"></script>
 <script src="js/core/asientos.js?v=1"></script>
 <script src="js/core/parser.js?v=1"></script>
 <script src="js/core/parser-sii.js?v=1"></script>
@@ -3014,18 +3103,19 @@
 <script src="js/services/reconciliacion.js?v=5"></script>
 <script src="js/services/sii-rcv.js?v=1"></script>
 
-<script src="js/modules/compras.js?v=3"></script>
-<script src="js/modules/ventas.js?v=3"></script>
-<script src="js/modules/documentos.js?v=3"></script>
+<script src="js/modules/compras.js?v=4"></script>
+<script src="js/modules/ventas.js?v=4"></script>
+<script src="js/modules/documentos.js?v=4"></script>
 <script src="js/modules/clientes.js?v=3"></script>
 <script src="js/modules/productos.js?v=4"></script>
 <script src="js/modules/centros-costo.js?v=2"></script>
 <script src="js/modules/bodegas.js?v=2"></script>
-<script src="js/modules/inventario.js?v=3"></script>
+<script src="js/modules/inventario.js?v=4"></script>
 <script src="js/modules/activos.js?v=9"></script>
-<script src="js/modules/cartolas.js?v=5"></script>
-<script src="js/modules/remuneraciones.js?v=3"></script>
+<script src="js/modules/cartolas.js?v=6"></script>
+<script src="js/modules/remuneraciones.js?v=4"></script>
 <script src="js/modules/segunda-categoria.js?v=5"></script>
+<script src="js/core/conexiones.js?v=1"></script>
 
 <script src="js/services/app.js?v=11"></script>
 
@@ -3102,7 +3192,7 @@
 <script src="js/services/auth-manager.js?v=1"></script>
 <script src="js/services/exportar.js?v=9"></script>
 <script src="js/services/ia.js?v=3"></script>
-<script src="js/services/firebase-service.js?v=6"></script>
+<script src="js/services/firebase-service.js?v=7"></script>
 <script>
     // Firebase siempre activo — config hardcodeada en firebase-service.js
     fbInit();

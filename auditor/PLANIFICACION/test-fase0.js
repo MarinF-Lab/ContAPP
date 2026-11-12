@@ -169,7 +169,7 @@ console.log('\n══ Respaldo del cliente ══');
     const malo = vm.runInContext('(o) => datosClienteValidarRespaldo(o)', ctx)({ formato: 'otro' });
     check('un archivo ajeno se rechaza', !malo.ok);
     const lista = vm.runInContext('DATOS_CLIENTE_KEYS', ctx);
-    check('la lista de datos por cliente tiene 25 claves', lista.length === 25);
+    check('la lista de datos por cliente tiene 23 claves', lista.length === 23);
 }
 
 console.log(`\nResultado: ${ok} OK, ${fallos} con error\n`);

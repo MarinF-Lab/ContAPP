@@ -56,6 +56,44 @@ function invRegistrarMovimiento({ tipo, producto, cantidad, bodega, centroCosto,
     return mov;
 }
 
+// Movimiento ligado a un documento (Fase 1 de conectividad): una compra o
+// venta con producto tiene a lo más UN movimiento, identificado por
+// origen ('compras' | 'ventas') + ref (id del registro). Editar la factura
+// actualiza el mismo movimiento; anularla lo elimina.
+function invRegistrarPorOrigen({ origen, ref, tipo, producto, cantidad, bodega, centroCosto, fecha, glosa }) {
+    if (!origen || ref == null) return null;
+    if (!producto || !cantidad || cantidad <= 0 || (tipo !== 'ingreso' && tipo !== 'egreso')) return null;
+    const arr = getMovimientosInventario();
+    const idx = arr.findIndex(m => m.origen === origen && String(m.origen_ref) === String(ref));
+    const datos = {
+        tipo,
+        producto: String(producto).trim(),
+        cantidad: Number(cantidad),
+        bodega: (bodega || '').trim(),
+        centroCosto: (centroCosto || '').trim(),
+        fecha: fecha || new Date().toISOString().slice(0, 10),
+        glosa: glosa || '',
+        origen,
+        origen_ref: String(ref),
+    };
+    let mov;
+    if (idx >= 0) {
+        mov = Object.assign(arr[idx], datos, { updated_at: Date.now() });
+    } else {
+        mov = { id: _invNuevoId(), asientoId: null, created_at: Date.now(), ...datos };
+        arr.push(mov);
+    }
+    saveMovimientosInventario(arr);
+    return mov;
+}
+
+function invEliminarPorOrigen(origen, ref) {
+    const arr = getMovimientosInventario();
+    const resto = arr.filter(m => !(m.origen === origen && String(m.origen_ref) === String(ref)));
+    if (resto.length !== arr.length) saveMovimientosInventario(resto);
+    return arr.length - resto.length;
+}
+
 // Stock actual por producto — opcionalmente filtrado a una bodega.
 function invStockActual(producto, bodega) {
     const movs = getMovimientosInventario().filter(m =>
@@ -253,6 +291,8 @@ window.getMovimientosInventario   = getMovimientosInventario;
 window.saveMovimientosInventario  = saveMovimientosInventario;
 window.invRegistrarMovimiento     = invRegistrarMovimiento;
 window.invStockActual             = invStockActual;
+window.invRegistrarPorOrigen      = invRegistrarPorOrigen;
+window.invEliminarPorOrigen       = invEliminarPorOrigen;
 window.renderMovimientosInventario = renderMovimientosInventario;
 window.invAbrirForm               = invAbrirForm;
 window.invCerrarForm              = invCerrarForm;

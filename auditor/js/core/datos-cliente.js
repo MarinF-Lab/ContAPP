@@ -6,7 +6,7 @@
 //     pertenecen a un cliente. firebase-service.js la usa para sincronizar,
 //     limpiar al cambiar de cliente y cargar desde la nube. Antes había 12
 //     claves; los módulos de Activos, Cartolas, Inventario, Bodegas, Centros
-//     de costo, 2ª categoría y las cuentas por cobrar/pagar quedaban fuera:
+//     de costo y 2ª categoría quedaban fuera:
 //     no se respaldaban y se "heredaban" de un cliente a otro.
 //  2. ContappEventos: avisos entre módulos (emitir / escuchar).
 //  3. Respaldo completo del cliente (exportar / importar a archivo JSON).
@@ -40,8 +40,6 @@ const DATOS_CLIENTE_DOCS = {
     'core_centros_costo':          'centros_costo',
     'core_inventario_movimientos': 'inventario_movimientos',
     'core_cartola_movs':           'cartola_movs',
-    'doc_pagar':                   'doc_pagar',
-    'doc_cobrar':                  'doc_cobrar',
     'hon_boletas':                 'hon_boletas',
     'hon_egresos':                 'hon_egresos',
     'hon_ingresos_extra':          'hon_ingresos_extra',
@@ -54,7 +52,7 @@ const DATOS_CLIENTE_KEYS = Object.keys(DATOS_CLIENTE_DOCS);
 // Claves que se agregaron en Fase 0: son las que pueden tener datos huérfanos.
 const DATOS_CLIENTE_KEYS_NUEVAS = [
     'core_activos', 'core_bodegas', 'core_centros_costo', 'core_inventario_movimientos',
-    'core_cartola_movs', 'doc_pagar', 'doc_cobrar',
+    'core_cartola_movs',
     'hon_boletas', 'hon_egresos', 'hon_ingresos_extra', 'hon_ppm', 'hon_prestadores', 'hon_retenciones',
 ];
 
@@ -70,7 +68,6 @@ const DATOS_DOC_AVISO_BYTES  = Math.round(1048576 * 0.7);
 const _DATOS_ETIQUETAS = {
     core_activos: 'activos fijos', core_bodegas: 'bodegas', core_centros_costo: 'centros de costo',
     core_inventario_movimientos: 'movimientos de inventario', core_cartola_movs: 'movimientos de cartola',
-    doc_pagar: 'documentos por pagar', doc_cobrar: 'documentos por cobrar',
     hon_boletas: 'boletas de honorarios', hon_egresos: 'egresos de honorarios',
     hon_ingresos_extra: 'otros ingresos', hon_ppm: 'registros de PPM',
     hon_prestadores: 'prestadores', hon_retenciones: 'retenciones',

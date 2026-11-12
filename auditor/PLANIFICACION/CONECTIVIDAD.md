@@ -1,4 +1,4 @@
-# Conectividad entre módulos — Fase 0 (Base)
+# Conectividad entre módulos — Fases 0 y 1
 
 > Fecha: 2026-11-12 · Alcance: solo conexiones y funciones. **No se cambió el diseño**
 > (no hay pantallas ni botones nuevos; los avisos usan `mostrarConfirm`/`mostrarToast` existentes).
@@ -7,7 +7,7 @@
 
 | # | Problema | Dónde estaba |
 |---|----------|--------------|
-| 1 | Al cambiar de cliente, activos, cartolas, inventario, bodegas, centros de costo, 2ª categoría y cuentas por cobrar/pagar **seguían visibles en el cliente nuevo** y se mezclaban. | `firebase-service.js` solo limpiaba 12 claves |
+| 1 | Al cambiar de cliente, activos, cartolas, inventario, bodegas, centros de costo y 2ª categoría **seguían visibles en el cliente nuevo** y se mezclaban. | `firebase-service.js` solo limpiaba 12 claves |
 | 2 | Esos mismos datos **no se respaldaban en la nube**. | `FB_KEYS` |
 | 3 | Cambiar de cliente desde el panel, el chip de recientes o al crear un cliente **no limpiaba nada**: el cliente nuevo heredaba datos del anterior y el auto-sync podía subirlos a él. | `seleccionarEmpresa()` |
 | 4 | Remuneraciones creaba **un asiento nuevo en cada clic** (gasto duplicado). | `remEnviarAsiento()` |
@@ -18,22 +18,22 @@
 ## Qué se implementó
 
 ### Paso 1 · Respaldo del cliente — `js/core/datos-cliente.js`
-- `exportarRespaldoCliente()` descarga un `.json` con las 25 claves del cliente.
+- `exportarRespaldoCliente()` descarga un `.json` con las 23 claves del cliente.
 - `importarRespaldoCliente(archivo|texto)` valida y restaura (con confirmación).
-- **Sin botón todavía** (decisión de diseño pendiente). Se puede llamar desde la consola del navegador.
+- Botones en **Configuración → Respaldo del cliente** (agregados en la Fase 1).
 
 ### Paso 2 · Avisos entre módulos — `ContappEventos`
 - `ContappEventos.emitir(nombre, detalle)` / `ContappEventos.escuchar(nombre, fn)`.
 - En uso: `cliente:datos-cargados`, `asiento:registrado`, `asiento:anulado`, `contacto:actualizado`.
 
 ### Paso 3 · Datos por cliente y en la nube
-- Lista única `DATOS_CLIENTE_DOCS` (25 claves; antes 12). `firebase-service.js` la usa para sincronizar, limpiar y cargar.
+- Lista única `DATOS_CLIENTE_DOCS` (23 claves; antes 12). `firebase-service.js` la usa para sincronizar, limpiar y cargar.
 - `core_datos_empresa_id` registra **de qué cliente son los datos del navegador**.
 - `_fbSoltarDatosDeOtroCliente()`: antes de cargar otro cliente sube lo pendiente **al cliente dueño** y limpia. Se llama en `seleccionarEmpresa()` y `fbLoadFromCloud()`.
 - Si no se puede subir (sin conexión, sin permiso o datos creados en modo local) **no se borra**: se aparta como "datos sin cliente".
 - **Migración (una sola vez):** los datos de las 13 claves nuevas que ya existían se apartan en `core_respaldo_sin_cliente`. Al abrir un cliente se pregunta: "¿Pertenecen a {cliente}?". Si se cancela, se pregunta en el siguiente cliente. Nunca se suben solos.
 - `_fbRecargarMemoria()` ahora también recarga Documentos y emite `cliente:datos-cargados`; Cartolas, Conciliación, Remuneraciones y 2ª categoría escuchan y recargan.
-- `fbCambiarCuenta()` sube lo pendiente antes de cerrar sesión; `fbLogout()` limpia las 25 claves.
+- `fbCambiarCuenta()` sube lo pendiente antes de cerrar sesión; `fbLogout()` limpia las 23 claves.
 
 ### Paso 4 · Límite de 1 MB de Firestore
 - Antes de subir se mide cada documento. Al 70 % avisa una vez por sesión; sobre el límite **no lo sube** (para no bloquear al resto) y pide exportar respaldo.
@@ -77,7 +77,64 @@ Prueba en navegador (Chromium, modo sin conexión): la app carga sin errores pro
 3. Volver a A: deben estar. Abrir en otro navegador: deben estar.
 4. Enviar 2 veces la misma liquidación al Diario: 1 solo asiento.
 
-## Pendiente (siguientes fases)
-- Diseño: botones de exportar/importar respaldo y aviso de tamaño en Configuración.
-- Paso 4b: dividir documentos grandes por año.
-- Fase 1: Documentos → Compras/Ventas, stock automático, compra → activo fijo, cartola ↔ facturas pendientes, centros de costo en Compras/Ventas/Sueldos.
+> **Corrección (Fase 1):** en la Fase 0 se agregaron por error `doc_pagar` y `doc_cobrar` a la
+> lista de datos por cliente. No son datos guardados (son valores de "medio de pago"), así que nunca
+> se subían ni causaban daño; se quitaron de la lista (quedan 23 claves).
+
+---
+
+# Fase 1 — Circuito comercial
+
+> Fecha: 2026-11-12 · Lógica en `js/core/conexiones.js` (se carga después de los módulos).
+> Interfaz agregada con los estilos actuales de la app; **no** se aplicó el diseño de los artefactos.
+
+| # | Conexión | Funciones | Interfaz |
+|---|----------|-----------|----------|
+| C1 | Documentos → Compras/Ventas | `conexDocPasarALibro`, `conexDocSincronizar`, `conexLibroAnulado`, `conexEnlazarDocumentosExistentes` | Botón **📗 Pasar al libro** / marca **En libro** en Documentos |
+| C2 | Cartolas ↔ facturas pendientes | `conexCartolaSugerencias`, `conexCartolaAplicarDocumento`, `conexCartolaDesvincular` | Facturas sugeridas en el panel **Clasificar** de Cartolas |
+| C3 | Compras/Ventas → Inventario | `conexSincronizarInventario`, `conexCostoVenta`, `invRegistrarPorOrigen`, `invEliminarPorOrigen` | Producto, cantidad y bodega en los formularios de compra y venta |
+| C4 | Compras → Activos fijos | `conexSincronizarActivo`, `conexCuentaCargoCompra`, `conexVidaUtilSugerida` | Casilla **Es activo fijo** + cuenta y vida útil en Compras |
+| C5 | Centros de costo | líneas `centroCosto` en las centralizaciones y en sueldos | Selector en Compras, Ventas y en el contrato del trabajador |
+| + | Respaldo (Fase 0) | `exportarRespaldoCliente`, `importarRespaldoCliente` | Tarjeta en Configuración |
+
+## Cómo funciona
+
+**C1 · Documentos como bandeja de entrada**
+- Facturas de compra (materia prima y servicio) → Libro de Compras; facturas y boletas de venta → Libro de Ventas. Honorarios no (van por 2ª categoría).
+- Si el libro ya tiene el mismo documento (RUT + folio + tipo) **solo se enlazan**, no se duplica. Los documentos antiguos se enlazan solos al cargar.
+- Documento sin desglose: se asume afecto y se calcula neto e IVA desde el total.
+- Editar, pagar o anular el documento actualiza el libro; anular en el libro anula el documento.
+
+**C2 · Pagos y cobros conciliados**
+- Al clasificar un cargo se sugieren las facturas de compra **pendientes por el mismo monto** (±$1); un abono sugiere facturas de venta. Orden: RUT o nombre del proveedor en la glosa del banco, folio, cercanía de fecha.
+- "Es este pago": el movimiento queda clasificado contra la cuenta del medio de pago (Proveedores/Clientes), la factura y su documento quedan **pagados** y el saldo del contacto baja. "Quitar vínculo" lo deshace. Ignorar o eliminar el movimiento también lo deshace.
+
+**C3 · Stock y costo de venta**
+- Compra con producto = ingreso; venta = egreso (al revés en notas de crédito). Un movimiento por documento: editar lo actualiza, anular lo elimina.
+- La centralización de ventas agrega **Costo de Ventas / Mercaderías** = cantidad × precio de costo del catálogo (mismo criterio que la calculadora del Diario). Sin costo en el catálogo no se inventa.
+- La compra con producto se carga a la cuenta de inventario del producto (por defecto Mercaderías).
+
+**C4 · Activo fijo desde la compra**
+- La ficha se crea con nombre (glosa), fecha de la factura, valor neto + exento, proveedor y la vida útil sugerida (equipos computacionales 6, vehículos 7, muebles 7, maquinarias 15…; editable).
+- En la centralización esa compra va a la cuenta del activo, no a la cuenta de cargo del mes.
+- Anular la compra deja el activo **inactivo** (no se borra por si ya tiene depreciación).
+
+**C5 · Centros de costo**
+- Las centralizaciones agrupan por cuenta **y** centro de costo (campo `centroCosto` en el movimiento, el mismo que usa la calculadora del Diario).
+- Remuneraciones: el centro de costo del contrato va en las líneas de gasto (sueldo y leyes sociales) y en el finiquito.
+
+## Verificación
+```bash
+node PLANIFICACION/verificar.js     # 50 ✅ (secciones Fase 0 y Fase 1)
+node PLANIFICACION/test-fase0.js    # 28 pruebas
+node PLANIFICACION/test-fase1.js    # 39 pruebas (carga compras.js, ventas.js e inventario.js reales)
+```
+Prueba en navegador (Chromium, sin conexión): Documentos → "Pasar al libro" crea la compra; el formulario de compra muestra bodegas, centros de costo y los campos de activo fijo; Cartolas sugiere la factura y al aceptarla queda pagada junto con su documento; la tarjeta de respaldo aparece en Configuración. Sin errores de la app en consola.
+
+**No probado:** con Firebase real ni con datos reales de un cliente.
+
+## Pendiente
+- Paso 4b (Fase 0): dividir documentos grandes por año.
+- Fase 2: pago de sueldos y Previred con la cartola; boletas de honorarios recibidas → retención en F29.
+- Fase 3: checklist de cierre por cliente y trazabilidad Balance → asiento → documento.
+- Diseño: aplicar el diseño de los artefactos (al final, con aprobación).

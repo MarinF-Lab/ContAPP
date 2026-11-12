@@ -1010,6 +1010,12 @@ function remHtmlModal() {
         ${txtInp('fechaIngreso','Fecha de ingreso',t.fechaIngreso,'type="date"')}
         ${(t.tipoContrato && t.tipoContrato !== 'indefinido')
             ? txtInp('fechaTermino','Fecha de término',t.fechaTermino||'','type="date"') : ''}
+        ${selInp('centroCosto','Centro de costo',[
+            ['','Sin centro de costo'],
+            ...(typeof getCentrosCosto === 'function'
+                ? getCentrosCosto().filter(c => c.estado !== 'inactivo' && c.estado !== 'inactiva').map(c => [c.nombre, c.nombre])
+                : []),
+          ], t.centroCosto||'')}
       </div>
       <div class="rem-form-divider">Documento de contrato (PDF / imagen, máx. 5 MB)</div>
       ${t.contrato
@@ -1215,7 +1221,7 @@ function _recogerFormulario() {
     const todos = ['rut','nombre','cargo','email','telefono','direccion',
                    ...CAMPOS_MONTO_MODAL, ...CAMPOS_NUM_MODAL,
                    'afp','sistemaSalud','jornada','banco','sucursal','cuentaBancaria',
-                   'tipoContrato','fechaIngreso','fechaTermino'];
+                   'tipoContrato','fechaIngreso','fechaTermino','centroCosto'];
     todos.forEach(f => {
         const el = g(f);
         if (!el) return;
@@ -1324,7 +1330,9 @@ function remEnviarAsiento(trabId) {
         const fecha  = ultimo.toString().padStart(2,'0') + '/' + m + '/' + y;
 
         // Formato { cuenta, debe, haber } — requerido por contabilidad.js y diario.js
-        const d = (cuenta, monto) => ({ cuenta, debe: Math.round(monto), haber: 0 });
+        // Centro de costo del trabajador (Fase 1): va en las líneas de gasto
+        const cc = t.centroCosto || '';
+        const d = (cuenta, monto) => ({ cuenta, debe: Math.round(monto), haber: 0, ...(cc ? { centroCosto: cc } : {}) });
         const h = (cuenta, monto) => ({ cuenta, debe: 0, haber: Math.round(monto) });
 
         // Nombres dinámicos de AFP y sistema de salud del trabajador
@@ -2154,7 +2162,8 @@ function remFiqAsiento(trabId, fechaTermino, causal, avisoPrevio) {
 
 
     const movs = [];
-    const deb = (cuenta, monto) => movs.push({ cuenta, debe: Math.round(monto), haber: 0 });
+    const cc  = t.centroCosto || '';
+    const deb = (cuenta, monto) => movs.push({ cuenta, debe: Math.round(monto), haber: 0, ...(cc ? { centroCosto: cc } : {}) });
     const hab = (cuenta, monto) => movs.push({ cuenta, debe: 0, haber: Math.round(monto) });
 
     _remEnsureCuenta('Gasto Finiquito',                   'Pérdida', 'Pérdidas', 530);
