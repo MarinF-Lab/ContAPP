@@ -218,6 +218,33 @@ check('index.html carga conexiones.js después de los módulos',
     (() => { const h = leer('index.html'); return h.indexOf('js/core/conexiones.js') > h.indexOf('js/modules/segunda-categoria.js'); })());
 
 // ─────────────────────────────────────────────────────────────
+console.log('\n══ FASE 2 — Personas y honorarios (ver CONECTIVIDAD.md) ══');
+
+check('P1 · el líquido del sueldo queda en "Remuneraciones por pagar"',
+    tieneString('js/modules/remuneraciones.js', "h('Remuneraciones por pagar'") &&
+    !tieneString('js/modules/remuneraciones.js', "movs.push(h('Banco',                             liq.liquido))"));
+
+check('P1 · Cartolas sugiere sueldos individuales y nómina completa',
+    tieneFunc('js/core/conexiones.js', 'conexRemuneracionesPorPagar') && tieneString('js/core/conexiones.js', "libro: 'nomina'"));
+
+check('P2 · Previred: detalle por período y asiento de pago',
+    tieneFunc('js/core/conexiones.js', 'conexPreviredDetalle') && tieneFunc('js/core/conexiones.js', 'conexPreviredRegistrarPago'));
+
+check('P3 · boletas de honorarios: asiento con retención que toma el F29',
+    tieneFunc('js/core/conexiones.js', 'conexHonorarioContabilizar') &&
+    tieneString('js/core/conexiones.js', "'Retención Honorarios por pagar'") &&
+    tieneFunc('js/modules/documentos.js', 'docContabilizarHonorario'));
+
+check('P3 · Documentos permite marcar una boleta "sin retención"',
+    tieneString('js/modules/documentos.js', 'id="docSinRetencion"'));
+
+check('P4 · el pago de honorarios se concilia contra "Honorarios por Pagar"',
+    tieneString('js/core/conexiones.js', "libro === 'honorarios'"));
+
+check('P5 · trabajador enlazado con contacto por RUT',
+    tieneFunc('js/core/conexiones.js', 'conexTrabajadorEnlazar') && tieneString('js/modules/remuneraciones.js', 'conexTrabajadorEnlazar('));
+
+// ─────────────────────────────────────────────────────────────
 console.log('\n' + '─'.repeat(50));
 console.log(`Resultado: ${ok} ✅  |  ${errores} ❌`);
 

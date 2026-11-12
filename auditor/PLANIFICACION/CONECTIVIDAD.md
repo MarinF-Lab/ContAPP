@@ -1,4 +1,4 @@
-# Conectividad entre módulos — Fases 0 y 1
+# Conectividad entre módulos — Fases 0, 1 y 2
 
 > Fecha: 2026-11-12 · Alcance: solo conexiones y funciones. **No se cambió el diseño**
 > (no hay pantallas ni botones nuevos; los avisos usan `mostrarConfirm`/`mostrarToast` existentes).
@@ -133,8 +133,58 @@ Prueba en navegador (Chromium, sin conexión): Documentos → "Pasar al libro" c
 
 **No probado:** con Firebase real ni con datos reales de un cliente.
 
+---
+
+# Fase 2 — Personas y honorarios
+
+> Fecha: 2026-11-12 · Lógica en `js/core/conexiones.js`. Interfaz con los estilos actuales.
+
+## Cambio de criterio contable (aprobado)
+El asiento de sueldo registraba el **líquido directo contra Banco**. Ahora registra el devengo:
+**Haber "Remuneraciones por pagar"** por el líquido. El pago se registra al conciliar la cartola
+(Remuneraciones por pagar → Banco). Los asientos antiguos no se modifican y se consideran pagados.
+El finiquito no cambia (se paga al firmar).
+
+| # | Conexión | Funciones | Interfaz |
+|---|----------|-----------|----------|
+| P1 | Sueldos ↔ Cartola | `conexRemuneracionesPorPagar`, sugerencias `remuneraciones` y `nomina` | Panel **Clasificar** de Cartolas |
+| P2 | Previred ↔ Cartola | `conexPreviredDetalle`, `conexPreviredPorPagar`, `conexPreviredRegistrarPago` | Panel **Clasificar** de Cartolas |
+| P3 | Boletas de honorarios → asiento y F29 | `conexHonorarioRetencion`, `conexHonorarioContabilizar` | Botón **📗 Contabilizar** y casilla **Sin retención** en Documentos |
+| P4 | Pago de honorarios ↔ Cartola | sugerencia `honorarios` | Panel **Clasificar** de Cartolas |
+| P5 | Trabajador ↔ Contacto | `conexTrabajadorEnlazar`, `conexHistorialPorRut` | (sin pantalla nueva) |
+
+## Cómo funciona
+**P1 · Sueldos.** Cada asiento de sueldo guarda líquido, trabajador y período. En Cartolas, un cargo
+por el líquido sugiere el sueldo de ese trabajador; un cargo por la **suma** de los líquidos de un
+período (2 o más pendientes) sugiere la **nómina completa**. Al aceptar, el movimiento queda contra
+"Remuneraciones por pagar" y "Generar asientos" registra el pago.
+
+**P2 · Previred.** Suma por cuenta las cotizaciones del período (AFP, salud, seguro de cesantía
+trabajador y empleador, SIS y mutual; no incluye impuesto único ni el líquido). Un cargo por ese
+total sugiere Previred; al aceptar se registra el asiento (Debe cada cotización / Haber Banco) y el
+movimiento queda procesado. Quitar el vínculo anula ese asiento.
+
+**P3 · Boletas de honorarios recibidas.** En Documentos (categoría Honorarios), **Contabilizar**
+registra: Debe Honorarios (bruto) · Haber **Retención Honorarios por pagar** (15,25%) · Haber
+Honorarios por Pagar (líquido). La retención la toma solo el F29 (Resumen IVA cuenta toda cuenta que
+empieza con "Retención"). "Sin retención" para prestadores no sujetos. Editar la boleta actualiza el
+asiento; anularla lo anula. El prestador queda en Contactos con rol prestador.
+
+**P4 · Pago de honorarios.** Un cargo por el líquido sugiere la boleta; al aceptar queda contra
+"Honorarios por Pagar" y la boleta pagada.
+
+**P5 · Trabajador ↔ Contacto.** Si el RUT del trabajador ya existe como contacto (p. ej. también
+emite boletas), se enlaza y se agrega el rol trabajador. No se crean contactos nuevos para
+trabajadores. `conexHistorialPorRut(rut)` reúne contacto, ficha de trabajador, compras, ventas,
+boletas y sueldos.
+
+## Verificación
+```bash
+node PLANIFICACION/verificar.js     # incluye sección Fase 2
+node PLANIFICACION/test-fase2.js    # 33 pruebas (usa remuneraciones.js, contabilidad.js e iva-resumen.js reales)
+```
+
 ## Pendiente
 - Paso 4b (Fase 0): dividir documentos grandes por año.
-- Fase 2: pago de sueldos y Previred con la cartola; boletas de honorarios recibidas → retención en F29.
 - Fase 3: checklist de cierre por cliente y trazabilidad Balance → asiento → documento.
 - Diseño: aplicar el diseño de los artefactos (al final, con aprobación).

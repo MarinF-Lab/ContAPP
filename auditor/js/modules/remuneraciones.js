@@ -1244,6 +1244,8 @@ function remGuardarTrab() {
     } else {
         arr = [...arr, {...t, id: Date.now().toString()}];
     }
+    // Enlace con Contactos por RUT (Fase 2): solo si ya existe el contacto
+    if (typeof conexTrabajadorEnlazar === 'function') arr.forEach(x => { if (x.rut === t.rut) conexTrabajadorEnlazar(x); });
     saveTrab(arr);
     remState.trabajadores = arr;
     remCerrarModal();
@@ -1353,6 +1355,7 @@ function remEnviarAsiento(trabId) {
         _remEnsureCuenta('Impuesto Único por pagar',           'Pasivo',  PC,  234);
         _remEnsureCuenta('Descuentos por pagar',               'Pasivo',  PC,  235);
         _remEnsureCuenta('Anticipos de Remuneraciones',        'Activo',  'Activo Circulante', 11);
+        _remEnsureCuenta('Remuneraciones por pagar',           'Pasivo',  PC,  209);
 
         // Leyes sociales empleador: SIS + Cesantía empleador + Mutual
         const leyesSociales = liq.aportSis + liq.aportCesantia + liq.aportMutual;
@@ -1378,7 +1381,9 @@ function remEnviarAsiento(trabId) {
             movs.push(h('Descuentos por pagar',          liq.descPrestamo + liq.descOtros));
         if (liq.anticipos > 0)
             movs.push(h('Anticipos de Remuneraciones',   liq.anticipos));
-        movs.push(h('Banco',                             liq.liquido));
+        // Devengo (Fase 2): el líquido queda por pagar; el pago real se registra
+        // al conciliar la cartola (Remuneraciones por pagar → Banco).
+        movs.push(h('Remuneraciones por pagar',          liq.liquido));
 
         // Registro único: un asiento por trabajador y período. Antes cada clic
         // en "enviar al Diario" agregaba otro asiento y duplicaba el gasto.
@@ -1390,7 +1395,8 @@ function remEnviarAsiento(trabId) {
             fecha,
             glosa:        glosaLiq,
             movimientos:  movs,
-            extra:        { trabajador_id: trabId, trabajador_rut: t.rut || '', periodo: remState.periodo },
+            extra:        { trabajador_id: trabId, trabajador_rut: t.rut || '', trabajador_nombre: t.nombre || '',
+                            periodo: remState.periodo, liquido: Math.round(liq.liquido || 0) },
             buscarLegacy: a => a.tipo === 'remuneraciones' && a.glosa === glosaLiq,
         });
         if (!res.ok) { mostrarToast(res.error, 'error'); return; }

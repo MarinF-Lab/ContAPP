@@ -558,15 +558,16 @@ function _cartolaPanelSugerencias(mv) {
         const v = mv.doc_vinculado;
         const fila = document.createElement('div');
         fila.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;';
-        fila.innerHTML = '<span>🔗 ' + (v.libro === 'compras' ? 'Paga' : 'Cobra') + ' la factura N°' +
-            _cEsc(v.numero_doc || '—') + ' de ' + _cEsc(v.nombre || '') + '</span>';
+        const etiqueta = v.etiqueta || ('Factura N°' + (v.numero_doc || '—') + ' · ' + (v.nombre || ''));
+        fila.innerHTML = '<span>🔗 ' + (v.libro === 'ventas' ? 'Cobra: ' : 'Paga: ') + _cEsc(etiqueta) +
+            (v.libro === 'previred' ? ' (asiento ya registrado)' : '') + '</span>';
         const btn = document.createElement('button');
         btn.className = 'btn-cl-cancelar';
         btn.textContent = 'Quitar vínculo';
         btn.addEventListener('click', function () {
             conexCartolaDesvincular(mv.id);
             _cartolaRefrescar();
-            mostrarToast('Vínculo quitado: la factura volvió a pendiente.', 'ok');
+            mostrarToast('Vínculo quitado: el pago volvió a pendiente.', 'ok');
         });
         fila.appendChild(btn);
         box.appendChild(fila);
@@ -577,12 +578,12 @@ function _cartolaPanelSugerencias(mv) {
     if (!lista.length) return null;
     const titulo = document.createElement('div');
     titulo.style.cssText = 'font-size:12px;font-weight:700;color:var(--text-muted);';
-    titulo.textContent = (mv.cargo > 0 ? 'Facturas de compra pendientes' : 'Facturas de venta pendientes') + ' por el mismo monto:';
+    titulo.textContent = (mv.cargo > 0 ? 'Pagos pendientes' : 'Cobros pendientes') + ' por el mismo monto:';
     box.appendChild(titulo);
     lista.forEach(function (s) {
         const fila = document.createElement('div');
         fila.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;';
-        fila.innerHTML = '<span>N°' + _cEsc(s.numero_doc || '—') + ' · ' + _cEsc(s.nombre) +
+        fila.innerHTML = '<span>' + _cEsc(s.etiqueta || ('N°' + (s.numero_doc || '—') + ' · ' + s.nombre)) +
             ' · ' + _cEsc(s.fecha || '') + ' · ' + _cFmt(s.total) + '</span>';
         const btn = document.createElement('button');
         btn.className = 'btn-cl-aplicar';
@@ -592,7 +593,9 @@ function _cartolaPanelSugerencias(mv) {
             if (!r.ok) { mostrarToast(r.error, 'error'); return; }
             _cartolaFilaAbierta = null;
             _cartolaRefrescar();
-            mostrarToast('Movimiento clasificado y factura N°' + (s.numero_doc || '—') + ' marcada como pagada.', 'ok');
+            mostrarToast(s.libro === 'previred'
+                ? 'Pago de Previred registrado en el Libro Diario.'
+                : 'Movimiento clasificado: ' + (s.etiqueta || 'pago') + ' queda pagado.', 'ok');
         });
         fila.appendChild(btn);
         box.appendChild(fila);

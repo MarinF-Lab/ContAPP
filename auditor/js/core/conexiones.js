@@ -9,6 +9,13 @@
 //  C4 · Compras → Activos fijos
 //  C5 · Centro de costo en Compras, Ventas y Remuneraciones
 //
+//  Fase 2 (personas y honorarios):
+//  P1 · Sueldos ↔ Cartola (liquidación individual o nómina completa)
+//  P2 · Previred ↔ Cartola (asiento que cancela AFP, salud, cesantía, SIS, mutual)
+//  P3 · Boletas de honorarios recibidas → asiento con retención (va al F29)
+//  P4 · Pago de honorarios ↔ Cartola
+//  P5 · Trabajador ↔ Contacto (por RUT)
+//
 //  Se carga DESPUÉS de los módulos: usa dbDocumentos, dbCompras, dbVentas,
 //  _dbCartola, getProductos, getActivos… en tiempo de llamada.
 // ─────────────────────────────────────────────────────────────
@@ -170,6 +177,7 @@ function conexDocPasarALibro(docId) {
 /** Lleva al libro los cambios de un documento enlazado (edición, pago, anulación). */
 function conexDocSincronizar(docId) {
     const doc = _cxDocs().find(d => String(d.id) === String(docId));
+    if (doc && doc.categoria === 'honorarios' && doc.contabilizado) return conexHonorarioSincronizar(doc);
     if (!doc || !doc.libro || !doc.libro_id) return false;
     const L = CX_LIBROS[doc.libro];
     const reg = conexRegistroLibro(doc.libro, doc.libro_id);
@@ -237,89 +245,198 @@ function _cxCartolaGuardar() {
     if (typeof guardarCartolas === 'function') guardarCartolas();
 }
 
+/** Puntaje de coincidencia entre la glosa del banco y un nombre/RUT/folio. */
+function _cxPuntaje(mv, nombre, rut, folio, fechaDMA) {
+    const desc = _cxTxt(mv.descripcion);
+    const descDigitos = String(mv.descripcion || '').replace(/[^0-9kK]/g, '').toUpperCase();
+    let score = 1;
+    const r = _cxRut(rut);
+    if (r && r.length > 3 && descDigitos.includes(r.slice(0, -1))) score += 3;
+    if (_cxTxt(nombre).split(' ').filter(w => w.length >= 4).some(w => desc.includes(w))) score += 2;
+    if (folio && desc.includes(String(folio))) score += 2;
+    if (fechaDMA) {
+        const dias = Math.abs((new Date(mv.fecha || Date.now()) - new Date(_cxFechaISO(fechaDMA))) / 864e5) || 0;
+        score -= Math.min(dias, 365) / 365;
+    }
+    return Math.round(score * 100) / 100;
+}
+
+const _cxCoincide = (a, b) => Math.abs(Math.round(Number(a) || 0) - Math.round(Number(b) || 0)) <= CX_TOLERANCIA_PAGO;
+
 /**
- * Facturas pendientes que un movimiento de cartola podría pagar (cargo →
- * compras) o cobrar (abono → ventas), ordenadas por probabilidad.
+ * Pagos/cobros pendientes que un movimiento de cartola podría corresponder,
+ * ordenados por probabilidad. Un cargo busca facturas de compra, boletas de
+ * honorarios, liquidaciones de sueldo, nóminas completas y pagos de Previred;
+ * un abono busca facturas de venta.
+ * Cada sugerencia: { libro, id, numero_doc, nombre, total, fecha, score, etiqueta }
  */
 function conexCartolaSugerencias(mvOId, max = 5) {
     const mv = typeof mvOId === 'object' ? mvOId : _cxCartolaArr().find(x => x.id === mvOId);
     if (!mv) return [];
-    const libro = (Number(mv.cargo) || 0) > 0 ? 'compras' : 'ventas';
+    const esCargo = (Number(mv.cargo) || 0) > 0;
     const monto = Math.round(Number(mv.cargo) || Number(mv.abono) || 0);
     if (!monto) return [];
-    const L = CX_LIBROS[libro];
-    const desc = _cxTxt(mv.descripcion);
-    const descDigitos = String(mv.descripcion || '').replace(/[^0-9kK]/g, '').toUpperCase();
-    const fechaMv = new Date(mv.fecha || Date.now());
+    const out = [];
 
-    return L.arr()
-        .filter(r => r.estado === 'pendiente' && r.tipo_doc !== 'nota_credito' &&
-                     Math.abs(Math.round(Number(r.total) || 0) - monto) <= CX_TOLERANCIA_PAGO)
-        .map(r => {
-            let score = 1;
-            const rut = _cxRut(L.rut(r));
-            if (rut && rut.length > 3 && descDigitos.includes(rut.slice(0, -1))) score += 3;
-            const palabras = _cxTxt(L.nombre(r)).split(' ').filter(w => w.length >= 4);
-            if (palabras.some(w => desc.includes(w))) score += 2;
-            if (r.numero_doc && desc.includes(String(r.numero_doc))) score += 2;
-            const dias = Math.abs((fechaMv - new Date(_cxFechaISO(r.fecha))) / 864e5) || 0;
-            score -= Math.min(dias, 365) / 365;
-            return {
-                libro, id: r.id, numero_doc: r.numero_doc || '', tipo_doc: r.tipo_doc,
-                nombre: L.nombre(r) || '', rut: L.rut(r) || '', total: r.total, fecha: r.fecha,
-                score: Math.round(score * 100) / 100,
-            };
-        })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, max);
+    // Facturas de compra / venta pendientes (Fase 1)
+    const libro = esCargo ? 'compras' : 'ventas';
+    const L = CX_LIBROS[libro];
+    L.arr()
+        .filter(r => r.estado === 'pendiente' && r.tipo_doc !== 'nota_credito' && _cxCoincide(r.total, monto))
+        .forEach(r => out.push({
+            libro, id: r.id, numero_doc: r.numero_doc || '', tipo_doc: r.tipo_doc,
+            nombre: L.nombre(r) || '', rut: L.rut(r) || '', total: r.total, fecha: r.fecha,
+            score: _cxPuntaje(mv, L.nombre(r), L.rut(r), r.numero_doc, r.fecha),
+            etiqueta: `Factura N°${r.numero_doc || '—'} · ${L.nombre(r) || ''}`,
+        }));
+
+    if (esCargo) {
+        // P4 · Boletas de honorarios contabilizadas y pendientes (por el líquido)
+        _cxDocs()
+            .filter(d => d.categoria === 'honorarios' && d.contabilizado && d.estado === 'pendiente' &&
+                         _cxCoincide(conexHonorarioRetencion(d).liquido, monto))
+            .forEach(d => out.push({
+                libro: 'honorarios', id: d.id, numero_doc: d.numero_doc || '', nombre: d.nombre || '', rut: d.rut || '',
+                total: conexHonorarioRetencion(d).liquido, fecha: d.fecha,
+                score: _cxPuntaje(mv, d.nombre, d.rut, d.numero_doc, d.fecha),
+                etiqueta: `Boleta de honorarios N°${d.numero_doc || '—'} · ${d.nombre || ''}`,
+            }));
+
+        // P1 · Liquidaciones individuales pendientes de pago
+        const pendientes = conexRemuneracionesPorPagar();
+        pendientes.filter(a => _cxCoincide(a.liquido, monto)).forEach(a => out.push({
+            libro: 'remuneraciones', id: a.id, numero_doc: '', nombre: a.trabajador_nombre || a.glosa,
+            rut: a.trabajador_rut || '', total: a.liquido, fecha: a.fecha,
+            score: _cxPuntaje(mv, a.trabajador_nombre || '', a.trabajador_rut, '', a.fecha) + 0.5,
+            etiqueta: `Sueldo ${a.trabajador_nombre || ''} · ${a.periodo || ''}`,
+        }));
+
+        // P1 · Nómina completa de un período (una transferencia para varios trabajadores)
+        const porPeriodo = {};
+        pendientes.forEach(a => { (porPeriodo[a.periodo] = porPeriodo[a.periodo] || []).push(a); });
+        Object.entries(porPeriodo).forEach(([periodo, lista]) => {
+            if (lista.length < 2) return;
+            const total = lista.reduce((t, a) => t + a.liquido, 0);
+            if (!_cxCoincide(total, monto)) return;
+            const desc = _cxTxt(mv.descripcion);
+            out.push({
+                libro: 'nomina', id: periodo, numero_doc: '', nombre: `Nómina ${periodo} (${lista.length} trabajadores)`,
+                total, fecha: lista[0].fecha,
+                score: 2 + (/(remun|sueldo|nomina|nómina)/.test(desc) ? 2 : 0),
+                etiqueta: `Nómina ${periodo} · ${lista.length} trabajadores`,
+            });
+        });
+
+        // P2 · Previred del período
+        conexPreviredPorPagar().filter(pv => _cxCoincide(pv.total, monto)).forEach(pv => out.push({
+            libro: 'previred', id: pv.periodo, numero_doc: '', nombre: `Previred ${pv.periodo}`,
+            total: pv.total, fecha: pv.fecha,
+            score: 2 + (/previred/.test(_cxTxt(mv.descripcion)) ? 4 : 0),
+            etiqueta: `Cotizaciones Previred · ${pv.periodo}`,
+        }));
+    }
+
+    return out.sort((x, y) => y.score - x.score).slice(0, max);
 }
 
 /**
- * Vincula un movimiento de cartola con la factura que paga/cobra: clasifica el
- * movimiento contra la cuenta del proveedor/cliente, marca la factura pagada
- * (y su documento en Documentos) y deja la referencia para conciliar.
+ * Vincula un movimiento de cartola con lo que paga/cobra.
+ *  - compras/ventas/honorarios/remuneraciones/nomina: el movimiento queda
+ *    clasificado contra la cuenta por pagar/cobrar y el asiento lo genera
+ *    "Generar asientos" de Cartolas, como cualquier otro movimiento.
+ *  - previred: el pago cancela varias cuentas a la vez, así que el asiento se
+ *    registra aquí mismo y el movimiento queda procesado.
  */
 function conexCartolaAplicarDocumento(mvId, libro, regId) {
-    const mv  = _cxCartolaArr().find(x => x.id === mvId);
-    const reg = conexRegistroLibro(libro, regId);
-    if (!mv)  return { ok: false, error: 'Movimiento no encontrado.' };
-    if (!reg) return { ok: false, error: 'Factura no encontrada.' };
+    const mv = _cxCartolaArr().find(x => x.id === mvId);
+    if (!mv) return { ok: false, error: 'Movimiento no encontrado.' };
     if (mv.doc_vinculado) conexCartolaDesvincular(mvId);
+    const vincular = (cuenta, datos) => {
+        mv.cuenta_banco         = mv.cuenta_banco || 'Banco';
+        mv.cuenta_contrapartida = cuenta;
+        if (mv.estado !== 'ignorado') mv.estado = 'clasificado';
+        mv.doc_vinculado = { libro, id: regId, ...datos };
+    };
+    let registro = null;
 
-    const L = CX_LIBROS[libro];
-    mv.cuenta_banco         = mv.cuenta_banco || 'Banco';
-    mv.cuenta_contrapartida = L.cuentaContraparte(reg);
-    if (mv.estado !== 'ignorado') mv.estado = 'clasificado';
-    mv.doc_vinculado = { libro, id: reg.id, numero_doc: reg.numero_doc || '', nombre: L.nombre(reg) || '' };
-
-    reg.estado        = 'pagada';
-    reg.pagado_mov_id = mv.id;
-    reg.fecha_pago    = mv.fecha;
-    if (reg.doc_id) {
-        const doc = _cxDocs().find(d => String(d.id) === String(reg.doc_id));
-        if (doc && doc.estado !== 'anulada') { doc.estado = 'pagada'; _cxGuardarDocs(); }
+    if (libro === 'compras' || libro === 'ventas') {
+        const reg = conexRegistroLibro(libro, regId);
+        if (!reg) return { ok: false, error: 'Factura no encontrada.' };
+        const L = CX_LIBROS[libro];
+        vincular(L.cuentaContraparte(reg), { numero_doc: reg.numero_doc || '', nombre: L.nombre(reg) || '',
+            etiqueta: `Factura N°${reg.numero_doc || '—'} · ${L.nombre(reg) || ''}` });
+        reg.estado = 'pagada'; reg.pagado_mov_id = mv.id; reg.fecha_pago = mv.fecha;
+        if (reg.doc_id) {
+            const doc = _cxDocs().find(d => String(d.id) === String(reg.doc_id));
+            if (doc && doc.estado !== 'anulada') { doc.estado = 'pagada'; _cxGuardarDocs(); }
+        }
+        L.guardar();
+        registro = reg;
+    } else if (libro === 'honorarios') {
+        const doc = _cxDocs().find(d => String(d.id) === String(regId));
+        if (!doc) return { ok: false, error: 'Boleta no encontrada.' };
+        vincular(CX_CTA_HON_POR_PAGAR, { numero_doc: doc.numero_doc || '', nombre: doc.nombre || '',
+            etiqueta: `Boleta de honorarios N°${doc.numero_doc || '—'} · ${doc.nombre || ''}` });
+        doc.estado = 'pagada'; doc.pagado_mov_id = mv.id;
+        _cxGuardarDocs();
+        registro = doc;
+    } else if (libro === 'remuneraciones' || libro === 'nomina') {
+        const lista = libro === 'remuneraciones'
+            ? conexRemuneracionesPorPagar().filter(a => String(a.id) === String(regId))
+            : conexRemuneracionesPorPagar().filter(a => a.periodo === regId);
+        if (!lista.length) return { ok: false, error: 'No hay liquidaciones pendientes de pago para vincular.' };
+        lista.forEach(a => { a.pago_mov_id = mv.id; });
+        _cxGuardarAsientos();
+        vincular(CX_CTA_REM_POR_PAGAR, { nombre: lista.length === 1 ? (lista[0].trabajador_nombre || '') : `${lista.length} trabajadores`,
+            etiqueta: libro === 'nomina' ? `Nómina ${regId} · ${lista.length} trabajadores` : `Sueldo ${lista[0].trabajador_nombre || ''} · ${lista[0].periodo || ''}`,
+            asientos: lista.map(a => a.id) });
+        registro = lista;
+    } else if (libro === 'previred') {
+        const r = conexPreviredRegistrarPago(regId, mv);
+        if (!r.ok) return r;
+        mv.cuenta_banco = mv.cuenta_banco || 'Banco';
+        mv.estado = 'ignorado';                // ya tiene su asiento: "Generar asientos" no lo repite
+        mv.asiento_directo = { origen: 'previred', ref: regId };
+        mv.doc_vinculado = { libro, id: regId, nombre: `Previred ${regId}`, etiqueta: `Cotizaciones Previred · ${regId}` };
+        registro = r.asiento;
+    } else {
+        return { ok: false, error: 'Tipo de pago desconocido.' };
     }
-    L.guardar();
+
     _cxCartolaGuardar();
-    ContappEventos.emitir('pago:conciliado', { mv, libro, registro: reg });
-    return { ok: true, movimiento: mv, registro: reg };
+    ContappEventos.emitir('pago:conciliado', { mv, libro, registro });
+    return { ok: true, movimiento: mv, registro };
 }
 
-/** Deshace el vínculo cartola ↔ factura (la factura vuelve a pendiente). */
+/** Deshace el vínculo de un movimiento de cartola (lo pagado vuelve a pendiente). */
 function conexCartolaDesvincular(mvId) {
     const mv = _cxCartolaArr().find(x => x.id === mvId);
     if (!mv || !mv.doc_vinculado) return false;
     const { libro, id } = mv.doc_vinculado;
-    const reg = conexRegistroLibro(libro, id);
-    if (reg && reg.pagado_mov_id === mv.id) {
-        reg.estado = 'pendiente';
-        delete reg.pagado_mov_id;
-        delete reg.fecha_pago;
-        if (reg.doc_id) {
-            const doc = _cxDocs().find(d => String(d.id) === String(reg.doc_id));
-            if (doc && doc.estado === 'pagada') { doc.estado = 'pendiente'; _cxGuardarDocs(); }
+
+    if (libro === 'compras' || libro === 'ventas') {
+        const reg = conexRegistroLibro(libro, id);
+        if (reg && reg.pagado_mov_id === mv.id) {
+            reg.estado = 'pendiente';
+            delete reg.pagado_mov_id;
+            delete reg.fecha_pago;
+            if (reg.doc_id) {
+                const doc = _cxDocs().find(d => String(d.id) === String(reg.doc_id));
+                if (doc && doc.estado === 'pagada') { doc.estado = 'pendiente'; _cxGuardarDocs(); }
+            }
+            CX_LIBROS[libro].guardar();
         }
-        CX_LIBROS[libro].guardar();
+    } else if (libro === 'honorarios') {
+        const doc = _cxDocs().find(d => String(d.id) === String(id));
+        if (doc && doc.pagado_mov_id === mv.id) { doc.estado = 'pendiente'; delete doc.pagado_mov_id; _cxGuardarDocs(); }
+    } else if (libro === 'remuneraciones' || libro === 'nomina') {
+        _cxAsientosArr().forEach(a => { if (a.pago_mov_id === mv.id) delete a.pago_mov_id; });
+        _cxGuardarAsientos();
+    } else if (libro === 'previred') {
+        anularAsientosPorOrigen('previred', id, 'Pago Previred desvinculado de la cartola');
+        _cxAsientosArr().forEach(a => { if (a.previred_mov_id === mv.id) delete a.previred_mov_id; });
+        _cxGuardarAsientos();
+        if (mv.asiento_directo) { delete mv.asiento_directo; mv.estado = 'pendiente'; }
     }
     mv.doc_vinculado = null;
     _cxCartolaGuardar();
@@ -545,10 +662,210 @@ function conexFormToggleActivo() {
 }
 
 // ═════════════════════════════════════════════════════════════
+//  FASE 2 · PERSONAS Y HONORARIOS
+// ═════════════════════════════════════════════════════════════
+const CX_CTA_REM_POR_PAGAR = 'Remuneraciones por pagar';
+const CX_CTA_HON_GASTO     = 'Honorarios';
+const CX_CTA_HON_POR_PAGAR = 'Honorarios por Pagar';
+const CX_CTA_HON_RETENCION = 'Retención Honorarios por pagar';  // empieza con "Retención" → la toma el F29
+const CX_TASA_RET_HON      = 0.1525;                            // Ley 21.133, 2026
+
+// Cuentas de Previred: lo que se paga en una sola planilla.
+const CX_RE_PREVIRED = /^(AFP .+|Salud .+|Seguro Cesantía|Seguro Cesantía Empleador|SIS|Mutual) por pagar$/i;
+
+function _cxAsientosArr() {
+    return typeof dbAsientos !== 'undefined' ? dbAsientos : (window.dbAsientos || []);
+}
+function _cxGuardarAsientos() {
+    localStorage.setItem('core_asientos', JSON.stringify(_cxAsientosArr()));
+}
+
+/** Crea la cuenta en el plan si no existe (mismo criterio que remuneraciones.js). */
+function conexAsegurarCuenta(nombre, tipo, grupo, orden) {
+    const plan = (typeof PLAN_CUENTAS !== 'undefined' && PLAN_CUENTAS) || window.PLAN_CUENTAS;
+    if (!plan || Array.isArray(plan) || plan[nombre]) return;
+    plan[nombre] = {
+        tipo, grupo, orden,
+        naturaleza: (tipo === 'Pérdida' || tipo === 'Activo') ? 'Debe' : 'Haber',
+        codigo: '', estado: 'ACTIVA', editable: true,
+    };
+    if (typeof guardarPlanCuentas === 'function') guardarPlanCuentas();
+}
+
+// ── P3 · Boletas de honorarios recibidas ─────────────────────
+/** Bruto, retención y líquido de una boleta de honorarios (Documentos). */
+function conexHonorarioRetencion(doc) {
+    const bruto = Math.round(Number(doc && doc.total) || 0);
+    const tasa  = typeof TASA_RETENCION_HON === 'number' ? TASA_RETENCION_HON : CX_TASA_RET_HON;
+    const retencion = doc && doc.sin_retencion ? 0 : Math.round(bruto * tasa);
+    return { bruto, retencion, liquido: bruto - retencion, tasa };
+}
+
+/**
+ * Registra el asiento de una boleta de honorarios recibida:
+ *   Debe  Honorarios (bruto)
+ *   Haber Retención Honorarios por pagar (15,25%) → se declara en el F29
+ *   Haber Honorarios por Pagar (líquido)          → se cancela al pagar (cartola)
+ * Reenviar actualiza el mismo asiento. El prestador queda en Contactos.
+ */
+function conexHonorarioContabilizar(docId) {
+    const doc = _cxDocs().find(d => String(d.id) === String(docId));
+    if (!doc) return { ok: false, error: 'Documento no encontrado.' };
+    if (doc.categoria !== 'honorarios') return { ok: false, error: 'Solo las boletas de honorarios se contabilizan así.' };
+    if (doc.estado === 'anulada') return { ok: false, error: 'La boleta está anulada.' };
+    const { bruto, retencion, liquido } = conexHonorarioRetencion(doc);
+    if (bruto <= 0) return { ok: false, error: 'La boleta no tiene monto.' };
+
+    conexAsegurarCuenta(CX_CTA_HON_GASTO,     'Pérdida', 'Pérdidas',          506);
+    conexAsegurarCuenta(CX_CTA_HON_POR_PAGAR, 'Pasivo',  'Pasivo Circulante', 206);
+    conexAsegurarCuenta(CX_CTA_HON_RETENCION, 'Pasivo',  'Pasivo Circulante', 236);
+
+    const movimientos = [{ cuenta: CX_CTA_HON_GASTO, debe: bruto, haber: 0 }];
+    if (retencion > 0) movimientos.push({ cuenta: CX_CTA_HON_RETENCION, debe: 0, haber: retencion });
+    movimientos.push({ cuenta: CX_CTA_HON_POR_PAGAR, debe: 0, haber: liquido });
+
+    const res = registrarAsiento({
+        origen: 'honorarios', ref: doc.id, fecha: doc.fecha,
+        glosa: `Boleta de honorarios N°${doc.numero_doc || '—'} ${doc.nombre || ''}`.trim(),
+        movimientos,
+        extra: { doc_id: doc.id, prestador_rut: doc.rut || '', bruto, retencion, liquido, contacto: doc.nombre || '' },
+    });
+    if (!res.ok) return res;
+    doc.contabilizado = true;
+    _cxGuardarDocs();
+    if (doc.rut && typeof contactoAsegurar === 'function') {
+        contactoAsegurar({ rut: doc.rut, nombre: doc.nombre, origen: 'honorarios' }, 'prestador');
+    }
+    return { ok: true, asiento: res.asiento, actualizado: res.actualizado, bruto, retencion, liquido };
+}
+
+/** Lleva al asiento los cambios de una boleta ya contabilizada (o la anula). */
+function conexHonorarioSincronizar(doc) {
+    if (doc.estado === 'anulada') {
+        anularAsientosPorOrigen('honorarios', doc.id, 'Boleta de honorarios anulada');
+        doc.contabilizado = false;
+        _cxGuardarDocs();
+        return true;
+    }
+    return conexHonorarioContabilizar(doc.id).ok;
+}
+
+// ── P1 · Sueldos por pagar ───────────────────────────────────
+/**
+ * Asientos de remuneraciones ACTIVOS con líquido en "Remuneraciones por pagar"
+ * que todavía no tienen pago vinculado. Los asientos antiguos (líquido directo
+ * a Banco) se consideran pagados y no aparecen.
+ */
+function conexRemuneracionesPorPagar() {
+    return _cxAsientosArr().filter(a =>
+        a.estado !== 'ANULADO' && a.origen === 'remuneraciones' && !a.pago_mov_id &&
+        (a.movimientos || []).some(m => m.cuenta === CX_CTA_REM_POR_PAGAR && (Number(m.haber) || 0) > 0)
+    ).map(a => {
+        if (!a.liquido) {
+            const m = a.movimientos.find(x => x.cuenta === CX_CTA_REM_POR_PAGAR);
+            a.liquido = Math.round(Number(m && m.haber) || 0);
+        }
+        return a;
+    });
+}
+
+// ── P2 · Previred ────────────────────────────────────────────
+/** Cotizaciones de un período: suma por cuenta de los asientos de sueldo. */
+function conexPreviredDetalle(periodo) {
+    const porCuenta = {};
+    const asientos = _cxAsientosArr().filter(a =>
+        a.estado !== 'ANULADO' && a.origen === 'remuneraciones' && a.periodo === periodo);
+    asientos.forEach(a => (a.movimientos || []).forEach(m => {
+        if (!CX_RE_PREVIRED.test(m.cuenta || '')) return;
+        porCuenta[m.cuenta] = (porCuenta[m.cuenta] || 0) + (Number(m.haber) || 0) - (Number(m.debe) || 0);
+    }));
+    const lineas = Object.entries(porCuenta).filter(([, v]) => v > 0).map(([cuenta, monto]) => ({ cuenta, monto: Math.round(monto) }));
+    return { periodo, asientos, lineas, total: lineas.reduce((t, l) => t + l.monto, 0) };
+}
+
+/** Períodos con cotizaciones sin pagar (uno por período con sueldos contabilizados). */
+function conexPreviredPorPagar() {
+    const periodos = [...new Set(_cxAsientosArr()
+        .filter(a => a.estado !== 'ANULADO' && a.origen === 'remuneraciones' && a.periodo)
+        .map(a => a.periodo))];
+    return periodos
+        .filter(p => !buscarAsientoPorOrigen('previred', p))
+        .map(p => {
+            const d = conexPreviredDetalle(p);
+            const [y, m] = p.split('-');
+            const ult = new Date(parseInt(y, 10), parseInt(m, 10), 0).getDate();
+            return { ...d, fecha: `${String(ult).padStart(2, '0')}/${m}/${y}` };
+        })
+        .filter(d => d.total > 0);
+}
+
+/** Registra el pago de Previred de un período: Debe cada cotización, Haber Banco. */
+function conexPreviredRegistrarPago(periodo, mv) {
+    const d = conexPreviredDetalle(periodo);
+    if (!d.total) return { ok: false, error: `No hay cotizaciones por pagar en ${periodo}.` };
+    const cuentaBanco = (mv && mv.cuenta_banco) || 'Banco';
+    const fecha = mv && mv.fecha ? _cxFechaDMA(mv.fecha) : d.asientos[0]?.fecha;
+    const res = registrarAsiento({
+        origen: 'previred', ref: periodo, fecha,
+        glosa: `Pago cotizaciones Previred ${periodo}`,
+        movimientos: [
+            ...d.lineas.map(l => ({ cuenta: l.cuenta, debe: l.monto, haber: 0 })),
+            { cuenta: cuentaBanco, debe: 0, haber: d.total },
+        ],
+        extra: { periodo, cartola_mov_id: mv ? mv.id : null },
+    });
+    if (!res.ok) return res;
+    if (mv) { d.asientos.forEach(a => { a.previred_mov_id = mv.id; }); _cxGuardarAsientos(); }
+    return { ok: true, asiento: res.asiento, total: d.total };
+}
+
+// ── P5 · Trabajador ↔ Contacto ───────────────────────────────
+/**
+ * Enlaza un trabajador con su contacto (mismo RUT). No crea contactos: un
+ * trabajador no es cliente ni proveedor; solo si ya existe (p.ej. también
+ * emite boletas) se le agrega el rol 'trabajador'.
+ */
+function conexTrabajadorEnlazar(t) {
+    if (!t || !t.rut || typeof contactoPorRut !== 'function') return null;
+    const c = contactoPorRut(t.rut);
+    if (!c) return null;
+    const roles = new Set(typeof contactoRoles === 'function' ? contactoRoles(c) : (c.roles || []));
+    if (!roles.has('trabajador')) {
+        roles.add('trabajador');
+        c.roles = [...roles];
+        if (typeof guardarContactos === 'function') guardarContactos();
+    }
+    t.contacto_id = c.id;
+    return c;
+}
+
+/** Todo lo que existe para un RUT, desde un solo lugar. */
+function conexHistorialPorRut(rut) {
+    const n = _cxRut(rut);
+    if (!n) return null;
+    const eq = r => _cxRut(r) === n;
+    const trabajadores = (() => { try { return JSON.parse(localStorage.getItem('rem_trabajadores') || '[]'); } catch { return []; } })();
+    return {
+        contacto:      typeof contactoPorRut === 'function' ? contactoPorRut(rut) : null,
+        trabajador:    trabajadores.find(t => eq(t.rut)) || null,
+        compras:       CX_LIBROS.compras.arr().filter(r => eq(r.rut_proveedor)),
+        ventas:        CX_LIBROS.ventas.arr().filter(r => eq(r.rut_cliente)),
+        honorarios:    _cxDocs().filter(d => d.categoria === 'honorarios' && eq(d.rut)),
+        remuneraciones: _cxAsientosArr().filter(a => a.origen === 'remuneraciones' && eq(a.trabajador_rut)),
+    };
+}
+
+// ═════════════════════════════════════════════════════════════
 //  Arranque y recarga por cliente
 // ═════════════════════════════════════════════════════════════
 function _cxAlCargarDatos() {
     try { conexEnlazarDocumentosExistentes(); } catch (e) { console.warn('Enlace documentos:', e); }
+    try {
+        const trab = JSON.parse(localStorage.getItem('rem_trabajadores') || '[]');
+        let cambio = false;
+        trab.forEach(t => { const antes = t.contacto_id; conexTrabajadorEnlazar(t); if (t.contacto_id !== antes) cambio = true; });
+        if (cambio) localStorage.setItem('rem_trabajadores', JSON.stringify(trab));
+    } catch (e) { console.warn('Enlace trabajadores:', e); }
 }
 ContappEventos.escuchar('cliente:datos-cargados', _cxAlCargarDatos);
 document.addEventListener('DOMContentLoaded', _cxAlCargarDatos);
@@ -573,3 +890,13 @@ window.conexFormPoblar                  = conexFormPoblar;
 window.conexFormLeer                    = conexFormLeer;
 window.conexFormProducto                = conexFormProducto;
 window.conexFormToggleActivo            = conexFormToggleActivo;
+window.conexAsegurarCuenta              = conexAsegurarCuenta;
+window.conexHonorarioRetencion          = conexHonorarioRetencion;
+window.conexHonorarioContabilizar       = conexHonorarioContabilizar;
+window.conexRemuneracionesPorPagar      = conexRemuneracionesPorPagar;
+window.conexPreviredDetalle             = conexPreviredDetalle;
+window.conexPreviredPorPagar            = conexPreviredPorPagar;
+window.conexPreviredRegistrarPago       = conexPreviredRegistrarPago;
+window.conexTrabajadorEnlazar           = conexTrabajadorEnlazar;
+window.conexHistorialPorRut             = conexHistorialPorRut;
+window.CX_CTA_REM_POR_PAGAR             = CX_CTA_REM_POR_PAGAR;
