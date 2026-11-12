@@ -220,6 +220,7 @@ function editarVenta(id) {
     _vSetVal('ventaEstado',    v.estado  || 'pendiente');
     _ventaAdjuntoTemp = v.adjunto || null;
     _actualizarBadgeAdjuntoVenta();
+    if (typeof conexFormPoblar === 'function') conexFormPoblar('venta', v);
 
     const h2 = document.querySelector('#modalVenta h2');
     if (h2) h2.textContent = '✏️ Editar Venta';
@@ -245,6 +246,7 @@ function _limpiarFormVenta() {
     _vSetVal('ventaEstado',     'pendiente');
     _ventaAdjuntoTemp = null;
     _actualizarBadgeAdjuntoVenta();
+    if (typeof conexFormPoblar === 'function') conexFormPoblar('venta', null);
 }
 
 function adjuntarArchivoVenta() {
@@ -390,13 +392,18 @@ function _finalizarGuardarVenta(fecha, tipoDoc, nombre, total, neto, iva, exento
         estado:         _vGetVal('ventaEstado') || 'pendiente',
         adjunto:        _ventaAdjuntoTemp || null,
         asiento_id:     null,
+        // Conexiones (Fase 1): producto/cantidad/bodega → Inventario y costo
+        // de venta, centro de costo → asiento.
+        ...(typeof conexFormLeer === 'function' ? conexFormLeer('venta') : {}),
     };
 
+    let guardada = venta;
     if (_ventaEditandoId) {
         const idx = dbVentas.findIndex(x => x.id === _ventaEditandoId);
         if (idx >= 0) {
             venta.id = _ventaEditandoId;
-            dbVentas[idx] = venta;
+            // Conservar los enlaces (documento, cobro conciliado)
+            guardada = dbVentas[idx] = { ...dbVentas[idx], ...venta };
         }
         mostrarToast('Venta actualizada correctamente.', 'ok');
         if (typeof audit === 'function') audit('editar', 'ventas', { folio: venta.numero_doc, cliente: nombre, total });
@@ -407,6 +414,7 @@ function _finalizarGuardarVenta(fecha, tipoDoc, nombre, total, neto, iva, exento
     }
     _ventaEditandoId = null;
     guardarVentas();
+    if (typeof conexDespuesDeGuardarLibro === 'function') conexDespuesDeGuardarLibro('ventas', guardada);
     cerrarModalVenta();
     renderVentas();
 }
@@ -417,6 +425,8 @@ function anularVenta(id) {
     mostrarConfirm(`¿Anular ${v.tipo_doc} N°${v.numero_doc || '?'} de ${v.nombre_cliente || 'sin nombre'}?`, () => {
         v.estado = 'anulada';
         guardarVentas();
+        // Anula también el documento enlazado y devuelve el stock
+        if (typeof conexLibroAnulado === 'function') conexLibroAnulado('ventas', id);
         renderVentas();
         mostrarToast('Documento anulado.', 'ok');
     });
@@ -437,28 +447,32 @@ function generarAsientoVentas() {
 
     const ctaIngreso = document.getElementById('ventaCtaIngreso')?.value || 'Ingresos por Ventas';
 
+    // Una línea por cuenta y centro de costo.
     const movMap = {};
-    const addMov = (cuenta, debe, haber) => {
-        if (!movMap[cuenta]) movMap[cuenta] = { cuenta, debe: 0, haber: 0 };
-        movMap[cuenta].debe  += debe;
-        movMap[cuenta].haber += haber;
+    const addMov = (cuenta, debe, haber, cc) => {
+        const k = cuenta + '|' + (cc || '');
+        if (!movMap[k]) movMap[k] = { cuenta, debe: 0, haber: 0, ...(cc ? { centroCosto: cc } : {}) };
+        movMap[k].debe  += debe;
+        movMap[k].haber += haber;
     };
+    const costo = v => (typeof conexCostoVenta === 'function' ? conexCostoVenta(v) : null);
 
     // Ventas normales: DEBE cuentas cobro, HABER Ingresos + IVA DF
-    const totNeto   = normales.reduce((s, v) => s + (v.neto   || 0), 0);
-    const totIva    = normales.reduce((s, v) => s + (v.iva    || 0), 0);
-    const totExento = normales.reduce((s, v) => s + (v.exento || 0), 0);
     normales.forEach(v => addMov(_cuentaDebito(v.medio_pago), v.total || 0, 0));
-    if (totNeto + totExento > 0) addMov(ctaIngreso, 0, totNeto + totExento);
-    if (totIva > 0)              addMov('IVA Débito Fiscal', 0, totIva);
+    normales.forEach(v => addMov(ctaIngreso, 0, (v.neto || 0) + (v.exento || 0), v.centro_costo));
+    const totIva = normales.reduce((s, v) => s + (v.iva || 0), 0);
+    if (totIva > 0) addMov('IVA Débito Fiscal', 0, totIva);
 
     // Notas de crédito emitidas: HABER cuentas cobro, DEBE Ingresos + IVA DF
-    const ncNeto   = notasCred.reduce((s, v) => s + (v.neto   || 0), 0);
-    const ncIva    = notasCred.reduce((s, v) => s + (v.iva    || 0), 0);
-    const ncExento = notasCred.reduce((s, v) => s + (v.exento || 0), 0);
     notasCred.forEach(v => addMov(_cuentaDebito(v.medio_pago), 0, v.total || 0));
-    if (ncNeto + ncExento > 0) addMov(ctaIngreso, ncNeto + ncExento, 0);
-    if (ncIva  > 0)            addMov('IVA Débito Fiscal', ncIva, 0);
+    notasCred.forEach(v => addMov(ctaIngreso, (v.neto || 0) + (v.exento || 0), 0, v.centro_costo));
+    const ncIva = notasCred.reduce((s, v) => s + (v.iva || 0), 0);
+    if (ncIva > 0) addMov('IVA Débito Fiscal', ncIva, 0);
+
+    // Costo de venta (inventario perpetuo, mismo criterio que la calculadora
+    // del Diario): ventas con producto dan de baja el costo del catálogo.
+    normales.forEach(v => { const c = costo(v); if (c) { addMov(c.cuenta_costo, c.monto, 0, v.centro_costo); addMov(c.cuenta_inventario, 0, c.monto); } });
+    notasCred.forEach(v => { const c = costo(v); if (c) { addMov(c.cuenta_inventario, c.monto, 0); addMov(c.cuenta_costo, 0, c.monto, v.centro_costo); } });
 
     const totTotal = normales.reduce((s, v) => s + (v.total || 0), 0)
                    - notasCred.reduce((s, v) => s + (v.total || 0), 0);
@@ -473,34 +487,21 @@ function generarAsientoVentas() {
         : `${clientesUnicos.length} clientes`;
 
     const glosaBase = `Centralización Ventas ${_vNombreMes(ventasMes)} ${ventasAnio}`;
-    const idxExist  = dbAsientos.findIndex(a => a.glosa && a.glosa.startsWith(glosaBase));
 
-    let asiento;
-    if (idxExist >= 0) {
-        asiento = Object.assign(dbAsientos[idxExist], {
-            fecha:       fechaUltimo,
-            glosa:       `${glosaBase} — ${datos.length} doc(s)`,
-            contacto:    contactoResumen,
-            movimientos,
-        });
-        mostrarToast(`Asiento N°${asiento.numero} actualizado en el Libro Diario.`, 'ok');
-    } else {
-        asiento = {
-            id:          Date.now(),
-            numero:      _nextNumeroAsiento(),
-            estado:      'ACTIVO',
-            fecha:       fechaUltimo,
-            glosa:       `${glosaBase} — ${datos.length} doc(s)`,
-            contacto:    contactoResumen,
-            movimientos,
-        };
-        dbAsientos.push(asiento);
-        mostrarToast(`Asiento N°${asiento.numero} creado en el Libro Diario.`, 'ok');
-    }
-
-    localStorage.setItem('core_asientos', JSON.stringify(dbAsientos));
-    if (typeof renderHistorialDiario === 'function') renderHistorialDiario();
-    if (typeof generarLibroMayor     === 'function') generarLibroMayor();
+    // Registro único: un asiento por mes (origen 'ventas', ref 'AAAA-MM').
+    // Reenviar actualiza el mismo asiento. buscarLegacy reconoce los asientos
+    // creados antes de que existiera `origen` (se identificaban por la glosa).
+    const res = registrarAsiento({
+        origen:       'ventas',
+        ref:          `${ventasAnio}-${String(ventasMes).padStart(2, '0')}`,
+        fecha:        fechaUltimo,
+        glosa:        `${glosaBase} — ${datos.length} doc(s)`,
+        movimientos,
+        extra:        { contacto: contactoResumen },
+        buscarLegacy: a => a.glosa && a.glosa.startsWith(glosaBase),
+    });
+    if (!res.ok) return mostrarToast(res.error, 'error');
+    mostrarToast(`Asiento N°${res.asiento.numero} ${res.actualizado ? 'actualizado' : 'creado'} en el Libro Diario.`, 'ok');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -554,6 +555,7 @@ function _onProductoSeleccionadoVenta(prod) {
         calcularDesdeNetoVenta();
     }
     if (prod.nombre) _vSetVal('ventaGlosa', prod.nombre);
+    if (typeof conexFormProducto === 'function') conexFormProducto('venta', prod);
     mostrarToast(`Producto "${prod.nombre}" seleccionado`, 'ok');
 }
 

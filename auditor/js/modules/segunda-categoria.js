@@ -724,6 +724,11 @@ function honAgregarPrestador() {
     if (lista.find(x => x.rut === rut)) { mostrarToast('Ya existe un prestador con ese RUT.', 'error'); return; }
     lista.push({ id: Date.now(), rut, nombre, correo: correo || '' });
     _honSet('hon_prestadores', lista);
+    // Contacto único: el prestador queda también en Clientes/Proveedores
+    // (mismo RUT, rol 'prestador'), sin duplicarlo si ya existía.
+    if (typeof contactoAsegurar === 'function') {
+        contactoAsegurar({ rut, nombre, email: correo || '', origen: 'prestador' }, 'prestador');
+    }
     honRenderPrestadores();
     ['prestRut','prestNombre','prestCorreo'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     mostrarToast('Prestador registrado.', 'ok');
@@ -909,6 +914,27 @@ window.honCalcularF22          = honCalcularF22;
 window.honToggleGastosF22      = honToggleGastosF22;
 window.honCargarEgresosEnF22   = honCargarEgresosEnF22;
 window.honProyectarF22         = honProyectarF22;
+/**
+ * Enlaza todos los prestadores existentes con Contactos (idempotente).
+ * Corre al cargar y cada vez que se cambia de cliente.
+ */
+function honEnlazarPrestadoresConContactos() {
+    if (typeof contactoAsegurar !== 'function') return 0;
+    let n = 0;
+    _honGet('hon_prestadores').forEach(p => {
+        if (!p || !p.rut || !p.nombre) return;
+        const c = contactoPorRut(p.rut);
+        if (c && contactoRoles(c).includes('prestador')) return;
+        if (contactoAsegurar({ rut: p.rut, nombre: p.nombre, email: p.correo || '', origen: 'prestador' }, 'prestador')) n++;
+    });
+    return n;
+}
+ContappEventos.escuchar('cliente:datos-cargados', honEnlazarPrestadoresConContactos);
+document.addEventListener('DOMContentLoaded', () => {
+    try { honEnlazarPrestadoresConContactos(); } catch (e) { console.warn('Enlace prestadores:', e); }
+});
+
+window.honEnlazarPrestadoresConContactos = honEnlazarPrestadoresConContactos;
 window.honAgregarPrestador     = honAgregarPrestador;
 window.honRenderPrestadores    = honRenderPrestadores;
 window.honEliminarPrestador    = honEliminarPrestador;

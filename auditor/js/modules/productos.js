@@ -701,3 +701,27 @@ window.prodCerrarSelector    = prodCerrarSelector;
 window.prodSeleccionarItem   = prodSeleccionarItem;
 window.prodFiltrarSelector   = prodFiltrarSelector;
 window.PROD_TIPOS            = PROD_TIPOS;
+
+// ─────────────────────────────────────────────────────────────
+//  CUENTAS CONTABLES DEL PRODUCTO — Fase 0 de conectividad
+//  Preparación para la Fase 1 (Compras/Ventas → Inventario y costo de venta).
+//  Si el producto no define sus cuentas, se usan las del plan por defecto.
+// ─────────────────────────────────────────────────────────────
+const PROD_CUENTAS_DEFECTO = {
+    cuenta_inventario: 'Existencias',
+    cuenta_costo:      'Costo de Ventas',
+    cuenta_venta:      'Ingresos por Ventas',
+};
+
+function productoCuentas(prodOId) {
+    const p = (prodOId && typeof prodOId === 'object')
+        ? prodOId
+        : getProductos().find(x => x.id === prodOId || String(x.id) === String(prodOId));
+    return {
+        cuenta_inventario: p?.cuenta_inventario || PROD_CUENTAS_DEFECTO.cuenta_inventario,
+        cuenta_costo:      p?.cuenta_costo      || PROD_CUENTAS_DEFECTO.cuenta_costo,
+        cuenta_venta:      p?.cuenta_venta      || PROD_CUENTAS_DEFECTO.cuenta_venta,
+    };
+}
+window.productoCuentas      = productoCuentas;
+window.PROD_CUENTAS_DEFECTO = PROD_CUENTAS_DEFECTO;

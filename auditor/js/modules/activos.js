@@ -763,31 +763,23 @@ function activoGenerarAsientoDepreciacion(anio, mes) {
     var totalDebe = movimientos.reduce(function (s, m) { return s + m.debe;  }, 0);
     var totalHabe = movimientos.reduce(function (s, m) { return s + m.haber; }, 0);
 
-    var asiento = {
-        id:           Date.now(),
-        numero:       _nextNumeroAsiento(),
-        estado:       'ACTIVO',
+    // Registro único de asientos. La referencia es período + activos del lote:
+    // la protección contra doble depreciación por activo (periodos_depreciados)
+    // sigue igual, y un lote con activos nuevos del mismo mes no pisa el anterior.
+    var idsLote = lineas.map(function (l) { return l.activo_id; }).sort().join(',');
+    var res = registrarAsiento({
+        origen:      'activos_depreciacion',
+        ref:         periodoStr + '|' + idsLote,
         // DD/MM/AAAA — mismo formato que el resto de la app (diario.js), no ISO:
         // con ISO el asiento desaparecía de Dashboard/Flujo de Caja/Conciliación,
         // que filtran por período haciendo fecha.split('/').
-        fecha:        '01/' + String(mes + 1).padStart(2, '0') + '/' + anio,
-        tipo:         'diario',
-        glosa:        glosa,
-        movimientos:  movimientos,
-        total_debe:   totalDebe,
-        total_haber:  totalHabe,
-        origen:       'activos_depreciacion',
-        created_at:   Date.now(),
-    };
-
-    // Persistir en dbAsientos
-    if (!window.dbAsientos) {
-        try { window.dbAsientos = JSON.parse(localStorage.getItem('core_asientos') || '[]'); }
-        catch (e) { window.dbAsientos = []; }
-    }
-
-    window.dbAsientos.push(asiento);
-    localStorage.setItem('core_asientos', JSON.stringify(window.dbAsientos));
+        fecha:       '01/' + String(mes + 1).padStart(2, '0') + '/' + anio,
+        tipo:        'diario',
+        glosa:       glosa,
+        movimientos: movimientos,
+        extra:       { periodo_depreciacion: periodoStr, activos_ids: lineas.map(function (l) { return l.activo_id; }) },
+    });
+    if (!res.ok) { mostrarToast(res.error, 'error'); return; }
 
     // Registrar período depreciado en cada activo
     var activosActualizados = getActivos();

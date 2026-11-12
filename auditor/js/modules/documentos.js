@@ -207,6 +207,7 @@ function _docHtml() {
                         style="border:1px solid var(--divider);background:var(--input-bg);color:var(--text);
                                border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;">
                         ✏️ Editar</button>
+                    ${_docBotonLibro(d)}
                     ${d.estado === 'pendiente' ? `
                     <button onclick="docMarcarPagada(${d.id})"
                         style="border:1px solid #10b98155;background:#10b98111;color:#10b981;
@@ -334,6 +335,12 @@ function _docHtml() {
                         oninput="docCalcDesdeTotal()">
                 </div>
             </div>
+            <div id="docFilaRetencion" style="display:none;">
+                <label class="ctc-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input id="docSinRetencion" type="checkbox" style="width:auto;">
+                    Sin retención <span style="font-weight:400;color:var(--text-muted);">— el prestador paga su impuesto (no se retiene el 15,25%)</span>
+                </label>
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                 <div>
                     <label class="ctc-label">Estado</label>
@@ -392,6 +399,8 @@ function abrirNuevoDocumento() {
     _docSetVal('docTotal',      '');
     _docSetVal('docEstado',     'pendiente');
     _docSetVal('docGlosa',      '');
+    const chkRet = document.getElementById('docSinRetencion');
+    if (chkRet) chkRet.checked = false;
     docState.adjuntoTemp = null;
     _docActualizarBadge();
     docActualizarFormulario();
@@ -418,6 +427,8 @@ function editarDocumento(id) {
     _docSetVal('docTotal',      d.total || 0);
     _docSetVal('docEstado',     d.estado || 'pendiente');
     _docSetVal('docGlosa',      d.glosa || '');
+    const chkRet = document.getElementById('docSinRetencion');
+    if (chkRet) chkRet.checked = !!d.sin_retencion;
     docState.adjuntoTemp = d.adjunto || null;
     _docActualizarBadge();
     docActualizarFormulario();
@@ -441,6 +452,8 @@ function docActualizarFormulario() {
     // Honorarios no generan IVA
     const filaIva = document.getElementById('docFilaIva');
     if (filaIva) filaIva.style.opacity = esHonorios ? '.4' : '1';
+    const filaRet = document.getElementById('docFilaRetencion');
+    if (filaRet) filaRet.style.display = esHonorios ? '' : 'none';
 }
 
 function docCalcDesdeNeto() {
@@ -514,10 +527,12 @@ function guardarDocumento() {
                 nombre, neto, iva, total,
                 estado: _docGetVal('docEstado') || orig.estado,
                 glosa: _docGetVal('docGlosa'),
+                sin_retencion: !!document.getElementById('docSinRetencion')?.checked,
                 adjunto: docState.adjuntoTemp || orig.adjunto,
             };
         }
         guardarDocumentos();
+        if (typeof conexDocSincronizar === 'function') conexDocSincronizar(_docEditandoId);
         cerrarModalDocumento();
         renderDocumentos();
         mostrarToast('Documento actualizado.', 'ok');
@@ -536,6 +551,7 @@ function guardarDocumento() {
         total,
         estado:     _docGetVal('docEstado') || 'pendiente',
         glosa:      _docGetVal('docGlosa'),
+        sin_retencion: !!document.getElementById('docSinRetencion')?.checked,
         adjunto:    docState.adjuntoTemp || null,
         created_at: Date.now(),
     };
@@ -549,6 +565,60 @@ function guardarDocumento() {
 }
 
 // ─────────────────────────────────────────────────────────────
+//  CONEXIÓN CON COMPRAS / VENTAS (Fase 1)
+// ─────────────────────────────────────────────────────────────
+const _DOC_LIBRO_LABEL = { compras: 'Libro de Compras', ventas: 'Libro de Ventas' };
+
+function _docBotonLibro(d) {
+    if (typeof conexDocDestino !== 'function') return '';
+    if (d.libro && d.libro_id) {
+        return `<span title="Registrado en el ${_DOC_LIBRO_LABEL[d.libro] || d.libro}"
+            style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+                   border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;white-space:nowrap;">
+            📗 En libro</span>`;
+    }
+    if (d.categoria === 'honorarios' && typeof conexHonorarioContabilizar === 'function') {
+        if (d.contabilizado) {
+            return `<span title="Asiento con retención registrado en el Libro Diario"
+                style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+                       border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;white-space:nowrap;">
+                📗 Contabilizada</span>`;
+        }
+        if (d.estado === 'anulada') return '';
+        return `<button onclick="docContabilizarHonorario(${d.id})"
+            title="Registra el gasto, la retención (va al F29) y el honorario por pagar"
+            style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+                   border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap;">
+            📗 Contabilizar</button>`;
+    }
+    if (d.estado === 'anulada' || !conexDocDestino(d)) return '';
+    return `<button onclick="docPasarALibro(${d.id})"
+        title="Registrar este documento en el libro sin volver a digitarlo"
+        style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+               border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap;">
+        📗 Pasar al libro</button>`;
+}
+
+function docContabilizarHonorario(id) {
+    const r = conexHonorarioContabilizar(id);
+    if (!r.ok) return mostrarToast(r.error, 'error');
+    renderDocumentos();
+    mostrarToast(r.retencion > 0
+        ? `Boleta contabilizada. Retención de $${Math.round(r.retencion).toLocaleString('es-CL')} queda para el F29.`
+        : 'Boleta contabilizada sin retención.', 'ok');
+}
+
+function docPasarALibro(id) {
+    const r = conexDocPasarALibro(id);
+    if (!r.ok) return mostrarToast(r.error, 'error');
+    renderDocumentos();
+    mostrarToast(r.enlazado
+        ? `Ya estaba en el ${_DOC_LIBRO_LABEL[r.libro]}: quedó enlazado.`
+        : `Registrado en el ${_DOC_LIBRO_LABEL[r.libro]}.`, 'ok');
+    if (typeof audit === 'function') audit('crear', r.libro, { origen: 'documentos', doc: id });
+}
+
+// ─────────────────────────────────────────────────────────────
 //  ACCIONES
 // ─────────────────────────────────────────────────────────────
 function docMarcarPagada(id) {
@@ -556,6 +626,7 @@ function docMarcarPagada(id) {
     if (!d) return;
     d.estado = 'pagada';
     guardarDocumentos();
+    if (typeof conexDocSincronizar === 'function') conexDocSincronizar(id);
     renderDocumentos();
     mostrarToast('Documento marcado como pagado.', 'ok');
 }
@@ -566,6 +637,7 @@ function docAnular(id) {
     mostrarConfirm(`¿Anular documento N°${d.numero_doc || '?'} de ${d.nombre}?`, () => {
         d.estado = 'anulada';
         guardarDocumentos();
+        if (typeof conexDocSincronizar === 'function') conexDocSincronizar(id);
         renderDocumentos();
         mostrarToast('Documento anulado.', 'ok');
     }, { titulo: 'Anular documento', textoBtn: 'Sí, anular' });
@@ -598,3 +670,5 @@ window.cerrarModalDocumento = cerrarModalDocumento;
 window.guardarDocumento     = guardarDocumento;
 window.docAnular            = docAnular;
 window.docMarcarPagada      = docMarcarPagada;
+window.docPasarALibro       = docPasarALibro;
+window.docContabilizarHonorario = docContabilizarHonorario;

@@ -109,6 +109,15 @@ function getLiqs()   { try { return JSON.parse(localStorage.getItem('rem_liquida
 function saveTrab(a) { localStorage.setItem('rem_trabajadores', JSON.stringify(a)); }
 function saveLiqs(a) { localStorage.setItem('rem_liquidaciones', JSON.stringify(a)); }
 
+// Al cambiar de cliente recargar trabajadores y liquidaciones del nuevo.
+ContappEventos.escuchar('cliente:datos-cargados', () => {
+    remState.trabajadores  = getTrab();
+    remState.liquidaciones = getLiqs();
+    remState.borrador      = {};
+    remState.trabSelId     = null;
+    remState.modalData     = null;
+});
+
 // ── Borrador (variables del período por trabajador) ────────────
 function getBorrador(trabId) {
     if (!remState.borrador[trabId]) {
@@ -1001,6 +1010,12 @@ function remHtmlModal() {
         ${txtInp('fechaIngreso','Fecha de ingreso',t.fechaIngreso,'type="date"')}
         ${(t.tipoContrato && t.tipoContrato !== 'indefinido')
             ? txtInp('fechaTermino','Fecha de término',t.fechaTermino||'','type="date"') : ''}
+        ${selInp('centroCosto','Centro de costo',[
+            ['','Sin centro de costo'],
+            ...(typeof getCentrosCosto === 'function'
+                ? getCentrosCosto().filter(c => c.estado !== 'inactivo' && c.estado !== 'inactiva').map(c => [c.nombre, c.nombre])
+                : []),
+          ], t.centroCosto||'')}
       </div>
       <div class="rem-form-divider">Documento de contrato (PDF / imagen, máx. 5 MB)</div>
       ${t.contrato
@@ -1206,7 +1221,7 @@ function _recogerFormulario() {
     const todos = ['rut','nombre','cargo','email','telefono','direccion',
                    ...CAMPOS_MONTO_MODAL, ...CAMPOS_NUM_MODAL,
                    'afp','sistemaSalud','jornada','banco','sucursal','cuentaBancaria',
-                   'tipoContrato','fechaIngreso','fechaTermino'];
+                   'tipoContrato','fechaIngreso','fechaTermino','centroCosto'];
     todos.forEach(f => {
         const el = g(f);
         if (!el) return;
@@ -1229,6 +1244,8 @@ function remGuardarTrab() {
     } else {
         arr = [...arr, {...t, id: Date.now().toString()}];
     }
+    // Enlace con Contactos por RUT (Fase 2): solo si ya existe el contacto
+    if (typeof conexTrabajadorEnlazar === 'function') arr.forEach(x => { if (x.rut === t.rut) conexTrabajadorEnlazar(x); });
     saveTrab(arr);
     remState.trabajadores = arr;
     remCerrarModal();
@@ -1315,7 +1332,9 @@ function remEnviarAsiento(trabId) {
         const fecha  = ultimo.toString().padStart(2,'0') + '/' + m + '/' + y;
 
         // Formato { cuenta, debe, haber } — requerido por contabilidad.js y diario.js
-        const d = (cuenta, monto) => ({ cuenta, debe: Math.round(monto), haber: 0 });
+        // Centro de costo del trabajador (Fase 1): va en las líneas de gasto
+        const cc = t.centroCosto || '';
+        const d = (cuenta, monto) => ({ cuenta, debe: Math.round(monto), haber: 0, ...(cc ? { centroCosto: cc } : {}) });
         const h = (cuenta, monto) => ({ cuenta, debe: 0, haber: Math.round(monto) });
 
         // Nombres dinámicos de AFP y sistema de salud del trabajador
@@ -1336,6 +1355,7 @@ function remEnviarAsiento(trabId) {
         _remEnsureCuenta('Impuesto Único por pagar',           'Pasivo',  PC,  234);
         _remEnsureCuenta('Descuentos por pagar',               'Pasivo',  PC,  235);
         _remEnsureCuenta('Anticipos de Remuneraciones',        'Activo',  'Activo Circulante', 11);
+        _remEnsureCuenta('Remuneraciones por pagar',           'Pasivo',  PC,  209);
 
         // Leyes sociales empleador: SIS + Cesantía empleador + Mutual
         const leyesSociales = liq.aportSis + liq.aportCesantia + liq.aportMutual;
@@ -1361,27 +1381,28 @@ function remEnviarAsiento(trabId) {
             movs.push(h('Descuentos por pagar',          liq.descPrestamo + liq.descOtros));
         if (liq.anticipos > 0)
             movs.push(h('Anticipos de Remuneraciones',   liq.anticipos));
-        movs.push(h('Banco',                             liq.liquido));
+        // Devengo (Fase 2): el líquido queda por pagar; el pago real se registra
+        // al conciliar la cartola (Remuneraciones por pagar → Banco).
+        movs.push(h('Remuneraciones por pagar',          liq.liquido));
 
-        // Persistir en localStorage
-        const arr = JSON.parse(localStorage.getItem('core_asientos') || '[]');
-        const _nums = arr.map(a => a.numero).filter(n => typeof n === 'number' && !isNaN(n) && isFinite(n));
-        const _nextNum = _nums.length ? Math.max(..._nums) + 1 : 1;
-        arr.push({
-            id: Date.now(), numero: _nextNum, fecha, tipo: 'remuneraciones',
-            glosa: `Remuneraciones ${liq.nombre} ${remState.periodo}`,
-            movimientos: movs, estado: 'ACTIVO',
+        // Registro único: un asiento por trabajador y período. Antes cada clic
+        // en "enviar al Diario" agregaba otro asiento y duplicaba el gasto.
+        const glosaLiq = `Remuneraciones ${liq.nombre} ${remState.periodo}`;
+        const res = registrarAsiento({
+            origen:       'remuneraciones',
+            ref:          `${trabId}|${remState.periodo}`,
+            tipo:         'remuneraciones',
+            fecha,
+            glosa:        glosaLiq,
+            movimientos:  movs,
+            extra:        { trabajador_id: trabId, trabajador_rut: t.rut || '', trabajador_nombre: t.nombre || '',
+                            periodo: remState.periodo, liquido: Math.round(liq.liquido || 0) },
+            buscarLegacy: a => a.tipo === 'remuneraciones' && a.glosa === glosaLiq,
         });
-        localStorage.setItem('core_asientos', JSON.stringify(arr));
-
-        // Sincronizar array en memoria y refrescar vista sin recargar
-        if (window.dbAsientos) {
-            window.dbAsientos.length = 0;
-            arr.forEach(a => window.dbAsientos.push(a));
-        }
-        if (typeof renderHistorialDiario === 'function') renderHistorialDiario();
-
-        mostrarToast('Asiento de remuneraciones generado correctamente.', 'ok');
+        if (!res.ok) { mostrarToast(res.error, 'error'); return; }
+        mostrarToast(res.actualizado
+            ? `Asiento N°${res.asiento.numero} de remuneraciones actualizado (no se duplicó).`
+            : 'Asiento de remuneraciones generado correctamente.', 'ok');
     } catch(e) { console.error(e); mostrarToast('Error al generar el asiento.', 'err'); }
 }
 
@@ -2145,11 +2166,10 @@ function remFiqAsiento(trabId, fechaTermino, causal, avisoPrevio) {
     const [y, m, d] = fechaTermino.split('-');
     const fecha = `${d}/${m}/${y}`;
 
-    const asientos = JSON.parse(localStorage.getItem('core_asientos') || '[]');
-    const nextNum  = asientos.length ? Math.max(...asientos.map(a => a.numero || 0)) + 1 : 1;
 
     const movs = [];
-    const deb = (cuenta, monto) => movs.push({ cuenta, debe: Math.round(monto), haber: 0 });
+    const cc  = t.centroCosto || '';
+    const deb = (cuenta, monto) => movs.push({ cuenta, debe: Math.round(monto), haber: 0, ...(cc ? { centroCosto: cc } : {}) });
     const hab = (cuenta, monto) => movs.push({ cuenta, debe: 0, haber: Math.round(monto) });
 
     _remEnsureCuenta('Gasto Finiquito',                   'Pérdida', 'Pérdidas', 530);
@@ -2166,14 +2186,16 @@ function remFiqAsiento(trabId, fechaTermino, causal, avisoPrevio) {
     const habTotal = movs.filter(m=>m.haber>0).reduce((s,m)=>s+m.haber,0);
     if (gastoTotal > habTotal) hab('Banco', gastoTotal - habTotal);
 
-    asientos.push({
-        id: Date.now(), numero: nextNum, fecha,
-        tipo: 'finiquito',
-        glosa: `Finiquito ${t.nombre} — ${CAUSALES.find(c=>c.value===causal)?.label || causal}`,
-        movimientos: movs, estado: 'ACTIVO',
+    const res = registrarAsiento({
+        origen:      'finiquito',
+        ref:         `${trabId}|${fechaTermino}`,
+        tipo:        'finiquito',
+        fecha,
+        glosa:       `Finiquito ${t.nombre} — ${CAUSALES.find(c=>c.value===causal)?.label || causal}`,
+        movimientos: movs,
+        extra:       { trabajador_id: trabId, trabajador_rut: t.rut || '' },
     });
-    localStorage.setItem('core_asientos', JSON.stringify(asientos));
-    if (window.dbAsientos) { window.dbAsientos.length = 0; asientos.forEach(a => window.dbAsientos.push(a)); }
+    if (!res.ok) { mostrarToast(res.error, 'error'); return; }
     if (typeof renderHistorialDiario === 'function') renderHistorialDiario();
     mostrarToast('Asiento de finiquito generado.', 'ok');
 }

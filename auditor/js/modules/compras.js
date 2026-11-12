@@ -219,6 +219,7 @@ function editarCompra(id) {
     _compraAdjuntoTemp = c.adjunto || null;
     _actualizarBadgeAdjuntoCompra();
     _actualizarEtiquetaIva();
+    if (typeof conexFormPoblar === 'function') conexFormPoblar('compra', c);
 
     // Cambiar título del modal
     const h2 = document.querySelector('#modalCompra h2');
@@ -246,6 +247,7 @@ function _limpiarFormCompra() {
     _compraAdjuntoTemp = null;
     _actualizarBadgeAdjuntoCompra();
     _actualizarEtiquetaIva();
+    if (typeof conexFormPoblar === 'function') conexFormPoblar('compra', null);
 }
 
 function adjuntarArchivoCompra() {
@@ -400,13 +402,18 @@ function _finalizarGuardarCompra(fecha, tipoDoc, nombre, total, neto, iva, exent
         estado:           _getVal('compraEstado') || 'pendiente',
         adjunto:          _compraAdjuntoTemp || null,
         asiento_id:       null,
+        // Conexiones (Fase 1): producto/cantidad/bodega → Inventario,
+        // centro de costo → asiento, activo fijo → ficha en Activos.
+        ...(typeof conexFormLeer === 'function' ? conexFormLeer('compra') : {}),
     };
 
+    let guardada = compra;
     if (_compraEditandoId) {
         const idx = dbCompras.findIndex(x => x.id === _compraEditandoId);
         if (idx >= 0) {
             compra.id = _compraEditandoId;
-            dbCompras[idx] = compra;
+            // Conservar los enlaces (documento, pago conciliado, activo)
+            guardada = dbCompras[idx] = { ...dbCompras[idx], ...compra };
         }
         mostrarToast('Compra actualizada correctamente.', 'ok');
         if (typeof audit === 'function') audit('editar', 'compras', { folio: compra.numero_doc, proveedor: nombre, total });
@@ -417,6 +424,7 @@ function _finalizarGuardarCompra(fecha, tipoDoc, nombre, total, neto, iva, exent
     }
     _compraEditandoId = null;
     guardarCompras();
+    if (typeof conexDespuesDeGuardarLibro === 'function') conexDespuesDeGuardarLibro('compras', guardada);
     cerrarModalCompra();
     renderCompras();
 }
@@ -427,6 +435,8 @@ function anularCompra(id) {
     mostrarConfirm(`¿Anular ${c.tipo_doc} N°${c.numero_doc || '?'} de ${c.nombre_proveedor}?`, () => {
         c.estado = 'anulada';
         guardarCompras();
+        // Anula también el documento enlazado, saca el stock y desactiva el activo
+        if (typeof conexLibroAnulado === 'function') conexLibroAnulado('compras', id);
         renderCompras();
         mostrarToast('Documento anulado.', 'ok');
     });
@@ -447,27 +457,28 @@ function generarAsientoCompras() {
 
     const ctaCargo = document.getElementById('compraCtaCargo')?.value || 'Mercaderías';
 
+    // Una línea por cuenta y centro de costo. La cuenta del Debe depende de
+    // cada compra: activo fijo → su cuenta de activo; con producto → cuenta de
+    // inventario del producto; si no, la cuenta elegida para el mes.
     const movMap = {};
-    const addMov = (cuenta, debe, haber) => {
-        if (!movMap[cuenta]) movMap[cuenta] = { cuenta, debe: 0, haber: 0 };
-        movMap[cuenta].debe  += debe;
-        movMap[cuenta].haber += haber;
+    const addMov = (cuenta, debe, haber, cc) => {
+        const k = cuenta + '|' + (cc || '');
+        if (!movMap[k]) movMap[k] = { cuenta, debe: 0, haber: 0, ...(cc ? { centroCosto: cc } : {}) };
+        movMap[k].debe  += debe;
+        movMap[k].haber += haber;
     };
+    const cuentaCargo = c => (typeof conexCuentaCargoCompra === 'function' ? conexCuentaCargoCompra(c, ctaCargo) : ctaCargo);
 
-    // Documentos normales: DEBE Mercaderías + IVA CF, HABER cuentas de pago
-    const totNeto   = normales.reduce((s, c) => s + (c.neto   || 0), 0);
-    const totIva    = normales.reduce((s, c) => s + (c.iva    || 0), 0);
-    const totExento = normales.reduce((s, c) => s + (c.exento || 0), 0);
-    if (totNeto + totExento > 0) addMov(ctaCargo, totNeto + totExento, 0);
-    if (totIva  > 0)             addMov('IVA Crédito Fiscal', totIva, 0);
+    // Documentos normales: DEBE cuenta de cargo + IVA CF, HABER cuentas de pago
+    normales.forEach(c => addMov(cuentaCargo(c), (c.neto || 0) + (c.exento || 0), 0, c.centro_costo));
+    const totIva = normales.reduce((s, c) => s + (c.iva || 0), 0);
+    if (totIva > 0) addMov('IVA Crédito Fiscal', totIva, 0);
     normales.forEach(c => addMov(_cuentaAbono(c.medio_pago), 0, c.total || 0));
 
-    // Notas de crédito recibidas: HABER Mercaderías + IVA CF, DEBE cuentas de pago
-    const ncNeto   = notasCred.reduce((s, c) => s + (c.neto   || 0), 0);
-    const ncIva    = notasCred.reduce((s, c) => s + (c.iva    || 0), 0);
-    const ncExento = notasCred.reduce((s, c) => s + (c.exento || 0), 0);
-    if (ncNeto + ncExento > 0) addMov(ctaCargo, 0, ncNeto + ncExento);
-    if (ncIva  > 0)            addMov('IVA Crédito Fiscal', 0, ncIva);
+    // Notas de crédito recibidas: HABER cuenta de cargo + IVA CF, DEBE cuentas de pago
+    notasCred.forEach(c => addMov(cuentaCargo(c), 0, (c.neto || 0) + (c.exento || 0), c.centro_costo));
+    const ncIva = notasCred.reduce((s, c) => s + (c.iva || 0), 0);
+    if (ncIva > 0) addMov('IVA Crédito Fiscal', 0, ncIva);
     notasCred.forEach(c => addMov(_cuentaAbono(c.medio_pago), c.total || 0, 0));
 
     // totales para la glosa
@@ -484,34 +495,21 @@ function generarAsientoCompras() {
         : `${proveedoresUnicos.length} proveedores`;
 
     const glosaBase = `Centralización Compras ${_nombreMes(comprasMes)} ${comprasAnio}`;
-    const idxExist  = dbAsientos.findIndex(a => a.glosa && a.glosa.startsWith(glosaBase));
 
-    let asiento;
-    if (idxExist >= 0) {
-        asiento = Object.assign(dbAsientos[idxExist], {
-            fecha:       fechaUltimo,
-            glosa:       `${glosaBase} — ${datos.length} doc(s)`,
-            contacto:    contactoResumen,
-            movimientos,
-        });
-        mostrarToast(`Asiento N°${asiento.numero} actualizado en el Libro Diario.`, 'ok');
-    } else {
-        asiento = {
-            id:          Date.now(),
-            numero:      _nextNumeroAsiento(),
-            estado:      'ACTIVO',
-            fecha:       fechaUltimo,
-            glosa:       `${glosaBase} — ${datos.length} doc(s)`,
-            contacto:    contactoResumen,
-            movimientos,
-        };
-        dbAsientos.push(asiento);
-        mostrarToast(`Asiento N°${asiento.numero} creado en el Libro Diario.`, 'ok');
-    }
-
-    localStorage.setItem('core_asientos', JSON.stringify(dbAsientos));
-    if (typeof renderHistorialDiario === 'function') renderHistorialDiario();
-    if (typeof generarLibroMayor     === 'function') generarLibroMayor();
+    // Registro único: un asiento por mes (origen 'compras', ref 'AAAA-MM').
+    // Reenviar actualiza el mismo asiento. buscarLegacy reconoce los asientos
+    // creados antes de que existiera `origen` (se identificaban por la glosa).
+    const res = registrarAsiento({
+        origen:       'compras',
+        ref:          `${comprasAnio}-${String(comprasMes).padStart(2, '0')}`,
+        fecha:        fechaUltimo,
+        glosa:        `${glosaBase} — ${datos.length} doc(s)`,
+        movimientos,
+        extra:        { contacto: contactoResumen },
+        buscarLegacy: a => a.glosa && a.glosa.startsWith(glosaBase),
+    });
+    if (!res.ok) return mostrarToast(res.error, 'error');
+    mostrarToast(`Asiento N°${res.asiento.numero} ${res.actualizado ? 'actualizado' : 'creado'} en el Libro Diario.`, 'ok');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -568,6 +566,7 @@ function _onProductoSeleccionadoCompra(prod) {
         calcularDesdeNetoCompra();
     }
     if (prod.nombre) _setVal('compraGlosa', prod.nombre);
+    if (typeof conexFormProducto === 'function') conexFormProducto('compra', prod);
     mostrarToast(`Producto "${prod.nombre}" seleccionado`, 'ok');
 }
 

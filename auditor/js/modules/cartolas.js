@@ -13,6 +13,14 @@
 // ─────────────────────────────────────────────────────────────
 let _dbCartola = JSON.parse(localStorage.getItem('core_cartola_movs')) || [];
 
+// Al cambiar de cliente (o restaurar un respaldo) recargar los movimientos
+// del cliente nuevo; si no, se seguían mostrando y guardando los del anterior.
+ContappEventos.escuchar('cliente:datos-cargados', () => {
+    try { _dbCartola = JSON.parse(localStorage.getItem('core_cartola_movs')) || []; }
+    catch (e) { _dbCartola = []; }
+    window.dbCartolaMov = _dbCartola;
+});
+
 let _cartolaFiltroMes   = periodoTrabajo().mes;
 let _cartolaFiltroAnio  = periodoTrabajo().anio;
 let _cartolaFiltroTipo  = 'todos';     // 'todos' | 'cargo' | 'abono'
@@ -369,9 +377,8 @@ function cartolasGenerarAsientos() {
         return;
     }
 
-    if (!window.dbAsientos) window.dbAsientos = [];
-
     let generados = 0;
+    const creados = [];
     clasificados.forEach(function (mv) {
         let debe, haber, monto;
         if (mv.cargo > 0) {
@@ -394,22 +401,23 @@ function cartolasGenerarAsientos() {
             ? partesFecha[2] + '/' + partesFecha[1] + '/' + partesFecha[0]
             : mv.fecha;
 
-        const asiento = {
-            id:         Date.now() + Math.floor(Math.random() * 1000),
-            numero:     _nextNumeroAsiento(),
-            estado:     'ACTIVO',
-            fecha:      fechaDMA,
-            glosa:      mv.descripcion + ' [cartola ' + mv.banco + ']',
+        // Registro único (en lote): ref = id del movimiento. Si el movimiento ya
+        // tenía asiento, se actualiza en vez de crear otro.
+        const res = registrarAsiento({
+            origen:      'cartola',
+            ref:         mv.id,
+            fecha:       fechaDMA,
+            glosa:       mv.descripcion + ' [cartola ' + mv.banco + ']',
             movimientos: [
                 { cuenta: debe,  debe: monto, haber: 0 },
                 { cuenta: haber, debe: 0,     haber: monto },
             ],
-            origen:     'cartola',
-            ref_mv:     mv.id,
-            created_at: Date.now()
-        };
-
-        window.dbAsientos.push(asiento);
+            extra:       { ref_mv: mv.id },
+            buscarLegacy: function (a) { return a.ref_mv === mv.id; },
+            silencioso:  true,
+        });
+        if (!res.ok) return;
+        creados.push(res.asiento);
 
         // Marcar movimiento como procesado
         const idx = _dbCartola.findIndex(function (x) { return x.id === mv.id; });
@@ -418,8 +426,8 @@ function cartolasGenerarAsientos() {
         generados++;
     });
 
-    // Persistir
-    localStorage.setItem('core_asientos', JSON.stringify(window.dbAsientos));
+    // Persistir (un solo guardado y un solo aviso para todo el lote)
+    if (creados.length) confirmarLoteAsientos('cartola', creados);
     _guardarCartola();
 
     mostrarToast(generados + ' asiento(s) generado(s) correctamente.', 'ok');
@@ -533,12 +541,72 @@ function _abrirPanelClasificacion(mvId) {
     div.appendChild(btnCancelar);
 
     td.appendChild(div);
+    const sug = _cartolaPanelSugerencias(mv);
+    if (sug) td.appendChild(sug);
     panelTr.appendChild(td);
     fila.after(panelTr);
 }
 
+// ── Facturas pendientes que este movimiento puede pagar/cobrar (Fase 1) ──
+function _cartolaPanelSugerencias(mv) {
+    if (typeof conexCartolaSugerencias !== 'function') return null;
+    const box = document.createElement('div');
+    box.className = 'cartola-panel-cuerpo';
+    box.style.cssText = 'flex-direction:column;align-items:stretch;gap:6px;margin-top:6px;';
+
+    if (mv.doc_vinculado) {
+        const v = mv.doc_vinculado;
+        const fila = document.createElement('div');
+        fila.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;';
+        const etiqueta = v.etiqueta || ('Factura N°' + (v.numero_doc || '—') + ' · ' + (v.nombre || ''));
+        fila.innerHTML = '<span>🔗 ' + (v.libro === 'ventas' ? 'Cobra: ' : 'Paga: ') + _cEsc(etiqueta) +
+            (v.libro === 'previred' ? ' (asiento ya registrado)' : '') + '</span>';
+        const btn = document.createElement('button');
+        btn.className = 'btn-cl-cancelar';
+        btn.textContent = 'Quitar vínculo';
+        btn.addEventListener('click', function () {
+            conexCartolaDesvincular(mv.id);
+            _cartolaRefrescar();
+            mostrarToast('Vínculo quitado: el pago volvió a pendiente.', 'ok');
+        });
+        fila.appendChild(btn);
+        box.appendChild(fila);
+        return box;
+    }
+
+    const lista = conexCartolaSugerencias(mv);
+    if (!lista.length) return null;
+    const titulo = document.createElement('div');
+    titulo.style.cssText = 'font-size:12px;font-weight:700;color:var(--text-muted);';
+    titulo.textContent = (mv.cargo > 0 ? 'Pagos pendientes' : 'Cobros pendientes') + ' por el mismo monto:';
+    box.appendChild(titulo);
+    lista.forEach(function (s) {
+        const fila = document.createElement('div');
+        fila.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;';
+        fila.innerHTML = '<span>' + _cEsc(s.etiqueta || ('N°' + (s.numero_doc || '—') + ' · ' + s.nombre)) +
+            ' · ' + _cEsc(s.fecha || '') + ' · ' + _cFmt(s.total) + '</span>';
+        const btn = document.createElement('button');
+        btn.className = 'btn-cl-aplicar';
+        btn.textContent = mv.cargo > 0 ? '✓ Es este pago' : '✓ Es este cobro';
+        btn.addEventListener('click', function () {
+            const r = conexCartolaAplicarDocumento(mv.id, s.libro, s.id);
+            if (!r.ok) { mostrarToast(r.error, 'error'); return; }
+            _cartolaFilaAbierta = null;
+            _cartolaRefrescar();
+            mostrarToast(s.libro === 'previred'
+                ? 'Pago de Previred registrado en el Libro Diario.'
+                : 'Movimiento clasificado: ' + (s.etiqueta || 'pago') + ' queda pagado.', 'ok');
+        });
+        fila.appendChild(btn);
+        box.appendChild(fila);
+    });
+    return box;
+}
+
 /** Marca un movimiento como ignorado */
 function _ignorarMovimiento(mvId) {
+    // Un movimiento ignorado no paga ninguna factura
+    if (typeof conexCartolaDesvincular === 'function') conexCartolaDesvincular(mvId);
     const idx = _dbCartola.findIndex(function (x) { return x.id === mvId; });
     if (idx !== -1) {
         _dbCartola[idx].estado = 'ignorado';
@@ -549,6 +617,7 @@ function _ignorarMovimiento(mvId) {
 
 /** Elimina un movimiento */
 function _eliminarMovimiento(mvId) {
+    if (typeof conexCartolaDesvincular === 'function') conexCartolaDesvincular(mvId);
     _dbCartola = _dbCartola.filter(function (x) { return x.id !== mvId; });
     _guardarCartola();
     _cartolaRefrescar();

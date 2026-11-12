@@ -17,29 +17,12 @@ const FB_CONFIG = {
     appId:             "1:449801913268:web:166038705a5fd563e3a8e1",
 };
 
-const FB_KEYS = [
-    'core_asientos', 'core_compras', 'core_ventas',
-    'core_contactos', 'core_plan_cuentas', 'core_config',
-    'core_reconciliacion', 'core_documentos',
-    'rem_trabajadores', 'rem_liquidaciones', 'rem_vacaciones',
-    'core_productos',
-];
-
-// Mapeo localStorage key → ID del documento en la subcollección modulos/
-const FB_KEY_TO_DOC = {
-    'core_asientos':       'asientos',
-    'core_compras':        'compras',
-    'core_ventas':         'ventas',
-    'core_contactos':      'contactos',
-    'core_plan_cuentas':   'plan_cuentas',
-    'core_config':         'config',
-    'core_reconciliacion': 'reconciliacion',
-    'core_documentos':     'documentos',
-    'rem_trabajadores':    'rem_trabajadores',
-    'rem_liquidaciones':   'rem_liquidaciones',
-    'rem_vacaciones':      'rem_vacaciones',
-    'core_productos':      'productos',
-};
+// Lista única de datos por cliente: vive en js/core/datos-cliente.js
+// (DATOS_CLIENTE_DOCS). Se agregaron activos, cartolas, inventario, bodegas,
+// centros de costo y 2ª categoría, que antes no se
+// respaldaban y quedaban "pegados" al cambiar de cliente.
+const FB_KEY_TO_DOC = DATOS_CLIENTE_DOCS;
+const FB_KEYS       = DATOS_CLIENTE_KEYS;
 
 let _fbAuth    = null;
 let _fbDb      = null;
@@ -69,6 +52,10 @@ function _fbEntrarModoOffline() {
         }
     } catch { window.currentUser = { uid: 'local', email: 'local@offline', rol: 'admin', categoria: 'primera', empresaId: 'local' }; }
 
+    // Sin conexión se sigue trabajando sobre los datos locales: si aún no
+    // tienen dueño, son del último cliente abierto (o 'local' si nunca hubo).
+    if (!datosClienteDueno()) datosClienteMarcarDueno(window.currentUser.empresaId || 'local');
+
     // Mostrar app con banner offline (saltar el selector de empresa)
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('wizardOverlay').style.display = 'none';
@@ -95,6 +82,7 @@ function _fbEntrarModoOffline() {
     if (typeof actualizarTopbarModulo        === 'function') actualizarTopbarModulo('inicio');
 
     if (!LOGIN_DESACTIVADO_TEMPORAL) mostrarToast('Modo sin conexión — trabajando con datos locales.', 'info');
+    datosClienteOfrecerHuerfanos();
 }
 
 // ── Inicialización ────────────────────────────────────────────
@@ -174,24 +162,59 @@ function _fbInterceptLocalStorage() {
     };
 }
 
-async function _fbAutoSync() {
-    if (_syncBusy || !_fbUser) return;
+// Avisos de tamaño ya mostrados en esta sesión (uno por documento)
+const _fbAvisosTamano = new Set();
+
+// empresaIdForzado: al cambiar de cliente se sube lo pendiente al cliente
+// DUEÑO de los datos locales, aunque currentUser ya apunte a otro.
+async function _fbAutoSync(empresaIdForzado) {
+    if (!_fbUser) return;
+    // Si hay un sync en curso, esperar a que termine (máx ~5 s) en vez de
+    // saltarse: al cambiar de cliente no se puede perder lo pendiente.
+    for (let i = 0; _syncBusy && i < 50; i++) await new Promise(r => setTimeout(r, 100));
+    if (_syncBusy) return;
     _syncBusy = true;
-    const empresaId = window.currentUser?.empresaId || _fbUser.uid;
+    // Los datos locales se suben a su DUEÑO registrado; así un sync programado
+    // que se dispara en medio de un cambio de cliente no los manda al otro.
+    const dueno = datosClienteDueno();
+    const empresaId = empresaIdForzado || (dueno && dueno !== 'local' ? dueno : null)
+        || window.currentUser?.empresaId || _fbUser.uid;
     try {
         const modulosRef = _fbDb.collection('empresas').doc(empresaId).collection('modulos');
         const writes = FB_KEYS
             .map(k => ({ k, v: localStorage.getItem(k) }))
             .filter(({ v }) => v !== null)
+            .filter(({ k, v }) => _fbRevisarTamano(k, v))
             .map(({ k, v }) => modulosRef.doc(FB_KEY_TO_DOC[k]).set({ data: v }));
         await Promise.all(writes);
         _fbSetSyncIcon('✅');
+        return true;
     } catch(e) {
         console.warn('Auto-sync error:', e.message);
         _fbSetSyncIcon('⚠️');
+        return false;
     } finally {
         _syncBusy = false;
     }
+}
+
+// Firestore no acepta documentos de más de 1 MiB: si un módulo lo supera, la
+// escritura fallaría y arrastraría al resto. Se omite ese documento y se avisa.
+function _fbRevisarTamano(k, v) {
+    const bytes = datosClienteTamanoBytes(v);
+    const doc   = FB_KEY_TO_DOC[k];
+    if (bytes > DATOS_DOC_LIMITE_BYTES) {
+        if (!_fbAvisosTamano.has(doc + ':max')) {
+            _fbAvisosTamano.add(doc + ':max');
+            mostrarToast(`"${doc}" supera el límite de 1 MB de la nube y no se está respaldando. Exporta un respaldo del cliente.`, 'error');
+        }
+        return false;
+    }
+    if (bytes > DATOS_DOC_AVISO_BYTES && !_fbAvisosTamano.has(doc)) {
+        _fbAvisosTamano.add(doc);
+        mostrarToast(`"${doc}" usa el ${Math.round(bytes / 10485.76)}% del límite de la nube para este cliente.`, 'info');
+    }
+    return true;
 }
 
 function _fbSetSyncIcon(icon) {
@@ -455,6 +478,13 @@ async function seleccionarEmpresa(empresaId) {
     if (lista) lista.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">Cargando datos…</div>';
 
     try {
+        // Si los datos que hay en el navegador son de OTRO cliente (cambio
+        // directo desde el panel, el chip de recientes o al crear un cliente),
+        // subir lo pendiente a su dueño y limpiar antes de cargar el nuevo.
+        // Antes solo cambiarEmpresa() limpiaba, y el resto de los caminos
+        // dejaba los datos del cliente anterior mezclados con el nuevo.
+        await _fbSoltarDatosDeOtroCliente(empresaId);
+
         // Cargar rol del usuario en esta empresa
         const [empDoc, usrDoc] = await Promise.all([
             _fbDb.collection('empresas').doc(empresaId).get(),
@@ -542,12 +572,14 @@ async function seleccionarEmpresa(empresaId) {
 
         // Cargar datos de esta empresa desde Firestore
         await fbLoadFromCloud();
+        datosClienteMarcarDueno(empresaId);
 
         // Mostrar la app
         _fbShowApp(_fbUser);
         _fbRefrescarUI();
 
         mostrarToast(`Cliente: ${window.currentUser.empresaNombre || empresaId}`, 'ok');
+        datosClienteOfrecerHuerfanos();
 
     } catch(e) {
         mostrarToast('Error al seleccionar empresa: ' + e.message, 'error');
@@ -555,11 +587,32 @@ async function seleccionarEmpresa(empresaId) {
     }
 }
 
+/**
+ * Si los datos locales pertenecen a un cliente distinto de `empresaIdNuevo`,
+ * los sube a ese cliente y limpia el navegador. Sin dueño registrado (datos
+ * de una versión anterior) no limpia: no se sabe de quién son.
+ */
+async function _fbSoltarDatosDeOtroCliente(empresaIdNuevo) {
+    const dueno = datosClienteDueno();
+    if (!dueno || dueno === empresaIdNuevo) return;
+    clearTimeout(_syncTimer);
+    let subido = false;
+    if (_fbUser && _fbDb && dueno !== 'local') {
+        try { subido = await _fbAutoSync(dueno); } catch (e) { console.warn('Sync antes de cambiar de cliente:', e); }
+    }
+    // Datos creados sin conexión ('local') o que no se pudieron subir: no se
+    // borran, se apartan y se ofrece asignarlos al abrir un cliente.
+    if (!subido) datosClienteApartarComoHuerfanos(dueno);
+    datosClienteLimpiar();
+    _fbRecargarMemoria();
+}
+
 async function cambiarEmpresa() {
-    // Guardar datos actuales antes de salir
-    if (_fbUser && _fbDb) await _fbAutoSync();
+    // Guardar datos actuales antes de salir (al cliente dueño de los datos)
+    clearTimeout(_syncTimer);
+    if (_fbUser && _fbDb) await _fbAutoSync(datosClienteDueno() || undefined);
     // Limpiar datos locales de la empresa anterior
-    FB_KEYS.forEach(k => localStorage.removeItem(k));
+    datosClienteLimpiar();
     _fbRecargarMemoria();
     // Volver al selector
     await _fbShowEmpresaSelector();
@@ -702,8 +755,8 @@ async function fbLogout() {
         // Sync final antes de salir
         await fbSyncToCloud();
         await _fbAuth.signOut();
-        // Limpiar datos locales de la sesión
-        FB_KEYS.forEach(k => localStorage.removeItem(k));
+        // Limpiar datos locales de la sesión (todas las claves del cliente)
+        datosClienteLimpiar();
         location.reload();
     });
 }
@@ -719,6 +772,8 @@ async function fbLoadFromCloud() {
     if (!_fbUser || !_fbDb) return;
     const empresaId = window.currentUser?.empresaId || _fbUser.uid;
     const _orig = Object.getPrototypeOf(localStorage).setItem;
+    // Nunca superponer los datos de este cliente sobre los de otro.
+    await _fbSoltarDatosDeOtroCliente(empresaId);
     try {
         const modulosRef = _fbDb.collection('empresas').doc(empresaId).collection('modulos');
 
@@ -755,38 +810,42 @@ async function fbLoadFromCloud() {
             }
         }
 
+        datosClienteMarcarDueno(empresaId);
         _fbRecargarMemoria();
     } catch(e) {
         console.error('Error cargando desde la nube:', e);
     }
 }
 
+// Recarga los arreglos en memoria desde localStorage y avisa a los módulos
+// ('cliente:datos-cargados') para que recarguen sus propios estados
+// (Cartolas, Conciliación, Remuneraciones, Documentos…).
 function _fbRecargarMemoria() {
+    const recargar = (arr, key) => {
+        if (!Array.isArray(arr)) return;
+        let datos = [];
+        try { datos = JSON.parse(localStorage.getItem(key) || '[]') || []; } catch { datos = []; }
+        arr.length = 0; datos.forEach(x => arr.push(x));
+    };
     try {
-        if (typeof dbAsientos !== 'undefined') {
-            const a = JSON.parse(localStorage.getItem('core_asientos') || '[]');
-            dbAsientos.length = 0; a.forEach(x => dbAsientos.push(x));
-        }
-        if (window.dbCompras) {
-            const c = JSON.parse(localStorage.getItem('core_compras') || '[]');
-            window.dbCompras.length = 0; c.forEach(x => window.dbCompras.push(x));
-        }
-        if (window.dbVentas) {
-            const v = JSON.parse(localStorage.getItem('core_ventas') || '[]');
-            window.dbVentas.length = 0; v.forEach(x => window.dbVentas.push(x));
-        }
-        if (window.dbContactos) {
-            const ct = JSON.parse(localStorage.getItem('core_contactos') || '[]');
-            window.dbContactos.length = 0; ct.forEach(x => window.dbContactos.push(x));
-        }
+        if (typeof dbAsientos   !== 'undefined') recargar(dbAsientos,   'core_asientos');
+        if (typeof dbCompras    !== 'undefined') recargar(dbCompras,    'core_compras');
+        if (typeof dbVentas     !== 'undefined') recargar(dbVentas,     'core_ventas');
+        if (typeof dbContactos  !== 'undefined') recargar(dbContactos,  'core_contactos');
+        if (typeof dbDocumentos !== 'undefined') recargar(dbDocumentos, 'core_documentos');
     } catch(e) {
         console.warn('Error recargando memoria:', e);
     }
+    ContappEventos.emitir('cliente:datos-cargados', { empresaId: window.currentUser?.empresaId || null });
 }
 
 // ── Cambiar cuenta (logout sin limpiar datos locales de empresa) ──
 async function fbCambiarCuenta() {
     mostrarConfirm('¿Cambiar de cuenta? Se cerrará la sesión actual. Los datos locales se conservan.', async () => {
+        // Subir lo pendiente con la sesión actual: la próxima cuenta puede no
+        // tener permiso sobre este cliente y no podría respaldarlo.
+        clearTimeout(_syncTimer);
+        try { await _fbAutoSync(datosClienteDueno() || undefined); } catch {}
         await _fbAuth.signOut();
         location.reload();
     });
