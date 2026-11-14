@@ -1,167 +1,115 @@
 # ContApp Auditor — Protocolo de trabajo para Claude Code
 
----
-
-## ⚡ INICIO DE SESIÓN — leer esto primero, siempre
-
-```
-1. Leer PLANIFICACION/INTEGRACION_DISENO.md → sección "Pendientes / próximo paso"
-2. Ejecutar: node PLANIFICACION/verificar.js
-3. Comenzar la tarea indicada
-```
-
-No escribas código sin haber leído INTEGRACION_DISENO.md. No asumas el estado del código — verifícalo.
-
-> Nota: `PROGRESO.md` (el doc "vivo" de sprints anteriores) se eliminó a propósito — esos sprints
-> ya cumplieron su propósito. Mientras dure la integración de diseño, `INTEGRACION_DISENO.md` es
-> el doc vivo de referencia.
+SaaS contable multi-cliente para estudios contables chilenos (PWA, JS puro, Firebase).
+Este es el único producto activo del repo (`educa/` y `empresa/` están en pausa).
 
 ---
 
-## 🔁 LOOP DE TRABAJO — repetir tras cada tarea completada
+## ⚡ Inicio de sesión
 
 ```
+1. Leer PLANIFICACION/INTEGRACION_DISENO.md (corto: estado, decisiones y "Pendientes / próximo paso")
+2. Ejecutar: npm test
+3. Comenzar la tarea indicada por el usuario (o el próximo paso pendiente)
+```
+
+No asumas el estado del código — verifícalo. El historial antiguo (jul-sep 2026) está en
+`PLANIFICACION/archivo/` y **no** se lee al iniciar; consúltalo solo si hace falta contexto.
+
+---
+
+## Preferencias del usuario
+
+- Respuestas **breves, precisas y en español**.
+- **Antes de cada acción solicitada: planificar y esperar confirmación.** No programar, borrar ni
+  publicar sin aprobación explícita.
+- Ser objetivo: señalar fallas y riesgos aunque no se hayan preguntado.
+
+---
+
+## 🔁 Loop de trabajo
+
+```
+[ PLAN breve → confirmación del usuario ]
+      ↓
 [ HACER TAREA ]
       ↓
-[ VERIFICAR ]
-  node PLANIFICACION/verificar.js
-  revisión visual en browser contra PLANIFICACION/diseno/referencia-contapp-consola.html (ver INTEGRACION_DISENO.md)
+[ VERIFICAR ]  npm test  (+ npm run test:navegador si cambió la interfaz,
+               + npm run test:reglas si cambió firestore.rules o el acceso)
+               + revisión visual contra PLANIFICACION/diseno/referencia-contapp-consola.html
       ↓
-[ ¿Coincide con el diseño? ]
-  NO → arreglar y volver a verificar
-  SÍ → continuar
+[ ACTUALIZAR PLANIFICACION/INTEGRACION_DISENO.md ]  marcar ✅ con fecha, actualizar "Pendientes"
       ↓
-[ ACTUALIZAR INTEGRACION_DISENO.md ]
-  - Marcar paso ✅ con fecha de hoy
-  - Actualizar sección "Pendientes / próximo paso"
-      ↓
-[ INFORMAR AL USUARIO con el próximo paso ]
-      ↓
-[ ESPERAR CONFIRMACIÓN o continuar al siguiente ítem ]
+[ INFORMAR AL USUARIO con el próximo paso y esperar ]
 ```
 
 ---
 
 ## Reglas obligatorias
 
-- **Referencia de diseño (desde 2026-11): `PLANIFICACION/diseno/referencia-contapp-consola.html`** — carcasa visual "ContApp Consola"
-  (artefacto aprobado por el usuario). Reemplaza a `new desing.html`, que ya no está en el repo.
-  Mientras dure el rediseño tiene prioridad sobre cualquier otra instrucción de planificación previa;
-  si migrar el diseño requiere tocar un módulo, se toca.
+- **Referencia de diseño:** `PLANIFICACION/diseno/referencia-contapp-consola.html` (artefacto
+  "ContApp Consola", aprobado). Si migrar el diseño requiere tocar un módulo, se toca.
 - **Decisiones de diseño aprobadas (2026-11):** paleta del logo (claro: gris niebla `#DCE3E9`,
   superficie `#EEF2F5`, tinta `#0F1B26`, acero `#8FA5B3`, magenta `#A03A63`; oscuro: navy `#131D2A`,
-  rosa neón `#FF5A8A`) con contraste AA verificado · fuentes actuales (Space Grotesk / Manrope /
-  IBM Plex Mono) · la consola **"¿Qué quieres hacer hoy?"** va **encima** del centro de mando, no
-  lo reemplaza · íconos SVG en vez de emoji.
-- **Solo capa visual:** el rediseño no cambia lógica contable; `verificar.js` y
-  `test-fase0..3.js` deben seguir pasando en cada etapa.
-- **No usar** `alert()`, `confirm()` ni `console.log()` en código nuevo
-  - Notificaciones → `mostrarToast(mensaje, tipo)`
-  - Confirmaciones destructivas → `mostrarConfirm(mensaje, callback)`
-- **No marcar un paso como completado** sin pasar `verificar.js` y sin confirmar visualmente en
-  browser que coincide con `PLANIFICACION/diseno/referencia-contapp-consola.html`
-- **Si algo no coincide con el diseño**, dejarlo explícito en `INTEGRACION_DISENO.md` en vez de
-  darlo por terminado
+  rosa neón `#FF5A8A`) con contraste AA · fuentes actuales (Space Grotesk / Manrope / IBM Plex Mono)
+  · la consola **"¿Qué quieres hacer hoy?"** va **encima** del centro de mando, no lo reemplaza ·
+  íconos SVG en vez de emoji.
+- **El rediseño es solo capa visual:** no cambia lógica contable; `npm test` debe seguir pasando.
+- **No usar** `alert()`, `confirm()` ni `console.log()` en código nuevo:
+  notificaciones → `mostrarToast(mensaje, tipo)` · confirmaciones → `mostrarConfirm(mensaje, callback)`.
+- **Modales:** abrirlos como siempre (`style.display = 'flex'` o `appendChild`); `js/core/modales.js`
+  agrega animación, Escape, foco y bloqueo de scroll. Para quitar uno creado por JS con salida
+  suave: `modalQuitar(el)`. Los formularios no se cierran con clic fuera.
+- **Cambios en JS/CSS:** subir `?v=N` en `index.html` y `CACHE` en `service-worker.js`.
+- **No marcar un paso como completado** sin pasar las pruebas y sin revisión visual; si algo no
+  coincide con el diseño, dejarlo explícito en `INTEGRACION_DISENO.md`.
+- **Seguridad:** el acceso a datos lo deciden `firestore.rules` (v3) — titular, invitado o acceso
+  por código. Todo cambio de acceso se prueba con `npm run test:reglas`. Las reglas las publica el
+  usuario (consola de Firebase o `firebase deploy --only firestore:rules`).
 
 ---
 
-## Stack — no instalar dependencias nuevas
+## Stack — no agregar dependencias a la app
 
-- Vanilla JS ES6+ (sin frameworks)
-- jsPDF y SheetJS disponibles globalmente vía CDN
-- Firebase Auth + Firestore vía CDN
-- CSS: `css/variables.css` para tokens, `css/main.css` para componentes globales
+- Vanilla JS ES6+ con `<script>` clásicos (comparten el ámbito global), sin frameworks ni build.
+- jsPDF, SheetJS, Chart.js y Firebase (Auth + Firestore) vía CDN.
+- CSS: `css/variables.css` (tokens) y `css/main.css` (componentes).
+- Las dependencias de `package.json` son **solo de desarrollo** (pruebas).
 
 ---
 
 ## Mapa de archivos
 
 ```
-js/core/       → helpers, db, parser, plan-cuentas
-js/services/   → diario, mayor, balance, dashboard, IA…
-js/modules/    → compras, ventas, clientes, activos…
-js/auditor/    → hallazgos, informe-auditoria, multi-cliente, licencia
-css/           → variables.css, main.css, módulos
-PLANIFICACION/ → INTEGRACION_DISENO.md (estado vivo), verificar.js
+js/core/        → datos-cliente, asientos, conexiones, cierre, modales, plan-cuentas, helpers…
+js/services/    → app, menu, home-hub, diario, mayor, balance, IVA, firebase-service, auth-manager…
+js/modules/     → compras, ventas, documentos, cartolas, remuneraciones, activos, inventario…
+js/categorias/  → catálogos de módulos por categoría tributaria (grupos del centro de mando)
+js/auditor/     → licencia, multi-cliente, panel del estudio
+css/            → variables.css, main.css, home-hub.css, remuneraciones.css, auditor.css
+herramientas/   → previred-proxy-worker.js (Cloudflare Worker, lo enlaza la app)
+PLANIFICACION/  → INTEGRACION_DISENO.md (estado vivo), CONECTIVIDAD.md, pruebas, diseno/, archivo/
+firestore.rules → reglas v3 · firebase.json → emulador y despliegue de reglas
 ```
 
 ---
 
-## Verificación — comandos exactos
+## Pruebas — comandos exactos (desde `auditor/`)
 
 ```bash
-# 1. Verificación estática + pruebas de conectividad (Fases 0-3)
-node PLANIFICACION/verificar.js
-for t in 0 1 2 3; do node PLANIFICACION/test-fase$t.js; done
-
-# 2. Servidor local para revisión visual
-npx serve . -p 8080
+npm test                 # verificar.js (estática) + test-fase0..3.js (conectividad)
+npm run test:navegador   # + interacción en Chromium (modales, teclado, tema, avisos)
+npm run test:reglas      # firestore.rules en el emulador (requiere Java; 63 casos)
 ```
 
-> Nota: la suite de Playwright (`PLANIFICACION/tests/`) probaba la navegación anterior (sidebar
-> G1-G5) y se eliminó junto con esa arquitectura — ver `INTEGRACION_DISENO.md`. La verificación
-> mientras dure el rediseño es `verificar.js` + pruebas de fase + comparación visual contra
-> `PLANIFICACION/diseno/referencia-contapp-consola.html` y contra la línea base `PLANIFICACION/diseno/linea-base/` (capturas del antes).
+Capturas: `node PLANIFICACION/diseno/capturar-linea-base.js` (con un servidor en el puerto 8765)
+para comparar contra la línea base `PLANIFICACION/diseno/linea-base/`.
 
 ---
 
-## Diseño UI — checklist mientras dure la integración
+## Skills disponibles en el entorno
 
-Comparar visualmente en el browser contra `PLANIFICACION/diseno/referencia-contapp-consola.html` antes de marcar un paso como completo — no
-contra una guía de estilo aparte (la referencia misma es la guía). Plan por etapas y estado en
-`PLANIFICACION/INTEGRACION_DISENO.md` (sección "Rediseño 2026-11"); hallazgos de la auditoría
-inicial en `PLANIFICACION/diseno/LINEA_BASE_DISENO.md`.
-
-Skills de diseño instaladas en el entorno (script de configuración): `frontend-design` (dirección
-visual), `ui-ux-pro-max` (contraste, accesibilidad, patrones), `web-design-guidelines` (revisión de
-reglas de interfaz), `emil-design-eng` / `review-animations` (interacción y movimiento),
-`mobile-native` (uso en celular).
-
----
-
-## Frase de inicio de sesión estándar
-
-> "Trabaja en ContApp Auditor. Lee INTEGRACION_DISENO.md, identifica el próximo paso pendiente, ejecuta verificar.js y comienza. Sigue el loop de trabajo hasta que el usuario diga stop."
-
----
-
-## Skill routing — optimización con gstack
-
-Antes de cada tarea, elige el skill correcto. Llamar al skill vía la herramienta Skill ANTES de generar código o análisis.
-
-| Si el usuario pide… | Skill a invocar |
-|---------------------|----------------|
-| Planificar feature / arquitectura | `/plan-eng-review` |
-| Revisar idea de producto / UX | `/office-hours` |
-| QA / probar que algo funciona | `/qa` |
-| Bug / error inesperado | `/investigate` |
-| Revisar diff / PR | `/review` o `/code-review` |
-| Revisar diseño visual | `/design-review` |
-| Crear spec / issue backlog | `/spec` |
-| Guardar contexto antes de cerrar | `/context-save` |
-| Retomar sesión anterior | `/context-restore` |
-| Pipeline completo (CEO+eng+design) | `/autoplan` |
-
-### Reglas de aplicación
-
-- **Bugs/errores** → invocar `/investigate` antes de leer código. Evita buscar a ciegas.
-- **Features nuevas** → invocar `/plan-eng-review` antes de codear. Evita reescrituras.
-- **QA de UI** → invocar `/qa` después de implementar. Confirma antes de reportar como completado.
-- **Cambios grandes** (>3 archivos o nueva arquitectura) → invocar `/autoplan` primero.
-- **Al terminar una sesión larga** → invocar `/context-save` para no perder estado.
-
-### Loop optimizado con skills
-
-```
-[ RECIBIR TAREA ]
-      ↓
-[ ELEGIR SKILL según tabla ]
-      ↓
-[ EJECUTAR SKILL (plan/investigate/etc.) ]
-      ↓
-[ IMPLEMENTAR con loop de trabajo de arriba ]
-      ↓
-[ /qa para verificar ]
-      ↓
-[ ACTUALIZAR INTEGRACION_DISENO.md ]
-```
+`frontend-design` (dirección visual) · `ui-ux-pro-max` (contraste, accesibilidad, patrones) ·
+`web-design-guidelines` (revisión de reglas de interfaz) · `emil-design-eng`, `review-animations`,
+`animate` (interacción y movimiento) · `mobile-native` (uso en celular) · `code-review`
+(revisión de cambios). Usarlas cuando la tarea lo amerite; no son obligatorias.
