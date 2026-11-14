@@ -319,6 +319,12 @@ async function _fbCargarPerfil(user) {
                         window.currentUser.canInvite   = false;
                         window.currentUser.titularUid  = data.vinculadoA;
                         window.currentUser.titularEmail = t.email || '';
+                        // Sesión con código que se recargó: mismo usuario que en _audEntrarConCodigo
+                        if (data.anonimo) {
+                            window.currentUser.email = 'Invitado';
+                            window.currentUser.accesoPorCodigo = true;
+                            window.currentUser.rol = 'asistente';
+                        }
                     }
                 } catch(e) { console.warn('No se pudo cargar el perfil del titular:', e.message); }
             } else {
@@ -561,8 +567,12 @@ async function seleccionarEmpresa(empresaId) {
             // no del usuario — ya fue asignada desde el empDoc arriba y no debe sobreescribirse.
             window.currentUser.rol = usrDoc.data().rol || 'asistente';
         } else {
-            // El doc de usuario no existe en esta empresa → crearlo con el rol del perfil
-            const rolPerfil = window.currentUser.rol || 'admin';
+            // El doc de usuario no existe en esta empresa → crearlo. Titular: admin.
+            // Invitado o acceso por código: 'asistente' (firestore.rules v3 no deja
+            // que un invitado se inscriba como admin; el titular puede subirlo después).
+            const rolPerfil = window.currentUser.esInvitado
+                ? 'asistente'
+                : (window.currentUser.rol || 'admin');
             await _fbDb.collection('empresas').doc(empresaId)
                 .collection('usuarios').doc(window.currentUser.uid).set({
                     email:    window.currentUser.email,

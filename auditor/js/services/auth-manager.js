@@ -293,6 +293,20 @@ async function _audEntrarConCodigo(codigo, authUser) {
     const titularUid = inv.titularUid;
     if (!titularUid) return { ok: false, error: 'Código no válido para esta versión.' };
 
+    // Perfil de la sesión anónima: deja constancia del código con que entró.
+    // firestore.rules v3 da acceso a los clientes del titular solo mientras ese
+    // código no esté revocado (revocarlo corta el acceso de inmediato).
+    try {
+        await _fbDb.collection('perfiles').doc(authUser.uid).set({
+            vinculadoA:   titularUid,
+            codigoAcceso: codigo,
+            anonimo:      true,
+            creadoEn:     firebase.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (e) {
+        return { ok: false, error: 'No se pudo validar el código. Intenta de nuevo.' };
+    }
+
     const tSnap = await _fbDb.collection('perfiles').doc(titularUid).get();
     if (!tSnap.exists) return { ok: false, error: 'La cuenta del titular ya no existe.' };
     const t = tSnap.data();
