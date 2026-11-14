@@ -25,7 +25,7 @@ No escribas código sin haber leído INTEGRACION_DISENO.md. No asumas el estado 
       ↓
 [ VERIFICAR ]
   node PLANIFICACION/verificar.js
-  revisión visual en browser contra new desing.html (ver INTEGRACION_DISENO.md)
+  revisión visual en browser contra PLANIFICACION/diseno/referencia-contapp-consola.html (ver INTEGRACION_DISENO.md)
       ↓
 [ ¿Coincide con el diseño? ]
   NO → arreglar y volver a verificar
@@ -44,15 +44,22 @@ No escribas código sin haber leído INTEGRACION_DISENO.md. No asumas el estado 
 
 ## Reglas obligatorias
 
-- **Mientras dure la integración de diseño, el diseño (`new desing.html`) tiene prioridad sobre
-  cualquier otra instrucción de planificación previa.** No aplican restricciones de sprints
-  antiguos ni listas de "módulos que no se tocan" — si migrar el diseño requiere tocar un módulo,
-  se toca.
+- **Referencia de diseño (desde 2026-11): `PLANIFICACION/diseno/referencia-contapp-consola.html`** — carcasa visual "ContApp Consola"
+  (artefacto aprobado por el usuario). Reemplaza a `new desing.html`, que ya no está en el repo.
+  Mientras dure el rediseño tiene prioridad sobre cualquier otra instrucción de planificación previa;
+  si migrar el diseño requiere tocar un módulo, se toca.
+- **Decisiones de diseño aprobadas (2026-11):** paleta del logo (claro: gris niebla `#DCE3E9`,
+  superficie `#EEF2F5`, tinta `#0F1B26`, acero `#8FA5B3`, magenta `#A03A63`; oscuro: navy `#131D2A`,
+  rosa neón `#FF5A8A`) con contraste AA verificado · fuentes actuales (Space Grotesk / Manrope /
+  IBM Plex Mono) · la consola **"¿Qué quieres hacer hoy?"** va **encima** del centro de mando, no
+  lo reemplaza · íconos SVG en vez de emoji.
+- **Solo capa visual:** el rediseño no cambia lógica contable; `verificar.js` y
+  `test-fase0..3.js` deben seguir pasando en cada etapa.
 - **No usar** `alert()`, `confirm()` ni `console.log()` en código nuevo
   - Notificaciones → `mostrarToast(mensaje, tipo)`
   - Confirmaciones destructivas → `mostrarConfirm(mensaje, callback)`
 - **No marcar un paso como completado** sin pasar `verificar.js` y sin confirmar visualmente en
-  browser que coincide con `new desing.html`
+  browser que coincide con `PLANIFICACION/diseno/referencia-contapp-consola.html`
 - **Si algo no coincide con el diseño**, dejarlo explícito en `INTEGRACION_DISENO.md` en vez de
   darlo por terminado
 
@@ -83,8 +90,9 @@ PLANIFICACION/ → INTEGRACION_DISENO.md (estado vivo), verificar.js
 ## Verificación — comandos exactos
 
 ```bash
-# 1. Verificación estática
+# 1. Verificación estática + pruebas de conectividad (Fases 0-3)
 node PLANIFICACION/verificar.js
+for t in 0 1 2 3; do node PLANIFICACION/test-fase$t.js; done
 
 # 2. Servidor local para revisión visual
 npx serve . -p 8080
@@ -92,16 +100,22 @@ npx serve . -p 8080
 
 > Nota: la suite de Playwright (`PLANIFICACION/tests/`) probaba la navegación anterior (sidebar
 > G1-G5) y se eliminó junto con esa arquitectura — ver `INTEGRACION_DISENO.md`. La verificación
-> mientras dure la integración de diseño es `verificar.js` + comparación visual directa contra
-> `Diseño de apps/new desing.html`.
+> mientras dure el rediseño es `verificar.js` + pruebas de fase + comparación visual contra
+> `PLANIFICACION/diseno/referencia-contapp-consola.html` y contra la línea base `PLANIFICACION/diseno/linea-base/` (capturas del antes).
 
 ---
 
 ## Diseño UI — checklist mientras dure la integración
 
-Comparar visualmente en el browser contra `Diseño de apps/new desing.html` antes de marcar un
-paso como completo — no contra una guía de estilo aparte (`DISEÑO_UI.md` se eliminó, el prototipo
-mismo es la referencia). Ver `PLANIFICACION/INTEGRACION_DISENO.md` para el detalle de qué falta.
+Comparar visualmente en el browser contra `PLANIFICACION/diseno/referencia-contapp-consola.html` antes de marcar un paso como completo — no
+contra una guía de estilo aparte (la referencia misma es la guía). Plan por etapas y estado en
+`PLANIFICACION/INTEGRACION_DISENO.md` (sección "Rediseño 2026-11"); hallazgos de la auditoría
+inicial en `PLANIFICACION/diseno/LINEA_BASE_DISENO.md`.
+
+Skills de diseño instaladas en el entorno (script de configuración): `frontend-design` (dirección
+visual), `ui-ux-pro-max` (contraste, accesibilidad, patrones), `web-design-guidelines` (revisión de
+reglas de interfaz), `emil-design-eng` / `review-animations` (interacción y movimiento),
+`mobile-native` (uso en celular).
 
 ---
 

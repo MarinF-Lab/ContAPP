@@ -1,5 +1,11 @@
 # Integración de Diseño — ContApp Auditor
 
+> ## ⚠️ Rediseño 2026-11 — nueva referencia
+> Desde 2026-11 la referencia visual es **`PLANIFICACION/diseno/referencia-contapp-consola.html`** (carcasa "ContApp Consola", paleta del logo).
+> `Diseño de apps/new desing.html` ya no está en el repo y deja de ser la referencia. El historial de
+> abajo documenta la integración anterior (navy/coral/periwinkle) y sigue siendo válido como registro.
+> Estado del rediseño: sección **"Rediseño 2026-11"** al final de este documento.
+
 > **Objetivo:** que la app termine **visual y funcionalmente igual** al prototipo
 > `Diseño de apps/new desing.html`, con **todas las funciones del prototipo migradas y
 > funcionando sobre datos reales** (no placeholders ni datos de ejemplo).
@@ -1252,3 +1258,28 @@ seedeado (UTM 11/2024 $66.628, 12/2024 $67.294) → reajuste $8.557, detalle "UT
 UTM 12/2024: $67.294 (factor 1.0100)"; confirmado también end-to-end vía `generarIvaResumen()`
 (Remanente reajustado $864.592). `node PLANIFICACION/verificar.js` → 20/20 ✅. Sin errores de
 consola nuevos. Datos de prueba revertidos al finalizar. Sin commitear.
+
+
+---
+
+## Rediseño 2026-11 — carcasa "ContApp Consola" (paleta del logo)
+
+> Referencia: `PLANIFICACION/diseno/referencia-contapp-consola.html` · Línea base y auditoría: `PLANIFICACION/diseno/LINEA_BASE_DISENO.md`
+> Decisiones aprobadas: artefacto como referencia · paleta del logo (opción a) · fuentes actuales
+> (opción a) · la consola "¿Qué quieres hacer hoy?" va encima del centro de mando (no lo reemplaza).
+
+| Etapa | Qué incluye | Estado |
+|-------|-------------|--------|
+| 0 | Referencia en el repo, auditoría (`web-design-guidelines`, `ui-ux-pro-max`), capturas de línea base claro/oscuro, inventario de colores fijos | ✅ 2026-11-14 |
+| 1 | Paleta del logo y tipografía en `css/variables.css` (ambos temas, contraste AA), logos en login y cabecera, `color-scheme` y `prefers-color-scheme` | 🔲 |
+| 2 | Reemplazar colores fijos de JS/estilos en línea por variables (prioridad: Documentos, Cartolas, cierre, tablas, insignias) | 🔲 |
+| 3 | Pantallas: login, Mis clientes (avance de cierre por tarjeta), Inicio con "¿Qué quieres hacer hoy?" sobre el centro de mando | 🔲 |
+| 4 | Componentes comunes: botones, tarjetas, tablas, formularios, modales, pestañas (incluye decisión `.plan-tab`/`.rem-tab`) | 🔲 |
+| 5 | Movimiento y móvil (`emil-design-eng`, `review-animations`, `mobile-native`), `prefers-reduced-motion` | 🔲 |
+| 6 | Revisión final: capturas antes/después, `verificar.js`, pruebas de fase, `web-design-guidelines` | 🔲 |
+
+### Pendientes / próximo paso
+1. **Etapa 1** — tokens de la paleta del logo en `css/variables.css` (ver tabla de contraste en
+   `LINEA_BASE_DISENO.md`: el coral actual no cumple AA en tema claro).
+2. Corregir el centro de mando vacío cuando Firebase no carga (hallazgo H1 de la línea base) —
+   es funcional, no visual; propuesto como cambio aparte.
