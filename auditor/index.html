@@ -68,6 +68,10 @@
                     <button class="hcs-all" onclick="cambiarEmpresa()">🏢 Ver todos mis clientes</button>
                 </div>
             </div>
+            <!-- Fase 3: avance de cierre del mes (abre el checklist) -->
+            <span class="hg-sep" id="homeCierreSep" style="display:none;">·</span>
+            <span class="hg-sub" id="homeCierre" style="display:none;cursor:pointer;" onclick="cierreAbrirChecklist()"
+                  title="Ver el checklist de cierre del mes"></span>
         </div>
         <div class="home-actions">
             <button class="icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema claro/oscuro">
@@ -102,6 +106,10 @@
             <!-- Contexto real (empresa/ejercicio/período) -->
             <div class="field"><label>Empresa</label><div class="val" id="fieldEmpresa">—</div></div>
             <div class="field"><label>Ejercicio</label><div class="val" id="fieldEjercicio">—</div></div>
+            <!-- Fase 3: avance de cierre del mes de trabajo; abre el checklist -->
+            <div class="field" id="fieldCierreBox" style="cursor:pointer;display:none;" onclick="cierreAbrirChecklist()" title="Ver el checklist de cierre del mes">
+                <label>Cierre</label><div class="val" id="fieldCierre">—</div>
+            </div>
 
             <div class="float-search" onclick="busquedaGlobalAbrir()" title="Búsqueda global (Ctrl+K)">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-3.6-3.6"/></svg>
@@ -189,6 +197,9 @@
                  kluster-rediseno.html, Sección 2): 2 columnas, KPIs con delta,
                  gráfico + resumen de actividad a la izquierda, indicadores +
                  donuts a la derecha. -->
+            <!-- Fase 3: checklist de cierre del mes (ver js/core/cierre.js) -->
+            <div id="cierreCard"></div>
+
             <div id="dash-charts-area" class="s2-grid">
                 <div class="s2-col">
                     <div class="kpi-grid-compacta">
@@ -440,6 +451,7 @@
                 <div style="display:flex;gap:8px;">
                     <button class="btn-plan btn-plan-relacionadas" onclick="mayorFiltrarCuentasIntervinientes()">🔗 Relacionadas</button>
                     <button class="btn-plan btn-plan-editar" onclick="mayorEditarAsiento()">✏️ Editar</button>
+                    <button class="btn-plan btn-plan-relacionadas" onclick="mayorVerOrigen()" title="Abrir el documento que generó este asiento">📄 Origen</button>
                 </div>
             </div>
             </div><!-- /tab-mayor -->
@@ -3083,15 +3095,15 @@
 <script src="js/core/autocomplete.js?v=2"></script>
 <script src="js/core/helpers.js?v=1"></script>
 <script src="js/core/periodo.js?v=1"></script>
-<script src="js/core/datos-cliente.js?v=2"></script>
+<script src="js/core/datos-cliente.js?v=3"></script>
 <script src="js/core/asientos.js?v=1"></script>
 <script src="js/core/parser.js?v=1"></script>
 <script src="js/core/parser-sii.js?v=1"></script>
 <script src="js/core/plan-cuentas.js?v=5"></script>
 <script src="js/core/contabilidad.js?v=4"></script>
 
-<script src="js/services/diario.js?v=34"></script>
-<script src="js/services/mayor.js?v=10"></script>
+<script src="js/services/diario.js?v=35"></script>
+<script src="js/services/mayor.js?v=11"></script>
 <script src="js/services/balance.js?v=6"></script>
 <script src="js/services/dashboard.js?v=6"></script>
 <script src="js/services/flujo-caja.js?v=3"></script>
@@ -3100,12 +3112,12 @@
 <script src="js/services/indicadores.js?v=5"></script>
 <script src="js/services/previred-scraper.js?v=2"></script>
 <script src="js/services/iva-resumen.js?v=12"></script>
-<script src="js/services/reconciliacion.js?v=5"></script>
+<script src="js/services/reconciliacion.js?v=6"></script>
 <script src="js/services/sii-rcv.js?v=1"></script>
 
-<script src="js/modules/compras.js?v=4"></script>
-<script src="js/modules/ventas.js?v=4"></script>
-<script src="js/modules/documentos.js?v=5"></script>
+<script src="js/modules/compras.js?v=5"></script>
+<script src="js/modules/ventas.js?v=5"></script>
+<script src="js/modules/documentos.js?v=6"></script>
 <script src="js/modules/clientes.js?v=3"></script>
 <script src="js/modules/productos.js?v=4"></script>
 <script src="js/modules/centros-costo.js?v=2"></script>
@@ -3116,6 +3128,7 @@
 <script src="js/modules/remuneraciones.js?v=5"></script>
 <script src="js/modules/segunda-categoria.js?v=5"></script>
 <script src="js/core/conexiones.js?v=2"></script>
+<script src="js/core/cierre.js?v=3"></script>
 
 <script src="js/services/app.js?v=11"></script>
 
@@ -3192,7 +3205,7 @@
 <script src="js/services/auth-manager.js?v=1"></script>
 <script src="js/services/exportar.js?v=9"></script>
 <script src="js/services/ia.js?v=3"></script>
-<script src="js/services/firebase-service.js?v=7"></script>
+<script src="js/services/firebase-service.js?v=8"></script>
 <script>
     // Firebase siempre activo — config hardcodeada en firebase-service.js
     fbInit();
@@ -3242,7 +3255,7 @@
 <script src="js/services/menu.js?v=6"></script>
 <script src="js/services/home-hub.js?v=2"></script>
 <script src="js/auditor/multi-cliente.js?v=1"></script>
-<script src="js/auditor/panel-estudio.js?v=1"></script>
+<script src="js/auditor/panel-estudio.js?v=2"></script>
 
 <!-- Registro del Service Worker (PWA) -->
 <script>

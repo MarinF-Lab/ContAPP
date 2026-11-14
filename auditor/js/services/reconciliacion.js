@@ -834,7 +834,30 @@ function _recParseNum(val) {
 
 window.renderReconciliacion       = renderReconciliacion;
 window.recImportarDesdeCartolas   = recImportarDesdeCartolas;
+// ── Estado de la conciliación de un período (Fase 3: checklist de cierre) ──
+// La conciliación trabaja un período a la vez; cuando el período pedido es el
+// cargado se calcula y se guarda en _recState.historial, para que el checklist
+// lo siga viendo después de pasar a otro mes.
+function recEstadoPeriodo(p) {
+    if (!_recState.periodo) _recCargar();
+    const txs = _recState.transacciones || [];
+    if (_recState.periodo === p && txs.length) {
+        const saldoLibros = _recSaldoLibros(_recAsientosDelPeriodo());
+        const diferencia  = _recState.saldoExtracto != null ? _recState.saldoExtracto - saldoLibros : null;
+        const pendientes  = txs.filter(t => (_recState.conciliados || {})[t._id] == null).length;
+        const r = { diferencia, pendientes, transacciones: txs.length };
+        const previo = (_recState.historial || {})[p];
+        if (!previo || previo.diferencia !== r.diferencia || previo.pendientes !== r.pendientes || previo.transacciones !== r.transacciones) {
+            _recState.historial = { ...(_recState.historial || {}), [p]: { ...r, fecha: Date.now() } };
+            _recGuardar();
+        }
+        return r;
+    }
+    return (_recState.historial || {})[p] || null;
+}
+
 window.recCargarDesdeFirebase  = recCargarDesdeFirebase;
+window.recEstadoPeriodo        = recEstadoPeriodo;
 window.recOnDrop               = recOnDrop;
 window.recOnFile               = recOnFile;
 window.recAplicarMapeoManual   = recAplicarMapeoManual;

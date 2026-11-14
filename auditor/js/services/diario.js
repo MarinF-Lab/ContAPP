@@ -1048,6 +1048,9 @@ function _persistirAsientoDiario(asiento) {
 
     }
 
+    // Fase 3: si el mes está cerrado, avisar (no bloquea)
+    if (typeof cierreAvisarSiCerrado === 'function') cierreAvisarSiCerrado(asiento.fecha, 'Libro Diario');
+
     localStorage.setItem(
         "core_asientos",
         JSON.stringify(dbAsientos)
@@ -1501,6 +1504,7 @@ function renderHistorialDiario() {
                 <button class="btn btn-primary" onclick="editarAsiento(${as.id})">✏️ Editar</button>
                 ${as._calcOrigen ? `<button class="btn btn-secondary" onclick="editarAsientoManual(${as.id})" title="Editar las líneas cuenta/debe/haber directamente">✏️ Líneas manual</button>` : ''}
                 <button class="btn btn-secondary" onclick="anularAsiento(${as.id})">🚫 Anular</button>
+                ${as.origen ? `<button class="btn btn-secondary" onclick="cierreIrAOrigen(${as.id})" title="Abrir el documento que generó este asiento">📄 Ver origen</button>` : ''}
             </div>` : `
             <div style="padding:8px 12px;display:flex;gap:8px;border-bottom:1px solid var(--border);">
                 <button class="btn btn-danger" onclick="eliminarAsiento(${as.id})">🗑 Eliminar</button>
@@ -1866,6 +1870,7 @@ function _persistirAsientoManual(asiento) {
         dbAsientos.push(asiento);
     }
     localStorage.setItem('core_asientos', JSON.stringify(dbAsientos));
+    if (typeof cierreAvisarSiCerrado === 'function') cierreAvisarSiCerrado(asiento.fecha, 'Libro Diario');
 
     // Limpia también el estado de edición de la página principal — si venía
     // de editarAsiento(), esa vista quedó con la glosa/tabla del asiento
