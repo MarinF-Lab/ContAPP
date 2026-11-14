@@ -2,7 +2,7 @@
 
 > Pedido explícito del usuario: "examen funcional e integral de todo el programa" — encontrar
 > apartados visuales sin funciones definidas o mal ejecutadas, y corregirlos. A diferencia de
-> `INTEGRACION_DISENO.md` (que documenta la migración visual al prototipo `new desing.html`), este
+> `HISTORIAL_INTEGRACION_2026-07_a_09.md` (que documenta la migración visual al prototipo `new desing.html`), este
 > documento cubre **bugs funcionales reales** encontrados en el código ya existente, sin relación
 > con el diseño.
 
@@ -154,7 +154,7 @@ versión que se edite en el futuro debe subir el número, o el cambio no se ver�
 
 ## Hallazgos de menor prioridad, no corregidos (informativo)
 
-- **Panel de notificaciones decorativo** — ya documentado en `INTEGRACION_DISENO.md`, es diseño
+- **Panel de notificaciones decorativo** — ya documentado en `HISTORIAL_INTEGRACION_2026-07_a_09.md`, es diseño
   intencional del prototipo, no un bug.
 - **Descarga automática SII RCV requiere proxy externo** — no es un bug, es una limitación real
   (el SII no tiene CORS) que ya está comunicada en el código con un mensaje de error claro.

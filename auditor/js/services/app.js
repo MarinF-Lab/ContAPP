@@ -152,7 +152,7 @@ function navegar(modulo, elNav) {
         'centros-costo':       ['inventario-activos', 'tab-inv-centros'],
         'bodegas':             ['inventario-activos', 'tab-inv-bodegas'],
         'movimientos-inventario': ['inventario-activos', 'tab-inv-movimientos'],
-        // Alias — módulos fusionados en inventario-activos (ver PLANIFICACION/INTEGRACION_DISENO.md)
+        // Alias — módulos fusionados en inventario-activos (ver PLANIFICACION/archivo/HISTORIAL_INTEGRACION_2026-07_a_09.md)
         'activos-produccion':  ['inventario-activos', 'tab-ap-activos'],
         'inventario':          ['inventario-activos', 'tab-inv-centros'],
         // Segunda categoría

@@ -6,7 +6,7 @@
 
 // Grupos restaurados a la división histórica G1-G5 (previa a la consolidación
 // a 3 grupos de la integración de diseño — ver git 67061db "rediseño de
-// arquitectura de módulos", y PLANIFICACION/INTEGRACION_DISENO.md sección
+// arquitectura de módulos", y PLANIFICACION/archivo/HISTORIAL_INTEGRACION_2026-07_a_09.md sección
 // "Decisión de arquitectura: 3 grupos de módulos, no 5"). El G5 original
 // también incluía "Auditoría (Informe/Hallazgos)" — ese módulo ya no existe
 // en el catálogo (no hay vista ni navegación asociada), así que Empresa
