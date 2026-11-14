@@ -145,7 +145,13 @@ function fbInit() {
         return true;
     } catch(e) {
         console.error('Firebase init error:', e);
-        _fbEntrarModoOffline();
+        // Mismo caso que LOGIN_DESACTIVADO_TEMPORAL: fbInit() corre antes de que
+        // menu.js/categorias existan; sin diferir, Inicio queda sin grupos.
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', _fbEntrarModoOffline);
+        } else {
+            _fbEntrarModoOffline();
+        }
         return false;
     }
 }

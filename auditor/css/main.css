@@ -313,7 +313,7 @@ body {
     font-family: inherit;
     background: var(--card);
     color: var(--text);
-    transition: all 0.2s;
+    transition: color 0.2s, background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
 .glosa-input:focus {
@@ -522,13 +522,28 @@ body {
 }
 
 .cuenta-t-titulo {
-    background: var(--accent);
-    color: #fff;
+    /* Antes: bloque coral sólido con texto blanco (contraste 2,3:1 y mucho peso
+       visual). Ahora: título en tinta con filete de acento a la izquierda. */
+    background: var(--table-stripe);
+    color: var(--text);
+    border-bottom: 1px solid var(--divider);
+    box-shadow: inset 3px 0 0 var(--accent);
     padding: 12px 20px;
+    font-family: var(--font-heading);
     font-weight: 600;
     font-size: 15px;
     display: flex;
     justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+.cuenta-t-titulo .cuenta-t-tipo {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: .02em;
+    white-space: nowrap;
 }
 
 /* ══════════════════════════════════════════
@@ -832,9 +847,18 @@ body {
     background: rgba(0,0,0,.45);
     display: none;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     z-index: 9999;
+    /* Formularios más altos que la pantalla: el fondo desplaza y la caja no se
+       corta arriba (antes, centrada sin scroll, el título quedaba inalcanzable). */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 24px 16px;
 }
+
+/* margin:auto centra la caja (cualquier clase: .modal-box, .ctc-modal…) y,
+   si es más alta que la pantalla, la deja empezar arriba sin cortarse */
+.modal-overlay > * { margin: auto; }
 
 .modal-box {
     background: var(--card);
@@ -980,7 +1004,7 @@ body {
     border: 1px dashed var(--card-border);
     border-radius: var(--radius-s, 8px);
     cursor: pointer;
-    transition: all .2s;
+    transition: color .2s, background-color .2s, border-color .2s, box-shadow .2s;
     letter-spacing: .02em;
 }
 
@@ -1499,7 +1523,7 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: all .15s;
+    transition: color .15s, background-color .15s, border-color .15s, box-shadow .15s;
 }
 
 .ctc-tab:hover {
@@ -1542,7 +1566,7 @@ body {
     cursor: pointer;
     border-bottom: 3px solid transparent;
     margin-bottom: -2px;
-    transition: all .15s;
+    transition: color .15s, background-color .15s, border-color .15s, box-shadow .15s;
 }
 
 .tab-detalle-btn:hover { color: var(--text); }
@@ -2282,7 +2306,7 @@ body {
     font-weight: 600;
     color: var(--ink-soft);
     cursor: pointer;
-    transition: all .15s;
+    transition: color .15s, background-color .15s, border-color .15s, box-shadow .15s;
     font-family: inherit;
 }
 .login-tab-active {
@@ -2856,7 +2880,7 @@ input::placeholder, textarea::placeholder { color: var(--text-subtle); }
 input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(255,134,146,.1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 /* ══════════════════════════════════════════
@@ -4221,3 +4245,196 @@ body[data-imprimiendo] .ia-chat-panel { display: none !important; }
     #app-topbar .field { display: none; }
     .float-search { min-width: 0; flex: 1; }
 }
+
+
+/* ══════════════════════════════════════════
+   CARTOLAS — botones, estados y panel de clasificación
+   (antes sin estilos: se veían como botones nativos del navegador)
+══════════════════════════════════════════ */
+.celda-acciones { white-space: nowrap; text-align: right; }
+.celda-acciones .btn-accion + .btn-accion { margin-left: 6px; }
+.btn-accion,
+.btn-cl-aplicar,
+.btn-cl-cancelar {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 7px 12px;
+    border-radius: var(--radius-s, 8px);
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    transition: color .15s, background-color .15s, border-color .15s;
+}
+.btn-accion:hover,
+.btn-cl-cancelar:hover { background: var(--table-stripe); border-color: var(--text-subtle); }
+.btn-clasificar,
+.btn-cl-aplicar { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-clasificar:hover,
+.btn-cl-aplicar:hover { background: var(--primary-hover, var(--accent)); border-color: var(--primary-hover, var(--accent)); color: #fff; }
+.btn-ignorar { color: var(--text-muted); }
+.btn-eliminar { padding: 7px 10px; color: var(--text-muted); }
+.btn-eliminar:hover { color: var(--negative); border-color: var(--negative); background: var(--negative-soft); }
+.btn-accion:active, .btn-cl-aplicar:active, .btn-cl-cancelar:active { transform: scale(.97); }
+.btn-generar-asientos { margin-left: auto; align-self: flex-end; }
+
+.badge-estado {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.badge-pendiente   { background: var(--warning-soft);  color: var(--text); }
+.badge-clasificado { background: var(--positive-soft); color: var(--text); }
+.badge-ignorado    { background: var(--table-stripe);  color: var(--text-muted); }
+.fila-estado-ignorado td { color: var(--text-muted); }
+.celda-monto { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cartola-tabla td.sin-datos { text-align: center; color: var(--text-muted); padding: 28px 12px; }
+.aviso-xlsx { color: var(--text-muted); font-size: 13px; }
+
+.cartola-panel-inline > td { background: var(--table-stripe); padding: 0 !important; }
+.cartola-panel-cuerpo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 14px 18px;
+    border-left: 3px solid var(--accent);
+    font-size: 13px;
+    animation: cm-caja-in .18s cubic-bezier(.2,.8,.2,1);
+}
+.cartola-panel-cuerpo label { font-weight: 600; color: var(--text-muted); }
+.cartola-panel-cuerpo select { min-width: 220px; padding: 7px 10px; }
+
+/* ══════════════════════════════════════════
+   GESTOR DE MODALES (js/core/modales.js)
+   Entrada/salida suaves, apilamiento y scroll del fondo.
+══════════════════════════════════════════ */
+.modal-confirm {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 99998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.modal-confirm-box {
+    background: var(--card);
+    color: var(--text);
+    border-radius: var(--radius-m, 14px);
+    padding: 26px 28px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+}
+.modal-confirm-box h3 { margin: 0 0 10px; font-size: 17px; font-family: var(--font-heading); }
+.modal-confirm-box p  { margin: 0 0 22px; color: var(--text-muted); font-size: 14px; line-height: 1.55; }
+.modal-confirm-acciones { display: flex; gap: 10px; justify-content: flex-end; }
+
+
+.modal-overlay, .modal-confirm, #modalDocumento, #rem-modal, #sii-rcv-modal, [data-modal] {
+    animation: cm-fondo-in .16s ease-out;
+}
+.modal-overlay > *, .modal-confirm > *, #modalDocumento > *, #rem-modal > *, #sii-rcv-modal > *, [data-modal] > * {
+    animation: cm-caja-in .2s cubic-bezier(.2,.8,.2,1);
+    transform-origin: 50% 40%;
+}
+.cm-estable > * { animation: none !important; }
+#activo-drawer-overlay > :first-child,
+#prod-drawer-overlay > :first-child { animation: cm-fondo-in .2s ease-out; }
+
+.cm-saliendo { animation: cm-fondo-out .12s ease-in forwards !important; pointer-events: none; }
+.cm-saliendo > * { animation: cm-caja-out .12s ease-in forwards !important; }
+
+@keyframes cm-fondo-in  { from { opacity: 0; } }
+@keyframes cm-fondo-out { to   { opacity: 0; } }
+@keyframes cm-caja-in   { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+@keyframes cm-caja-out  { to   { opacity: 0; transform: scale(.98); } }
+
+/* Scroll del fondo bloqueado mientras hay un modal (sin salto: se reserva el
+   ancho de la barra de desplazamiento). */
+html.cm-sin-scroll { overflow: hidden; }
+html.cm-sin-scroll body { padding-right: var(--cm-barra, 0px); }
+html.cm-sin-scroll .view-container { overscroll-behavior: contain; }
+
+/* ══════════════════════════════════════════
+   AVISOS (toast) — tokens del tema, entrada corta, anunciados por lectores
+══════════════════════════════════════════ */
+#toast-global {
+    /* Abajo al centro: no tapa el botón flotante de la IA (abajo a la derecha) */
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    translate: -50% 0;
+    z-index: 99999;
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 13px 18px;
+    border-radius: var(--radius-s, 10px);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-left: 4px solid var(--positive);
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity .18s ease-out, transform .18s ease-out;
+}
+#toast-global.visible { opacity: 1; transform: none; pointer-events: auto; }
+#toast-global.t-error { border-left-color: var(--negative); background: var(--negative-soft); }
+#toast-global.t-warn  { border-left-color: var(--warning);  background: var(--warning-soft); }
+#toast-global.t-info  { border-left-color: var(--info); }
+@media (max-width: 600px) {
+    #toast-global { left: 16px; right: 16px; bottom: 16px; max-width: none; translate: none; }
+}
+
+/* ══════════════════════════════════════════
+   FOCO VISIBLE — anillo al navegar con teclado (no al hacer clic)
+══════════════════════════════════════════ */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
+[role="button"], [onclick]:not(button):not(a):not(input):not(select) { cursor: pointer; }
+
+.skip-link {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 100000;
+    padding: 10px 16px;
+    border-radius: var(--radius-s, 8px);
+    background: var(--card);
+    color: var(--text);
+    font-weight: 700;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-160%);
+    transition: transform .15s;
+}
+.skip-link:focus { transform: none; }
+
+/* ══════════════════════════════════════════
+   MOVIMIENTO REDUCIDO — respeta la preferencia del sistema
+══════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+    *:not([class*="spin"]):not([class*="spin"] *), ::before, ::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+    .modal-overlay > *, .modal-confirm > *, #modalDocumento > *, #rem-modal > *,
+    #sii-rcv-modal > *, [data-modal] > * { animation-name: cm-fondo-in; }
+}
+
+#contenido-principal:focus { outline: none; }

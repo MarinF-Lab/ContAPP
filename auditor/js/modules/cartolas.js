@@ -710,6 +710,7 @@ function _renderTablaCartola() {
         btnDel.className = 'btn-accion btn-eliminar';
         btnDel.textContent = '✕';
         btnDel.title = 'Eliminar movimiento';
+        btnDel.setAttribute('aria-label', 'Eliminar movimiento');
         btnDel.dataset.id = mv.id;
         btnDel.addEventListener('click', function () {
             mostrarConfirm('¿Eliminar este movimiento?', () => {
@@ -839,7 +840,7 @@ function renderCartolas() {
                 '</label>' +
                 '<div id="dropzone-cartola" class="dropzone-cartola">' +
                     '<span>Arrastra aquí el archivo CSV' + (xlsxDisponible ? ' / XLSX' : '') + '</span>' +
-                    '<button id="btn-seleccionar-cartola" type="button">Seleccionar archivo</button>' +
+                    '<button id="btn-seleccionar-cartola" type="button" class="btn btn-secondary">Seleccionar archivo</button>' +
                     '<input type="file" id="input-file-cartola" accept=".csv,.xlsx,.xls" style="display:none">' +
                 '</div>' +
             '</div>' +
@@ -868,7 +869,7 @@ function renderCartolas() {
                     '<option value="ignorado">Ignorado</option>' +
                 '</select>' +
             '</label>' +
-            '<button id="btn-generar-asientos-cartola" class="btn-generar-asientos">Generar asientos</button>' +
+            '<button type="button" id="btn-generar-asientos-cartola" class="btn btn-primary btn-generar-asientos">Generar asientos</button>' +
         '</div>' +
 
         // ── Tabla ──

@@ -1278,8 +1278,30 @@ consola nuevos. Datos de prueba revertidos al finalizar. Sin commitear.
 | 5 | Movimiento y móvil (`emil-design-eng`, `review-animations`, `mobile-native`), `prefers-reduced-motion` | 🔲 |
 | 6 | Revisión final: capturas antes/después, `verificar.js`, pruebas de fase, `web-design-guidelines` | 🔲 |
 
+### Correcciones previas a la Etapa 1 — ✅ 2026-11-14
+Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar lógica contable:
+- **H1** Inicio vacío sin conexión → `fbInit()` difiere el modo sin conexión a `DOMContentLoaded`.
+- **H3** Tema: sigue a `prefers-color-scheme` mientras el usuario no elija; `color-scheme` y
+  `<meta theme-color>` acordes al tema.
+- **Modales** (`js/core/modales.js`, nuevo): gestor global que observa todos los modales sin cambiar
+  cómo se abren — entrada/salida suaves (160-200 ms, solo fundido con movimiento reducido), Escape
+  cierra el de arriba usando su botón Cancelar/Cerrar, foco al primer campo, Tab atrapado, foco
+  devuelto, scroll del fondo bloqueado sin salto, apilamiento (confirmación sobre formulario).
+  Los formularios altos ahora se desplazan (antes el título quedaba cortado). El formulario de
+  trabajador ya no se cierra con un clic fuera ni repite la animación al cambiar de sección.
+- **Avisos**: `mostrarToast` usa tokens del tema, `aria-live`, abajo al centro (no tapa el botón
+  de la IA). Arreglado: los avisos `info` se veían rojos como errores.
+- **Teclado/accesibilidad**: controles con `onclick` operables con Enter/Espacio (role/tabindex),
+  `aria-label` en botones de ícono, `:focus-visible`, enlace "Saltar al contenido", `autocomplete`
+  en correo/contraseña, `alt`/tamaño en img, "…", sin `transition: all`, `prefers-reduced-motion`,
+  fuentes por `<link>` (no `@import`).
+- **H6** Botones de Cartolas con estilo de la app (antes nativos); cabeceras del Libro Mayor sin
+  bloque coral sólido.
+- Prueba en navegador: `node PLANIFICACION/diseno/probar-interaccion.js` (23 comprobaciones,
+  capturas en `PLANIFICACION/diseno/correcciones/`).
+
 ### Pendientes / próximo paso
 1. **Etapa 1** — tokens de la paleta del logo en `css/variables.css` (ver tabla de contraste en
-   `LINEA_BASE_DISENO.md`: el coral actual no cumple AA en tema claro).
-2. Corregir el centro de mando vacío cuando Firebase no carga (hallazgo H1 de la línea base) —
-   es funcional, no visual; propuesto como cambio aparte.
+   `LINEA_BASE_DISENO.md`: el coral actual no cumple AA en tema claro — H2).
+2. Campos sin etiqueta asociada (~115, H5) y emoji como íconos (H4/H6): se resuelven al rediseñar
+   cada pantalla (Etapas 3-4).

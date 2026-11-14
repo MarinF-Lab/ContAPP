@@ -331,7 +331,7 @@ function siiAbrirRCV() {
     </div>`;
 
     document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    modal.addEventListener('click', e => { if (e.target === modal) (window.modalQuitar || (m => m.remove()))(modal); });
 }
 
 async function siiEjecutarDescargaRCV() {

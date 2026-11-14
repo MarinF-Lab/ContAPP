@@ -7,7 +7,7 @@
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e3a8a">
+    <meta name="theme-color" content="#F4F6FB">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 
     <!-- Adaptador web: define window.electronAPI antes que el resto de scripts -->
@@ -30,25 +30,32 @@
         window.pdfjsLib = pdfjsLib;
     </script>
 
-    <link rel="stylesheet" href="css/variables.css?v=1">
-    <link rel="stylesheet" href="css/main.css?v=14">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="css/variables.css?v=2">
+    <link rel="stylesheet" href="css/main.css?v=15">
     <link rel="stylesheet" href="css/home-hub.css?v=2">
     <link rel="stylesheet" href="css/remuneraciones.css?v=1">
     <link rel="stylesheet" href="css/auditor.css?v=2">
     <script>
         // Restaurar tema guardado antes de que el DOM pinte (evita flash)
         (function() {
-            var t = localStorage.getItem('appTheme') || 'light';
+            var t = null;
+            try { t = localStorage.getItem('appTheme'); } catch (e) {}
+            if (!t) t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', t);
+            document.documentElement.style.colorScheme = t;
         })();
     </script>
 </head>
 <body>
+<a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
 
 <!-- ═══════════════════════════════════════════════════════
      CONTENIDO PRINCIPAL
 ════════════════════════════════════════════════════════ -->
-<main class="main-content">
+<main class="main-content" id="contenido-principal" tabindex="-1">
 
     <!-- Header exclusivo de la pantalla Inicio (marca, saludo, acciones) — oculto en cualquier otro módulo -->
     <div id="home-header" class="home-header" style="display:none;">
@@ -59,7 +66,7 @@
         <div class="home-greet">
             <span class="hg-strong">Bienvenido de nuevo</span>
             <span class="hg-sep">·</span>
-            <div class="home-client-switch" id="homeClientSwitch" onclick="toggleHomeClientSwitch(event)">
+            <div class="home-client-switch" id="homeClientSwitch" onclick="toggleHomeClientSwitch(event)" aria-haspopup="true" aria-label="Cambiar de cliente">
                 <span class="hg-sub" id="homeGreetEmpresa">Mi Empresa Ltda.</span>
                 <span class="hcs-car">▾</span>
                 <div class="hcs-panel" id="homeClientPanel" onclick="event.stopPropagation()">
@@ -96,7 +103,7 @@
                 <svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v9h5v-5h2v5h5v-9"/></svg>
                 Inicio
             </button>
-            <div class="module-switch" id="moduleSwitch" onclick="toggleModulePanel(event)">
+            <div class="module-switch" id="moduleSwitch" onclick="toggleModulePanel(event)" aria-haspopup="true" aria-label="Cambiar de módulo">
                 <span class="ms-ic" id="msIcon">📁</span>
                 <span id="msLabel">Módulo</span>
                 <span class="ms-car">▾</span>
@@ -111,7 +118,7 @@
                 <label>Cierre</label><div class="val" id="fieldCierre">—</div>
             </div>
 
-            <div class="float-search" onclick="busquedaGlobalAbrir()" title="Búsqueda global (Ctrl+K)">
+            <div class="float-search" onclick="busquedaGlobalAbrir()" title="Búsqueda global (Ctrl+K)" aria-label="Buscar en todo el sistema (Ctrl+K)">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-3.6-3.6"/></svg>
                 Buscar en todo el sistema…
                 <kbd>Ctrl K</kbd>
@@ -263,9 +270,9 @@
 
          </div><!-- /inViewport -->
          <div class="in-rail" id="inRail">
-            <div class="in-dot activo" onclick="irASeccion(0)" title="Centro de mando">🧭</div>
-            <div class="in-dot" onclick="irASeccion(1)" title="Financiero y actividad">📊</div>
-            <div class="in-dot" onclick="irASeccion(2)" title="Configuración">⚙️</div>
+            <div class="in-dot activo" onclick="irASeccion(0)" title="Centro de mando" aria-label="Centro de mando">🧭</div>
+            <div class="in-dot" onclick="irASeccion(1)" title="Financiero y actividad" aria-label="Financiero y actividad">📊</div>
+            <div class="in-dot" onclick="irASeccion(2)" title="Configuración" aria-label="Configuración">⚙️</div>
          </div>
         </div><!-- /view-inicio -->
 
@@ -525,7 +532,7 @@
                     <h2>⚙️ Plan de Cuentas</h2>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                         <input type="text" id="busquedaPlanInput"
-                            placeholder="🔍  Buscar cuenta o código..."
+                            placeholder="🔍  Buscar cuenta o código…"
                             oninput="busquedaPlan=this.value; renderPlanCuentas()"
                             style="padding:9px 14px;border:1px solid var(--border);border-radius:8px;
                                    font-size:14px;width:260px;max-width:100%;">
@@ -1014,7 +1021,7 @@
                     <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;">
                         <div>
                             <label class="ctc-label">Correo del invitado</label>
-                            <input id="invEmail" class="ctc-input" type="email" placeholder="colaborador@empresa.cl">
+                            <input id="invEmail" class="ctc-input" type="email" autocomplete="off" spellcheck="false" placeholder="colaborador@empresa.cl">
                         </div>
                         <div>
                             <label class="ctc-label">Rol</label>
@@ -1069,7 +1076,7 @@
                 </p>
                 <div id="iaKeyEstado" style="font-size:13px;margin-bottom:14px;color:var(--text-muted);">Verificando…</div>
                 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                    <input type="password" id="iaApiKeyInput" placeholder="AIza…"
+                    <input type="password" id="iaApiKeyInput" autocomplete="off" spellcheck="false" placeholder="AIza…"
                         style="flex:1;min-width:260px;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--input-bg);color:var(--text);">
                     <button class="btn btn-primary" onclick="iaGuardarApiKey()">💾 Guardar Key</button>
                     <button class="btn btn-secondary" onclick="iaBorrarApiKey()">🗑 Eliminar</button>
@@ -1418,7 +1425,7 @@
                     <div class="card pv-card">
                         <div class="pv-card-header">
                             <div style="display:flex;align-items:center;gap:10px;">
-                                <img src="https://www.previred.com/favicon.ico" class="pv-logo" onerror="this.style.display='none'">
+                                <img src="https://www.previred.com/favicon.ico" class="pv-logo" alt="" width="16" height="16" onerror="this.style.display='none'">
                                 <div>
                                     <div style="font-weight:700;font-size:15px;line-height:1.2;">Configuración Previred
                                         <span id="previredBadge" style="display:none;" class="pv-badge pv-badge--ok">Conectado</span>
@@ -2116,7 +2123,7 @@
                 <div style="display:grid;grid-template-columns:1fr 2fr 2fr auto;gap:10px;align-items:end;">
                     <div><label class="ctc-label">RUT</label><input id="prestRut" class="ctc-input" type="text" placeholder="12.345.678-9" oninput="fmtRut(this)"></div>
                     <div><label class="ctc-label">Nombre</label><input id="prestNombre" class="ctc-input" type="text" placeholder="Nombre completo"></div>
-                    <div><label class="ctc-label">Correo (opcional)</label><input id="prestCorreo" class="ctc-input" type="email" placeholder="correo@ejemplo.cl"></div>
+                    <div><label class="ctc-label">Correo (opcional)</label><input id="prestCorreo" class="ctc-input" type="email" autocomplete="off" spellcheck="false" placeholder="correo@ejemplo.cl"></div>
                     <button class="btn btn-primary" onclick="honAgregarPrestador()">Agregar</button>
                 </div>
                 <p style="font-size:12px;color:var(--text-muted);margin-top:10px;">
@@ -2218,7 +2225,7 @@
                         </div>
                         <div>
                             <label class="wiz-label">Email <span style="font-weight:400;color:var(--text-muted);">(opcional)</span></label>
-                            <input id="empEmail" class="wiz-input" type="email" placeholder="contacto@empresa.cl"
+                            <input id="empEmail" class="wiz-input" type="email" autocomplete="off" spellcheck="false" placeholder="contacto@empresa.cl"
                                    style="margin-bottom:10px;">
                         </div>
                     </div>
@@ -2333,7 +2340,7 @@
                 <label>Correo electrónico</label>
                 <div class="linput">
                     <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-                    <input id="loginEmail" type="email" placeholder="correo@empresa.cl"
+                    <input id="loginEmail" type="email" autocomplete="username" spellcheck="false" placeholder="correo@empresa.cl"
                         onkeydown="if(event.key==='Enter') fbLogin()">
                 </div>
             </div>
@@ -2342,7 +2349,7 @@
                 <label>Contraseña</label>
                 <div class="linput">
                     <svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
-                    <input id="loginPass" type="password" placeholder="••••••••"
+                    <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••"
                         onkeydown="if(event.key==='Enter') fbLogin()">
                     <svg class="eye" viewBox="0 0 24 24" onclick="togglePwdLogin()"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 </div>
@@ -2421,12 +2428,12 @@
             <input id="wizNombreOficina" class="wiz-input" type="text" placeholder="Ej: Estudio Contable López"
                 style="margin-bottom:10px;">
             <label class="wiz-label">Correo electrónico</label>
-            <input id="wizEmail" class="wiz-input" type="email" placeholder="correo@empresa.cl"
+            <input id="wizEmail" class="wiz-input" type="email" autocomplete="username" spellcheck="false" placeholder="correo@empresa.cl"
                 onkeydown="if(event.key==='Enter') wizardSiguiente()">
             <label class="wiz-label">Contraseña</label>
-            <input id="wizPass" class="wiz-input" type="password" placeholder="Mínimo 6 caracteres">
+            <input id="wizPass" class="wiz-input" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres">
             <label class="wiz-label">Repetir contraseña</label>
-            <input id="wizPass2" class="wiz-input" type="password" placeholder="Repite la contraseña"
+            <input id="wizPass2" class="wiz-input" type="password" autocomplete="new-password" placeholder="Repite la contraseña"
                 onkeydown="if(event.key==='Enter') wizardSiguiente()">
         </div>
 
@@ -2533,7 +2540,7 @@
             <div>
                 <label style="font-size:13px;font-weight:600;">Contacto <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
                 <input type="text" id="contactoManual" list="listaContactosManual"
-                    placeholder="Buscar contacto..."
+                    placeholder="Buscar contacto…"
                     style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);">
                 <datalist id="listaContactosManual"></datalist>
             </div>
@@ -2986,7 +2993,7 @@
                 </div>
                 <div class="ctc-campo">
                     <label class="ctc-label">Email</label>
-                    <input class="ctc-input" type="email" id="ctcEmail" placeholder="contacto@empresa.cl">
+                    <input class="ctc-input" type="email" id="ctcEmail" autocomplete="off" spellcheck="false" placeholder="contacto@empresa.cl">
                 </div>
             </div>
 
@@ -3092,8 +3099,9 @@
 <!--  SCRIPTS  (orden importante)                    -->
 <!-- ─────────────────────────────────────────────── -->
 <script src="js/core/db.js?v=1"></script>
-<script src="js/core/autocomplete.js?v=2"></script>
+<script src="js/core/autocomplete.js?v=3"></script>
 <script src="js/core/helpers.js?v=1"></script>
+<script src="js/core/modales.js?v=1"></script>
 <script src="js/core/periodo.js?v=1"></script>
 <script src="js/core/datos-cliente.js?v=3"></script>
 <script src="js/core/asientos.js?v=1"></script>
@@ -3103,7 +3111,7 @@
 <script src="js/core/contabilidad.js?v=4"></script>
 
 <script src="js/services/diario.js?v=35"></script>
-<script src="js/services/mayor.js?v=11"></script>
+<script src="js/services/mayor.js?v=12"></script>
 <script src="js/services/balance.js?v=6"></script>
 <script src="js/services/dashboard.js?v=6"></script>
 <script src="js/services/flujo-caja.js?v=3"></script>
@@ -3113,7 +3121,7 @@
 <script src="js/services/previred-scraper.js?v=2"></script>
 <script src="js/services/iva-resumen.js?v=12"></script>
 <script src="js/services/reconciliacion.js?v=6"></script>
-<script src="js/services/sii-rcv.js?v=1"></script>
+<script src="js/services/sii-rcv.js?v=2"></script>
 
 <script src="js/modules/compras.js?v=5"></script>
 <script src="js/modules/ventas.js?v=5"></script>
@@ -3124,13 +3132,13 @@
 <script src="js/modules/bodegas.js?v=2"></script>
 <script src="js/modules/inventario.js?v=4"></script>
 <script src="js/modules/activos.js?v=9"></script>
-<script src="js/modules/cartolas.js?v=7"></script>
-<script src="js/modules/remuneraciones.js?v=5"></script>
+<script src="js/modules/cartolas.js?v=8"></script>
+<script src="js/modules/remuneraciones.js?v=6"></script>
 <script src="js/modules/segunda-categoria.js?v=5"></script>
 <script src="js/core/conexiones.js?v=2"></script>
 <script src="js/core/cierre.js?v=3"></script>
 
-<script src="js/services/app.js?v=11"></script>
+<script src="js/services/app.js?v=12"></script>
 
 <!-- Firebase SDK (compat) — cargado después de app.js -->
 <!-- ═══════════════════════════════════════════════════════
@@ -3204,8 +3212,8 @@
 <script src="js/services/permisos.js?v=1"></script>
 <script src="js/services/auth-manager.js?v=1"></script>
 <script src="js/services/exportar.js?v=9"></script>
-<script src="js/services/ia.js?v=3"></script>
-<script src="js/services/firebase-service.js?v=8"></script>
+<script src="js/services/ia.js?v=4"></script>
+<script src="js/services/firebase-service.js?v=9"></script>
 <script>
     // Firebase siempre activo — config hardcodeada en firebase-service.js
     fbInit();
@@ -3217,6 +3225,10 @@
     // ya guardada de usuarios existentes.
     function applyTheme(t) {
         document.documentElement.setAttribute('data-theme', t);
+        // Controles nativos (scroll, inputs, selects) y barra del navegador acordes al tema
+        document.documentElement.style.colorScheme = t === 'dark' ? 'dark' : 'light';
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || (t === 'dark' ? '#16161b' : '#F4F6FB'));
         document.querySelectorAll('.theme-toggle-btn').forEach(function (btn) {
             var sun = btn.querySelector('.ic-sun'), moon = btn.querySelector('.ic-moon');
             if (sun) sun.style.display = t === 'dark' ? 'none' : 'block';
@@ -3230,10 +3242,20 @@
         applyTheme(next);
         try { localStorage.setItem('appTheme', next); } catch (e) {}
     }
+    // Sin preferencia guardada, sigue al sistema (y sus cambios) hasta que el
+    // usuario elija con el botón.
+    var _mqDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
     function initTheme() {
-        var saved = 'light';
-        try { saved = localStorage.getItem('appTheme') || 'light'; } catch (e) {}
-        applyTheme(saved);
+        var saved = null;
+        try { saved = localStorage.getItem('appTheme'); } catch (e) {}
+        applyTheme(saved || (_mqDark && _mqDark.matches ? 'dark' : 'light'));
+    }
+    if (_mqDark && _mqDark.addEventListener) {
+        _mqDark.addEventListener('change', function (e) {
+            var saved = null;
+            try { saved = localStorage.getItem('appTheme'); } catch (err) {}
+            if (!saved) applyTheme(e.matches ? 'dark' : 'light');
+        });
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initTheme);

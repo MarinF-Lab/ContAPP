@@ -4,7 +4,7 @@
    Nuevo diseño (navy/coral/periwinkle) — ver Diseño de apps/integracion-diseno.md
    Paso 1 de la integración: tokens de color y tipografía únicamente.
 ───────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+/* Fuentes: se cargan con <link> en el <head> de index.html (antes @import aquí, que bloqueaba el render) */
 
 /* ══════════════════════════════════════════
    LIGHT MODE (default)

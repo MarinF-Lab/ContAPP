@@ -391,23 +391,27 @@ function aplicarConfiguracion(cfg) {
 //  TOAST NOTIFICATIONS
 // ─────────────────────────────────────────────────────────────
 function mostrarToast(mensaje, tipo = 'ok') {
+    // Estilos en main.css (#toast-global). Antes cualquier tipo distinto de 'ok'
+    // (incluido 'info') se veía rojo, como un error.
+    const clase = (tipo === 'error' || tipo === 'err') ? 'error' : (tipo === 'info' || tipo === 'warn') ? tipo : 'ok';
     let toast = document.getElementById('toast-global');
     if (!toast) {
         toast = document.createElement('div');
         toast.id = 'toast-global';
-        toast.style.cssText = `
-            position:fixed;bottom:30px;right:30px;z-index:99999;
-            padding:14px 22px;border-radius:10px;font-size:14px;font-weight:600;
-            box-shadow:0 4px 20px rgba(0,0,0,.15);transition:opacity .3s;
-        `;
+        toast.setAttribute('aria-live', 'polite');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.title = 'Clic para cerrar';
+        toast.addEventListener('click', () => { clearTimeout(toast._timer); toast.classList.remove('visible'); });
         document.body.appendChild(toast);
     }
+    toast.setAttribute('role', clase === 'error' ? 'alert' : 'status');
+    toast.className = 't-' + clase;
     toast.textContent = mensaje;
-    toast.style.background = tipo === 'ok' ? '#dcfce7' : '#fee2e2';
-    toast.style.color       = tipo === 'ok' ? '#166534' : '#991b1b';
-    toast.style.opacity     = '1';
+    // Forzar reflow para que la entrada se repita si ya estaba visible
+    void toast.offsetWidth;
+    toast.classList.add('visible');
     clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+    toast._timer = setTimeout(() => { toast.classList.remove('visible'); }, clase === 'error' ? 5000 : 3000);
 }
 
 window.mostrarToast = mostrarToast;
@@ -415,18 +419,18 @@ window.mostrarToast = mostrarToast;
 function mostrarConfirm(mensaje, onConfirm, { titulo = '¿Confirmar?', textoBtn = 'Confirmar', tipo = 'danger' } = {}) {
     // Evita apilar varias confirmaciones si algo la dispara de nuevo mientras
     // ya hay una abierta (ej. Enter repetido antes del fix de foco de abajo).
-    if (document.querySelector('.modal-confirm')) return;
+    if (document.querySelector('.modal-confirm:not(.cm-saliendo)')) return;
 
     const overlay = document.createElement('div');
     overlay.className = 'modal-confirm';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:center;justify-content:center;';
+    overlay.setAttribute('role', 'alertdialog');
     overlay.innerHTML = `
-        <div style="background:var(--card-bg,#fff);border-radius:12px;padding:28px 32px;max-width:420px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2);">
-            <h3 style="margin:0 0 12px;font-size:16px;">${titulo}</h3>
-            <p style="margin:0 0 24px;color:var(--text-muted,#555);font-size:14px;line-height:1.5;">${mensaje}</p>
-            <div style="display:flex;gap:10px;justify-content:flex-end;">
-                <button id="_confirmCancelar" class="btn btn-secondary">Cancelar</button>
-                <button id="_confirmAceptar" class="btn btn-danger">${textoBtn}</button>
+        <div class="modal-confirm-box">
+            <h3>${titulo}</h3>
+            <p>${mensaje}</p>
+            <div class="modal-confirm-acciones">
+                <button type="button" id="_confirmCancelar" class="btn btn-secondary">Cancelar</button>
+                <button type="button" id="_confirmAceptar" class="btn ${tipo === 'danger' ? 'btn-danger' : 'btn-primary'}">${textoBtn}</button>
             </div>
         </div>`;
     document.body.appendChild(overlay);
@@ -446,8 +450,9 @@ function mostrarConfirm(mensaje, onConfirm, { titulo = '¿Confirmar?', textoBtn 
     }
 
     const cerrar = () => {
-        document.body.removeChild(overlay);
         document.removeEventListener('keydown', onKeydown, true);
+        if (window.modalQuitar) window.modalQuitar(overlay);
+        else if (overlay.isConnected) overlay.remove();
         // Devuelve el foco a donde estaba (ej. la glosa) para poder seguir escribiendo.
         if (focoPrevio && typeof focoPrevio.focus === 'function') focoPrevio.focus();
     };

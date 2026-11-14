@@ -1073,8 +1073,7 @@ function remHtmlModal() {
     return `
     <div id="rem-modal"
       style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:5000;
-             display:flex;align-items:center;justify-content:center;padding:16px;"
-      onclick="if(event.target===this) remCerrarModal()">
+             display:flex;align-items:center;justify-content:center;padding:16px;">
       <div style="background:var(--card);border-radius:14px;box-shadow:var(--shadow-lg);
                   max-width:780px;width:100%;max-height:92vh;overflow-y:auto;">
         <div style="padding:18px 24px;border-bottom:1px solid var(--divider);display:flex;
@@ -1169,7 +1168,7 @@ function remAbrirModal(id) {
 function remCerrarModal() {
     remState.modalData = null;
     const m = document.getElementById('rem-modal');
-    if (m) m.remove();
+    if (m) (window.modalQuitar || (el => el.remove()))(m);
 }
 
 function remModalSec(sec) {
@@ -1180,10 +1179,18 @@ function remModalSec(sec) {
 
 function _renderModal() {
     const old = document.getElementById('rem-modal');
-    if (old) old.remove();
     const tmp = document.createElement('div');
     tmp.innerHTML = remHtmlModal();
-    document.body.appendChild(tmp.firstElementChild);
+    const nuevo = tmp.firstElementChild;
+    // Cambio de sección con el modal ya abierto: se reemplaza solo el contenido
+    // (sin volver a animar la entrada ni perder el lugar en el gestor de modales)
+    if (old && old.isConnected && old.style.display !== 'none' && !old.classList.contains('cm-saliendo')) {
+        old.classList.add('cm-estable');
+        old.innerHTML = nuevo.innerHTML;
+        return;
+    }
+    if (old) old.remove();
+    document.body.appendChild(nuevo);
 }
 
 function remActualizarAvatar(nombre) {

@@ -145,8 +145,8 @@ function generarLibroMayor() {
 
         contenedor.innerHTML += `<div class="card" data-cuenta="${c.cuenta}">
             <div class="cuenta-t-titulo">
-                <span>📖 ${c.cuenta}</span>
-                <span>[${c.tipo}]</span>
+                <span>${c.cuenta}</span>
+                <span class="cuenta-t-tipo">${c.tipo}</span>
             </div>
             <table class="cont-table" style="font-size:13px;table-layout:fixed;width:100%;">
                 <thead>

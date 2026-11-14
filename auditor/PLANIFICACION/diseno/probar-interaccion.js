@@ -1,0 +1,188 @@
+#!/usr/bin/env node
+/**
+ * probar-interaccion.js — Pruebas en navegador de las correcciones de interacción
+ * (gestor de modales, teclado, tema, avisos, Inicio sin conexión).
+ * Uso: desde auditor/: python3 -m http.server 8765 &  luego  node PLANIFICACION/diseno/probar-interaccion.js
+ * Guarda capturas en PLANIFICACION/diseno/correcciones/.
+ */
+const { chromium } = require('playwright');
+const fs = require('fs');
+const path = require('path');
+const OUT = path.join(__dirname, 'correcciones') + '/';
+fs.mkdirSync(OUT, { recursive: true });
+
+const fuente = fs.readFileSync(path.join(__dirname, 'capturar-linea-base.js'), 'utf8');
+const SEED = fuente.slice(fuente.indexOf('const SEED = () =>') + 'const SEED = '.length, fuente.indexOf('\nconst PANTALLAS')).trim().replace(/;$/, '');
+
+let ok = 0, mal = 0;
+function check(nombre, cond, extra) {
+  if (cond) { ok++; console.log('  ✅ ' + nombre); }
+  else { mal++; console.log('  ❌ ' + nombre + (extra !== undefined ? ' → ' + JSON.stringify(extra) : '')); }
+}
+const espera = ms => new Promise(r => setTimeout(r, ms));
+
+(async () => {
+  const b = await chromium.launch();
+  const errs = [];
+
+  // ── 1. Tema del sistema sin preferencia guardada ──
+  console.log('Tema');
+  for (const esquema of ['dark', 'light']) {
+    const c = await b.newContext({ colorScheme: esquema });
+    const p = await c.newPage();
+    await p.goto('http://localhost:8765/index.html');
+    await espera(1500);
+    const r = await p.evaluate(() => ({
+      t: document.documentElement.dataset.theme,
+      cs: document.documentElement.style.colorScheme,
+      meta: document.querySelector('meta[name="theme-color"]').content,
+    }));
+    check(`sistema ${esquema} → tema ${esquema} y color-scheme`, r.t === esquema && r.cs === esquema, r);
+    check('meta theme-color sigue el fondo', /^#|rgb/.test(r.meta), r.meta);
+    await c.close();
+  }
+
+  // ── 2. App con datos (modo sin conexión: Firebase bloqueado aquí) ──
+  const ctx = await b.newContext({ viewport: { width: 1366, height: 860 } });
+  await ctx.addInitScript(`window.__TEMA__='light';(${SEED})()`);
+  const p = await ctx.newPage();
+  p.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split('\n').slice(0, 3).join(' | ')));
+  await p.goto('http://localhost:8765/index.html');
+  await espera(8000);
+
+  console.log('Inicio sin conexión (H1)');
+  const grupos = await p.evaluate(() => document.querySelectorAll('#homeHubTiles .home-hub-tile').length);
+  check('el centro de mando muestra grupos sin refrescar a mano', grupos >= 3, grupos);
+  await p.screenshot({ path: OUT + '01-inicio.jpg', type: 'jpeg', quality: 70 });
+
+  console.log('Teclado');
+  const tile = await p.evaluate(() => {
+    const t = document.querySelector('#homeHubTiles .home-hub-tile');
+    return t && { tab: t.getAttribute('tabindex'), role: t.getAttribute('role') };
+  });
+  check('las tarjetas del centro de mando tienen foco y role=button', tile && tile.tab === '0' && tile.role === 'button', tile);
+  await p.focus('#homeHubTiles .home-hub-tile');
+  await p.keyboard.press('Enter');
+  await espera(400);
+  const grupoAbierto = await p.evaluate(() => !!document.querySelector('#hhOverlay.abierto'));
+  check('Enter en una tarjeta abre el grupo', grupoAbierto);
+  await p.keyboard.press('Escape');
+  await espera(300);
+  const ayuda = await p.evaluate(() => [...document.querySelectorAll('button.icon-btn')].filter(b => !b.getAttribute('aria-label') && !b.textContent.trim()).length);
+  check('botones de ícono con nombre accesible', ayuda === 0, ayuda);
+
+  console.log('Modal de compra');
+  await p.evaluate(() => { navegar('compras'); });
+  await espera(500);
+  await p.focus('body');
+  await p.evaluate(() => { abrirNuevaCompra(); });
+  await espera(60);
+  const anim = await p.evaluate(() => getComputedStyle(document.querySelector('#modalCompra > *')).animationName);
+  check('entrada animada', anim === 'cm-caja-in', anim);
+  await espera(250);
+  await p.screenshot({ path: OUT + '02-modal-compra.jpg', type: 'jpeg', quality: 70 });
+  let r = await p.evaluate(() => ({
+    foco: document.getElementById('modalCompra').contains(document.activeElement),
+    tag: document.activeElement.tagName,
+    scroll: document.documentElement.classList.contains('cm-sin-scroll'),
+    aria: document.getElementById('modalCompra').getAttribute('aria-modal'),
+  }));
+  check('foco al primer campo del modal', r.foco && /INPUT|SELECT|TEXTAREA/.test(r.tag), r);
+  check('scroll del fondo bloqueado y aria-modal', r.scroll && r.aria === 'true', r);
+  for (let i = 0; i < 80; i++) await p.keyboard.press('Tab');
+  r = await p.evaluate(() => document.getElementById('modalCompra').contains(document.activeElement));
+  check('Tab no se escapa del modal (80 tabs)', r);
+  await p.keyboard.press('Shift+Tab');
+  r = await p.evaluate(() => document.getElementById('modalCompra').contains(document.activeElement));
+  check('Shift+Tab tampoco', r);
+
+  console.log('Confirmación sobre el modal');
+  await p.evaluate(() => mostrarConfirm('¿Descartar los cambios?', () => {}, { titulo: 'Prueba' }));
+  await espera(250);
+  r = await p.evaluate(() => {
+    const c = document.querySelector('.modal-confirm'), m = document.getElementById('modalCompra');
+    return { zc: +getComputedStyle(c).zIndex, zm: +getComputedStyle(m).zIndex, foco: c.contains(document.activeElement) };
+  });
+  check('la confirmación queda encima y con foco', r.zc > r.zm && r.foco, r);
+  await p.screenshot({ path: OUT + '03-confirmacion.jpg', type: 'jpeg', quality: 70 });
+  await p.keyboard.press('Escape');
+  await espera(200);
+  r = await p.evaluate(() => ({
+    confirm: !!document.querySelector('.modal-confirm'),
+    compra: getComputedStyle(document.getElementById('modalCompra')).display,
+  }));
+  check('Escape cierra solo la confirmación', !r.confirm && r.compra !== 'none', r);
+
+  await p.keyboard.press('Escape');
+  await espera(40);
+  r = await p.evaluate(() => ({ cls: document.getElementById('modalCompra').className, d: getComputedStyle(document.getElementById('modalCompra')).display }));
+  check('Escape cierra el modal con salida suave', r.cls.includes('cm-saliendo') && r.d !== 'none', r);
+  await espera(200);
+  r = await p.evaluate(() => ({
+    d: getComputedStyle(document.getElementById('modalCompra')).display,
+    scroll: document.documentElement.classList.contains('cm-sin-scroll'),
+    abiertos: ContappModales.abiertos().length,
+  }));
+  check('tras la salida queda oculto y el scroll liberado', r.d === 'none' && !r.scroll && r.abiertos === 0, r);
+
+  console.log('Reabrir durante la salida');
+  await p.evaluate(() => { abrirNuevaCompra(); });
+  await espera(250);
+  await p.evaluate(() => { cerrarModalCompra(); setTimeout(() => abrirNuevaCompra(), 40); });
+  await espera(400);
+  r = await p.evaluate(() => ({ d: getComputedStyle(document.getElementById('modalCompra')).display, cls: document.getElementById('modalCompra').className, n: ContappModales.abiertos().length }));
+  check('reabrir a los 40 ms deja el modal abierto', r.d !== 'none' && !r.cls.includes('cm-saliendo') && r.n === 1, r);
+  await p.evaluate(() => cerrarModalCompra());
+  await espera(300);
+
+  console.log('Avisos');
+  await p.evaluate(() => mostrarToast('Aviso informativo de prueba', 'info'));
+  await espera(250);
+  r = await p.evaluate(() => { const t = document.getElementById('toast-global'); return { cls: t.className, live: t.getAttribute('aria-live'), role: t.getAttribute('role') }; });
+  check('aviso info no se ve como error y es anunciado', r.cls.includes('t-info') && r.live === 'polite' && r.role === 'status', r);
+  await p.screenshot({ path: OUT + '04-aviso.jpg', type: 'jpeg', quality: 70 });
+
+  console.log('Pantallas');
+  await p.evaluate(() => navegar('cartolas'));
+  await espera(800);
+  r = await p.evaluate(() => { const b = document.querySelector('.btn-clasificar'); return b && getComputedStyle(b).borderRadius; });
+  check('botones de Cartolas con estilo de la app', r && r !== '0px', r);
+  await p.screenshot({ path: OUT + '05-cartolas.jpg', type: 'jpeg', quality: 70 });
+  await p.evaluate(() => navegar('mayor'));
+  await espera(800);
+  await p.screenshot({ path: OUT + '06-mayor.jpg', type: 'jpeg', quality: 70 });
+  await p.evaluate(() => { document.documentElement.setAttribute('data-theme', 'dark'); });
+  await espera(300);
+  await p.screenshot({ path: OUT + '07-mayor-oscuro.jpg', type: 'jpeg', quality: 70 });
+  await p.evaluate(() => { document.documentElement.setAttribute('data-theme', 'light'); navegar('remuneraciones'); });
+  await espera(800);
+  const hayRem = await p.evaluate(() => typeof remAbrirModal === 'function');
+  if (hayRem) {
+    await p.evaluate(() => remAbrirModal());
+    await espera(300);
+    await p.evaluate(() => {
+      const b = [...document.querySelectorAll('#rem-modal button')].find(x => /remModalSec/.test(x.getAttribute('onclick') || ''));
+      if (b) b.click();
+    });
+    await espera(30);
+    r = await p.evaluate(() => {
+      const m = document.getElementById('rem-modal');
+      return { anim: m && getComputedStyle(m.firstElementChild).animationName, n: ContappModales.abiertos().length };
+    });
+    check('Remuneraciones: cambiar de sección no repite la entrada', r.anim === 'none' && r.n === 1, r);
+    await p.mouse.click(5, 5);
+    await espera(200);
+    r = await p.evaluate(() => !!document.getElementById('rem-modal') && getComputedStyle(document.getElementById('rem-modal')).display !== 'none');
+    check('Remuneraciones: clic fuera no cierra el formulario', r);
+    await p.keyboard.press('Escape');
+    await espera(250);
+    r = await p.evaluate(() => !document.getElementById('rem-modal') || getComputedStyle(document.getElementById('rem-modal')).display === 'none');
+    check('Remuneraciones: Escape cierra el formulario', r);
+  }
+
+  console.log('Errores de página:', errs.length ? errs : 'ninguno');
+  if (errs.length) mal++;
+  console.log(`\nResultado: ${ok} OK, ${mal} con error`);
+  await b.close();
+  process.exit(mal ? 1 : 0);
+})();
