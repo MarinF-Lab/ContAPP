@@ -122,6 +122,20 @@
         return pend;
     }
 
+    function resumenCierre() {
+        const b = $('consolaResumen');
+        if (!b) return;
+        let c = null;
+        try { c = typeof cierreChecklist === 'function' ? cierreChecklist() : null; } catch (e) { c = null; }
+        if (!c || !window.currentUser) { b.hidden = true; return; }
+        const n = c.items.filter(i => i.estado === 'pendiente').length;
+        b.textContent = c.cerrado ? `Cierre de ${c.etiqueta}: cerrado`
+            : n ? `${n} pendiente${n === 1 ? '' : 's'} del cierre de ${c.etiqueta} · ${c.avance}%`
+                : `Cierre de ${c.etiqueta} al día · ${c.avance}%`;
+        b.title = 'Ver sugerencias para hoy';
+        b.hidden = false;
+    }
+
     let sugs = [], sel = 0;
     const $ = id => document.getElementById(id);
 
@@ -209,8 +223,10 @@
                 </g></svg>
             </div>
             <div class="consola-in">
-                <h2>¿Qué quieres hacer hoy?</h2>
-                <p class="sub">Escríbelo con tus palabras y te muestro dónde hacerlo.</p>
+                <div class="consola-cab">
+                    <h2>¿Qué quieres hacer hoy?</h2>
+                    <button type="button" class="consola-resumen" id="consolaResumen" hidden></button>
+                </div>
                 <form class="consola-prompt" id="consolaForm" autocomplete="off" role="search">
                     <svg class="chev" viewBox="0 0 22 26" aria-hidden="true"><path d="M4 4l13 9-13 9"/></svg>
                     <label for="cmdConsola" class="sr-only">¿Qué quieres hacer hoy?</label>
@@ -225,12 +241,21 @@
                 <ul class="suglist" id="consolaSugList" role="listbox" aria-labelledby="consolaSugTitulo"></ul>
             </div>`;
         const input = $('cmdConsola');
-        input.addEventListener('input', render);
-        input.addEventListener('focus', () => { if (!input.value) render(); });
+        // Compacta: la lista se despliega solo mientras se usa el campo
+        const abrir = () => { cont.classList.add('abierta'); input.setAttribute('aria-expanded', 'true'); };
+        const cerrar = () => { if (input.value) return; cont.classList.remove('abierta'); input.setAttribute('aria-expanded', 'false'); };
+        input.setAttribute('aria-expanded', 'false');
+        input.addEventListener('input', () => { abrir(); render(); });
+        input.addEventListener('focus', () => { abrir(); if (!input.value) render(); });
+        cont.addEventListener('focusout', () => setTimeout(() => { if (!cont.contains(document.activeElement)) cerrar(); }, 120));
+        $('consolaResumen').addEventListener('click', () => input.focus());
         input.addEventListener('keydown', e => {
             if (e.key === 'ArrowDown') { e.preventDefault(); marcar(sel + 1); }
             else if (e.key === 'ArrowUp') { e.preventDefault(); marcar(sel - 1); }
-            else if (e.key === 'Escape' && input.value) { e.preventDefault(); input.value = ''; render(); }
+            else if (e.key === 'Escape') {
+                if (input.value) { e.preventDefault(); input.value = ''; render(); }
+                else { e.preventDefault(); input.blur(); cont.classList.remove('abierta'); }
+            }
         });
         $('consolaSugList').addEventListener('click', e => {
             const li = e.target.closest('.sugi'); if (li) ejecutar(sugs[+li.dataset.i]);
@@ -239,7 +264,7 @@
         render();
     }
 
-    function refrescar() { montar(); const i = $('cmdConsola'); if (i && !i.value) render(); }
+    function refrescar() { montar(); resumenCierre(); const i = $('cmdConsola'); if (i && !i.value) render(); }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refrescar);
     else refrescar();

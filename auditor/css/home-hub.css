@@ -226,3 +226,85 @@
     .consola-globo .mer.b { animation-delay: -8s; }
 }
 @keyframes consola-giro { from { transform: scaleX(1); } 50% { transform: scaleX(-1); } to { transform: scaleX(1); } }
+
+/* ══════════════════════════════════════════
+   INICIO — revisión (Etapa 3): consola compacta, centro de mando en fila,
+   un solo estilo (sin degradados, emoji ni fondo punteado)
+══════════════════════════════════════════ */
+/* Secciones: contenido a todo el ancho y arriba (no centrado vertical) */
+.in-slide-hub { justify-content: flex-start; align-items: stretch; padding: 22px 76px 28px 26px; }
+.home-hub { max-width: none; align-items: stretch; gap: 16px; }
+.hh-titulo { margin: 6px 0 0; font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: var(--text); text-align: left; }
+
+/* Consola compacta: título + resumen + campo; la lista solo al usarla */
+.consola-in { padding: 16px 20px; gap: 10px; }
+.consola-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.consola h2 { font-size: clamp(18px, 2vw, 22px); max-width: none; }
+.consola-resumen {
+    background: none; border: 0; padding: 0; font: inherit; font-size: 13.5px; color: var(--screen-dim);
+    cursor: pointer; text-align: right;
+}
+.consola-resumen:hover { color: var(--on-screen); text-decoration: underline; text-underline-offset: 3px; }
+.consola-globo { width: 260px; top: -60px; right: -60px; opacity: .4; }
+/* clip (no hidden): con hidden el navegador desplaza la caja al enfocar el campo,
+   porque el globo sobresale por la derecha, y el contenido se corría a la izquierda */
+.consola { overflow: clip; }
+.consola .consola-sug { display: none; }
+.consola.abierta .consola-sug { display: block; }
+.consola.abierta .consola-sug:has(.suglist:empty) { display: none; }
+
+/* Centro de mando y configuración: tarjetas de grupo con sus módulos */
+.hh-hub { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; justify-content: stretch; }
+@media (max-width: 640px)  { .hh-hub { grid-template-columns: minmax(0, 1fr); } }
+.hh-grupo {
+    background: var(--card); border: 1px solid var(--divider); border-radius: 16px; padding: 14px;
+    display: flex; flex-direction: column; gap: 10px; min-width: 0; text-align: left;
+    box-shadow: inset 0 3px 0 var(--gcolor, var(--accent));
+}
+.hh-grupo-h { display: flex; align-items: center; gap: 10px; }
+.hh-grupo-h .ic {
+    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none;
+    background: var(--table-stripe); color: var(--gcolor, var(--accent));
+}
+.hh-grupo-h .ic .ico, .hh-mod .ico, .in-dot .ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.hh-grupo-h h3 { margin: 0; font-family: var(--font-heading); font-size: 15.5px; font-weight: 700; color: var(--text); }
+.hh-grupo-h small { display: block; color: var(--text-muted); font-size: 12.5px; font-family: var(--font-sans); font-weight: 500; }
+.hh-mods { display: flex; flex-direction: column; gap: 2px; }
+.hh-mod {
+    text-align: left; background: none; border: 0; border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 14px;
+    color: var(--text); display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: pointer;
+    transition: background-color .15s, color .15s;
+}
+.hh-mod:hover { background: var(--table-stripe); color: var(--gcolor, var(--accent)); }
+.hh-mod .ico { width: 15px; height: 15px; color: var(--text-muted); flex: none; }
+
+/* Riel de secciones con íconos SVG */
+.in-dot { color: var(--text-muted); opacity: 1; box-shadow: none; padding: 0; }
+.in-dot:hover { color: var(--text); transform: none; }
+.in-dot.activo { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* Financiero y actividad: paneles planos como la referencia, sin fondo punteado */
+.home-body { background: var(--paper) !important; }
+.home-bg-dash { padding: 22px 76px 60px 26px; display: flex; flex-direction: column; gap: 14px; }
+.home-bg-dash > #cierreCard .card { margin-bottom: 0 !important; border-radius: 16px; border-color: var(--divider); box-shadow: none; }
+.home-bg-dash > #cierreCard .card:hover { transform: none; }
+.kpi-grid-compacta { gap: 0; background: var(--card); border: 1px solid var(--divider); border-radius: 16px; overflow: hidden; }
+.kpi-mx { border: 0; border-right: 1px solid var(--divider); border-radius: 0; box-shadow: none; background: none; padding: 14px 16px; }
+.kpi-mx:last-child { border-right: 0; }
+.kpi-mx:hover { transform: none; box-shadow: none; }
+.kpi-mx-lbl { font-size: 13px; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text-muted); }
+.kpi-mx-val { font-size: 20px; font-weight: 500; }
+.in-card { border-radius: 16px; border-color: var(--divider); box-shadow: none; padding: 16px; }
+.s2-card-titulo { font-family: var(--font-heading); font-size: 15px; margin-bottom: 10px; }
+.s2-donut-titulo { font-size: 12.5px; text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--text-muted); }
+.actividad-mini { font-size: 13px; }
+.actividad-mini b { font-size: 12px; text-transform: none; color: var(--text-muted); }
+@media (max-width: 900px) {
+    .in-slide-hub, .home-bg-dash { padding-right: 56px; }
+    .kpi-mx:nth-child(2) { border-right: 0; }
+    .kpi-mx:nth-child(-n+2) { border-bottom: 1px solid var(--divider); }
+}
+@media (max-width: 600px) {
+    .in-slide-hub, .home-bg-dash { padding-left: 14px; padding-right: 52px; }
+    .consola-resumen { text-align: left; }
+}

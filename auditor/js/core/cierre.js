@@ -485,10 +485,10 @@ function cierreRenderTarjeta() {
         ? `<div style="font-size:12px;color:var(--warning);margin-top:6px;">⚠️ ${cierre.modificaciones} cambio(s) después del cierre${cierre.ultima_modificacion?.contexto ? ' · último en ' + _ciEsc(cierre.ultima_modificacion.contexto) : ''}.</div>`
         : '';
     el.innerHTML = `
-    <div class="card" style="padding:16px 18px;margin-bottom:16px;">
+    <div class="card ci-tarjeta" style="padding:16px 18px;margin-bottom:16px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;cursor:pointer;" onclick="cierreToggleTarjeta()">
             <div style="display:flex;align-items:center;gap:10px;">
-                <strong style="font-size:15px;">✅ Cierre de ${_ciEsc(c.etiqueta)}</strong>
+                <strong style="font-size:16px;font-family:var(--font-heading);">Cierre de ${_ciEsc(c.etiqueta)}</strong>
                 ${c.cerrado ? `<span style="background:var(--positive-soft);color:var(--positive);border:1px solid var(--positive);padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;">CERRADO</span>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:10px;">

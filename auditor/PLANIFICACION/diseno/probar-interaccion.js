@@ -52,7 +52,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   await espera(8000);
 
   console.log('Inicio sin conexión (H1)');
-  const grupos = await p.evaluate(() => document.querySelectorAll('#homeHubTiles .home-hub-tile').length);
+  const grupos = await p.evaluate(() => document.querySelectorAll('#homeHubTiles .hh-grupo').length);
   check('el centro de mando muestra grupos sin refrescar a mano', grupos >= 3, grupos);
   if (CAPTURAS) await p.screenshot({ path: OUT + '01-inicio.jpg', type: 'jpeg', quality: 70 });
 
@@ -64,6 +64,12 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
     sugerencias: document.querySelectorAll('#consolaSugList .sugi').length,
   }));
   check('consola encima del centro de mando, con sugerencias del día', r.hay && r.antesDelHub && r.sugerencias > 0, r);
+  r = await p.evaluate(() => getComputedStyle(document.querySelector('#homeConsola .consola-sug')).display);
+  check('consola compacta: las sugerencias se ocultan hasta usar el campo', r === 'none', r);
+  await p.focus('#cmdConsola');
+  await espera(100);
+  r = await p.evaluate(() => getComputedStyle(document.querySelector('#homeConsola .consola-sug')).display);
+  check('al enfocar el campo se despliegan las sugerencias', r !== 'none', r);
   await p.click('#cmdConsola');
   await p.keyboard.type('pagué 50.000 de arriendo');
   await p.keyboard.press('Enter');
@@ -82,16 +88,16 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
 
   console.log('Teclado');
   const tile = await p.evaluate(() => {
-    const t = document.querySelector('#homeHubTiles .home-hub-tile');
-    return t && { tab: t.getAttribute('tabindex'), role: t.getAttribute('role') };
+    const b = document.querySelector('#homeHubTiles .hh-mod');
+    return b && { tag: b.tagName, txt: b.textContent.trim() };
   });
-  check('las tarjetas del centro de mando tienen foco y role=button', tile && tile.tab === '0' && tile.role === 'button', tile);
-  await p.focus('#homeHubTiles .home-hub-tile');
+  check('los módulos del centro de mando son botones (alcanzables con teclado)', tile && tile.tag === 'BUTTON', tile);
+  await p.focus('#homeHubTiles .hh-mod');
   await p.keyboard.press('Enter');
   await espera(400);
-  const grupoAbierto = await p.evaluate(() => !!document.querySelector('#hhOverlay.abierto'));
-  check('Enter en una tarjeta abre el grupo', grupoAbierto);
-  await p.keyboard.press('Escape');
+  const vistaMod = await p.evaluate(() => document.querySelector('.view.active')?.id);
+  check('Enter en un módulo del centro de mando lo abre (un clic, sin panel intermedio)', vistaMod && vistaMod !== 'view-inicio', vistaMod);
+  await p.evaluate(() => navegar('inicio'));
   await espera(300);
   const ayuda = await p.evaluate(() => [...document.querySelectorAll('button.icon-btn')].filter(b => !b.getAttribute('aria-label') && !b.textContent.trim()).length);
   check('botones de ícono con nombre accesible', ayuda === 0, ayuda);

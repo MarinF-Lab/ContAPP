@@ -36,7 +36,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
     <link rel="stylesheet" href="css/variables.css?v=5">
     <link rel="stylesheet" href="css/main.css?v=22">
-    <link rel="stylesheet" href="css/home-hub.css?v=4">
+    <link rel="stylesheet" href="css/home-hub.css?v=6">
     <link rel="stylesheet" href="css/remuneraciones.css?v=5">
     <link rel="stylesheet" href="css/auditor.css?v=5">
     <script>
@@ -190,8 +190,8 @@
             <div class="home-hub" id="homeHub">
                 <!-- Etapa 3: consola "¿Qué quieres hacer hoy?" encima del centro de mando (consola.js) -->
                 <section class="consola" id="homeConsola" aria-label="¿Qué quieres hacer hoy?"></section>
-                <div class="home-hub-caption">Centro de mando · selecciona un grupo de módulos</div>
-                <div class="home-hub-tiles" id="homeHubTiles"></div>
+                <h2 class="hh-titulo">Centro de mando</h2>
+                <div class="home-hub-tiles hh-hub" id="homeHubTiles"></div>
             </div>
           </div>
 
@@ -199,6 +199,7 @@
           <div class="in-slide" id="inSlide1">
           <div class="home-body" id="homeBody">
           <div class="home-bg-dash" id="homeBgDash">
+            <h2 class="hh-titulo">Financiero y actividad</h2>
 
             <!-- Panel onboarding (visible solo cuando no hay datos) -->
             <div id="dash-onboarding" style="display:none;"></div>
@@ -214,11 +215,11 @@
                 <div class="s2-col">
                     <div class="kpi-grid-compacta">
                         <div class="kpi-mx">
-                            <div class="kpi-mx-lbl">Total Activos</div>
+                            <div class="kpi-mx-lbl">Total activos</div>
                             <div class="kpi-mx-row"><span class="kpi-mx-val" id="kpi-activos">$0</span></div>
                         </div>
                         <div class="kpi-mx">
-                            <div class="kpi-mx-lbl">Total Pasivos</div>
+                            <div class="kpi-mx-lbl">Total pasivos</div>
                             <div class="kpi-mx-row"><span class="kpi-mx-val" id="kpi-pasivos">$0</span></div>
                         </div>
                         <div class="kpi-mx">
@@ -231,7 +232,7 @@
                         </div>
                     </div>
                     <div class="in-card flexcol" style="flex:1;">
-                        <div class="s2-card-titulo">📊 Ingresos vs Gastos — Año Actual</div>
+                        <div class="s2-card-titulo">Ingresos y gastos del año</div>
                         <div style="height:190px;"><canvas id="dashBarrasMensuales"></canvas></div>
                     </div>
                     <div class="in-card">
@@ -243,7 +244,7 @@
                 </div>
                 <div class="s2-col">
                     <div class="in-card">
-                        <div class="s2-card-titulo">📈 Indicadores</div>
+                        <div class="s2-card-titulo">Indicadores</div>
                         <div id="indicadoresLinea" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Sin datos cargados</div>
                     </div>
                     <div class="donut-row">
@@ -266,16 +267,16 @@
           <!-- Sección 3: Configuración — hub de accesos a #view-configuracion (ver home-hub.js) -->
           <div class="in-slide in-slide-hub" id="inSlide2">
             <div class="home-hub" id="homeHubConfig">
-                <div class="home-hub-caption">Configuración</div>
-                <div class="home-hub-tiles" id="homeHubConfigTiles"></div>
+                <h2 class="hh-titulo">Configuración</h2>
+                <div class="home-hub-tiles hh-hub hh-cfg" id="homeHubConfigTiles"></div>
             </div>
           </div>
 
          </div><!-- /inViewport -->
          <div class="in-rail" id="inRail">
-            <div class="in-dot activo" onclick="irASeccion(0)" title="Centro de mando" aria-label="Centro de mando">🧭</div>
-            <div class="in-dot" onclick="irASeccion(1)" title="Financiero y actividad" aria-label="Financiero y actividad">📊</div>
-            <div class="in-dot" onclick="irASeccion(2)" title="Configuración" aria-label="Configuración">⚙️</div>
+            <button type="button" class="in-dot activo" onclick="irASeccion(0)" title="Centro de mando" aria-label="Centro de mando"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></button>
+            <button type="button" class="in-dot" onclick="irASeccion(1)" title="Financiero y actividad" aria-label="Financiero y actividad"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4M4 20h16M8 16v-4M12 16V8M16 16v-6"/></svg></button>
+            <button type="button" class="in-dot" onclick="irASeccion(2)" title="Configuración" aria-label="Configuración"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></button>
          </div>
         </div><!-- /view-inicio -->
 
@@ -3100,6 +3101,7 @@
 <script src="js/core/db.js?v=1"></script>
 <script src="js/core/autocomplete.js?v=3"></script>
 <script src="js/core/helpers.js?v=1"></script>
+<script src="js/core/iconos.js?v=1"></script>
 <script src="js/core/modales.js?v=1"></script>
 <script src="js/core/periodo.js?v=1"></script>
 <script src="js/core/datos-cliente.js?v=3"></script>
@@ -3135,7 +3137,7 @@
 <script src="js/modules/remuneraciones.js?v=7"></script>
 <script src="js/modules/segunda-categoria.js?v=6"></script>
 <script src="js/core/conexiones.js?v=2"></script>
-<script src="js/core/cierre.js?v=3"></script>
+<script src="js/core/cierre.js?v=4"></script>
 
 <script src="js/services/app.js?v=13"></script>
 
@@ -3274,8 +3276,8 @@
 <script src="js/categorias/primera.js?v=4"></script>
 <script src="js/categorias/segunda.js?v=3"></script>
 <script src="js/services/menu.js?v=6"></script>
-<script src="js/services/consola.js?v=2"></script>
-<script src="js/services/home-hub.js?v=3"></script>
+<script src="js/services/consola.js?v=3"></script>
+<script src="js/services/home-hub.js?v=4"></script>
 <script src="js/auditor/multi-cliente.js?v=1"></script>
 <script src="js/auditor/panel-estudio.js?v=3"></script>
 

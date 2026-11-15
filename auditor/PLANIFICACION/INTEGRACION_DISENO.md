@@ -127,6 +127,12 @@ Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar l
   Google/Microsoft (no hacían nada); "¿Olvidaste tu contraseña?" ahora envía el correo de Firebase
   y "Recordarme" decide si la sesión sobrevive al cerrar el navegador.
 - Tokens `--screen-2`, `--screen-line`, `--screen-dim`, `--screen-accent` (AA verificado).
+- **Revisión de Inicio (pedida por el usuario)**: consola compacta (título, resumen de una línea
+  y campo; la lista de sugerencias solo al usar el campo); centro de mando como la referencia
+  (título a la izquierda, tarjetas de grupo a todo el ancho con íconos SVG y sus módulos como
+  botones directos, sin panel intermedio); Configuración igual (+ acceso a "Respaldo del
+  cliente"); Financiero sin fondo punteado ni emoji, indicadores en franja y paneles planos; riel
+  de secciones con íconos SVG. Íconos compartidos en `js/core/iconos.js`.
 - Capturas en `diseno/etapa3/`. Pruebas: 6 casos nuevos en el navegador, 3 en `verificar.js`.
 
 ### Pendientes / próximo paso

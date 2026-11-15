@@ -24,17 +24,33 @@
 const HOME_HUB_ACCENTS = ['var(--blue)', 'var(--coral)', 'var(--ok)', 'var(--warn)', 'var(--navy)']; // todos con contraste AA como texto
 
 // ── Sección 1: grupos de módulos reales ─────────────────────────────────────
+// Etapa 3 (revisión de Inicio): cada grupo es una tarjeta compacta con sus
+// módulos como botones directos (un clic, sin panel intermedio), como la referencia.
+const _hhIco = n => (window.ContappIconos ? ContappIconos.svg(n) : '');
+const _hhEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function _hhTarjetaGrupo({ icono, titulo, sub, color, items }) {
+    return `<div class="hh-grupo" style="--gcolor:${color}">
+        <div class="hh-grupo-h"><span class="ic">${icono}</span><h3>${_hhEsc(titulo)}<small>${_hhEsc(sub)}</small></h3></div>
+        <div class="hh-mods">${items.map(it => `<button type="button" class="hh-mod" onclick="${it.accion}" ${it.hint ? `title="${_hhEsc(it.hint)}"` : ''}>
+            <span>${_hhEsc(it.label)}</span>${_hhIco('flecha')}</button>`).join('')}</div>
+    </div>`;
+}
+
 function renderHomeHubTiles(menu) {
     const cont = document.getElementById('homeHubTiles');
     if (!cont) return;
-    cont.innerHTML = menu.map((g, i) => {
-        const n = g.modulos.length;
-        return `<div class="home-hub-tile" style="--accent:${HOME_HUB_ACCENTS[i] || 'var(--coral)'}" onclick="abrirGrupoHome('${g.id}', this)">
-            <div class="hh-tile-ic">${g.icono}</div>
-            <div class="hh-tile-title">${g.label}</div>
-            <div class="hh-tile-count">${n} módulo${n === 1 ? '' : 's'} · toca para explorar</div>
-        </div>`;
-    }).join('');
+    cont.innerHTML = menu.map((g, i) => _hhTarjetaGrupo({
+        icono: window.ContappIconos ? ContappIconos.grupo(g.label) : g.icono,
+        titulo: g.label,
+        sub: `${g.modulos.length} módulo${g.modulos.length === 1 ? '' : 's'}`,
+        color: HOME_HUB_ACCENTS[i] || 'var(--coral)',
+        items: g.modulos.map(m => ({
+            label: etiquetaCortaModulo(m.label),
+            hint: (MENU_SUBSECCIONES[m.id] || []).join(' · '),
+            accion: `irAModuloDesdeHome('${m.id}')`,
+        })),
+    })).join('');
 }
 
 function abrirGrupoHome(grupoId, tileEl) {
@@ -67,31 +83,32 @@ function irAModuloDesdeHome(id) {
 // navega a ella y se hace scroll hasta el card correspondiente). ──
 const CONFIG_HOME_GRUPOS = [
     { id: 'cfg-empresa', label: 'Empresa', icono: '🏢', modulos: [
-        { id: 'cfgCardEmpresa',     label: 'Configuración Empresa', icono: '🏢' },
+        { id: 'cfgCardEmpresa',     label: 'Datos de la empresa',   icono: '🏢' },
         { id: 'cfgCardModulos',     label: 'Módulos activos',       icono: '🧩' },
         { id: 'cfgCardCertificado', label: 'Certificado Digital',   icono: '🔐' },
     ]},
-    { id: 'cfg-usuarios', label: 'Usuarios y Sesión', icono: '👥', modulos: [
+    { id: 'cfg-usuarios', label: 'Usuarios y sesión', icono: '👥', modulos: [
         { id: 'cfgCardUsuarios', label: 'Usuarios de la Empresa', icono: '👥' },
         { id: 'cfgCardSesion',   label: 'Sesión activa',          icono: '👤' },
     ]},
-    { id: 'cfg-ia', label: 'IA y Sincronización', icono: '✨', modulos: [
+    { id: 'cfg-ia', label: 'IA y sincronización', icono: '✨', modulos: [
         { id: 'cfgCardIA',       label: 'IA — Google Gemini',      icono: '✨' },
         { id: 'cfgCardFirebase', label: 'Sincronización Firebase', icono: '☁️' },
+        { id: 'cfgCardRespaldo', label: 'Respaldo del cliente',    icono: '💾' },
     ]},
 ];
 
 function renderHomeHubConfigTiles() {
     const cont = document.getElementById('homeHubConfigTiles');
     if (!cont) return;
-    cont.innerHTML = CONFIG_HOME_GRUPOS.map((g, i) => {
-        const n = g.modulos.length;
-        return `<div class="home-hub-tile" style="--accent:${HOME_HUB_ACCENTS[i] || 'var(--coral)'}" onclick="abrirConfigGrupoHome('${g.id}', this)">
-            <div class="hh-tile-ic">${g.icono}</div>
-            <div class="hh-tile-title">${g.label}</div>
-            <div class="hh-tile-count">${n} sección${n === 1 ? '' : 'es'} · toca para explorar</div>
-        </div>`;
-    }).join('');
+    const ICONO_CFG = { 'cfg-empresa': 'edificio', 'cfg-usuarios': 'personas', 'cfg-ia': 'nube' };
+    cont.innerHTML = CONFIG_HOME_GRUPOS.map((g, i) => _hhTarjetaGrupo({
+        icono: _hhIco(ICONO_CFG[g.id] || 'engranaje'),
+        titulo: g.label,
+        sub: `${g.modulos.length} sección${g.modulos.length === 1 ? '' : 'es'}`,
+        color: HOME_HUB_ACCENTS[i] || 'var(--coral)',
+        items: g.modulos.map(m => ({ label: m.label, accion: `irAConfigDesdeHome('${m.id}')` })),
+    })).join('');
 }
 
 function abrirConfigGrupoHome(grupoId, tileEl) {
