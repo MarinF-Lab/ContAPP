@@ -108,9 +108,24 @@ puerto 8765) para comparar contra la línea base `PLANIFICACION/diseno/linea-bas
 
 ---
 
-## Skills disponibles en el entorno
+## Skills de diseño — OBLIGATORIAS en todo trabajo visual
 
-`frontend-design` (dirección visual) · `ui-ux-pro-max` (contraste, accesibilidad, patrones) ·
-`web-design-guidelines` (revisión de reglas de interfaz) · `emil-design-eng`, `review-animations`,
-`animate` (interacción y movimiento) · `mobile-native` (uso en celular) · `code-review`
-(revisión de cambios). Usarlas cuando la tarea lo amerite; no son obligatorias.
+El usuario instaló estas skills para que el trabajo visual sea mejor: **usarlas siempre** que la
+tarea toque la interfaz (pantallas, componentes, colores, tipografía, movimiento, celular).
+Invocarlas con la herramienta Skill **antes** de escribir código y aplicar sus reglas.
+
+| Cuándo | Skills |
+|--------|--------|
+| Antes de diseñar o rediseñar una pantalla | `frontend-design`, `ui-ux-pro-max`, `apple-design`, `learn-taste` |
+| Al elegir componentes o patrones | `pick-ui-library`, `prototype` |
+| Al revisar una pantalla terminada | `web-design-guidelines`, `emil-design-eng`, `break-ui` (datos extremos: nombres largos, montos enormes, listas vacías) |
+| Al agregar o ajustar movimiento | `animate`, `choreograph`, `find-animation-opportunities`, `animation-vocabulary` |
+| Al revisar movimiento existente | `review-animations`, `improve-animations`, `remove-animations`, `animation-performance` |
+| Celular, gestos y avisos | `mobile-native`, `gestures`, `ask-sonner` (solo como referencia de patrones: la app no usa React) |
+
+- En cada respuesta sobre trabajo visual, **decir qué skills se usaron** en esa tarea.
+- No usar `animate-expo`, `write-swift` ni `synced`: son para React Native, Swift y otro tipo de
+  proyecto.
+- Para revisar cambios de código: `code-review`.
+- Las skills no reemplazan la preferencia del usuario: **planificar y esperar confirmación** antes
+  de cada acción.
