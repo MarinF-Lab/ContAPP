@@ -53,7 +53,7 @@
     content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px;
     border-radius: var(--radius-m) var(--radius-m) 0 0; background: var(--accent, var(--coral));
 }
-.home-hub-tile:hover { transform: translateY(-4px); box-shadow: 0 18px 36px rgba(15,27,38,.16), 0 0 0 3px var(--wash-a); }
+@media (hover: hover) and (pointer: fine) { .home-hub-tile:hover { transform: translateY(-4px); box-shadow: 0 18px 36px rgba(15,27,38,.16), 0 0 0 3px var(--wash-a); } }
 
 .hh-tile-ic {
     width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, var(--periwinkle-soft), var(--coral) 150%);
@@ -96,10 +96,10 @@
     background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 10px; border-left: 3px solid transparent;
     font-size: 12.5px; font-weight: 500; color: var(--ink); transition: border-color .15s, color .15s, transform .15s, background .15s;
 }
-.hh-chip:hover {
+@media (hover: hover) and (pointer: fine) { .hh-chip:hover {
     border-color: var(--gcolor, var(--navy)); border-left-color: var(--gcolor, var(--navy)); color: var(--gcolor, var(--navy));
     transform: translateX(2px);
-}
+} }
 .hh-chip-nombre { flex: 1; }
 .hh-chip-flecha { font-size: 10px; opacity: 0; transform: translateX(-4px); transition: opacity .15s, transform .15s; }
 .hh-chip:hover .hh-chip-flecha { opacity: 1; transform: translateX(0); }
@@ -109,7 +109,7 @@
     display: flex; align-items: center; justify-content: center; color: var(--ink-faint); cursor: pointer;
     background: var(--wash-a); border: 1px solid var(--rule-strong); z-index: 2; transition: color .15s; font-size: 13px;
 }
-.hh-cerrar:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .hh-cerrar:hover { color: var(--ink); } }
 
 /* ---- Sección 2: dashboard compacto (igual al prototipo — 2 columnas: KPIs +
    gráfico + resumen de actividad a la izquierda, indicadores + donuts a la
@@ -128,7 +128,7 @@
     --k: var(--navy); padding: 12px 14px; border: 1px solid var(--rule-strong); border-top: 3px solid var(--k);
     border-radius: 11px; background: var(--card-bg); box-shadow: var(--shadow-card); transition: transform .18s, box-shadow .18s;
 }
-.kpi-mx:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+@media (hover: hover) and (pointer: fine) { .kpi-mx:hover { transform: translateY(-3px); box-shadow: var(--shadow); } }
 .kpi-mx:nth-child(1) { --k: var(--navy); }
 .kpi-mx:nth-child(2) { --k: var(--coral); }
 .kpi-mx:nth-child(3) { --k: var(--ok); }
@@ -195,7 +195,7 @@
     border: 0; background: var(--screen-accent); color: var(--screen); font-weight: 700; border-radius: 10px;
     padding: 8px 16px; font-size: 14px; flex: none; cursor: pointer; font-family: inherit;
 }
-.consola-go:hover { filter: brightness(1.08); }
+@media (hover: hover) and (pointer: fine) { .consola-go:hover { filter: brightness(1.08); } }
 .consola-sug { position: relative; border-top: 1px solid var(--screen-line); padding: 6px 12px 12px; }
 .consola-sug:has(.suglist:empty) { display: none; }
 .consola .sug-t { font-size: 13px; color: var(--screen-dim); padding: 6px 10px; }
@@ -204,7 +204,8 @@
     display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center;
     padding: 8px 10px; border-radius: 10px; cursor: pointer;
 }
-.consola .sugi:hover, .consola .sugi[aria-selected="true"] { background: var(--screen-2); }
+.consola .sugi[aria-selected="true"] { background: var(--screen-2); }
+@media (hover: hover) and (pointer: fine) { .consola .sugi:hover { background: var(--screen-2); } }
 .consola .sugi[aria-selected="true"] { box-shadow: inset 2px 0 0 var(--screen-accent); }
 .consola .sugi .ic {
     width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
@@ -221,10 +222,7 @@
     .consola .sugi .tag { grid-column: 2; text-align: left; }
     .consola-globo { width: 240px; right: -90px; }
 }
-@media (prefers-reduced-motion: no-preference) {
-    .consola-globo .mer { animation: consola-giro 16s linear infinite; transform-origin: 200px 200px; }
-    .consola-globo .mer.b { animation-delay: -8s; }
-}
+/* Etapa 5: el globo de la consola queda quieto (en Inicio se trabaja; el giro solo en el login) */
 @keyframes consola-giro { from { transform: scaleX(1); } 50% { transform: scaleX(-1); } to { transform: scaleX(1); } }
 
 /* ══════════════════════════════════════════
@@ -244,7 +242,7 @@
     background: none; border: 0; padding: 0; font: inherit; font-size: 13.5px; color: var(--screen-dim);
     cursor: pointer; text-align: right;
 }
-.consola-resumen:hover { color: var(--on-screen); text-decoration: underline; text-underline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .consola-resumen:hover { color: var(--on-screen); text-decoration: underline; text-underline-offset: 3px; } }
 .consola-globo { width: 260px; top: -60px; right: -60px; opacity: .4; }
 /* clip (no hidden): con hidden el navegador desplaza la caja al enfocar el campo,
    porque el globo sobresale por la derecha, y el contenido se corría a la izquierda */
@@ -275,23 +273,23 @@
     color: var(--text); display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: pointer;
     transition: background-color .15s, color .15s;
 }
-.hh-mod:hover { background: var(--table-stripe); color: var(--gcolor, var(--accent)); }
+@media (hover: hover) and (pointer: fine) { .hh-mod:hover { background: var(--table-stripe); color: var(--gcolor, var(--accent)); } }
 .hh-mod .ico { width: 15px; height: 15px; color: var(--text-muted); flex: none; }
 
 /* Riel de secciones con íconos SVG */
 .in-dot { color: var(--text-muted); opacity: 1; box-shadow: none; padding: 0; }
-.in-dot:hover { color: var(--text); transform: none; }
+@media (hover: hover) and (pointer: fine) { .in-dot:hover { color: var(--text); transform: none; } }
 .in-dot.activo { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
 /* Financiero y actividad: paneles planos como la referencia, sin fondo punteado */
 .home-body { background: var(--paper) !important; }
 .home-bg-dash { padding: 22px 76px 60px 26px; display: flex; flex-direction: column; gap: 14px; }
 .home-bg-dash > #cierreCard .card { margin-bottom: 0 !important; border-radius: 16px; border-color: var(--divider); box-shadow: none; }
-.home-bg-dash > #cierreCard .card:hover { transform: none; }
+@media (hover: hover) and (pointer: fine) { .home-bg-dash > #cierreCard .card:hover { transform: none; } }
 .kpi-grid-compacta { gap: 0; background: var(--card); border: 1px solid var(--divider); border-radius: 16px; overflow: hidden; }
 .kpi-mx { border: 0; border-right: 1px solid var(--divider); border-radius: 0; box-shadow: none; background: none; padding: 14px 16px; }
 .kpi-mx:last-child { border-right: 0; }
-.kpi-mx:hover { transform: none; box-shadow: none; }
+@media (hover: hover) and (pointer: fine) { .kpi-mx:hover { transform: none; box-shadow: none; } }
 .kpi-mx-lbl { font-size: 13px; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text-muted); }
 .kpi-mx-val { font-size: 20px; font-weight: 500; }
 .in-card { border-radius: 16px; border-color: var(--divider); box-shadow: none; padding: 16px; }

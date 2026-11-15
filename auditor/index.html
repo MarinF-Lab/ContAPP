@@ -2,12 +2,14 @@
 <html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <title>ContAPP Auditor</title>
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#DCE3E9">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#DCE3E9">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131D2A">
+    <meta name="color-scheme" content="light dark">
     <link rel="icon" href="icons/icon-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
 
@@ -35,10 +37,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
     <link rel="stylesheet" href="css/variables.css?v=5">
-    <link rel="stylesheet" href="css/main.css?v=25">
-    <link rel="stylesheet" href="css/home-hub.css?v=6">
-    <link rel="stylesheet" href="css/remuneraciones.css?v=6">
-    <link rel="stylesheet" href="css/auditor.css?v=6">
+    <link rel="stylesheet" href="css/main.css?v=28">
+    <link rel="stylesheet" href="css/home-hub.css?v=7">
+    <link rel="stylesheet" href="css/remuneraciones.css?v=7">
+    <link rel="stylesheet" href="css/auditor.css?v=7">
     <script>
         // Restaurar tema guardado antes de que el DOM pinte (evita flash)
         (function() {
@@ -3228,8 +3230,9 @@
         document.documentElement.setAttribute('data-theme', t);
         // Controles nativos (scroll, inputs, selects) y barra del navegador acordes al tema
         document.documentElement.style.colorScheme = t === 'dark' ? 'dark' : 'light';
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || (t === 'dark' ? '#131D2A' : '#DCE3E9'));
+        // El tema se elige en la app (no solo por el sistema): ambas etiquetas toman el color actual
+        var colorBarra = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || (t === 'dark' ? '#131D2A' : '#DCE3E9');
+        document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.setAttribute('content', colorBarra); });
         document.querySelectorAll('.theme-toggle-btn').forEach(function (btn) {
             var sun = btn.querySelector('.ic-sun'), moon = btn.querySelector('.ic-moon');
             if (sun) sun.style.display = t === 'dark' ? 'none' : 'block';
@@ -3275,7 +3278,7 @@
 <script src="js/auditor/licencia.js?v=1"></script>
 <script src="js/categorias/primera.js?v=4"></script>
 <script src="js/categorias/segunda.js?v=3"></script>
-<script src="js/services/menu.js?v=7"></script>
+<script src="js/services/menu.js?v=8"></script>
 <script src="js/services/consola.js?v=3"></script>
 <script src="js/services/home-hub.js?v=4"></script>
 <script src="js/auditor/multi-cliente.js?v=1"></script>

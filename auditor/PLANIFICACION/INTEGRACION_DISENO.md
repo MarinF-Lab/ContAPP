@@ -37,7 +37,7 @@
 | 2 | Reemplazar colores fijos de JS/estilos en línea por variables | ✅ 2026-11-15 |
 | 3 | Pantallas: login, Mis clientes (avance de cierre por tarjeta), Inicio con "¿Qué quieres hacer hoy?" sobre el centro de mando | ✅ 2026-11-15 |
 | 4 | Componentes comunes: botones, tarjetas, tablas, formularios, modales, pestañas e íconos SVG | ✅ 2026-11-15 |
-| 5 | Movimiento y móvil (`emil-design-eng`, `review-animations`, `mobile-native`), `prefers-reduced-motion` | 🔲 |
+| 5 | Movimiento y móvil (`mobile-native`), `prefers-reduced-motion` | ✅ 2026-11-15 |
 | 6 | Revisión final: capturas antes/después, `verificar.js`, pruebas de fase, `web-design-guidelines` | 🔲 |
 
 ### Correcciones previas a la Etapa 1 — ✅ 2026-11-14
@@ -151,8 +151,24 @@ Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar l
   detectaba (Documentos, panel del estudio).
 - Capturas en `diseno/etapa4/`.
 
+### Etapa 5 — móvil y movimiento ✅ 2026-11-15
+- **Celular** (guía `mobile-native`): `viewport-fit=cover` + `interactive-widget`; `theme-color` por
+  esquema; sin destello al tocar; sin "tirar para recargar"; `touch-action: manipulation` (sin
+  espera de doble toque); etiquetas de botones no seleccionables; campos a 16px en pantallas
+  táctiles (iOS hacía zoom); márgenes de muesca/barra de inicio en aviso, botón de IA y cabeceras;
+  `100vh` → `100dvh`. **96 estados `:hover` limitados a dispositivos con mouse** (en táctil quedaban
+  pegados); los que muestran/ocultan algo se dejan. Barra superior en celular: casa + módulo con
+  nombre corto + búsqueda en una fila, íconos en otra; menos espacio antes del contenido.
+- **Movimiento**: respuesta al presionar en botones (escala 0,97, 80 ms); sugerencias de la consola
+  con un desliz corto de entrada; el globo de la consola ya no gira en Inicio (solo en el login).
+  Duraciones existentes ya estaban en 100-250 ms.
+- Prueba `PLANIFICACION/diseno/probar-movil.js` (en `npm run test:navegador`): 26 comprobaciones con
+  iPhone emulado. **Falta confirmar en un teléfono real**: hover pegado, zoom de iOS, muesca, teclado
+  y "tirar para recargar" no se reproducen bien en emulación.
+
 ### Pendientes / próximo paso
-1. **Etapa 5** — movimiento y móvil (`emil-design-eng`, `review-animations`, `mobile-native`).
+1. **Etapa 6** — revisión final: capturas antes/después, `npm test`, `web-design-guidelines`.
+2. Probar en un teléfono real (iOS y Android) lo marcado arriba.
 2. Probar con Firebase real: "¿Olvidaste tu contraseña?" y "Recordarme" (aquí Firebase no carga).
 3. Si se quiere entrar con Google/Microsoft: activar los proveedores en Firebase Auth y programarlo.
 2. Campos sin etiqueta asociada (~115, H5) y emoji como íconos (H4/H6): se resuelven al rediseñar

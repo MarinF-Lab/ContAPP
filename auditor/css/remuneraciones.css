@@ -64,7 +64,7 @@
     transition: color .15s, border-color .15s;
     white-space: nowrap;
 }
-.rem-tab:hover { color: var(--text); }
+@media (hover: hover) and (pointer: fine) { .rem-tab:hover { color: var(--text); } }
 .rem-tab.active { color: var(--text); border-bottom-color: var(--accent); }  /* Etapa 4: subrayada como las pestañas de módulo */
 
 /* ── Toolbar ──────────────────────────────────────────────── */
@@ -123,7 +123,7 @@
     transition: background .12s;
 }
 .rem-tabla tbody tr:last-child { border-bottom: none; }
-.rem-tabla tbody tr:hover { background: var(--table-stripe); }
+@media (hover: hover) and (pointer: fine) { .rem-tabla tbody tr:hover { background: var(--table-stripe); } }
 .rem-tabla tbody td { padding: 14px 18px; color: var(--text); vertical-align: middle; }
 .rem-tabla tfoot td {
     padding: 13px 18px;
@@ -183,7 +183,7 @@
     transition: background .12s;
     border: 1.5px solid transparent;
 }
-.rem-worker-item:hover { background: var(--table-stripe); }
+@media (hover: hover) and (pointer: fine) { .rem-worker-item:hover { background: var(--table-stripe); } }
 .rem-worker-item.sel   { background: var(--accent-soft); border-color: var(--accent); }
 .rem-worker-nombre {
     font-size: 14px;
@@ -395,7 +395,7 @@
     white-space: nowrap;
     transition: color .15s;
 }
-.rem-form-tab:hover { color: var(--text); }
+@media (hover: hover) and (pointer: fine) { .rem-form-tab:hover { color: var(--text); } }
 .rem-form-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
 .rem-form-grid {
@@ -460,7 +460,7 @@
     transition: border-color .15s, background .15s;
     background: var(--input-bg);
 }
-.rem-drop-zone:hover { border-color: var(--accent); background: var(--accent-soft); }
+@media (hover: hover) and (pointer: fine) { .rem-drop-zone:hover { border-color: var(--accent); background: var(--accent-soft); } }
 
 .rem-contrato-adjunto {
     display: flex;

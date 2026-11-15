@@ -98,7 +98,7 @@ firestore.rules → reglas v3 · firebase.json → emulador y despliegue de regl
 
 ```bash
 npm test                 # verificar.js (estática) + contraste AA + test-fase0..3.js (conectividad)
-npm run test:navegador   # + interacción en Chromium (modales, teclado, tema, avisos)
+npm run test:navegador   # + interacción en Chromium (modales, teclado, tema, avisos) + celular emulado
 npm run test:reglas      # firestore.rules en el emulador (requiere Java; 63 casos)
 npm run revisar:texto    # texto pegado a bordes o desbordado (servidor en :8765; ~10 min)
 ```

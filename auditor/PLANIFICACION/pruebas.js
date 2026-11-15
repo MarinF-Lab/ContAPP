@@ -62,18 +62,20 @@ function servidor() {
     await new Promise((ok, mal) => srv.once('error', mal).listen(PUERTO, ok)).catch(e => {
       console.log(`❌ No se pudo abrir el puerto ${PUERTO}: ${e.message}`); process.exit(1);
     });
-    const ok = await new Promise(fin => {
+    const correrNav = (nombre, archivo) => new Promise(fin => {
       let salida = '';
-      const p = spawn(process.execPath, ['PLANIFICACION/diseno/probar-interaccion.js'], { cwd: RAIZ });
+      const p = spawn(process.execPath, [archivo], { cwd: RAIZ });
       p.stdout.on('data', d => { salida += d; });
       p.stderr.on('data', d => { salida += d; });
       p.on('close', code => {
-        console.log(`${code === 0 ? '✅' : '❌'} Interacción en navegador\n${resumen(salida)}`);
+        console.log(`${code === 0 ? '✅' : '❌'} ${nombre}\n${resumen(salida)}`);
         fin(code === 0);
       });
     });
+    const ok1 = await correrNav('Interacción en navegador', 'PLANIFICACION/diseno/probar-interaccion.js');
+    const ok2 = await correrNav('Uso en celular (iPhone emulado)', 'PLANIFICACION/diseno/probar-movil.js');
     srv.close();
-    todoOk = ok && todoOk;
+    todoOk = ok1 && ok2 && todoOk;
   } else {
     console.log('ℹ️  Prueba en navegador: npm run test:navegador · Reglas de Firestore: npm run test:reglas');
   }

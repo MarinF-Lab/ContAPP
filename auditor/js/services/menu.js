@@ -157,7 +157,7 @@ function actualizarTopbarModulo(modulo) {
         const info = buscarInfoModulo(modulo);
         const lbl = document.getElementById('msLabel');
         const ic  = document.getElementById('msIcon');
-        if (lbl) lbl.textContent = info.label;
+        if (lbl) { lbl.textContent = etiquetaCortaModulo(info.label); lbl.title = info.label; }
         if (ic) { if (info.svg) ic.innerHTML = info.svg; else ic.textContent = info.icono; }
         renderModuleSwitch(construirMenu());
     }
