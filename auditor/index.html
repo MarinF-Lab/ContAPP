@@ -38,7 +38,7 @@
     <link rel="stylesheet" href="css/main.css?v=20">
     <link rel="stylesheet" href="css/home-hub.css?v=4">
     <link rel="stylesheet" href="css/remuneraciones.css?v=5">
-    <link rel="stylesheet" href="css/auditor.css?v=4">
+    <link rel="stylesheet" href="css/auditor.css?v=5">
     <script>
         // Restaurar tema guardado antes de que el DOM pinte (evita flash)
         (function() {
@@ -2152,15 +2152,30 @@
         <div id="view-empresa" class="view">
             <div class="emp-page">
 
+                <!-- Barra: marca, cuenta y salir (Etapa 3) -->
+                <div class="mc-topbar">
+                    <span class="mc-brand"><span class="seal seal-logo" aria-hidden="true"><img class="logo-claro" src="icons/brand/isotipo-light-96.png" alt="" width="30" height="30"><img class="logo-oscuro" src="icons/brand/isotipo-dark-96.png" alt="" width="30" height="30"></span>ContApp</span>
+                    <span class="mc-spacer"></span>
+                    <span id="empUserEmail" class="mc-email"></span>
+                    <button class="icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema claro u oscuro">
+                        <svg class="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>
+                        <svg class="ic-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+                    </button>
+                    <button class="logout-link" onclick="fbLogout()" title="Cerrar sesión">
+                        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                        Salir
+                    </button>
+                </div>
+
                 <!-- Cabecera -->
-                <div class="emp-page-header">
+                <div class="mc-head">
                     <div>
-                        <div class="emp-page-titulo">📂 Mis Clientes</div>
-                        <div class="emp-page-sub">Selecciona un cliente para trabajar su contabilidad</div>
+                        <h1 class="mc-titulo">Mis clientes</h1>
+                        <p class="mc-sub" id="empPageSub">Abre un cliente para trabajar en él.</p>
                     </div>
-                    <div class="emp-user-info">
-                        <span id="empUserEmail" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-                        <button onclick="fbLogout()">Cerrar sesión</button>
+                    <div class="mc-head-acc">
+                        <button type="button" class="btn btn-secondary" onclick="empAbrirCodigo();document.getElementById('empCodigoForm').scrollIntoView({block:'nearest'})">Código de invitación</button>
+                        <button type="button" class="btn btn-primary" onclick="empAbrirCrear();document.getElementById('empCrearForm').scrollIntoView({block:'nearest'})">Agregar cliente</button>
                     </div>
                 </div>
 
@@ -2175,11 +2190,6 @@
                     </div>
                 </div>
 
-                <!-- Botones principales -->
-                <div class="emp-acciones">
-                    <button class="emp-btn-crear" onclick="empAbrirCrear()">➕ Nuevo Cliente</button>
-                    <button class="emp-btn-codigo" onclick="empAbrirCodigo()">🔑 Código de invitación</button>
-                </div>
 
                 <!-- Formulario: crear cliente -->
                 <div id="empCrearForm" class="emp-subform" style="display:none;">
@@ -3278,10 +3288,10 @@
 <script src="js/categorias/primera.js?v=4"></script>
 <script src="js/categorias/segunda.js?v=3"></script>
 <script src="js/services/menu.js?v=6"></script>
-<script src="js/services/consola.js?v=1"></script>
+<script src="js/services/consola.js?v=2"></script>
 <script src="js/services/home-hub.js?v=3"></script>
 <script src="js/auditor/multi-cliente.js?v=1"></script>
-<script src="js/auditor/panel-estudio.js?v=2"></script>
+<script src="js/auditor/panel-estudio.js?v=3"></script>
 
 <!-- Registro del Service Worker (PWA) -->
 <script>
