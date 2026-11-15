@@ -46,7 +46,8 @@ PARES.push(['--on-accent', '--accent'], ['--on-accent', '--primary-hover'],
   ['--positive', '--positive-soft'], ['--negative', '--negative-soft'], ['--warning', '--warning-soft'],
   ['--info', '--info-soft'], ['--accent', '--accent-soft'], ['--text', '--accent-soft'],
   ['--text', '--positive-soft'], ['--text', '--negative-soft'], ['--text', '--warning-soft'],
-  ['--text', '--input-bg'], ['--text-subtle', '--input-bg'], ['--on-screen', '--screen']);
+  ['--text', '--input-bg'], ['--text-subtle', '--input-bg'], ['--on-screen', '--screen'], ['--screen-dim', '--screen'], ['--screen-dim', '--screen-2'],
+  ['--screen-accent', '--screen'], ['--screen-accent', '--screen-2'], ['--screen', '--screen-accent']);
 
 let ok = 0, mal = 0;
 for (const [nombreTema, vars] of [['claro', claro], ['oscuro', oscuro]]) {

@@ -56,6 +56,30 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   check('el centro de mando muestra grupos sin refrescar a mano', grupos >= 3, grupos);
   if (CAPTURAS) await p.screenshot({ path: OUT + '01-inicio.jpg', type: 'jpeg', quality: 70 });
 
+  console.log('Consola "¿Qué quieres hacer hoy?"');
+  let r = await p.evaluate(() => ({
+    hay: !!document.getElementById('cmdConsola'),
+    antesDelHub: (() => { const c = document.getElementById('homeConsola'), h = document.getElementById('homeHubTiles');
+                          return !!(c && h && (c.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)); })(),
+    sugerencias: document.querySelectorAll('#consolaSugList .sugi').length,
+  }));
+  check('consola encima del centro de mando, con sugerencias del día', r.hay && r.antesDelHub && r.sugerencias > 0, r);
+  await p.click('#cmdConsola');
+  await p.keyboard.type('pagué 50.000 de arriendo');
+  await p.keyboard.press('Enter');
+  await espera(500);
+  r = await p.evaluate(() => ({ vista: document.querySelector('.view.active')?.id, glosa: document.getElementById('glosaInput')?.value }));
+  check('frase con monto → Libro Diario con la glosa escrita', r.vista === 'view-estructura-contable' && r.glosa === 'pagué 50.000 de arriendo', r);
+  await p.evaluate(() => { document.getElementById('glosaInput').value = ''; navegar('inicio'); });
+  await espera(300);
+  await p.fill('#cmdConsola', 'conciliar el banco');
+  await espera(100);
+  r = await p.evaluate(() => [...document.querySelectorAll('#consolaSugList .sugi b')].map(b => b.textContent));
+  check('palabras clave → área relacionada', r[0] === 'Conciliar el banco', r);
+  await p.keyboard.press('Escape');
+  r = await p.evaluate(() => document.getElementById('cmdConsola').value);
+  check('Escape limpia la consola', r === '', r);
+
   console.log('Teclado');
   const tile = await p.evaluate(() => {
     const t = document.querySelector('#homeHubTiles .home-hub-tile');
@@ -82,7 +106,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   check('entrada animada', anim === 'cm-caja-in', anim);
   await espera(250);
   if (CAPTURAS) await p.screenshot({ path: OUT + '02-modal-compra.jpg', type: 'jpeg', quality: 70 });
-  let r = await p.evaluate(() => ({
+  r = await p.evaluate(() => ({
     foco: document.getElementById('modalCompra').contains(document.activeElement),
     tag: document.activeElement.tagName,
     scroll: document.documentElement.classList.contains('cm-sin-scroll'),

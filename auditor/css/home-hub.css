@@ -162,3 +162,67 @@
     .hh-panel { width: 92vw; }
     .hh-panel-grid { grid-template-columns: 1fr; }
 }
+
+/* ══════════════════════════════════════════
+   CONSOLA "¿Qué quieres hacer hoy?" (Etapa 3, js/services/consola.js)
+   Panel "pantalla" oscuro en ambos temas, como en la referencia.
+══════════════════════════════════════════ */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.consola {
+    position: relative; width: 100%; background: var(--screen); color: var(--on-screen);
+    border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-2); text-align: left;
+}
+.consola-globo { position: absolute; right: -70px; top: -40px; width: 340px; opacity: .5; pointer-events: none; }
+.consola-globo svg { width: 100%; height: auto; overflow: visible; stroke: var(--periwinkle, #8FA5B3); }
+.consola-globo g { stroke: #8FA5B3; opacity: .45; }
+.consola-in { position: relative; padding: 22px 24px 16px; display: flex; flex-direction: column; gap: 12px; }
+.consola h2 { margin: 0; font-family: var(--font-heading); font-size: clamp(21px, 2.6vw, 27px); color: var(--on-screen); max-width: 28ch; }
+.consola .sub { margin: 0; color: var(--screen-dim); font-size: 14.5px; max-width: 62ch; }
+.consola-prompt {
+    display: flex; align-items: center; gap: 12px; background: var(--screen-2);
+    border: 1px solid var(--screen-line); border-radius: 14px; padding: 10px 10px 10px 16px;
+    transition: border-color .15s, box-shadow .15s;
+}
+.consola-prompt:focus-within { border-color: var(--screen-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--screen-accent) 25%, transparent); }
+.consola-prompt .chev { width: 16px; height: 20px; flex: none; }
+.consola-prompt .chev path { stroke: var(--screen-accent); stroke-width: 4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+#cmdConsola {
+    flex: 1; min-width: 0; background: none; border: 0; outline: none; box-shadow: none; padding: 4px 0;
+    color: var(--on-screen); font-family: var(--font-mono); font-size: clamp(14px, 1.7vw, 16px); caret-color: var(--screen-accent);
+}
+#cmdConsola::placeholder { color: var(--screen-dim); }
+.consola-go {
+    border: 0; background: var(--screen-accent); color: var(--screen); font-weight: 700; border-radius: 10px;
+    padding: 8px 16px; font-size: 14px; flex: none; cursor: pointer; font-family: inherit;
+}
+.consola-go:hover { filter: brightness(1.08); }
+.consola-sug { position: relative; border-top: 1px solid var(--screen-line); padding: 6px 12px 12px; }
+.consola-sug:has(.suglist:empty) { display: none; }
+.consola .sug-t { font-size: 13px; color: var(--screen-dim); padding: 6px 10px; }
+.consola .suglist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: 300px; overflow-y: auto; }
+.consola .sugi {
+    display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+    padding: 8px 10px; border-radius: 10px; cursor: pointer;
+}
+.consola .sugi:hover, .consola .sugi[aria-selected="true"] { background: var(--screen-2); }
+.consola .sugi[aria-selected="true"] { box-shadow: inset 2px 0 0 var(--screen-accent); }
+.consola .sugi .ic {
+    width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+    background: var(--screen-2); color: var(--screen-accent); border: 1px solid var(--screen-line);
+}
+.consola .sugi .ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.consola .sugi-txt { min-width: 0; }
+.consola .sugi b { display: block; color: var(--on-screen); font-weight: 600; font-size: 14.5px; }
+.consola .sugi .a { display: block; font-size: 13px; color: var(--screen-dim); }
+.consola .sugi .tag { font-size: 12.5px; color: var(--screen-accent); text-align: right; max-width: 22ch; }
+.consola .sug-vacio { padding: 6px 10px; font-size: 13.5px; color: var(--screen-dim); }
+@media (max-width: 560px) {
+    .consola .sugi { grid-template-columns: 34px minmax(0, 1fr); }
+    .consola .sugi .tag { grid-column: 2; text-align: left; }
+    .consola-globo { width: 240px; right: -90px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .consola-globo .mer { animation: consola-giro 16s linear infinite; transform-origin: 200px 200px; }
+    .consola-globo .mer.b { animation-delay: -8s; }
+}
+@keyframes consola-giro { from { transform: scaleX(1); } 50% { transform: scaleX(-1); } to { transform: scaleX(1); } }

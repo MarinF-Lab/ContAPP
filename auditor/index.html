@@ -34,9 +34,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-    <link rel="stylesheet" href="css/variables.css?v=4">
+    <link rel="stylesheet" href="css/variables.css?v=5">
     <link rel="stylesheet" href="css/main.css?v=20">
-    <link rel="stylesheet" href="css/home-hub.css?v=3">
+    <link rel="stylesheet" href="css/home-hub.css?v=4">
     <link rel="stylesheet" href="css/remuneraciones.css?v=5">
     <link rel="stylesheet" href="css/auditor.css?v=4">
     <script>
@@ -188,7 +188,9 @@
           <!-- Sección 1: Centro de mando — hub de grupos de módulos (ver home-hub.js) -->
           <div class="in-slide in-slide-hub" id="inSlide0">
             <div class="home-hub" id="homeHub">
-                <div class="home-hub-caption">Selecciona un grupo de módulos</div>
+                <!-- Etapa 3: consola "¿Qué quieres hacer hoy?" encima del centro de mando (consola.js) -->
+                <section class="consola" id="homeConsola" aria-label="¿Qué quieres hacer hoy?"></section>
+                <div class="home-hub-caption">Centro de mando · selecciona un grupo de módulos</div>
                 <div class="home-hub-tiles" id="homeHubTiles"></div>
             </div>
           </div>
@@ -3276,6 +3278,7 @@
 <script src="js/categorias/primera.js?v=4"></script>
 <script src="js/categorias/segunda.js?v=3"></script>
 <script src="js/services/menu.js?v=6"></script>
+<script src="js/services/consola.js?v=1"></script>
 <script src="js/services/home-hub.js?v=3"></script>
 <script src="js/auditor/multi-cliente.js?v=1"></script>
 <script src="js/auditor/panel-estudio.js?v=2"></script>

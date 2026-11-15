@@ -33,6 +33,10 @@
     --on-state:         #FFFFFF;   /* texto sobre botones de estado (rojo/verde/info) */
     --screen:           #0F1B26;   /* "pantalla": paneles oscuros en ambos temas (cabeceras de boleta, consola) */
     --on-screen:        #CBD5DE;
+    --screen-2:         #182736;
+    --screen-line:      #2A3B4C;
+    --screen-dim:       #8B9BA8;
+    --screen-accent:    #E8649A;
 
     /* ---- estados ---- */
     --ok:               #1C6E50;
@@ -137,6 +141,10 @@
     --on-state:         #131D2A;   /* ni sobre los estados claros del tema oscuro */
     --screen:           #0C1622;
     --on-screen:        #D3DCE4;
+    --screen-2:         #14212F;
+    --screen-line:      #253547;
+    --screen-dim:       #8B9BA8;
+    --screen-accent:    #FF5A8A;
 
     /* ---- estados ---- */
     --ok:               #4CC59A;

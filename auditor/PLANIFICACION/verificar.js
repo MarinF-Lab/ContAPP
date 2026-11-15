@@ -302,6 +302,11 @@ check('invitado se inscribe en el cliente como asistente (no admin)',
     tieneString('js/services/firebase-service.js', "window.currentUser.esInvitado\n                ? 'asistente'") ||
     /esInvitado\s*\?\s*'asistente'/.test(leer('js/services/firebase-service.js')));
 
+check('consola "¿Qué quieres hacer hoy?" encima del centro de mando (Etapa 3)',
+    tieneString('index.html', 'id="homeConsola"') && tieneString('index.html', 'js/services/consola.js') &&
+    (() => { const h = leer('index.html'); return h.indexOf('id="homeConsola"') < h.indexOf('id="homeHubTiles"'); })() &&
+    tieneString('js/services/consola.js', 'cierreChecklist'));
+
 // ─────────────────────────────────────────────────────────────
 console.log('\n' + '─'.repeat(50));
 console.log(`Resultado: ${ok} ✅  |  ${errores} ❌`);
