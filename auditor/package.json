@@ -1,16 +1,22 @@
 {
   "name": "auditor",
   "version": "1.0.0",
-  "description": "> Sistema de contabilidad SaaS multi-cliente para estudios contables chilenos.",
+  "description": "ContApp Auditor — SaaS contable multi-cliente para estudios contables chilenos.",
   "main": "service-worker.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node PLANIFICACION/pruebas.js",
+    "test:navegador": "node PLANIFICACION/pruebas.js --navegador",
+    "test:reglas": "firebase emulators:exec --only firestore --project contapp-reglas \"node PLANIFICACION/test-reglas.mjs\"",
+    "revisar:texto": "node PLANIFICACION/diseno/revisar-texto.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "@playwright/test": "^1.61.1"
+    "@playwright/test": "^1.61.1",
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase": "^12.0.0",
+    "firebase-tools": "^15.36.0"
   }
 }

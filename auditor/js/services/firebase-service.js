@@ -145,7 +145,13 @@ function fbInit() {
         return true;
     } catch(e) {
         console.error('Firebase init error:', e);
-        _fbEntrarModoOffline();
+        // Mismo caso que LOGIN_DESACTIVADO_TEMPORAL: fbInit() corre antes de que
+        // menu.js/categorias existan; sin diferir, Inicio queda sin grupos.
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', _fbEntrarModoOffline);
+        } else {
+            _fbEntrarModoOffline();
+        }
         return false;
     }
 }
@@ -313,6 +319,12 @@ async function _fbCargarPerfil(user) {
                         window.currentUser.canInvite   = false;
                         window.currentUser.titularUid  = data.vinculadoA;
                         window.currentUser.titularEmail = t.email || '';
+                        // Sesión con código que se recargó: mismo usuario que en _audEntrarConCodigo
+                        if (data.anonimo) {
+                            window.currentUser.email = 'Invitado';
+                            window.currentUser.accesoPorCodigo = true;
+                            window.currentUser.rol = 'asistente';
+                        }
                     }
                 } catch(e) { console.warn('No se pudo cargar el perfil del titular:', e.message); }
             } else {
@@ -412,7 +424,7 @@ async function _fbCargarListaEmpresas() {
     if (!empresas.length) {
         lista.innerHTML = `
             <div class="emp-empty">
-                <div class="emp-empty-icon">🏢</div>
+                <div class="emp-empty-icon"><i class=cxi-edificio></i></div>
                 <div>Aún no tienes clientes registrados.</div>
                 <div style="font-size:12px;margin-top:6px;color:var(--text-muted);">
                     Crea un cliente nuevo o únete con un código de invitación.
@@ -434,7 +446,7 @@ async function _fbCargarListaEmpresas() {
 
         const validas = cards.filter(Boolean);
         if (!validas.length) {
-            lista.innerHTML = '<div class="emp-empty"><div class="emp-empty-icon">⚠️</div><div>No se pudieron cargar los clientes.</div></div>';
+            lista.innerHTML = '<div class="emp-empty"><div class="emp-empty-icon"><i class=cxi-alerta></i></div><div>No se pudieron cargar los clientes.</div></div>';
             return;
         }
 
@@ -461,9 +473,9 @@ async function _fbCargarListaEmpresas() {
                         <div class="emp-item-nombre">${e.empresa || '(Sin nombre)'}</div>
                     </div>
                     <div class="emp-item-meta">
-                        <span>🪪 ${e.rut || '—'}</span>
-                        <span>📂 ${catLabel}</span>
-                        ${e.giro ? `<span>📋 ${e.giro}</span>` : ''}
+                        <span><i class=cxi-id></i> ${e.rut || '—'}</span>
+                        <span><i class=cxi-carpeta></i> ${catLabel}</span>
+                        ${e.giro ? `<span><i class=cxi-lista></i> ${e.giro}</span>` : ''}
                     </div>
                 </div>`;
             }).join('');
@@ -555,8 +567,12 @@ async function seleccionarEmpresa(empresaId) {
             // no del usuario — ya fue asignada desde el empDoc arriba y no debe sobreescribirse.
             window.currentUser.rol = usrDoc.data().rol || 'asistente';
         } else {
-            // El doc de usuario no existe en esta empresa → crearlo con el rol del perfil
-            const rolPerfil = window.currentUser.rol || 'admin';
+            // El doc de usuario no existe en esta empresa → crearlo. Titular: admin.
+            // Invitado o acceso por código: 'asistente' (firestore.rules v3 no deja
+            // que un invitado se inscriba como admin; el titular puede subirlo después).
+            const rolPerfil = window.currentUser.esInvitado
+                ? 'asistente'
+                : (window.currentUser.rol || 'admin');
             await _fbDb.collection('empresas').doc(empresaId)
                 .collection('usuarios').doc(window.currentUser.uid).set({
                     email:    window.currentUser.email,
@@ -670,7 +686,7 @@ async function _fbRenderHomeClientSwitch() {
         }
         listEl.innerHTML = items.map(it => `
             <button class="hcs-item ${it.id === activoId ? 'active' : ''}" onclick="event.stopPropagation();document.getElementById('homeClientPanel').classList.remove('open');seleccionarEmpresa('${it.id}')">
-                <span class="hcs-ic">🏢</span>
+                <span class="hcs-ic"><i class=cxi-edificio></i></span>
                 <span class="hcs-item-meta">${it.nombre}<span class="hcs-item-rut">${it.rut}</span></span>
             </button>`).join('');
         _homeClientSwitchCargado = true;
@@ -700,12 +716,32 @@ async function fbLogin() {
     if (!email || !pass) { errEl.textContent = 'Ingrese correo y contraseña.'; return; }
     _fbSetLoading(true, 'Ingresando…');
     try {
+        // "Recordarme": sin marcar, la sesión dura hasta cerrar el navegador
+        const recordar = document.getElementById('loginRecordar')?.checked !== false;
+        await _fbAuth.setPersistence(recordar ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
         await _fbAuth.signInWithEmailAndPassword(email, pass);
     } catch(e) {
         errEl.textContent = _fbErrMsg(e.code);
         _fbSetLoading(false);
     }
 }
+
+// "¿Olvidaste tu contraseña?": Firebase envía un enlace para crear una nueva
+async function fbRecuperarClave() {
+    const email = (document.getElementById('loginEmail')?.value || '').trim();
+    const errEl = document.getElementById('loginError');
+    if (errEl) errEl.textContent = '';
+    if (!email) { if (errEl) errEl.textContent = 'Escribe tu correo arriba y vuelve a presionar «¿Olvidaste tu contraseña?».'; document.getElementById('loginEmail')?.focus(); return; }
+    if (!_fbAuth) { if (errEl) errEl.textContent = 'Sin conexión: inténtalo cuando tengas internet.'; return; }
+    try {
+        await _fbAuth.sendPasswordResetEmail(email);
+        mostrarToast(`Te enviamos un enlace a ${email} para crear una nueva contraseña.`, 'ok');
+    } catch (e) {
+        if (errEl) errEl.textContent = e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email'
+            ? 'No encontramos una cuenta con ese correo.' : _fbErrMsg(e.code);
+    }
+}
+window.fbRecuperarClave = fbRecuperarClave;
 
 // Entrada directa con código: sesión anónima vinculada al perfil del titular.
 // Requiere tener habilitado el proveedor "Anónimo" en Firebase Auth.

@@ -293,6 +293,20 @@ async function _audEntrarConCodigo(codigo, authUser) {
     const titularUid = inv.titularUid;
     if (!titularUid) return { ok: false, error: 'Código no válido para esta versión.' };
 
+    // Perfil de la sesión anónima: deja constancia del código con que entró.
+    // firestore.rules v3 da acceso a los clientes del titular solo mientras ese
+    // código no esté revocado (revocarlo corta el acceso de inmediato).
+    try {
+        await _fbDb.collection('perfiles').doc(authUser.uid).set({
+            vinculadoA:   titularUid,
+            codigoAcceso: codigo,
+            anonimo:      true,
+            creadoEn:     firebase.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (e) {
+        return { ok: false, error: 'No se pudo validar el código. Intenta de nuevo.' };
+    }
+
     const tSnap = await _fbDb.collection('perfiles').doc(titularUid).get();
     if (!tSnap.exists) return { ok: false, error: 'La cuenta del titular ya no existe.' };
     const t = tSnap.data();
@@ -343,7 +357,7 @@ async function empVerificarCodigo() {
 
 // ── Gestión de invitaciones (solo admin, desde Configuración) ─
 
-// ContAPP Auditor: la invitación es a nivel de PERFIL (no por empresa).
+// ID Contable Auditor: la invitación es a nivel de PERFIL (no por empresa).
 // El titular de pago genera hasta MAX_INVITADOS códigos; cada invitado que
 // los canjea queda vinculado al perfil del titular y ve TODOS sus clientes.
 const MAX_INVITADOS = 4;
@@ -480,7 +494,7 @@ function _actualizarEstadoCertificado(nombre, valido) {
     if (!box) return;
     box.style.display = 'block';
     box.innerHTML = valido
-        ? `<span style="color:var(--positive);">✔ Certificado cargado: <strong>${nombre}</strong></span>`
+        ? `<span style="color:var(--positive);"><i class=cxi-check></i> Certificado cargado: <strong>${nombre}</strong></span>`
         : `<span style="color:var(--text-muted);">Sin certificado digital cargado.</span>`;
 }
 

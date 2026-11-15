@@ -559,7 +559,7 @@ function _cartolaPanelSugerencias(mv) {
         const fila = document.createElement('div');
         fila.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;';
         const etiqueta = v.etiqueta || ('Factura N°' + (v.numero_doc || '—') + ' · ' + (v.nombre || ''));
-        fila.innerHTML = '<span>🔗 ' + (v.libro === 'ventas' ? 'Cobra: ' : 'Paga: ') + _cEsc(etiqueta) +
+        fila.innerHTML = '<span><i class=cxi-vinculo></i> ' + (v.libro === 'ventas' ? 'Cobra: ' : 'Paga: ') + _cEsc(etiqueta) +
             (v.libro === 'previred' ? ' (asiento ya registrado)' : '') + '</span>';
         const btn = document.createElement('button');
         btn.className = 'btn-cl-cancelar';
@@ -710,6 +710,7 @@ function _renderTablaCartola() {
         btnDel.className = 'btn-accion btn-eliminar';
         btnDel.textContent = '✕';
         btnDel.title = 'Eliminar movimiento';
+        btnDel.setAttribute('aria-label', 'Eliminar movimiento');
         btnDel.dataset.id = mv.id;
         btnDel.addEventListener('click', function () {
             mostrarConfirm('¿Eliminar este movimiento?', () => {
@@ -777,7 +778,7 @@ function renderCartolas() {
     const xlsxDisponible = !!window.XLSX;
     const avisoXLSX = xlsxDisponible
         ? ''
-        : '<p class="aviso-xlsx">⚠ SheetJS no detectado — importación XLSX deshabilitada. Solo CSV.</p>';
+        : '<p class="aviso-xlsx"><i class=cxi-alerta></i> SheetJS no detectado — importación XLSX deshabilitada. Solo CSV.</p>';
 
     // Selector de meses
     const meses = [
@@ -839,7 +840,7 @@ function renderCartolas() {
                 '</label>' +
                 '<div id="dropzone-cartola" class="dropzone-cartola">' +
                     '<span>Arrastra aquí el archivo CSV' + (xlsxDisponible ? ' / XLSX' : '') + '</span>' +
-                    '<button id="btn-seleccionar-cartola" type="button">Seleccionar archivo</button>' +
+                    '<button id="btn-seleccionar-cartola" type="button" class="btn btn-secondary">Seleccionar archivo</button>' +
                     '<input type="file" id="input-file-cartola" accept=".csv,.xlsx,.xls" style="display:none">' +
                 '</div>' +
             '</div>' +
@@ -868,7 +869,7 @@ function renderCartolas() {
                     '<option value="ignorado">Ignorado</option>' +
                 '</select>' +
             '</label>' +
-            '<button id="btn-generar-asientos-cartola" class="btn-generar-asientos">Generar asientos</button>' +
+            '<button type="button" id="btn-generar-asientos-cartola" class="btn btn-primary btn-generar-asientos">Generar asientos</button>' +
         '</div>' +
 
         // ── Tabla ──

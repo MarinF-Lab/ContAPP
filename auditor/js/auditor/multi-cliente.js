@@ -1,7 +1,7 @@
 'use strict';
 // ─────────────────────────────────────────────────────────────────────────────
 //  MULTI-CLIENTE — Gestión de clientes + despachador de categorías
-//  ContAPP Auditor
+//  ID Contable Auditor
 //
 //  La lógica de módulos vive en:
 //    js/categorias/primera.js  →  CAT1_*, cat1*
@@ -106,8 +106,8 @@ function audRenderizarTarjeta(cliente) {
                     ${cliente.esPropio ? '<span class="aud-badge-propio">Mi Oficina</span>' : ''}
                 </div>
                 <div class="aud-emp-meta">
-                    ${cliente.rut  ? `<span>🪪 ${cliente.rut}</span>`  : ''}
-                    ${cliente.giro ? `<span>📋 ${cliente.giro}</span>` : ''}
+                    ${cliente.rut  ? `<span><i class=cxi-id></i> ${cliente.rut}</span>`  : ''}
+                    ${cliente.giro ? `<span><i class=cxi-lista></i> ${cliente.giro}</span>` : ''}
                     <span class="aud-cat-badge aud-cat-${cat}">${cat === 'primera' ? '1ª Cat.' : '2ª Cat.'}</span>
                 </div>
             </div>

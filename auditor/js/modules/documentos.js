@@ -9,18 +9,18 @@
 //  CATÁLOGO DE CATEGORÍAS
 // ─────────────────────────────────────────────────────────────
 const DOC_CATEGORIAS = [
-    { value: 'todos',           label: 'Todos',             icon: '📁', dir: null       },
-    { value: 'compra_materia',  label: 'F. Materia Prima',  icon: '📦', dir: 'entrada'  },
-    { value: 'compra_servicio', label: 'F. Servicio',       icon: '🔧', dir: 'entrada'  },
-    { value: 'honorarios',      label: 'Honorarios',        icon: '📒', dir: 'entrada'  },
-    { value: 'venta_boleta',    label: 'Boletas Venta',     icon: '🧾', dir: 'salida'   },
-    { value: 'venta_factura',   label: 'Facturas Venta',    icon: '💰', dir: 'salida'   },
+    { value: 'todos',           label: 'Todos',             icon: 'carpeta', dir: null       },
+    { value: 'compra_materia',  label: 'F. Materia Prima',  icon: 'caja', dir: 'entrada'  },
+    { value: 'compra_servicio', label: 'F. Servicio',       icon: 'engranaje', dir: 'entrada'  },
+    { value: 'honorarios',      label: 'Honorarios',        icon: 'libro', dir: 'entrada'  },
+    { value: 'venta_boleta',    label: 'Boletas Venta',     icon: 'recibo', dir: 'salida'   },
+    { value: 'venta_factura',   label: 'Facturas Venta',    icon: 'dinero', dir: 'salida'   },
 ];
 
 const DOC_ESTADOS = [
-    { value: 'pendiente', label: 'Pendiente', color: '#f59e0b' },
-    { value: 'pagada',    label: 'Pagada',    color: '#10b981' },
-    { value: 'anulada',   label: 'Anulada',   color: '#94a3b8' },
+    { value: 'pendiente', label: 'Pendiente', color: 'var(--warning)' },
+    { value: 'pagada',    label: 'Pagada',    color: 'var(--positive)' },
+    { value: 'anulada',   label: 'Anulada',   color: 'var(--text-subtle)' },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -138,10 +138,10 @@ function _docHtml() {
                    border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;
                    border:1.5px solid ${active ? 'var(--accent)' : 'var(--divider)'};
                    background:${active ? 'var(--accent)' : 'var(--input-bg)'};
-                   color:${active ? '#fff' : 'var(--text)'};font-weight:${active ? '700' : '400'};">
-            ${cat.icon} ${cat.label}
-            <span style="background:${active ? 'rgba(255,255,255,.25)' : 'var(--divider)'};
-                         color:${active ? '#fff' : 'var(--text-muted)'};padding:1px 7px;
+                   color:${active ? 'var(--on-accent)' : 'var(--text)'};font-weight:${active ? '700' : '400'};">
+            <i class=cxi-${cat.icon}></i> ${cat.label}
+            <span style="background:${active ? 'color-mix(in srgb, var(--on-accent) 22%, transparent)' : 'var(--divider)'};
+                         color:${active ? 'var(--on-accent)' : 'var(--text-muted)'};padding:1px 7px;
                          border-radius:12px;font-size:11px;">${count}</span>
         </button>`;
     }).join('');
@@ -155,15 +155,15 @@ function _docHtml() {
         </div>
         <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px 20px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Neto total</div>
-            <div style="font-size:20px;font-weight:800;color:var(--text);margin-top:4px;">$${fmt(totNeto)}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--text);margin-top:4px;">${fmtPeso(totNeto)}</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px 20px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">IVA</div>
-            <div style="font-size:20px;font-weight:800;color:#2563eb;margin-top:4px;">$${fmt(totIva)}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--info);margin-top:4px;">${fmtPeso(totIva)}</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px 20px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Total</div>
-            <div style="font-size:20px;font-weight:800;color:var(--positive);margin-top:4px;">$${fmt(totTotal)}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--positive);margin-top:4px;">${fmtPeso(totTotal)}</div>
         </div>
     </div>`;
 
@@ -175,7 +175,7 @@ function _docHtml() {
         return `<tr style="${d.estado === 'anulada' ? 'opacity:.5;' : ''}">
             <td>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:18px;">${cat.icon}</span>
+                    <span style="font-size:18px;color:var(--accent);"><i class=cxi-${cat.icon}></i></span>
                     <div>
                         <div style="font-size:12px;font-weight:700;color:var(--text);">${cat.label}</div>
                         <div style="font-size:11px;color:var(--text-muted);">${cat.dir === 'entrada' ? 'Entrada' : cat.dir === 'salida' ? 'Salida' : '—'}</div>
@@ -185,37 +185,37 @@ function _docHtml() {
             <td style="font-family:monospace;font-size:12px;">${d.numero_doc || '—'}</td>
             <td>${d.fecha || '—'}</td>
             <td>
-                <div style="font-weight:600;font-size:13px;">${d.nombre || '—'}</div>
-                ${d.rut ? `<div style="font-size:11px;color:var(--text-muted);font-family:monospace;">${d.rut}</div>` : ''}
+                <div class="nombre-2l" style="font-weight:600;font-size:13px;max-width:26ch;" title="${escHTML(d.nombre || '')}">${escHTML(d.nombre || '—')}</div>
+                ${d.rut ? `<div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap;">${d.rut}</div>` : ''}
             </td>
-            <td class="monto">$${fmt(d.neto || 0)}</td>
-            <td class="monto" style="color:#2563eb;">$${fmt(d.iva || 0)}</td>
-            <td class="monto" style="font-weight:700;">$${fmt(d.total || 0)}</td>
+            <td class="monto">${d.neto ? '$' + fmt(d.neto) : '—'}</td>
+            <td class="monto" style="color:var(--info);">${d.iva ? '$' + fmt(d.iva) : '—'}</td>
+            <td class="monto" style="font-weight:700;">${fmtPeso(d.total || 0)}</td>
             <td>
                 <span style="background:${est.color}22;color:${est.color};border:1px solid ${est.color}55;
                              padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;">
                     ${est.label}
                 </span>
             </td>
-            <td>
-                <div style="display:flex;gap:5px;align-items:center;">
+            <td class="doc-acciones-td">
+                <div class="doc-acciones">
                     ${d.adjunto ? `<button onclick="docAbrirAdjunto(${d.id})"
                         style="border:1px solid var(--divider);background:var(--input-bg);
                                border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;"
-                        title="Ver adjunto">📄</button>` : ''}
+                        title="Ver adjunto"><i class=cxi-documento></i></button>` : ''}
                     <button onclick="editarDocumento(${d.id})"
                         style="border:1px solid var(--divider);background:var(--input-bg);color:var(--text);
                                border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;">
-                        ✏️ Editar</button>
+                        <i class=cxi-editar></i> Editar</button>
                     ${_docBotonLibro(d)}
                     ${d.estado === 'pendiente' ? `
                     <button onclick="docMarcarPagada(${d.id})"
-                        style="border:1px solid #10b98155;background:#10b98111;color:#10b981;
+                        style="border:1px solid var(--positive);background:var(--positive-soft);color:var(--positive);
                                border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;">
-                        ✔ Pagar</button>` : ''}
+                        <i class=cxi-check></i> Pagar</button>` : ''}
                     ${d.estado !== 'anulada' ? `
                     <button onclick="docAnular(${d.id})"
-                        style="border:1px solid #fca5a5;background:var(--negative-soft);
+                        style="border:1px solid var(--negative);background:var(--negative-soft);
                                border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;">
                         Anular</button>` : ''}
                 </div>
@@ -295,7 +295,7 @@ function _docHtml() {
                     <select id="docCategoria" class="ctc-input"
                         onchange="docActualizarFormulario()">
                         ${DOC_CATEGORIAS.filter(c=>c.value!=='todos').map(c=>
-                            `<option value="${c.value}">${c.icon} ${c.label}</option>`
+                            `<option value="${c.value}">${c.label}</option>`
                         ).join('')}
                     </select>
                 </div>
@@ -360,7 +360,7 @@ function _docHtml() {
                     <button onclick="docAdjuntarArchivo()"
                         style="padding:8px 14px;border:1.5px dashed var(--divider);border-radius:8px;
                                background:var(--input-bg);cursor:pointer;font-size:13px;font-family:inherit;">
-                        📎 Adjuntar archivo
+                        <i class=cxi-clip></i> Adjuntar archivo
                     </button>
                     <span id="docAdjuntoBadge" style="display:none;font-size:12px;
                           background:var(--accent-soft);color:var(--accent);padding:4px 10px;
@@ -378,7 +378,7 @@ function _docHtml() {
             </button>
             <button class="btn btn-primary" onclick="guardarDocumento()"
                 style="padding:9px 22px;font-size:13px;">
-                💾 Guardar documento
+                <i class=cxi-guardar></i> Guardar documento
             </button>
         </div>
     </div>
@@ -574,30 +574,30 @@ function _docBotonLibro(d) {
     if (typeof conexDocDestino !== 'function') return '';
     if (d.libro && d.libro_id) {
         return `<span title="Registrado en el ${_DOC_LIBRO_LABEL[d.libro] || d.libro}"
-            style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+            style="border:1px solid var(--info);background:var(--info-soft);color:var(--info);
                    border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;white-space:nowrap;">
-            📗 En libro</span>`;
+            <i class=cxi-libro></i> En libro</span>`;
     }
     if (d.categoria === 'honorarios' && typeof conexHonorarioContabilizar === 'function') {
         if (d.contabilizado) {
             return `<span title="Asiento con retención registrado en el Libro Diario"
-                style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+                style="border:1px solid var(--info);background:var(--info-soft);color:var(--info);
                        border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;white-space:nowrap;">
-                📗 Contabilizada</span>`;
+                <i class=cxi-libro></i> Contabilizada</span>`;
         }
         if (d.estado === 'anulada') return '';
         return `<button onclick="docContabilizarHonorario(${d.id})"
             title="Registra el gasto, la retención (va al F29) y el honorario por pagar"
-            style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+            style="border:1px solid var(--info);background:var(--info-soft);color:var(--info);
                    border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap;">
-            📗 Contabilizar</button>`;
+            <i class=cxi-libro></i> Contabilizar</button>`;
     }
     if (d.estado === 'anulada' || !conexDocDestino(d)) return '';
     return `<button onclick="docPasarALibro(${d.id})"
         title="Registrar este documento en el libro sin volver a digitarlo"
-        style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+        style="border:1px solid var(--info);background:var(--info-soft);color:var(--info);
                border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap;">
-        📗 Pasar al libro</button>`;
+        <i class=cxi-libro></i> Pasar al libro</button>`;
 }
 
 function docContabilizarHonorario(id) {

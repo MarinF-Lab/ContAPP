@@ -122,6 +122,14 @@ function _modulosRecientesRegistrar(modulo) {
 }
 
 function navegar(modulo, elNav) {
+    // Formulario abierto con cambios sin guardar: preguntar antes de cerrarlo (web-design-guidelines)
+    if (window.ContappModales && ContappModales.hayCambiosSinGuardar() && typeof mostrarConfirm === 'function') {
+        mostrarConfirm('Tienes cambios sin guardar en el formulario abierto. ¿Salir y descartarlos?', () => {
+            ContappModales.descartarCambios();
+            navegar(modulo, elNav);
+        }, { titulo: 'Descartar cambios', textoBtn: 'Salir sin guardar' });
+        return;
+    }
 
     // Cerrar cualquier modal abierto al cambiar de módulo (evita que quede
     // flotando sobre la vista de destino)
@@ -152,7 +160,7 @@ function navegar(modulo, elNav) {
         'centros-costo':       ['inventario-activos', 'tab-inv-centros'],
         'bodegas':             ['inventario-activos', 'tab-inv-bodegas'],
         'movimientos-inventario': ['inventario-activos', 'tab-inv-movimientos'],
-        // Alias — módulos fusionados en inventario-activos (ver PLANIFICACION/INTEGRACION_DISENO.md)
+        // Alias — módulos fusionados en inventario-activos (ver PLANIFICACION/archivo/HISTORIAL_INTEGRACION_2026-07_a_09.md)
         'activos-produccion':  ['inventario-activos', 'tab-ap-activos'],
         'inventario':          ['inventario-activos', 'tab-inv-centros'],
         // Segunda categoría
@@ -375,6 +383,7 @@ function aplicarConfiguracion(cfg) {
     txt('headerEmpresa',  cfg.empresa || 'Mi Empresa Ltda.');
     txt('homeGreetEmpresa', cfg.empresa || 'Mi Empresa Ltda.');
     txt('fieldEmpresa', cfg.empresa || 'Mi Empresa Ltda.');
+    ['fieldEmpresa', 'homeGreetEmpresa'].forEach(id => { const el = document.getElementById(id); if (el) el.title = cfg.empresa || ''; });
     txt('fieldEjercicio', cfg.periodo || new Date().getFullYear());
 
     const hp = document.getElementById('headerPeriodo');
@@ -391,42 +400,52 @@ function aplicarConfiguracion(cfg) {
 //  TOAST NOTIFICATIONS
 // ─────────────────────────────────────────────────────────────
 function mostrarToast(mensaje, tipo = 'ok') {
+    // Estilos en main.css (#toast-global). Antes cualquier tipo distinto de 'ok'
+    // (incluido 'info') se veía rojo, como un error.
+    const clase = (tipo === 'error' || tipo === 'err') ? 'error' : (tipo === 'info' || tipo === 'warn') ? tipo : 'ok';
     let toast = document.getElementById('toast-global');
     if (!toast) {
         toast = document.createElement('div');
         toast.id = 'toast-global';
-        toast.style.cssText = `
-            position:fixed;bottom:30px;right:30px;z-index:99999;
-            padding:14px 22px;border-radius:10px;font-size:14px;font-weight:600;
-            box-shadow:0 4px 20px rgba(0,0,0,.15);transition:opacity .3s;
-        `;
+        toast.setAttribute('aria-live', 'polite');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.title = 'Clic para cerrar';
+        toast.addEventListener('click', () => { clearTimeout(toast._timer); toast.classList.remove('visible'); });
         document.body.appendChild(toast);
     }
+    toast.setAttribute('role', clase === 'error' ? 'alert' : 'status');
+    toast.className = 't-' + clase;
     toast.textContent = mensaje;
-    toast.style.background = tipo === 'ok' ? '#dcfce7' : '#fee2e2';
-    toast.style.color       = tipo === 'ok' ? '#166534' : '#991b1b';
-    toast.style.opacity     = '1';
+    // Forzar reflow para que la entrada se repita si ya estaba visible
+    void toast.offsetWidth;
+    toast.classList.add('visible');
     clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+    toast._timer = setTimeout(() => { toast.classList.remove('visible'); }, clase === 'error' ? 5000 : 3000);
 }
 
 window.mostrarToast = mostrarToast;
 
+// El mensaje es texto (puede traer nombres importados): se escapa y solo se
+// permiten los saltos de línea y negritas que usan las confirmaciones propias.
+function _textoConfirm(m) {
+    return escHTML(m).replace(/&lt;(\/?)(br|strong|b)\s*\/?&gt;/g, '<$1$2>').replace(/\n/g, '<br>');
+}
+
 function mostrarConfirm(mensaje, onConfirm, { titulo = '¿Confirmar?', textoBtn = 'Confirmar', tipo = 'danger' } = {}) {
     // Evita apilar varias confirmaciones si algo la dispara de nuevo mientras
     // ya hay una abierta (ej. Enter repetido antes del fix de foco de abajo).
-    if (document.querySelector('.modal-confirm')) return;
+    if (document.querySelector('.modal-confirm:not(.cm-saliendo)')) return;
 
     const overlay = document.createElement('div');
     overlay.className = 'modal-confirm';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:center;justify-content:center;';
+    overlay.setAttribute('role', 'alertdialog');
     overlay.innerHTML = `
-        <div style="background:var(--card-bg,#fff);border-radius:12px;padding:28px 32px;max-width:420px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2);">
-            <h3 style="margin:0 0 12px;font-size:16px;">${titulo}</h3>
-            <p style="margin:0 0 24px;color:var(--text-muted,#555);font-size:14px;line-height:1.5;">${mensaje}</p>
-            <div style="display:flex;gap:10px;justify-content:flex-end;">
-                <button id="_confirmCancelar" class="btn btn-secondary">Cancelar</button>
-                <button id="_confirmAceptar" class="btn btn-danger">${textoBtn}</button>
+        <div class="modal-confirm-box">
+            <h3>${escHTML(titulo)}</h3>
+            <p>${_textoConfirm(mensaje)}</p>
+            <div class="modal-confirm-acciones">
+                <button type="button" id="_confirmCancelar" class="btn btn-secondary">Cancelar</button>
+                <button type="button" id="_confirmAceptar" class="btn ${tipo === 'danger' ? 'btn-danger' : 'btn-primary'}">${textoBtn}</button>
             </div>
         </div>`;
     document.body.appendChild(overlay);
@@ -446,8 +465,9 @@ function mostrarConfirm(mensaje, onConfirm, { titulo = '¿Confirmar?', textoBtn 
     }
 
     const cerrar = () => {
-        document.body.removeChild(overlay);
         document.removeEventListener('keydown', onKeydown, true);
+        if (window.modalQuitar) window.modalQuitar(overlay);
+        else if (overlay.isConnected) overlay.remove();
         // Devuelve el foco a donde estaba (ej. la glosa) para poder seguir escribiendo.
         if (focoPrevio && typeof focoPrevio.focus === 'function') focoPrevio.focus();
     };
@@ -684,10 +704,10 @@ function validarRutInput(input) {
 
     // En modo prueba: limpiar estado visual y ocultar botón SII
     if (window.MODO_PRUEBA) {
-        if (elEstado) { elEstado.textContent = '🧪 Modo Prueba — RUT libre'; elEstado.style.color = '#854d0e'; }
+        if (elEstado) { elEstado.textContent = '🧪 Modo Prueba — RUT libre'; elEstado.style.color = 'var(--warning)'; }
         if (btnSII)   btnSII.style.display = 'none';
         if (elSII)    elSII.textContent = '';
-        input.style.borderColor = raw.length > 2 ? '#fbbf24' : '';
+        input.style.borderColor = raw.length > 2 ? 'var(--warning)' : '';
         return;
     }
 

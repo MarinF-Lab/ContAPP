@@ -15,7 +15,7 @@ function _getEncabezadoHTML(nombreReporte) {
     return `
     <div class="print-encabezado">
         <div class="print-enc-left">
-            <div class="print-enc-soft">ContApp Auditor</div>
+            <div class="print-enc-soft">ID Contable Auditor</div>
             <div class="print-enc-empresa">${empresa}</div>
             <div class="print-enc-rut">RUT: ${rut}</div>
         </div>
@@ -37,7 +37,7 @@ function _getEncabezadoExcel(nombreReporte) {
     const usuario = window.currentUser?.email || 'Usuario local';
     const fecha   = new Date().toLocaleString('es-CL');
     return [
-        `ContApp Auditor — ${empresa}`,
+        `ID Contable Auditor — ${empresa}`,
         `RUT: ${rut}  |  Período: ${periodo}`,
         `Reporte: ${nombreReporte}`,
         `Generado el ${fecha} por ${usuario}`,
@@ -423,23 +423,23 @@ function exportarPDFBalanceClasificado() {
             .forEach(it => {
                 const esContra = !!it.esContra, esAnom = !!it.esAnomalio;
                 const prefijo = esContra ? '(-) ' : (esAnom ? '⚠ ' : '');
-                const montoStr = (esAnom && !esContra) ? `(${fmt(Math.abs(it.saldo))})` : `$${fmt(Math.abs(it.saldo))}`;
+                const montoStr = (esAnom && !esContra) ? `(${fmt(Math.abs(it.saldo))})` : `${fmtPeso(Math.abs(it.saldo))}`;
                 body.push([`   ${prefijo}${it.nombre}`, montoStr]);
                 rowMeta.push({ tipo: 'item', color: (esContra || esAnom) ? [220, 38, 38] : null, italic: esContra });
             });
-        body.push([`Total ${titulo}`, `$${fmt(seccion.total)}`]);
+        body.push([`Total ${titulo}`, `${fmtPeso(seccion.total)}`]);
         rowMeta.push({ tipo: 'subtotal' });
     };
 
     agregarSeccion('Activo Circulante',    secciones['Activo Circulante']);
     agregarSeccion('Activo No Circulante', secciones['Activo No Circulante']);
-    body.push(['TOTAL ACTIVO', `$${fmt(totalActivo)}`]);
+    body.push(['TOTAL ACTIVO', `${fmtPeso(totalActivo)}`]);
     rowMeta.push({ tipo: 'total' });
 
     agregarSeccion('Pasivo Circulante',    secciones['Pasivo Circulante']);
     agregarSeccion('Pasivo No Circulante', secciones['Pasivo No Circulante']);
     agregarSeccion('Patrimonio',           secciones['Patrimonio']);
-    body.push(['TOTAL PASIVO + PATRIMONIO', `$${fmt(totalPasPat)}`]);
+    body.push(['TOTAL PASIVO + PATRIMONIO', `${fmtPeso(totalPasPat)}`]);
     rowMeta.push({ tipo: 'total' });
 
     const doc = new jsPDF();
@@ -449,7 +449,7 @@ function exportarPDFBalanceClasificado() {
     doc.text(`${empresa} — RUT: ${rut}`, 14, 21);
     doc.text(`Al fin de ${nombreMesTxt} ${anio}`, 14, 26);
     doc.text(
-        `${cuadra ? 'Cuadrado' : 'Descuadrado'} — Activo $${fmt(totalActivo)} · Pasivo+Patrimonio $${fmt(totalPasPat)}`,
+        `${cuadra ? 'Cuadrado' : 'Descuadrado'} — Activo ${fmtPeso(totalActivo)} · Pasivo+Patrimonio ${fmtPeso(totalPasPat)}`,
         14, 31
     );
 
@@ -488,7 +488,7 @@ function exportarPDFBalanceClasificado() {
     const { razonCorriente, pruebaAcida, capitalTrabajo } = liquidez;
     doc.text(`Razón corriente: ${razonCorriente !== null ? razonCorriente.toFixed(2) : '—'}`, 14, finalY + 6);
     doc.text(`Prueba ácida: ${pruebaAcida !== null ? pruebaAcida.toFixed(2) : '—'}`, 14, finalY + 12);
-    doc.text(`Capital de trabajo: $${fmt(capitalTrabajo)}`, 14, finalY + 18);
+    doc.text(`Capital de trabajo: ${fmtPeso(capitalTrabajo)}`, 14, finalY + 18);
 
     _abrirPreviewPDF(doc, _nombreArchivo('Balance Clasificado') + '.pdf');
 }
@@ -523,11 +523,11 @@ function exportarPDFEstadoResultados() {
     const rowMeta = [];
     const filaTitulo = (t) => { body.push([t, '']); rowMeta.push({ tipo: 'titulo' }); };
     const filaItem = (nombre, monto) => {
-        body.push([`   ${nombre}`, `$${fmt(Math.abs(monto))}`]);
+        body.push([`   ${nombre}`, `${fmtPeso(Math.abs(monto))}`]);
         rowMeta.push({ tipo: 'item', neg: monto < 0 });
     };
     const filaTotal = (texto, monto, destacado) => {
-        body.push([texto, `${destacado ? (monto >= 0 ? '+' : '-') : ''}$${fmt(Math.abs(monto))}`]);
+        body.push([texto, `${destacado ? (monto >= 0 ? '+' : '-') : ''}${fmtPeso(Math.abs(monto))}`]);
         rowMeta.push({ tipo: destacado ? 'totalFinal' : 'total', neg: monto < 0 });
     };
 
@@ -641,12 +641,12 @@ function exportarPDFFlujoCaja() {
                     l.glosa + (l.contacto ? ` (${l.contacto})` : ''),
                     l.entrada > 0 ? fmt(l.entrada) : '',
                     l.salida  > 0 ? fmt(l.salida)  : '',
-                    `${l.neto >= 0 ? '+' : '-'}$${fmt(Math.abs(l.neto))}`,
+                    `${l.neto >= 0 ? '+' : '-'}${fmtPeso(Math.abs(l.neto))}`,
                 ]);
                 rowMeta.push({ tipo: 'item', neg: l.neto < 0 });
             });
         }
-        body.push(['', `Subtotal ${sec.label}`, '', '', `${sec.total >= 0 ? '+' : '-'}$${fmt(Math.abs(sec.total))}`]);
+        body.push(['', `Subtotal ${sec.label}`, '', '', `${sec.total >= 0 ? '+' : '-'}${fmtPeso(Math.abs(sec.total))}`]);
         rowMeta.push({ tipo: 'subtotal', neg: sec.total < 0 });
     });
 
@@ -655,7 +655,7 @@ function exportarPDFFlujoCaja() {
     doc.text('Flujo de Caja', 14, 15);
     doc.setFontSize(10);
     doc.text(`${empresa} — RUT: ${rut}`, 14, 21);
-    doc.text(`Período: ${periodoTxt}  ·  Entradas $${fmt(totEntradas)}  ·  Salidas $${fmt(totSalidas)}  ·  Neto ${(totEntradas - totSalidas) >= 0 ? '+' : '-'}$${fmt(Math.abs(totEntradas - totSalidas))}`, 14, 26);
+    doc.text(`Período: ${periodoTxt}  ·  Entradas ${fmtPeso(totEntradas)}  ·  Salidas ${fmtPeso(totSalidas)}  ·  Neto ${(totEntradas - totSalidas) >= 0 ? '+' : '-'}${fmtPeso(Math.abs(totEntradas - totSalidas))}`, 14, 26);
 
     doc.autoTable({
         startY: 32,

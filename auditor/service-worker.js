@@ -1,17 +1,17 @@
 'use strict';
 /**
- * service-worker.js — Cache offline básico para la PWA de ContAPP Auditor.
+ * service-worker.js — Cache offline básico para la PWA de ID Contable Auditor.
  *
  * Estrategia: "network-first" para navegación (siempre intenta traer lo último,
  * cae al cache si no hay red) y "cache-first" para estáticos. Firebase y
  * mindicador.cl se dejan pasar siempre a la red.
  */
-const CACHE = 'auditor-beta-v12';
+const CACHE = 'auditor-beta-v29';
 const ASSETS = [
     './',
     './index.html',
     './manifest.json',
-    './icons/icon.svg',
+    './icons/icon-192.png',
 ];
 
 self.addEventListener('install', (e) => {

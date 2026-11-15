@@ -38,7 +38,7 @@ function iaVerificarKeyAlCargar() {
     if (el) {
         if (key) {
             const oculta = key.slice(0, 6) + '••••••••••••' + key.slice(-4);
-            el.innerHTML = `<span style="color:var(--positive,#166534);">✅ Key configurada: <code>${oculta}</code></span>`;
+            el.innerHTML = `<span style="color:var(--positive,#166534);"><i class=cxi-check></i> Key configurada: <code>${oculta}</code></span>`;
         } else {
             el.textContent = '⚠️ Sin API key — ingresa tu key de Google AI Studio para activar las funciones de IA.';
         }
@@ -173,6 +173,7 @@ function _iaMostrarResultado(titulo, texto) {
         m => `<ul style="padding-left:20px;margin:8px 0;">${m}</ul>`);
 
     const modal = document.createElement('div');
+    modal.setAttribute('data-modal', '');
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
     modal.innerHTML = `
         <div style="background:var(--bg);border-radius:12px;padding:28px;max-width:640px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
@@ -186,7 +187,7 @@ function _iaMostrarResultado(titulo, texto) {
             </div>
         </div>`;
     document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    modal.addEventListener('click', e => { if (e.target === modal) (window.modalQuitar || (m => m.remove()))(modal); });
 }
 
 // ── Modal de alerta (duplicado / monto inusual) ───────────────────────────────

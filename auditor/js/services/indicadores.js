@@ -325,7 +325,7 @@ async function actualizarIndicadores(forzar = false) {
         if (!clavesOk) {
             if (elFecha)  elFecha.textContent = 'Sin conexión — mostrando caché.';
             if (elEstado) elEstado.innerHTML  =
-                `<span style="color:var(--negative);font-size:12px;">⚠ No se pudo conectar con los servicios</span>`;
+                `<span style="color:var(--negative);font-size:12px;"><i class=cxi-alerta></i> No se pudo conectar con los servicios</span>`;
         } else {
             const ahora     = new Date().toLocaleString('es-CL');
             const cacheAct  = _cargarCacheIndicadores();
@@ -345,7 +345,7 @@ async function actualizarIndicadores(forzar = false) {
             _guardarCacheIndicadores(fusionado);
 
             if (elFecha)  elFecha.textContent = `Última actualización: ${ahora}`;
-            if (elEstado) elEstado.innerHTML  = `<span style="color:var(--positive);font-size:12px;">✅ ${fusionado._fuente}</span>`;
+            if (elEstado) elEstado.innerHTML  = `<span style="color:var(--positive);font-size:12px;"><i class=cxi-check></i> ${fusionado._fuente}</span>`;
         }
 
     } catch (e) {
@@ -374,7 +374,7 @@ async function previredActualizarAhora() {
         const r = await pvScrapearIndicadores();   // luego pisa con datos reales de Previred si hay proxy
         if (btn) { btn.disabled = false; btn.textContent = '↻ Actualizar ahora'; }
         if (estado && r?.ok) {
-            estado.innerHTML = `<span style="color:var(--positive);">✅ Actualizado automáticamente desde previred.com.</span>`;
+            estado.innerHTML = `<span style="color:var(--positive);"><i class=cxi-check></i> Actualizado automáticamente desde previred.com.</span>`;
         }
         return;
     }
@@ -386,10 +386,10 @@ async function previredActualizarAhora() {
     if (btn) { btn.disabled = false; btn.textContent = '↻ Actualizar ahora'; }
     if (estado) {
         if (cache._actualizadoEn) {
-            estado.innerHTML = `<span style="color:var(--positive);">✅ UF/UTM/IMM actualizados (${cache._actualizadoEn}).</span> ` +
+            estado.innerHTML = `<span style="color:var(--positive);"><i class=cxi-check></i> UF/UTM/IMM actualizados (${cache._actualizadoEn}).</span> ` +
                 'Configura el proxy de Previred (abajo) para traer también tasas AFP, SIS e IMM automáticamente.';
         } else {
-            estado.innerHTML = `<span style="color:var(--negative);">⚠ No se pudo conectar. Se mantienen los últimos valores guardados.</span>`;
+            estado.innerHTML = `<span style="color:var(--negative);"><i class=cxi-alerta></i> No se pudo conectar. Se mantienen los últimos valores guardados.</span>`;
         }
     }
 }
@@ -749,7 +749,7 @@ function renderPreviredTablas() {
     const mono = "font-family:'JetBrains Mono','Courier New',monospace;";
 
     const secHead = (title, sub = '') => `
-        <div style="padding:10px 14px;background:var(--accent);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+        <div style="padding:10px 14px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
             ${title}${sub ? `<span style="font-size:11px;font-weight:400;opacity:.82;">${sub}</span>` : ''}
         </div>`;
     const thR = `padding:7px 10px;text-align:right;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-bottom:2px solid var(--divider);white-space:nowrap;`;

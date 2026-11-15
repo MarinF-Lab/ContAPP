@@ -143,10 +143,10 @@ function renderMovimientosInventario() {
     });
 
     view.innerHTML = `
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card card-pad" style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
                 <div>
-                    <h2 style="margin:0 0 4px;">📦 Movimientos de Inventario</h2>
+                    <h2 style="margin:0 0 4px;">Movimientos de Inventario</h2>
                     <p style="color:var(--text-muted);font-size:12px;margin:0;">Ingresos y egresos de stock — se registran solos desde compras/ventas con producto en la calculadora del Diario, o a mano acá.</p>
                 </div>
                 <button class="btn btn-primary" onclick="invAbrirForm()">+ Registrar movimiento</button>
@@ -176,7 +176,7 @@ function renderMovimientosInventario() {
             <select id="invFiltroBodega" style="padding:9px 14px;border:1px solid var(--border);border-radius:8px;"
                 onchange="_invFiltroBodega=this.value; renderMovimientosInventario();">
                 <option value="">Todas las bodegas</option>
-                ${bodegas.map(b => `<option value="${b.nombre}" ${_invFiltroBodega === b.nombre ? 'selected' : ''}>${b.nombre}</option>`).join('')}
+                ${bodegas.map(b => `<option value="${escHTML(b.nombre)}" ${_invFiltroBodega === b.nombre ? 'selected' : ''}>${escHTML(b.nombre)}</option>`).join('')}
             </select>
         </div>
 
@@ -205,8 +205,8 @@ function renderMovimientosInventario() {
                             <td class="monto">${fmt(m.cantidad)}</td>
                             <td style="font-size:12px;color:var(--text-muted);">${m.bodega || '—'}</td>
                             <td style="font-size:12px;color:var(--text-muted);">${m.centroCosto || '—'}</td>
-                            <td style="font-size:12px;color:var(--text-muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.glosa || '—'}</td>
-                            <td>${m.asientoId != null ? `<button class="btn-plan" onclick="invIrAAsiento(${m.asientoId})" title="Ver/editar el asiento en el Diario">📝 Ver</button>` : '—'}</td>
+                            <td style="font-size:12px;color:var(--text-muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHTML(m.glosa || '—')}</td>
+                            <td>${m.asientoId != null ? `<button class="btn-plan" onclick="invIrAAsiento(${m.asientoId})" title="Ver/editar el asiento en el Diario"><i class=cxi-editar></i> Ver</button>` : '—'}</td>
                         </tr>`;
                     }).join('') : `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">Sin movimientos para el filtro seleccionado.</td></tr>`}
                 </tbody>
@@ -218,21 +218,21 @@ function renderMovimientosInventario() {
                 <h2>Registrar movimiento manual</h2>
                 <div class="form-grid">
                     <label>Tipo</label>
-                    <select id="invTipo"><option value="ingreso">📥 Ingreso</option><option value="egreso">📤 Egreso</option></select>
+                    <select id="invTipo"><option value="ingreso">Ingreso</option><option value="egreso">Egreso</option></select>
                     <label>Producto</label> <input id="invProducto" placeholder="Nombre del producto" list="invProductosList">
                     <label>Cantidad</label> <input id="invCantidad" type="number" min="0" placeholder="0">
                     <label>Bodega</label>
-                    <select id="invBodega"><option value="">— Sin bodega —</option>${bodegas.map(b => `<option value="${b.nombre}">${b.nombre}</option>`).join('')}</select>
+                    <select id="invBodega"><option value="">— Sin bodega —</option>${bodegas.map(b => `<option value="${escHTML(b.nombre)}">${escHTML(b.nombre)}</option>`).join('')}</select>
                     <label>Centro de costo</label>
-                    <select id="invCentroCosto"><option value="">— Sin centro —</option>${getCentrosCosto().map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('')}</select>
+                    <select id="invCentroCosto"><option value="">— Sin centro —</option>${getCentrosCosto().map(c => `<option value="${escHTML(c.nombre)}">${escHTML(c.nombre)}</option>`).join('')}</select>
                     <label>Fecha</label> <input id="invFecha" type="date">
                     <label>Glosa</label> <input id="invGlosa" placeholder="Ej: Ajuste por conteo físico">
                 </div>
                 <datalist id="invProductosList">
-                    ${getProductos().map(p => `<option value="${p.nombre}">`).join('')}
+                    ${getProductos().map(p => `<option value="${escHTML(p.nombre)}">`).join('')}
                 </datalist>
                 <div class="modal-actions">
-                    <button class="btn btn-primary"   onclick="invGuardarManual()">💾 Guardar</button>
+                    <button class="btn btn-primary"   onclick="invGuardarManual()"><i class=cxi-guardar></i> Guardar</button>
                     <button class="btn btn-secondary" onclick="invCerrarForm()">Cancelar</button>
                 </div>
             </div>

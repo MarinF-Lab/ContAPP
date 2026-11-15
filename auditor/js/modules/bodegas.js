@@ -38,10 +38,10 @@ function renderBodegas() {
     const items = getBodegas().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 
     view.innerHTML = `
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card card-pad" style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                 <div>
-                    <h2 style="margin:0 0 4px;">🏬 Bodegas</h2>
+                    <h2 style="margin:0 0 4px;">Bodegas</h2>
                     <p style="color:var(--text-muted);font-size:12px;margin:0;">Ubicaciones físicas donde entra y sale stock — disponible desde la calculadora de ítems del Diario.</p>
                 </div>
                 <button class="btn btn-primary" onclick="bodAbrirForm(null)">+ Agregar</button>
@@ -55,14 +55,14 @@ function renderBodegas() {
                 <tbody>
                     ${items.length ? items.map(b => `
                         <tr style="${b.estado === 'INACTIVO' ? 'opacity:.5;' : ''}">
-                            <td style="font-family:monospace;font-size:13px;color:#64748b;">${b.codigo || '—'}</td>
-                            <td style="font-weight:600;">${b.nombre}</td>
+                            <td style="font-family:monospace;font-size:13px;color:var(--text-muted);">${b.codigo || '—'}</td>
+                            <td style="font-weight:600;">${escHTML(b.nombre)}</td>
                             <td style="font-size:13px;color:var(--text-muted);">${b.ubicacion || '—'}</td>
                             <td><span class="${b.estado !== 'INACTIVO' ? 'badge-activo' : 'badge-inactivo'}">${b.estado !== 'INACTIVO' ? 'Activo' : 'Inactivo'}</span></td>
                             <td>
                                 <div class="plan-acciones">
-                                    <button class="btn-plan btn-plan-editar" onclick="bodAbrirForm('${b.id}')">✏️ Editar</button>
-                                    <button class="btn-plan btn-plan-eliminar" onclick="bodEliminar('${b.id}')">🗑️</button>
+                                    <button class="btn-plan btn-plan-editar" onclick="bodAbrirForm('${b.id}')"><i class=cxi-editar></i> Editar</button>
+                                    <button class="btn-plan btn-plan-eliminar" onclick="bodEliminar('${b.id}')"><i class=cxi-eliminar></i></button>
                                 </div>
                             </td>
                         </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">Sin bodegas aún.</td></tr>`}
@@ -81,7 +81,7 @@ function renderBodegas() {
                     <select id="bodEstado"><option value="ACTIVO">ACTIVA</option><option value="INACTIVO">INACTIVA</option></select>
                 </div>
                 <div class="modal-actions">
-                    <button class="btn btn-primary"   onclick="bodGuardar()">💾 Guardar</button>
+                    <button class="btn btn-primary"   onclick="bodGuardar()"><i class=cxi-guardar></i> Guardar</button>
                     <button class="btn btn-secondary" onclick="bodCerrarForm()">Cancelar</button>
                 </div>
             </div>

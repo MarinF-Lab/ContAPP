@@ -302,22 +302,22 @@ function remHtmlShell() {
 <div class="rem-root">
   <div class="rem-kpi-strip">
     <div class="rem-kpi-card">
-      <div class="rem-kpi-icon">👷</div>
+      <div class="rem-kpi-icon"><i class=cxi-personas></i></div>
       <div class="rem-kpi-val">${s.trabajadores.length}</div>
       <div class="rem-kpi-label">Trabajadores</div>
     </div>
     <div class="rem-kpi-card">
-      <div class="rem-kpi-icon">💰</div>
+      <div class="rem-kpi-icon"><i class=cxi-dinero></i></div>
       <div class="rem-kpi-val" style="color:var(--negative)">${fmt$(totalCosto)}</div>
       <div class="rem-kpi-label">Costo empleador</div>
     </div>
     <div class="rem-kpi-card">
-      <div class="rem-kpi-icon">💵</div>
+      <div class="rem-kpi-icon"><i class=cxi-dinero></i></div>
       <div class="rem-kpi-val" style="color:var(--positive)">${fmt$(totalLiq)}</div>
       <div class="rem-kpi-label">Total líquido</div>
     </div>
     <div class="rem-kpi-card">
-      <div class="rem-kpi-icon">✅</div>
+      <div class="rem-kpi-icon"><i class=cxi-check></i></div>
       <div class="rem-kpi-val">${liqPer.length}<span style="font-size:14px;font-weight:500;color:var(--text-muted)"> / ${s.trabajadores.length}</span></div>
       <div class="rem-kpi-label">Liquidados · ${fmtPeriodo(s.periodo)}</div>
     </div>
@@ -325,7 +325,7 @@ function remHtmlShell() {
 
   <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;">
     <div class="rem-tabs">
-      ${[['trabajadores','👤 Trabajadores'],['liquidar','💵 Liquidar'],['libro','📋 Libro'],['vacaciones','🏖 Vacaciones'],['finiquito','📄 Finiquito'],['ia','✨ Auditoría IA']]
+      ${[['trabajadores','Trabajadores'],['liquidar','Liquidar'],['libro','Libro'],['vacaciones','Vacaciones'],['finiquito','Finiquito'],['ia','Auditoría IA']]
         .map(([id,lbl]) => `<button class="rem-tab${s.tab===id?' active':''}" onclick="remSetTab('${id}')">${lbl}</button>`).join('')}
     </div>
     <div style="display:flex;gap:10px;align-items:center;padding-bottom:2px;">
@@ -394,7 +394,7 @@ function remHtmlTrabajadores() {
 
     if (!filtrados.length) return toolbar + `
       <div class="rem-empty">
-        <div class="rem-empty-icon">👥</div>
+        <div class="rem-empty-icon"><i class=cxi-personas></i></div>
         <p>${buscar ? 'Sin resultados.' : 'No hay trabajadores registrados.'}</p>
         ${!buscar ? '<small>Haz clic en "+ Nuevo trabajador" para comenzar.</small>' : ''}
       </div>`;
@@ -406,8 +406,8 @@ function remHtmlTrabajadores() {
             <div style="display:flex;align-items:center;gap:12px;">
               ${avatarHtml(t.nombre, 36)}
               <div>
-                <div style="font-weight:600;font-size:14px;">${t.nombre}</div>
-                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${t.cargo || 'Sin cargo'}</div>
+                <div style="font-weight:600;font-size:14px;">${escHTML(t.nombre)}</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${escHTML(t.cargo || 'Sin cargo')}</div>
               </div>
             </div>
           </td>
@@ -417,16 +417,16 @@ function remHtmlTrabajadores() {
           <td style="text-align:right;font-family:'Courier New',monospace;font-weight:600;">${fmt$(t.sueldoBruto)}</td>
           <td>
             <div style="display:flex;gap:6px;align-items:center;">
-              <span class="rem-badge ${yaLiq?'rem-badge-ok':'rem-badge-warn'}">${yaLiq?'✔ Liquidado':'Pendiente'}</span>
-              ${t.contrato?'<span class="rem-badge rem-badge-gray" title="Contrato adjunto">📎</span>':''}
+              <span class="rem-badge ${yaLiq?'rem-badge-ok':'rem-badge-warn'}">${yaLiq?'<i class=cxi-check></i> Liquidado':'Pendiente'}</span>
+              ${t.contrato?'<span class="rem-badge rem-badge-gray" title="Contrato adjunto"><i class=cxi-clip></i></span>':''}
             </div>
           </td>
           <td>
             <div style="display:flex;gap:6px;">
               <button onclick="remAbrirModal('${t.id}')"
-                style="border:1px solid var(--divider);background:var(--input-bg);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;">✏️</button>
+                style="border:1px solid var(--divider);background:var(--input-bg);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;"><i class=cxi-editar></i></button>
               <button onclick="remEliminar('${t.id}')"
-                style="border:1px solid #fca5a5;background:var(--negative-soft);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;">🗑</button>
+                style="border:1px solid var(--negative);background:var(--negative-soft);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;"><i class=cxi-eliminar></i></button>
             </div>
           </td>
         </tr>`;
@@ -454,7 +454,7 @@ function remHtmlLiquidar() {
     const { trabajadores, liquidaciones, periodo, trabSelId } = remState;
     if (!trabajadores.length) return `
       <div class="rem-empty">
-        <div class="rem-empty-icon">💵</div>
+        <div class="rem-empty-icon"><i class=cxi-dinero></i></div>
         <p>Primero registra trabajadores en la pestaña "Trabajadores".</p>
       </div>`;
 
@@ -468,10 +468,10 @@ function remHtmlLiquidar() {
         return `<div class="rem-worker-item${sel?' sel':''}" onclick="remSelTrab('${w.id}')">
           ${avatarHtml(w.nombre, 34)}
           <div style="flex:1;min-width:0;">
-            <div class="rem-worker-nombre">${w.nombre}</div>
+            <div class="rem-worker-nombre">${escHTML(w.nombre)}</div>
             <div class="rem-worker-sub">${fmt$(w.sueldoBruto)}</div>
           </div>
-          <span class="rem-badge ${yaLiq?'rem-badge-ok':'rem-badge-warn'}" style="font-size:11px;">${yaLiq?'✔':'Pend.'}</span>
+          <span class="rem-badge ${yaLiq?'rem-badge-ok':'rem-badge-warn'}" style="font-size:11px;">${yaLiq?'<i class=cxi-check></i>':'Pend.'}</span>
         </div>`;
     }).join('');
 
@@ -558,7 +558,7 @@ function remHtmlVarsYBoleta(t) {
           <div style="display:flex;align-items:center;gap:12px;">
             ${avatarHtml(t.nombre, 34)}
             <div>
-              <div style="font-weight:700;font-size:14px;">${t.nombre}</div>
+              <div style="font-weight:700;font-size:14px;">${escHTML(t.nombre)}</div>
               <div style="font-size:12px;color:var(--text-muted);">${t.cargo||''} · Sueldo base: ${fmt$(t.sueldoBruto)}</div>
             </div>
           </div>
@@ -597,7 +597,7 @@ function remHtmlVarsYBoleta(t) {
           </div>
           <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px;margin-top:4px;"
             onclick="remRecalcular('${id}')">
-            🔄 Calcular liquidación
+            <i class=cxi-refrescar></i> Calcular liquidación
           </button>
         </div>
       </div>
@@ -686,7 +686,7 @@ function remHtmlBoleta(liq, t) {
       <div class="rem-bol-head">
         ${avatarHtml(liq.nombre, 44)}
         <div style="min-width:0;">
-          <div style="font-size:15px;font-weight:800;color:#fff;">${liq.nombre}</div>
+          <div style="font-size:15px;font-weight:800;color:var(--on-screen);">${escHTML(liq.nombre)}</div>
           <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:3px;">
             ${liq.rut||''}${liq.cargo?' · '+liq.cargo:''}${liq.tipoContrato?' · '+(liq.tipoContrato||'').replace('_',' '):''}
           </div>
@@ -783,18 +783,18 @@ function remHtmlBoleta(liq, t) {
         <button onclick="remImprimirBoleta('${liq.trabajadorId}','${liq.periodo}')"
           style="border:1px solid var(--divider);background:var(--input-bg);color:var(--text);
                  padding:10px 18px;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;">
-          🖨️ Imprimir / PDF
+          <i class=cxi-imprimir></i> Imprimir / PDF
         </button>
         ${!yaLiq
             ? `<button class="btn btn-primary" style="padding:10px 22px;font-size:14px;"
                 onclick="remGuardarLiquidacion('${liq.trabajadorId}')">
-                💾 Guardar liquidación
+                <i class=cxi-guardar></i> Guardar liquidación
                </button>`
             : `<button class="btn btn-primary" style="padding:10px 22px;font-size:14px;"
                 onclick="remEnviarAsiento('${liq.trabajadorId}')">
-                📒 Generar asiento contable
+                <i class=cxi-libro></i> Generar asiento contable
                </button>
-               <span class="rem-badge rem-badge-ok" style="padding:9px 16px;font-size:13px;">✔ Guardada</span>`
+               <span class="rem-badge rem-badge-ok" style="padding:9px 16px;font-size:13px;"><i class=cxi-check></i> Guardada</span>`
         }
       </div>
     </div>`;
@@ -807,7 +807,7 @@ function remHtmlLibro() {
     const { liquidaciones } = remState;
     if (!liquidaciones.length) return `
       <div class="rem-empty">
-        <div class="rem-empty-icon">📋</div>
+        <div class="rem-empty-icon"><i class=cxi-lista></i></div>
         <p>No hay liquidaciones procesadas aún.</p>
       </div>`;
 
@@ -821,7 +821,7 @@ function remHtmlLibro() {
 
         const filas = liqP.map(l => `<tr>
           <td>
-            <div style="font-weight:600;font-size:14px;">${l.nombre}</div>
+            <div style="font-weight:600;font-size:14px;">${escHTML(l.nombre)}</div>
             <div style="font-size:11px;color:var(--text-muted);font-family:'Courier New',monospace;margin-top:2px;">${l.rut||''}</div>
           </td>
           <td style="color:var(--text-muted);font-size:13px;">${l.cargo||'—'}</td>
@@ -848,11 +848,11 @@ function remHtmlLibro() {
               <div style="display:flex;gap:8px;">
                 <button onclick="remLibroPDF('${p}')"
                   style="padding:7px 14px;font-size:13px;border:1px solid var(--divider);background:var(--input-bg);border-radius:7px;cursor:pointer;color:var(--text);font-family:inherit;">
-                  🖨️ PDF
+                  <i class=cxi-imprimir></i> PDF
                 </button>
                 <button class="btn btn-primary" onclick="remPreviredCSV('${p}')"
                   style="padding:7px 14px;font-size:13px;">
-                  ⬇️ Previred CSV
+                  <i class=cxi-descargar></i> Previred CSV
                 </button>
               </div>
             </div>
@@ -903,13 +903,13 @@ function remHtmlIA() {
     <div class="rem-toolbar">
       <button class="btn btn-primary" style="padding:10px 20px;font-size:14px;"
         onclick="remAnalizarIA()" ${!liqPer.length?'disabled':''}>
-        ✨ Analizar liquidaciones
+        <i class=cxi-ia></i> Analizar liquidaciones
       </button>
       <button onclick="remVerificarPrevired()"
         style="padding:10px 20px;font-size:14px;border:1px solid var(--divider);background:var(--input-bg);
                color:var(--text);border-radius:8px;cursor:pointer;font-family:inherit;"
         ${!liqPer.length?'disabled':''}>
-        ⚖ Verificar planilla Previred
+        <i class=cxi-balanza></i> Verificar planilla Previred
       </button>
       ${!liqPer.length?'<span class="rem-badge rem-badge-warn">Sin liquidaciones en este período</span>':''}
     </div>
@@ -1020,14 +1020,14 @@ function remHtmlModal() {
       <div class="rem-form-divider">Documento de contrato (PDF / imagen, máx. 5 MB)</div>
       ${t.contrato
           ? `<div class="rem-contrato-adjunto">
-               <span style="font-size:24px;">📎</span>
+               <span style="font-size:24px;"><i class=cxi-clip></i></span>
                <div style="flex:1;min-width:0;">
                  <div style="font-weight:600;font-size:14px;">${t.contratoNombre||'Contrato adjunto'}</div>
                </div>
                <button type="button" onclick="window.open(remState.modalData.contrato,'_blank')"
                  style="padding:7px 14px;font-size:13px;border:1px solid var(--divider);background:var(--input-bg);border-radius:7px;cursor:pointer;">Ver</button>
                <button type="button" onclick="remQuitarContrato()"
-                 style="padding:7px 14px;font-size:13px;border:1px solid #fca5a5;background:var(--negative-soft);border-radius:7px;cursor:pointer;">Quitar</button>
+                 style="padding:7px 14px;font-size:13px;border:1px solid var(--negative);background:var(--negative-soft);border-radius:7px;cursor:pointer;">Quitar</button>
              </div>`
           : `<div class="rem-drop-zone" onclick="document.getElementById('rem-file-contrato').click()">
                <input id="rem-file-contrato" type="file" accept=".pdf,.jpg,.jpeg,.png"
@@ -1073,8 +1073,7 @@ function remHtmlModal() {
     return `
     <div id="rem-modal"
       style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:5000;
-             display:flex;align-items:center;justify-content:center;padding:16px;"
-      onclick="if(event.target===this) remCerrarModal()">
+             display:flex;align-items:center;justify-content:center;padding:16px;">
       <div style="background:var(--card);border-radius:14px;box-shadow:var(--shadow-lg);
                   max-width:780px;width:100%;max-height:92vh;overflow-y:auto;">
         <div style="padding:18px 24px;border-bottom:1px solid var(--divider);display:flex;
@@ -1111,7 +1110,7 @@ function remHtmlModal() {
                      color:var(--text);font-family:inherit;">Cancelar</button>
             <button type="button" class="btn btn-primary" onclick="remGuardarTrab()"
               style="padding:10px 22px;font-size:14px;">
-              💾 ${t.id?'Guardar cambios':'Crear trabajador'}
+              <i class=cxi-guardar></i> ${t.id?'Guardar cambios':'Crear trabajador'}
             </button>
           </div>
         </div>
@@ -1169,7 +1168,7 @@ function remAbrirModal(id) {
 function remCerrarModal() {
     remState.modalData = null;
     const m = document.getElementById('rem-modal');
-    if (m) m.remove();
+    if (m) (window.modalQuitar || (el => el.remove()))(m);
 }
 
 function remModalSec(sec) {
@@ -1180,10 +1179,18 @@ function remModalSec(sec) {
 
 function _renderModal() {
     const old = document.getElementById('rem-modal');
-    if (old) old.remove();
     const tmp = document.createElement('div');
     tmp.innerHTML = remHtmlModal();
-    document.body.appendChild(tmp.firstElementChild);
+    const nuevo = tmp.firstElementChild;
+    // Cambio de sección con el modal ya abierto: se reemplaza solo el contenido
+    // (sin volver a animar la entrada ni perder el lugar en el gestor de modales)
+    if (old && old.isConnected && old.style.display !== 'none' && !old.classList.contains('cm-saliendo')) {
+        old.classList.add('cm-estable');
+        old.innerHTML = nuevo.innerHTML;
+        return;
+    }
+    if (old) old.remove();
+    document.body.appendChild(nuevo);
 }
 
 function remActualizarAvatar(nombre) {
@@ -1428,7 +1435,7 @@ function remAnalizarIA() {
         cont.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:16px 20px;
           background:var(--positive-soft);border:1.5px solid var(--positive);border-radius:12px;
           color:var(--positive);font-weight:600;font-size:14px;margin-top:16px;">
-          <span style="font-size:24px;">✅</span>No se detectaron errores.</div>`;
+          <span style="font-size:24px;"><i class=cxi-check></i></span>No se detectaron errores.</div>`;
         return;
     }
     cont.innerHTML = `
@@ -1442,7 +1449,7 @@ function remAnalizarIA() {
                background:${a.tipo==='error'?'var(--negative-soft)':'var(--warning-soft)'};
                border-color:${a.tipo==='error'?'var(--negative)':'var(--warning)'};">
             <span>${a.tipo==='error'?'🔴':'🟡'}</span>
-            <span><strong>${a.nombre}:</strong> ${a.msg}</span>
+            <span><strong>${escHTML(a.nombre)}:</strong> ${a.msg}</span>
           </div>`).join('')}
       </div>`;
 }
@@ -1480,20 +1487,20 @@ function remLibroPDF(periodo) {
     const totL = liqP.reduce((a,l)=>a+l.liquido,0);
     const totC = liqP.reduce((a,l)=>a+l.costoTotal,0);
     const filas = liqP.map(l =>
-        `<tr><td>${l.rut||''}</td><td>${l.nombre}</td><td>${l.cargo||'—'}</td>
+        `<tr><td>${l.rut||''}</td><td>${escHTML(l.nombre)}</td><td>${l.cargo||'—'}</td>
          <td class="r">${fmt$(l.sueldoBase)}</td>
          <td class="r neg">-${fmt$(l.descAfp)}</td><td class="r neg">-${fmt$(l.descSalud)}</td>
          <td class="r neg">-${fmt$(l.impUnico)}</td>
          <td class="r pos">${fmt$(l.liquido)}</td>
-         <td class="r" style="color:#dc2626">${fmt$(l.costoTotal)}</td></tr>`
+         <td class="r" style="color:var(--negative)">${fmt$(l.costoTotal)}</td></tr>`
     ).join('');
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
 <title>Libro Remuneraciones ${periodo}</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;color:#111;padding:24px}
-h2{font-size:17px;color:#1e3a8a;margin-bottom:3px}.sub{color:#64748b;margin-bottom:18px;font-size:11px}
-table{width:100%;border-collapse:collapse}th{background:#f1f5f9;padding:7px 9px;border:1px solid #e2e8f0;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
-td{padding:7px 9px;border:1px solid #e2e8f0}.r{text-align:right}.pos{color:#16a34a;font-weight:700}.neg{color:#dc2626}
-.total{font-weight:700;background:#f8fafc}</style>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;color:var(--text);padding:24px}
+h2{font-size:17px;color:var(--info);margin-bottom:3px}.sub{color:var(--text-muted);margin-bottom:18px;font-size:11px}
+table{width:100%;border-collapse:collapse}th{background:var(--table-stripe);padding:7px 9px;border:1px solid var(--divider);text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+td{padding:7px 9px;border:1px solid var(--divider)}.r{text-align:right}.pos{color:var(--positive);font-weight:700}.neg{color:var(--negative)}
+.total{font-weight:700;background:var(--table-stripe)}</style>
 </head><body>
 <h2>Libro de Remuneraciones</h2>
 <div class="sub">Período: ${fmtPeriodo(periodo)} · ${liqP.length} trabajadores · IMM: ${fmt$(REM.IMM)}</div>
@@ -1529,24 +1536,24 @@ function remBuildPDF(liq, t, empresa) {
     }[liq.tipoGratif] || 'Gratificación';
 
     return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
-<title>Liquidación ${liq.nombre} ${liq.periodo}</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;color:#111}
+<title>Liquidación ${escHTML(liq.nombre)} ${liq.periodo}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;color:var(--text)}
 .page{max-width:700px;margin:0 auto;padding:28px}
-.head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #0f172a}
-.head h1{font-size:18px;font-weight:800;color:#0f172a}.head p{font-size:11px;color:#64748b;margin-top:3px}
-.badge{background:#0f172a;color:#fff;padding:5px 13px;border-radius:5px;font-size:11px;font-weight:700}
+.head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid var(--text)}
+.head h1{font-size:18px;font-weight:800;color:var(--text)}.head p{font-size:11px;color:var(--text-muted);margin-top:3px}
+.badge{background:var(--screen);color:var(--on-screen);padding:5px 13px;border-radius:5px;font-size:11px;font-weight:700}
 table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px}
-td{padding:5px 9px;border-bottom:1px solid #f1f5f9}
-th{background:#f8fafc;padding:6px 9px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:1px solid #e2e8f0}
-.r{text-align:right}.pos{color:#059669;font-weight:600}.neg{color:#dc2626;font-weight:600}.muted{color:#64748b}
-tr.sub td{background:#f8fafc;font-weight:700;border-top:1px solid #e2e8f0;border-bottom:2px solid #e2e8f0}
-.liq-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 16px;margin-bottom:16px}
-.footer{text-align:center;font-size:10px;color:#94a3b8;margin-top:16px}small{color:#94a3b8}</style>
+td{padding:5px 9px;border-bottom:1px solid var(--divider)}
+th{background:var(--table-stripe);padding:6px 9px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:1px solid var(--divider)}
+.r{text-align:right}.pos{color:var(--positive);font-weight:600}.neg{color:var(--negative);font-weight:600}.muted{color:var(--text-muted)}
+tr.sub td{background:var(--table-stripe);font-weight:700;border-top:1px solid var(--divider);border-bottom:2px solid var(--divider)}
+.liq-box{background:var(--positive-soft);border:1px solid var(--positive);border-radius:8px;padding:14px 16px;margin-bottom:16px}
+.footer{text-align:center;font-size:10px;color:var(--text-subtle);margin-top:16px}small{color:var(--text-subtle)}</style>
 </head><body><div class="page">
 <div class="head">
   <div><h1>${empresa}</h1>
     <p>Liquidación de Sueldo — ${fmtPeriodo(liq.periodo)}</p>
-    <p style="margin-top:6px"><b>${liq.nombre}</b> · RUT: ${liq.rut||''}${t.cargo?' · '+t.cargo:''}</p></div>
+    <p style="margin-top:6px"><b>${escHTML(liq.nombre)}</b> · RUT: ${liq.rut||''}${t.cargo?' · '+t.cargo:''}</p></div>
   <div class="badge">${fmtPeriodo(liq.periodo)}</div>
 </div>
 <table>
@@ -1570,14 +1577,14 @@ tr.sub td{background:#f8fafc;font-weight:700;border-top:1px solid #e2e8f0;border
   ${liq.descPrestamo?fD('Préstamo empresa',liq.descPrestamo):''}
   ${liq.descOtros?fD('Otros descuentos',liq.descOtros):''}
   ${sub('Total descuentos',liq.totalDescuentos,'neg')}
-  <tr class="sub" style="background:#f0fdf4"><td><b>Alcance líquido</b></td><td class="r pos"><b>${fmt$(liq.alcanceLiquido)}</b></td></tr>
+  <tr class="sub" style="background:var(--positive-soft)"><td><b>Alcance líquido</b></td><td class="r pos"><b>${fmt$(liq.alcanceLiquido)}</b></td></tr>
   ${liq.anticipos>0?`<tr><td>Anticipos</td><td class="r neg">-${fmt$(liq.anticipos)}</td></tr>`:''}
   ${sub('SUELDO LÍQUIDO A PAGAR',liq.liquido,'pos')}
 </table>
 <div class="liq-box">
-  <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#059669">Sueldo Líquido a Pagar</div>
-  <div style="font-size:22px;font-weight:800;color:#059669;margin-top:2px">${fmt$(liq.liquido)}</div>
-  ${t.banco?`<div style="font-size:10px;color:#059669;margin-top:2px">🏦 ${t.banco}</div>`:''}
+  <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--positive)">Sueldo Líquido a Pagar</div>
+  <div style="font-size:22px;font-weight:800;color:var(--positive);margin-top:2px">${fmt$(liq.liquido)}</div>
+  ${t.banco?`<div style="font-size:10px;color:var(--positive);margin-top:2px">🏦 ${t.banco}</div>`:''}
 </div>
 <table>
   <tr><th colspan="2">Aportes Patronales <small>(no descuentan del trabajador)</small></th></tr>
@@ -1638,7 +1645,7 @@ function remHtmlVacaciones() {
     const trabajadores = remState.trabajadores;
     if (!trabajadores.length) return `
       <div class="rem-empty">
-        <div class="rem-empty-icon">🏖</div>
+        <div class="rem-empty-icon"><i class=cxi-calendario></i></div>
         <p>Primero registra trabajadores en la pestaña "Trabajadores".</p>
       </div>`;
 
@@ -1651,7 +1658,7 @@ function remHtmlVacaciones() {
         return `<div class="rem-worker-item${activo ? ' sel' : ''}" onclick="remVacSelTrab('${t.id}')">
           ${avatarHtml(t.nombre, 34)}
           <div style="flex:1;min-width:0;">
-            <div class="rem-worker-nombre">${t.nombre}</div>
+            <div class="rem-worker-nombre">${escHTML(t.nombre)}</div>
             <div class="rem-worker-sub">${saldo} días disponibles</div>
           </div>
           <span class="rem-badge ${saldo > 0 ? 'rem-badge-ok' : 'rem-badge-gray'}">${saldo}d</span>
@@ -1684,7 +1691,7 @@ function remHtmlVacPanel(t, vacaciones) {
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
           ${avatarHtml(t.nombre, 44)}
           <div>
-            <div style="font-size:15px;font-weight:700;">${t.nombre}</div>
+            <div style="font-size:15px;font-weight:700;">${escHTML(t.nombre)}</div>
             <div style="font-size:12px;color:var(--text-muted);">
               Ingreso: ${t.fechaIngreso || '—'} · ${t.diasVacaciones || 15} días/año
             </div>
@@ -1769,7 +1776,7 @@ function remHtmlVacPanel(t, vacaciones) {
               <td style="padding:9px 14px;color:var(--text-muted);">${v.obs || '—'}</td>
               <td style="padding:9px 14px;text-align:right;">
                 <button onclick="remVacEliminar('${v.id}')"
-                  style="border:1px solid #fca5a5;background:var(--negative-soft);border-radius:6px;
+                  style="border:1px solid var(--negative);background:var(--negative-soft);border-radius:6px;
                          padding:3px 9px;cursor:pointer;font-size:12px;color:var(--negative);">Eliminar</button>
               </td>
             </tr>`).join('')}
@@ -1857,12 +1864,12 @@ function remHtmlFiniquito() {
     const trabajadores = remState.trabajadores;
     if (!trabajadores.length) return `
       <div class="rem-empty">
-        <div class="rem-empty-icon">📄</div>
+        <div class="rem-empty-icon"><i class=cxi-documento></i></div>
         <p>Primero registra trabajadores en la pestaña "Trabajadores".</p>
       </div>`;
 
     const trabOpts = trabajadores.map(t =>
-        `<option value="${t.id}">${t.nombre} — ${t.rut || 'sin RUT'}</option>`
+        `<option value="${t.id}">${escHTML(t.nombre)} — ${t.rut || 'sin RUT'}</option>`
     ).join('');
 
     const hoy = new Date().toISOString().slice(0, 10);
@@ -2025,7 +2032,7 @@ function remHtmlFiqResultado(t, c, fechaTermino, causal, avisoPrevio) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;
                   padding-bottom:14px;border-bottom:2px solid var(--divider);">
         <div>
-          <div style="font-size:15px;font-weight:800;">${t.nombre}</div>
+          <div style="font-size:15px;font-weight:800;">${escHTML(t.nombre)}</div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
             ${t.rut || ''} · ${c.anios} año(s) y ${c.meses} mes(es) de servicio
           </div>
@@ -2067,8 +2074,8 @@ function remHtmlFiqResultado(t, c, fechaTermino, causal, avisoPrevio) {
       <!-- Total -->
       <div style="background:var(--accent);border-radius:12px;padding:16px 20px;margin-top:16px;
                   display:flex;justify-content:space-between;align-items:center;">
-        <div style="color:#fff;font-size:14px;font-weight:700;">TOTAL FINIQUITO</div>
-        <div style="color:#fff;font-size:22px;font-weight:800;font-family:monospace;">${fmt$(c.totalFiniquito)}</div>
+        <div style="color:var(--on-accent);font-size:14px;font-weight:700;">TOTAL FINIQUITO</div>
+        <div style="color:var(--on-accent);font-size:22px;font-weight:800;font-family:monospace;">${fmt$(c.totalFiniquito)}</div>
       </div>
 
       <!-- Acciones -->
@@ -2076,11 +2083,11 @@ function remHtmlFiqResultado(t, c, fechaTermino, causal, avisoPrevio) {
         <button onclick="remImprimirFiniquito('${t.id}','${fechaTermino}','${causal}',${avisoPrevio})"
           style="padding:10px 20px;border:1px solid var(--divider);background:var(--input-bg);
                  color:var(--text);border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;">
-          🖨️ Imprimir finiquito
+          <i class=cxi-imprimir></i> Imprimir finiquito
         </button>
         <button class="btn btn-primary" style="padding:10px 22px;font-size:13px;"
           onclick="remFiqAsiento('${t.id}','${fechaTermino}','${causal}',${avisoPrevio})">
-          📒 Generar asiento contable
+          <i class=cxi-libro></i> Generar asiento contable
         </button>
       </div>
     </div>`;
@@ -2098,20 +2105,20 @@ function remImprimirFiniquito(trabId, fechaTermino, causal, avisoPrevio) {
         ? `<tr><td>${lbl}</td><td style="text-align:right;font-weight:600;">${fmt$(monto)}</td></tr>` : '';
 
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
-<title>Finiquito ${t.nombre}</title>
+<title>Finiquito ${escHTML(t.nombre)}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;font-size:11px;color:#111;padding:32px}
-.head{margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #0f172a}
-h1{font-size:18px;font-weight:800;color:#0f172a}
-.sub{color:#64748b;font-size:11px;margin-top:3px}
+body{font-family:Arial,sans-serif;font-size:11px;color:var(--text);padding:32px}
+.head{margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid var(--text)}
+h1{font-size:18px;font-weight:800;color:var(--text)}
+.sub{color:var(--text-muted);font-size:11px;margin-top:3px}
 table{width:100%;border-collapse:collapse;margin-bottom:16px}
-td{padding:7px 10px;border-bottom:1px solid #f1f5f9}
-th{background:#f8fafc;padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0}
-.total td{background:#0f172a;color:#fff;font-size:14px;font-weight:800;padding:12px 10px}
+td{padding:7px 10px;border-bottom:1px solid var(--divider)}
+th{background:var(--table-stripe);padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--divider)}
+.total td{background:var(--screen);color:var(--on-screen);font-size:14px;font-weight:800;padding:12px 10px}
 .firma{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px}
-.firma-box{border-top:1px solid #111;padding-top:8px;text-align:center;font-size:10px;color:#64748b}
-.legal{font-size:9px;color:#94a3b8;margin-top:24px;line-height:1.5}
+.firma-box{border-top:1px solid var(--text);padding-top:8px;text-align:center;font-size:10px;color:var(--text-muted)}
+.legal{font-size:9px;color:var(--text-subtle);margin-top:24px;line-height:1.5}
 </style>
 </head><body>
 <div class="head">
@@ -2119,11 +2126,11 @@ th{background:#f8fafc;padding:7px 10px;text-align:left;font-size:10px;font-weigh
   <div class="sub">${empresa} · Fecha: ${fechaTermino} · Generado: ${hoy}</div>
 </div>
 <p style="margin-bottom:16px;font-size:12px;line-height:1.6;">
-  Por medio del presente instrumento, <strong>${empresa}</strong> y don/doña <strong>${t.nombre}</strong>,
+  Por medio del presente instrumento, <strong>${empresa}</strong> y don/doña <strong>${escHTML(t.nombre)}</strong>,
   RUT <strong>${t.rut || '—'}</strong>, acuerdan poner término a la relación laboral con fecha
   <strong>${fechaTermino}</strong>, en virtud de la causal contemplada en el <strong>${infoCausal.label}</strong>.
 </p>
-<p style="margin-bottom:16px;font-size:11px;line-height:1.6;color:#64748b;">
+<p style="margin-bottom:16px;font-size:11px;line-height:1.6;color:var(--text-muted);">
   El trabajador prestó servicios desde el <strong>${t.fechaIngreso || '—'}</strong>, con una antigüedad de
   <strong>${c.anios} año(s) y ${c.meses} mes(es)</strong>. Remuneración base de cálculo: <strong>${fmt$(c.baseCalc)}</strong>.
 </p>
@@ -2145,7 +2152,7 @@ th{background:#f8fafc;padding:7px 10px;text-align:left;font-size:10px;font-weigh
   se pone término.
 </p>
 <div class="firma">
-  <div class="firma-box">Firma trabajador<br><br>${t.nombre}<br>RUT: ${t.rut || '—'}</div>
+  <div class="firma-box">Firma trabajador<br><br>${escHTML(t.nombre)}<br>RUT: ${t.rut || '—'}</div>
   <div class="firma-box">Firma empleador<br><br>${empresa}<br>Representante Legal</div>
 </div>
 <div class="legal">

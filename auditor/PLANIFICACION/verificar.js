@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * verificar.js — Verificación estática del Sprint activo
- * Uso: node PLANIFICACION/verificar.js
+ * verificar.js — Verificación ESTÁTICA (busca funciones y textos en el código)
+ * Uso: node PLANIFICACION/verificar.js   (o `npm test`, que además corre las pruebas de fase)
  *
- * Comprueba que las funciones declaradas en el plan existen realmente
- * en el código fuente. No reemplaza las pruebas de browser, pero atrapa
- * el error más común: marcar como completo sin implementar.
+ * Atrapa regresiones obvias (algo borrado o renombrado) y tareas marcadas como hechas sin
+ * implementar. NO prueba comportamiento: para eso están test-fase0..3.js (lógica),
+ * `npm run test:navegador` (interacción en Chromium) y `npm run test:reglas` (Firestore).
  */
 
 const fs   = require('fs');
@@ -49,7 +49,7 @@ function tieneString(archivo, texto) {
 }
 
 // ─────────────────────────────────────────────────────────────
-console.log('\n══ SPRINT 1 — Inventario y Activos (Centros de Costo / Bodegas / Movimientos / Activos Fijos / Productos) ══');
+console.log('\n══ Inventario y activos (centros de costo, bodegas, movimientos, activos fijos) ══');
 
 check('centros-costo.js tiene contenido real (≥20 líneas de código)',
     tieneContenido('js/modules/centros-costo.js', 20));
@@ -79,7 +79,7 @@ check('la calculadora del Diario registra movimientos de inventario',
     tieneString('js/services/diario.js', 'invRegistrarMovimiento'));
 
 // ─────────────────────────────────────────────────────────────
-console.log('\n══ SPRINT 2 — UX ══');
+console.log('\n══ Libro Diario, Plan de Cuentas y Libro Mayor ══');
 
 check('diario.js no tiene alert() sueltos',
     !/(return\s+alert\(|^\s*alert\()/m.test(leer('js/services/diario.js')));
@@ -96,7 +96,7 @@ check('mayor.js tiene filtro por cuenta o período',
     tieneString('js/services/mayor.js', 'periodo'));
 
 // ─────────────────────────────────────────────────────────────
-console.log('\n══ SPRINT 3 — Módulos ══');
+console.log('\n══ Documentos y Cartolas ══');
 
 check('documentos.js tiene _docEditandoId',
     tieneString('js/modules/documentos.js', '_docEditandoId'));
@@ -108,7 +108,7 @@ check('cartolas.js llama guardarCartolas() al clasificar',
     tieneString('js/modules/cartolas.js', 'guardarCartolas'));
 
 // ─────────────────────────────────────────────────────────────
-console.log('\n══ SPRINT 4 — Reportes ══');
+console.log('\n══ Reportes, F29 y depreciación ══');
 
 check('balance.js tiene estado vacío (empty-state o Sin movimientos)',
     tieneString('js/services/balance.js', 'empty-state') ||
@@ -121,7 +121,7 @@ check('activos.js tiene periodos_depreciados',
     tieneString('js/modules/activos.js', 'periodos_depreciados'));
 
 // ─────────────────────────────────────────────────────────────
-console.log('\n══ SPRINT 5 — Integraciones ══');
+console.log('\n══ Conciliación bancaria y utilidades ══');
 
 check('reconciliacion.js tiene selector de cuenta bancaria',
     tieneString('js/services/reconciliacion.js', 'recCuentaBanco') ||
@@ -279,12 +279,52 @@ check('Inicio tiene la tarjeta de cierre y cierre.js se carga después de conexi
     (() => { const h = leer('index.html'); return h.indexOf('<script src="js/core/cierre.js') > h.indexOf('<script src="js/core/conexiones.js'); })());
 
 // ─────────────────────────────────────────────────────────────
+console.log('\n══ Interacción y seguridad (2026-11) ══');
+
+check('gestor de modales cargado antes de los módulos',
+    tieneString('js/core/modales.js', 'window.ContappModales') &&
+    (() => { const h = leer('index.html'); return h.indexOf('js/core/modales.js') > -1 && h.indexOf('js/core/modales.js') < h.indexOf('js/modules/compras.js'); })());
+
+check('avisos anunciados a lectores de pantalla (aria-live)',
+    tieneString('js/services/app.js', "setAttribute('aria-live', 'polite')"));
+
+check('Inicio sin conexión: el modo offline espera a que carguen menu.js y categorías',
+    (() => { const c = leer('js/services/firebase-service.js'); const i = c.indexOf("console.error('Firebase init error:'"); return i > -1 && c.slice(i, i + 600).includes('DOMContentLoaded'); })());
+
+check('firestore.rules v3 (invitados con vínculo vigente, pago protegido)',
+    tieneString('firestore.rules', 'function invitadoVigente') &&
+    tieneString('firestore.rules', "hasAny(['estado', 'plan', 'codigoAcceso'])"));
+
+check('acceso por código crea su perfil antes de leer el del titular',
+    (() => { const c = leer('js/services/auth-manager.js'); return c.indexOf('codigoAcceso: codigo') > -1 && c.indexOf('codigoAcceso: codigo') < c.indexOf("collection('perfiles').doc(titularUid).get()"); })());
+
+check('invitado se inscribe en el cliente como asistente (no admin)',
+    tieneString('js/services/firebase-service.js', "window.currentUser.esInvitado\n                ? 'asistente'") ||
+    /esInvitado\s*\?\s*'asistente'/.test(leer('js/services/firebase-service.js')));
+
+check('consola "¿Qué quieres hacer hoy?" encima del centro de mando (Etapa 3)',
+    tieneString('index.html', 'id="homeConsola"') && tieneString('index.html', 'js/services/consola.js') &&
+    (() => { const h = leer('index.html'); return h.indexOf('id="homeConsola"') < h.indexOf('id="homeHubTiles"'); })() &&
+    tieneString('js/services/consola.js', 'cierreChecklist'));
+
+check('Mis clientes: tarjetas con barra de avance del cierre (Etapa 3)',
+    tieneString('js/auditor/panel-estudio.js', 'class="mc-bar"') && tieneString('index.html', 'id="empPageSub"'));
+
+check('login: "¿Olvidaste tu contraseña?" y "Recordarme" funcionan; sin botones sociales falsos',
+    tieneFunc('js/services/firebase-service.js', 'fbRecuperarClave') && tieneString('js/services/firebase-service.js', 'setPersistence') &&
+    !tieneString('index.html', 'class="lsocial"'));
+
+check('Etapa 4: íconos SVG (cxi-*) definidos y usados en vez de emoji en botones y pestañas',
+    tieneString('css/main.css', '.cxi-editar') && tieneString('js/core/iconos.js', 'ContappIconos') &&
+    !/class="mod-tab-btn[^>]*>[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/u.test(leer('index.html')));
+
+// ─────────────────────────────────────────────────────────────
 console.log('\n' + '─'.repeat(50));
 console.log(`Resultado: ${ok} ✅  |  ${errores} ❌`);
 
 if (errores > 0) {
-    console.log('\n⚠️  HAY TAREAS MARCADAS COMO COMPLETADAS QUE NO LO ESTÁN.');
-    console.log('   Revisa los ❌ antes de continuar con el siguiente sprint.\n');
+    console.log('\n⚠️  Algo que debería existir en el código no está (regresión o tarea sin terminar).');
+    console.log('   Revisa los ❌ antes de continuar.\n');
     process.exit(1);
 } else {
     console.log('\n🎉 Todo verificado correctamente.\n');

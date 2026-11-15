@@ -46,19 +46,19 @@
 
 .home-hub-tile {
     width: 260px; background: var(--card-bg); border: 1px solid var(--rule-strong); border-radius: var(--radius-m);
-    padding: 26px 24px 22px; box-shadow: 0 12px 28px rgba(30,30,93,.1), 0 2px 6px rgba(30,30,93,.06);
+    padding: 26px 24px 22px; box-shadow: 0 12px 28px rgba(15,27,38,.1), 0 2px 6px rgba(15,27,38,.06);
     cursor: pointer; position: relative; text-align: left; transition: transform .2s, box-shadow .2s;
 }
 .home-hub-tile::before {
     content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px;
     border-radius: var(--radius-m) var(--radius-m) 0 0; background: var(--accent, var(--coral));
 }
-.home-hub-tile:hover { transform: translateY(-4px); box-shadow: 0 18px 36px rgba(30,30,93,.16), 0 0 0 3px var(--wash-a); }
+@media (hover: hover) and (pointer: fine) { .home-hub-tile:hover { transform: translateY(-4px); box-shadow: 0 18px 36px rgba(15,27,38,.16), 0 0 0 3px var(--wash-a); } }
 
 .hh-tile-ic {
     width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, var(--periwinkle-soft), var(--coral) 150%);
     display: flex; align-items: center; justify-content: center; color: var(--navy); margin-bottom: 14px;
-    box-shadow: 0 6px 18px rgba(88,127,252,.22); font-size: 24px;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--blue) 22%, transparent); font-size: 24px;
 }
 [data-theme="dark"] .hh-tile-ic { background: linear-gradient(135deg, var(--paper-deep), var(--navy-light)); box-shadow: none; }
 .hh-tile-title { font-size: 18px; font-weight: 700; color: var(--ink); font-family: var(--font-heading); letter-spacing: -.01em; margin-bottom: 5px; }
@@ -74,7 +74,7 @@
 
 .hh-panel {
     width: min(60vw, 560px); border-radius: 20px; overflow: hidden;
-    background: var(--card-bg); border: 1px solid var(--rule-strong); box-shadow: 0 24px 60px rgba(30,30,93,.28);
+    background: var(--card-bg); border: 1px solid var(--rule-strong); box-shadow: 0 24px 60px rgba(15,27,38,.28);
     position: relative; transform: scale(.94); opacity: 0; transition: transform .22s cubic-bezier(.22,1,.36,1), opacity .22s;
 }
 .hh-overlay.abierto .hh-panel { transform: scale(1); opacity: 1; }
@@ -96,10 +96,10 @@
     background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 10px; border-left: 3px solid transparent;
     font-size: 12.5px; font-weight: 500; color: var(--ink); transition: border-color .15s, color .15s, transform .15s, background .15s;
 }
-.hh-chip:hover {
+@media (hover: hover) and (pointer: fine) { .hh-chip:hover {
     border-color: var(--gcolor, var(--navy)); border-left-color: var(--gcolor, var(--navy)); color: var(--gcolor, var(--navy));
     transform: translateX(2px);
-}
+} }
 .hh-chip-nombre { flex: 1; }
 .hh-chip-flecha { font-size: 10px; opacity: 0; transform: translateX(-4px); transition: opacity .15s, transform .15s; }
 .hh-chip:hover .hh-chip-flecha { opacity: 1; transform: translateX(0); }
@@ -109,7 +109,7 @@
     display: flex; align-items: center; justify-content: center; color: var(--ink-faint); cursor: pointer;
     background: var(--wash-a); border: 1px solid var(--rule-strong); z-index: 2; transition: color .15s; font-size: 13px;
 }
-.hh-cerrar:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .hh-cerrar:hover { color: var(--ink); } }
 
 /* ---- Sección 2: dashboard compacto (igual al prototipo — 2 columnas: KPIs +
    gráfico + resumen de actividad a la izquierda, indicadores + donuts a la
@@ -128,7 +128,7 @@
     --k: var(--navy); padding: 12px 14px; border: 1px solid var(--rule-strong); border-top: 3px solid var(--k);
     border-radius: 11px; background: var(--card-bg); box-shadow: var(--shadow-card); transition: transform .18s, box-shadow .18s;
 }
-.kpi-mx:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+@media (hover: hover) and (pointer: fine) { .kpi-mx:hover { box-shadow: var(--shadow); } }
 .kpi-mx:nth-child(1) { --k: var(--navy); }
 .kpi-mx:nth-child(2) { --k: var(--coral); }
 .kpi-mx:nth-child(3) { --k: var(--ok); }
@@ -161,4 +161,148 @@
 @media (max-width: 640px) {
     .hh-panel { width: 92vw; }
     .hh-panel-grid { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════
+   CONSOLA "¿Qué quieres hacer hoy?" (Etapa 3, js/services/consola.js)
+   Panel "pantalla" oscuro en ambos temas, como en la referencia.
+══════════════════════════════════════════ */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.consola {
+    position: relative; width: 100%; background: var(--screen); color: var(--on-screen);
+    border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-2); text-align: left;
+}
+.consola-globo { position: absolute; right: -70px; top: -40px; width: 340px; opacity: .5; pointer-events: none; }
+.consola-globo svg { width: 100%; height: auto; overflow: visible; stroke: var(--periwinkle, #8FA5B3); }
+.consola-globo g { stroke: #8FA5B3; opacity: .45; }
+.consola-in { position: relative; padding: 22px 24px 16px; display: flex; flex-direction: column; gap: 12px; }
+.consola h2 { margin: 0; font-family: var(--font-heading); font-size: clamp(21px, 2.6vw, 27px); color: var(--on-screen); max-width: 28ch; }
+.consola .sub { margin: 0; color: var(--screen-dim); font-size: 14.5px; max-width: 62ch; }
+.consola-prompt {
+    display: flex; align-items: center; gap: 12px; background: var(--screen-2);
+    border: 1px solid var(--screen-line); border-radius: 14px; padding: 10px 10px 10px 16px;
+    transition: border-color .15s, box-shadow .15s;
+}
+.consola-prompt:focus-within { border-color: var(--screen-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--screen-accent) 25%, transparent); }
+.consola-prompt .chev { width: 16px; height: 20px; flex: none; }
+.consola-prompt .chev path { stroke: var(--screen-accent); stroke-width: 4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+#cmdConsola {
+    flex: 1; min-width: 0; background: none; border: 0; outline: none; box-shadow: none; padding: 4px 0;
+    color: var(--on-screen); font-family: var(--font-mono); font-size: clamp(14px, 1.7vw, 16px); caret-color: var(--screen-accent);
+}
+#cmdConsola::placeholder { color: var(--screen-dim); }
+.consola-go {
+    border: 0; background: var(--screen-accent); color: var(--screen); font-weight: 700; border-radius: 10px;
+    padding: 8px 16px; font-size: 14px; flex: none; cursor: pointer; font-family: inherit;
+}
+@media (hover: hover) and (pointer: fine) { .consola-go:hover { filter: brightness(1.08); } }
+.consola-sug { position: relative; border-top: 1px solid var(--screen-line); padding: 6px 12px 12px; }
+.consola-sug:has(.suglist:empty) { display: none; }
+.consola .sug-t { font-size: 13px; color: var(--screen-dim); padding: 6px 10px; }
+.consola .suglist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: 300px; overflow-y: auto; }
+.consola .sugi {
+    display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+    padding: 8px 10px; border-radius: 10px; cursor: pointer;
+}
+.consola .sugi[aria-selected="true"] { background: var(--screen-2); }
+@media (hover: hover) and (pointer: fine) { .consola .sugi:hover { background: var(--screen-2); } }
+.consola .sugi[aria-selected="true"] { box-shadow: inset 2px 0 0 var(--screen-accent); }
+.consola .sugi .ic {
+    width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+    background: var(--screen-2); color: var(--screen-accent); border: 1px solid var(--screen-line);
+}
+.consola .sugi .ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.consola .sugi-txt { min-width: 0; }
+.consola .sugi b { display: block; color: var(--on-screen); font-weight: 600; font-size: 14.5px; }
+.consola .sugi .a { display: block; font-size: 13px; color: var(--screen-dim); }
+.consola .sugi .tag { font-size: 12.5px; color: var(--screen-accent); text-align: right; max-width: 22ch; }
+.consola .sug-vacio { padding: 6px 10px; font-size: 13.5px; color: var(--screen-dim); }
+@media (max-width: 560px) {
+    .consola .sugi { grid-template-columns: 34px minmax(0, 1fr); }
+    .consola .sugi .tag { grid-column: 2; text-align: left; }
+    .consola-globo { width: 240px; right: -90px; }
+}
+/* Etapa 5: el globo de la consola queda quieto (en Inicio se trabaja; el giro solo en el login) */
+@keyframes consola-giro { from { transform: scaleX(1); } 50% { transform: scaleX(-1); } to { transform: scaleX(1); } }
+
+/* ══════════════════════════════════════════
+   INICIO — revisión (Etapa 3): consola compacta, centro de mando en fila,
+   un solo estilo (sin degradados, emoji ni fondo punteado)
+══════════════════════════════════════════ */
+/* Secciones: contenido a todo el ancho y arriba (no centrado vertical) */
+.in-slide-hub { justify-content: flex-start; align-items: stretch; padding: 22px 76px 28px 26px; }
+.home-hub { max-width: none; align-items: stretch; gap: 16px; }
+.hh-titulo { margin: 6px 0 0; font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: var(--text); text-align: left; }
+
+/* Consola compacta: título + resumen + campo; la lista solo al usarla */
+.consola-in { padding: 16px 20px; gap: 10px; }
+.consola-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.consola h2 { font-size: clamp(18px, 2vw, 22px); max-width: none; }
+.consola-resumen {
+    background: none; border: 0; padding: 0; font: inherit; font-size: 13.5px; color: var(--screen-dim);
+    cursor: pointer; text-align: right;
+}
+@media (hover: hover) and (pointer: fine) { .consola-resumen:hover { color: var(--on-screen); text-decoration: underline; text-underline-offset: 3px; } }
+.consola-globo { width: 260px; top: -60px; right: -60px; opacity: .4; }
+/* clip (no hidden): con hidden el navegador desplaza la caja al enfocar el campo,
+   porque el globo sobresale por la derecha, y el contenido se corría a la izquierda */
+.consola { overflow: clip; }
+.consola .consola-sug { display: none; }
+.consola.abierta .consola-sug { display: block; }
+.consola.abierta .consola-sug:has(.suglist:empty) { display: none; }
+
+/* Centro de mando y configuración: tarjetas de grupo con sus módulos */
+.hh-hub { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; justify-content: stretch; }
+@media (max-width: 640px)  { .hh-hub { grid-template-columns: minmax(0, 1fr); } }
+.hh-grupo {
+    background: var(--card); border: 1px solid var(--divider); border-radius: 16px; padding: 14px;
+    display: flex; flex-direction: column; gap: 10px; min-width: 0; text-align: left;
+    box-shadow: inset 0 3px 0 var(--gcolor, var(--accent));
+}
+.hh-grupo-h { display: flex; align-items: center; gap: 10px; }
+.hh-grupo-h .ic {
+    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none;
+    background: var(--table-stripe); color: var(--gcolor, var(--accent));
+}
+.hh-grupo-h .ic .ico, .hh-mod .ico, .in-dot .ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.hh-grupo-h h3 { margin: 0; font-family: var(--font-heading); font-size: 15.5px; font-weight: 700; color: var(--text); }
+.hh-grupo-h small { display: block; color: var(--text-muted); font-size: 12.5px; font-family: var(--font-sans); font-weight: 500; }
+.hh-mods { display: flex; flex-direction: column; gap: 2px; }
+.hh-mod {
+    text-align: left; background: none; border: 0; border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 14px;
+    color: var(--text); display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: pointer;
+    transition: background-color .15s, color .15s;
+}
+@media (hover: hover) and (pointer: fine) { .hh-mod:hover { background: var(--table-stripe); color: var(--gcolor, var(--accent)); } }
+.hh-mod .ico { width: 15px; height: 15px; color: var(--text-muted); flex: none; }
+
+/* Riel de secciones con íconos SVG */
+.in-dot { color: var(--text-muted); opacity: 1; box-shadow: none; padding: 0; }
+@media (hover: hover) and (pointer: fine) { .in-dot:hover { color: var(--text); transform: none; } }
+.in-dot.activo { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* Financiero y actividad: paneles planos como la referencia, sin fondo punteado */
+.home-body { background: var(--paper) !important; }
+.home-bg-dash { padding: 22px 76px 60px 26px; display: flex; flex-direction: column; gap: 14px; }
+.home-bg-dash > #cierreCard .card { margin-bottom: 0 !important; border-radius: 16px; border-color: var(--divider); box-shadow: none; }
+@media (hover: hover) and (pointer: fine) { .home-bg-dash > #cierreCard .card:hover { transform: none; } }
+.kpi-grid-compacta { gap: 0; background: var(--card); border: 1px solid var(--divider); border-radius: 16px; overflow: hidden; }
+.kpi-mx { border: 0; border-right: 1px solid var(--divider); border-radius: 0; box-shadow: none; background: none; padding: 14px 16px; }
+.kpi-mx:last-child { border-right: 0; }
+@media (hover: hover) and (pointer: fine) { .kpi-mx:hover { transform: none; box-shadow: none; } }
+.kpi-mx-lbl { font-size: 13px; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text-muted); }
+.kpi-mx-val { font-size: 20px; font-weight: 500; }
+.in-card { border-radius: 16px; border-color: var(--divider); box-shadow: none; padding: 16px; }
+.s2-card-titulo { font-family: var(--font-heading); font-size: 15px; margin-bottom: 10px; }
+.s2-donut-titulo { font-size: 12.5px; text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--text-muted); }
+.actividad-mini { font-size: 13px; }
+.actividad-mini b { font-size: 12px; text-transform: none; color: var(--text-muted); }
+@media (max-width: 900px) {
+    .in-slide-hub, .home-bg-dash { padding-right: 56px; }
+    .kpi-mx:nth-child(2) { border-right: 0; }
+    .kpi-mx:nth-child(-n+2) { border-bottom: 1px solid var(--divider); }
+}
+@media (max-width: 600px) {
+    .in-slide-hub, .home-bg-dash { padding-left: 14px; padding-right: 52px; }
+    .consola-resumen { text-align: left; }
 }

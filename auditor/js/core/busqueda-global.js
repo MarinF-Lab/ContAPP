@@ -1,5 +1,5 @@
 /**
- * busqueda-global.js — Búsqueda global Ctrl+K para ContApp Auditor
+ * busqueda-global.js — Búsqueda global Ctrl+K para ID Contable Auditor
  * Requiere: navegar(modulo, null), mostrarToast(mensaje, tipo) globales
  */
 
@@ -152,25 +152,25 @@
             '@keyframes bgFadeIn{from{opacity:0}to{opacity:1}}' +
             '#bg-panel{' +
                 'width:100%;max-width:600px;' +
-                'background:#fff;border-radius:12px;' +
+                'background:var(--card);border-radius:12px;' +
                 'box-shadow:0 20px 60px rgba(0,0,0,0.35);' +
                 'display:flex;flex-direction:column;overflow:hidden;' +
                 'max-height:75vh;' +
             '}' +
             '#bg-input-wrap{' +
                 'display:flex;align-items:center;gap:10px;' +
-                'padding:14px 16px;border-bottom:1px solid #e5e7eb;' +
+                'padding:14px 16px;border-bottom:1px solid var(--divider);' +
                 'flex-shrink:0;' +
             '}' +
             '#bg-input-wrap span.bg-search-icon{font-size:20px;line-height:1;}' +
             '#' + INPUT_ID + '{' +
                 'flex:1;border:none;outline:none;' +
-                'font-size:16px;background:transparent;color:#111;' +
+                'font-size:16px;background:transparent;color:var(--text);' +
             '}' +
-            '#' + INPUT_ID + '::placeholder{color:#9ca3af;}' +
-            '.bg-hint{font-size:11px;color:#9ca3af;white-space:nowrap;}' +
+            '#' + INPUT_ID + '::placeholder{color:var(--text-subtle);}' +
+            '.bg-hint{font-size:11px;color:var(--text-subtle);white-space:nowrap;}' +
             '.bg-hint kbd{' +
-                'background:#f3f4f6;border:1px solid #d1d5db;' +
+                'background:var(--table-stripe);border:1px solid var(--card-border);' +
                 'border-radius:4px;padding:1px 5px;font-size:11px;' +
             '}' +
             '#' + RESULTS_ID + '{overflow-y:auto;flex:1;}' +
@@ -178,8 +178,8 @@
                 'display:flex;align-items:center;gap:6px;' +
                 'padding:8px 16px 4px;' +
                 'font-size:11px;font-weight:700;letter-spacing:0.05em;' +
-                'text-transform:uppercase;color:#6b7280;' +
-                'position:sticky;top:0;background:#fff;z-index:1;' +
+                'text-transform:uppercase;color:var(--text-muted);' +
+                'position:sticky;top:0;background:var(--card);z-index:1;' +
             '}' +
             '.bg-grupo-dot{' +
                 'width:8px;height:8px;border-radius:50%;display:inline-block;' +
@@ -189,23 +189,23 @@
                 'padding:9px 16px;cursor:pointer;' +
                 'transition:background 0.1s;' +
             '}' +
-            '.bg-item:hover,.bg-item.activo{background:#f3f4f6;}' +
+            '.bg-item:hover,.bg-item.activo{background:var(--table-stripe);}' +
             '.bg-item-icono{font-size:18px;flex-shrink:0;width:24px;text-align:center;}' +
             '.bg-item-texto{flex:1;min-width:0;}' +
             '.bg-item-titulo{' +
-                'font-size:14px;font-weight:600;color:#111;' +
+                'font-size:14px;font-weight:600;color:var(--text);' +
                 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
             '}' +
             '.bg-item-sub{' +
-                'font-size:12px;color:#6b7280;' +
+                'font-size:12px;color:var(--text-muted);' +
                 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
             '}' +
             '.bg-vacio{' +
-                'text-align:center;padding:40px 20px;color:#9ca3af;' +
+                'text-align:center;padding:40px 20px;color:var(--text-subtle);' +
             '}' +
             '.bg-vacio-icono{font-size:40px;margin-bottom:10px;}' +
             '.bg-vacio p{margin:4px 0;font-size:14px;}' +
-            '.bg-separador{height:1px;background:#f3f4f6;margin:2px 0;}';
+            '.bg-separador{height:1px;background:var(--table-stripe);margin:2px 0;}';
         document.head.appendChild(s);
     }
 
@@ -256,7 +256,7 @@
     function _mostrarVacioInicial(container) {
         container.innerHTML =
             '<div class="bg-vacio">' +
-                '<div class="bg-vacio-icono">🔍</div>' +
+                '<div class="bg-vacio-icono"><i class=cxi-buscar></i></div>' +
                 '<p><strong>Busca en toda la app</strong></p>' +
                 '<p>Asientos, compras, ventas, contactos, productos, activos…</p>' +
             '</div>';

@@ -424,7 +424,7 @@ function cierreIrAOrigen(asientoId) {
 //  TARJETA DE CIERRE (Inicio → Financiero y actividad)
 // ═════════════════════════════════════════════════════════════
 const _CI_ICONO = {
-    ok:        '<span style="color:var(--positive);font-weight:700;">✔</span>',
+    ok:        '<span style="color:var(--positive);font-weight:700;"><i class=cxi-check></i></span>',
     pendiente: '<span style="color:var(--warning);font-weight:700;">●</span>',
     na:        '<span style="color:var(--text-muted);">–</span>',
 };
@@ -446,7 +446,7 @@ function _ciRenderCampoTopbar(c) {
     const [y, m] = c.periodo.split('-');
     const mes = (CI_MESES[parseInt(m, 10) - 1] || '').slice(0, 3);
     const color = c.cerrado || c.avance === 100 ? 'var(--positive)' : 'var(--warning)';
-    const estado = `<strong style="color:${color};">${c.cerrado ? '🔒 cerrado' : c.avance + '%'}</strong>`;
+    const estado = `<strong style="color:${color};">${c.cerrado ? '<i class=cxi-candado></i> cerrado' : c.avance + '%'}</strong>`;
     const titulo = c.pendientes.length ? 'Falta: ' + c.pendientes.join(' · ') : 'Ver el checklist de cierre del mes';
     if (box && val) { val.innerHTML = `${mes} ${y} · ${estado}`; box.title = titulo; box.style.display = ''; }
     if (home) { home.innerHTML = `Cierre ${mes} ${y}: ${estado}`; home.title = titulo; home.style.display = ''; }
@@ -485,10 +485,10 @@ function cierreRenderTarjeta() {
         ? `<div style="font-size:12px;color:var(--warning);margin-top:6px;">⚠️ ${cierre.modificaciones} cambio(s) después del cierre${cierre.ultima_modificacion?.contexto ? ' · último en ' + _ciEsc(cierre.ultima_modificacion.contexto) : ''}.</div>`
         : '';
     el.innerHTML = `
-    <div class="card" style="padding:16px 18px;margin-bottom:16px;">
+    <div class="card ci-tarjeta" style="padding:16px 18px;margin-bottom:16px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;cursor:pointer;" onclick="cierreToggleTarjeta()">
             <div style="display:flex;align-items:center;gap:10px;">
-                <strong style="font-size:15px;">✅ Cierre de ${_ciEsc(c.etiqueta)}</strong>
+                <strong style="font-size:16px;font-family:var(--font-heading);">Cierre de ${_ciEsc(c.etiqueta)}</strong>
                 ${c.cerrado ? `<span style="background:var(--positive-soft);color:var(--positive);border:1px solid var(--positive);padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;">CERRADO</span>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
@@ -505,8 +505,8 @@ function cierreRenderTarjeta() {
             ${filas}
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap;">
                 ${c.cerrado
-                    ? `<button class="btn btn-secondary" data-requiere-rol="contador" onclick="cierreAccionReabrir()">🔓 Reabrir ${_ciEsc(c.etiqueta)}</button>`
-                    : `<button class="btn btn-primary" data-requiere-rol="contador" onclick="cierreAccionCerrar()">🔒 Cerrar ${_ciEsc(c.etiqueta)}</button>`}
+                    ? `<button class="btn btn-secondary" data-requiere-rol="contador" onclick="cierreAccionReabrir()"><i class=cxi-abierto></i> Reabrir ${_ciEsc(c.etiqueta)}</button>`
+                    : `<button class="btn btn-primary" data-requiere-rol="contador" onclick="cierreAccionCerrar()"><i class=cxi-candado></i> Cerrar ${_ciEsc(c.etiqueta)}</button>`}
             </div>
         </div>
     </div>`;

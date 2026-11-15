@@ -132,11 +132,11 @@ function generarFlujoCaja() {
                     <td>${l.fecha}</td>
                     <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                         ${l.glosa}
-                        ${l.contacto ? `<span style="font-size:11px;color:var(--accent);margin-left:6px;">👤 ${l.contacto}</span>` : ''}
+                        ${l.contacto ? `<span style="font-size:11px;color:var(--accent);margin-left:6px;"><i class=cxi-persona></i> ${escHTML(l.contacto)}</span>` : ''}
                     </td>
                     <td class="monto" style="color:var(--positive);">${l.entrada > 0 ? '$' + fmt(l.entrada) : ''}</td>
                     <td class="monto" style="color:var(--negative);">${l.salida  > 0 ? '$' + fmt(l.salida)  : ''}</td>
-                    <td class="monto" style="${cls}font-weight:600;">${signoNeto}$${fmt(Math.abs(l.neto))}</td>
+                    <td class="monto" style="${cls}font-weight:600;">${signoNeto}${fmtPeso(Math.abs(l.neto))}</td>
                 </tr>`;
             });
         }
@@ -148,7 +148,7 @@ function generarFlujoCaja() {
                 Subtotal ${sec.label}
             </td>
             <td class="monto" style="font-weight:700;font-size:14px;color:${colorTotal};background:var(--table-stripe);">
-                ${signoTotal}$${fmt(Math.abs(sec.total))}
+                ${signoTotal}${fmtPeso(Math.abs(sec.total))}
             </td>
         </tr>`;
     });
@@ -189,25 +189,25 @@ function _renderGraficoFlujoCaja(meses) {
         const x  = padL + i * grupW;
         const hE = Math.round((m.entrada / max) * (H - padB));
         const hS = Math.round((m.salida  / max) * (H - padB));
-        bars    += `<rect x="${x}" y="${H-padB-hE}" width="${barW}" height="${hE}" fill="#3b82f6" rx="2" opacity="0.85"/>`;
-        bars    += `<rect x="${x+barW+barGap}" y="${H-padB-hS}" width="${barW}" height="${hS}" fill="#f87171" rx="2" opacity="0.85"/>`;
-        xLabels += `<text x="${x+barW}" y="${H}" text-anchor="middle" font-size="9" fill="#64748b">${labels[i]}</text>`;
+        bars    += `<rect x="${x}" y="${H-padB-hE}" width="${barW}" height="${hE}" style="fill:var(--info)" rx="2" opacity="0.85"/>`;
+        bars    += `<rect x="${x+barW+barGap}" y="${H-padB-hS}" width="${barW}" height="${hS}" style="fill:var(--negative)" rx="2" opacity="0.85"/>`;
+        xLabels += `<text x="${x+barW}" y="${H}" text-anchor="middle" font-size="9" style="fill:var(--text-muted)">${labels[i]}</text>`;
     });
 
     let yLines = '';
     for (let i = 0; i <= 4; i++) {
         const y   = Math.round((H - padB) * (1 - i / 4));
         const val = Math.round(max * i / 4);
-        yLines += `<line x1="${padL-4}" y1="${y}" x2="${padL+12*grupW}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
-        yLines += `<text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#94a3b8">$${val >= 1e6 ? (val/1e6).toFixed(1)+'M' : val >= 1e3 ? (val/1e3).toFixed(0)+'K' : val}</text>`;
+        yLines += `<line x1="${padL-4}" y1="${y}" x2="${padL+12*grupW}" y2="${y}" style="stroke:var(--divider)" stroke-width="1"/>`;
+        yLines += `<text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="9" style="fill:var(--text-subtle)">$${val >= 1e6 ? (val/1e6).toFixed(1)+'M' : val >= 1e3 ? (val/1e3).toFixed(0)+'K' : val}</text>`;
     }
 
     const svg = `<svg viewBox="0 0 ${W} ${H+10}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:${W}px;">
         ${yLines}${bars}${xLabels}
-        <rect x="${W-110}" y="8"  width="12" height="10" fill="#3b82f6" rx="2"/>
-        <text x="${W-95}"  y="17" font-size="10" fill="#64748b">Entradas</text>
-        <rect x="${W-110}" y="24" width="12" height="10" fill="#f87171" rx="2"/>
-        <text x="${W-95}"  y="33" font-size="10" fill="#64748b">Salidas</text>
+        <rect x="${W-110}" y="8"  width="12" height="10" style="fill:var(--info)" rx="2"/>
+        <text x="${W-95}"  y="17" font-size="10" style="fill:var(--text-muted)">Entradas</text>
+        <rect x="${W-110}" y="24" width="12" height="10" style="fill:var(--negative)" rx="2"/>
+        <text x="${W-95}"  y="33" font-size="10" style="fill:var(--text-muted)">Salidas</text>
     </svg>`;
 
     const cont = document.getElementById('graficoFlujoCaja');
@@ -228,7 +228,7 @@ function fcAbrirOverrides() {
     modal.innerHTML = `
     <div class="modal-box" style="width:600px;max-height:80vh;display:flex;flex-direction:column;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3 style="margin:0;">⚙️ Clasificación de cuentas — Flujo de Caja</h3>
+            <h3 style="margin:0;">Clasificación de cuentas — Flujo de Caja</h3>
             <button class="btn btn-secondary" onclick="fcCerrarOverrides()">✕</button>
         </div>
         <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
@@ -237,9 +237,9 @@ function fcAbrirOverrides() {
         <div style="display:flex;gap:8px;margin-bottom:12px;">
             <input id="fcOvCuenta" class="input" placeholder="Nombre exacto de la cuenta" style="flex:1;">
             <select id="fcOvCategoria" class="input" style="width:180px;">
-                <option value="operacional">⚙️ Operacional</option>
-                <option value="inversion">🏗️ Inversión</option>
-                <option value="financiamiento">🏦 Financiamiento</option>
+                <option value="operacional">Operacional</option>
+                <option value="inversion">Inversión</option>
+                <option value="financiamiento">Financiamiento</option>
             </select>
             <button class="btn btn-primary" onclick="fcAgregarOverride()">+ Agregar</button>
         </div>
@@ -276,7 +276,7 @@ function _fcRenderOverridesTabla() {
             ${overrides.map((o, i) => `<tr>
                 <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.cuenta}</td>
                 <td>${icons[o.categoria] || ''} ${o.categoria}</td>
-                <td><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="fcEliminarOverride(${i})">🗑</button></td>
+                <td><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="fcEliminarOverride(${i})"><i class=cxi-eliminar></i></button></td>
             </tr>`).join('')}
         </tbody>
     </table>`;

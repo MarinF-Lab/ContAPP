@@ -1,136 +1,251 @@
 rules_version = '2';
 // ─────────────────────────────────────────────────────────────
-//  CONTAPP AUDITOR — Reglas Firestore v2
-//  Cambios respecto a v1:
-//    - perfiles: lectura restringida (solo propio + titular del invitado)
-//    - perfiles: escritura de otro uid limitada a campos de canje de invitación
-//    - invitaciones: list bloqueado; create solo a usuarios no-anónimos
-//      con titularUid == propio; update separado por titular vs invitado
-//    - empresas/create: bloqueado para sesiones anónimas
+//  CONTAPP AUDITOR — Reglas Firestore v3 (2026-11)
+//
+//  Modelo de acceso (licencia.js / auth-manager.js):
+//    · TITULAR: la cuenta que paga. Sus clientes tienen id "<uidTitular>_<timestamp>".
+//    · INVITADO: cuenta registrada que canjeó un código del titular
+//      (perfil.vinculadoA = titular y su uid está en perfil-del-titular.invitados).
+//    · ACCESO POR CÓDIGO: sesión anónima con perfil {vinculadoA, codigoAcceso};
+//      vale mientras la invitación no esté revocada.
+//    · Empresas con id antiguo (sin "<uid>_"): acceso solo para miembros existentes.
+//
+//  Cambios respecto a v2:
+//    · Ya no cualquiera puede inscribirse (y ponerse 'admin') en usuarios/ de
+//      cualquier empresa: solo el titular, o un invitado vigente con rol no admin.
+//    · El canje de invitación en el perfil del titular exige que la invitación
+//      quitada esté marcada como usada por quien canjea, y agrega solo su uid.
+//    · El invitado solo puede marcar la invitación como usada por él mismo y
+//      antes de que expire.
+//    · Revocar un código o sacar a un invitado corta el acceso de inmediato.
+//    · Nadie puede cambiarse 'estado' ni 'plan' de su perfil (pago).
+//    · Máximo 4 invitaciones (pendientes + invitados) por titular.
+//    · Los invitados no crean clientes; las sesiones anónimas tampoco.
+//    · modulos/{doc} solo acepta el campo 'data'; audit_log es inmutable y
+//      cada entrada lleva el uid y la hora reales de quien la crea.
 // ─────────────────────────────────────────────────────────────
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Helpers ──────────────────────────────────────────────
-    function esMiembro(empresaId) {
-      return exists(/databases/$(database)/documents/empresas/$(empresaId)/usuarios/$(request.auth.uid));
-    }
-    function rolEn(empresaId) {
-      return get(/databases/$(database)/documents/empresas/$(empresaId)/usuarios/$(request.auth.uid)).data.rol;
-    }
-    function esAdmin(empresaId) {
-      return rolEn(empresaId) == 'admin';
-    }
-    function puedeEscribir(empresaId) {
-      return rolEn(empresaId) in ['admin', 'contador', 'asistente'];
-    }
+    // ── Sesión ───────────────────────────────────────────────
+    function autenticado() { return request.auth != null; }
     function esAnonimo() {
-      return request.auth.token.email == null;
+      return request.auth.token.firebase.sign_in_provider == 'anonymous';
     }
 
     // ── Perfiles ─────────────────────────────────────────────
-    match /perfiles/{uid} {
-
-      // Lectura de un perfil específico:
-      //   - Siempre puede leer el propio
-      //   - Invitado puede leer el perfil del titular si su uid está en invitados[]
-      //     (necesario para que _fbCargarPerfil cargue las empresas del titular)
-      allow get:  if request.auth != null && (
-        request.auth.uid == uid ||
-        request.auth.uid in resource.data.invitados
-      );
-
-      // Nadie puede listar todos los perfiles
-      allow list: if false;
-
-      // El usuario solo puede escribir su propio perfil
-      allow write: if request.auth != null && request.auth.uid == uid;
-
-      // Canje de invitación: cuando un invitado acepta, escribe en el perfil
-      // del TITULAR para mover el código y agregar su uid.
-      // Solo se permiten cambios en codigosActivos e invitados; no se puede
-      // quitar elementos de invitados ni agregar campos nuevos.
-      allow update: if request.auth != null &&
-        request.auth.uid != uid &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['codigosActivos', 'invitados']) &&
-        request.resource.data.invitados.hasAll(resource.data.invitados) &&
-        resource.data.codigosActivos.hasAll(request.resource.data.codigosActivos);
+    function rutaPerfil(uid) { return /databases/$(database)/documents/perfiles/$(uid); }
+    function miPerfil()      { return get(rutaPerfil(request.auth.uid)); }
+    function miVinculo() {
+      return exists(rutaPerfil(request.auth.uid))
+        ? miPerfil().data.get('vinculadoA', '')
+        : '';
     }
 
     // ── Invitaciones ─────────────────────────────────────────
-    match /invitaciones/{codigo} {
-
-      // Cualquier usuario autenticado (incluye anónimos) puede leer
-      // una invitación específica por su código — el código es el secreto.
-      allow get:  if request.auth != null;
-
-      // Nadie puede enumerar todas las invitaciones
-      allow list: if false;
-
-      // Solo usuarios registrados (no anónimos) pueden crear invitaciones,
-      // y únicamente con su propio uid como titularUid.
-      allow create: if request.auth != null &&
-        !esAnonimo() &&
-        request.resource.data.titularUid == request.auth.uid;
-
-      // Titular puede revocar o modificar su propia invitación.
-      // Invitado puede únicamente marcar como usada (campos fijos).
-      allow update: if request.auth != null && (
-        resource.data.titularUid == request.auth.uid ||
-        (resource.data.usada == false &&
-         request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['usada', 'usadaPor', 'usadaEn']))
-      );
-
-      // Solo el titular puede eliminar sus invitaciones
-      allow delete: if request.auth != null &&
-        resource.data.titularUid == request.auth.uid;
+    function rutaInvitacion(codigo) {
+      return /databases/$(database)/documents/invitaciones/$(codigo);
+    }
+    function codigoValido(codigo) { return codigo is string && codigo.size() == 6; }
+    // Código de acceso vigente hacia un titular (no revocado)
+    function codigoVigente(codigo, titular) {
+      return codigoValido(codigo) &&
+        exists(rutaInvitacion(codigo)) &&
+        get(rutaInvitacion(codigo)).data.titularUid == titular &&
+        get(rutaInvitacion(codigo)).data.get('revocada', false) == false;
+    }
+    // Canje: la invitación quedó marcada como usada por quien escribe
+    function canjeHecho(codigo, titular) {
+      return codigoValido(codigo) &&
+        exists(rutaInvitacion(codigo)) &&
+        get(rutaInvitacion(codigo)).data.titularUid == titular &&
+        get(rutaInvitacion(codigo)).data.usada == true &&
+        get(rutaInvitacion(codigo)).data.usadaPor == request.auth.uid;
     }
 
-    // ── Empresas y subcolecciones ─────────────────────────────
+    // ── Vínculo invitado → titular ───────────────────────────
+    function invitadoVigente(titular) {
+      return exists(rutaPerfil(request.auth.uid)) &&
+        miPerfil().data.get('vinculadoA', '') == titular && (
+          (esAnonimo() &&
+            codigoVigente(miPerfil().data.get('codigoAcceso', ''), titular)) ||
+          (!esAnonimo() &&
+            request.auth.uid in get(rutaPerfil(titular)).data.get('invitados', []))
+        );
+    }
+
+    // ── Empresas ─────────────────────────────────────────────
+    // Ids nuevos: "<uidTitular>_<Date.now()>" (auth-manager.js: crear cliente)
+    function idConTitular(empresaId) {
+      return empresaId.matches('^[A-Za-z0-9]{20,40}_[0-9]{10,}$');
+    }
+    function titularDe(empresaId) { return empresaId.split('_')[0]; }
+    function esTitular(empresaId) {
+      return idConTitular(empresaId) && titularDe(empresaId) == request.auth.uid;
+    }
+    function rutaUsuario(empresaId) {
+      return /databases/$(database)/documents/empresas/$(empresaId)/usuarios/$(request.auth.uid);
+    }
+    function esMiembro(empresaId) { return exists(rutaUsuario(empresaId)); }
+    function rolEn(empresaId)     { return get(rutaUsuario(empresaId)).data.rol; }
+
+    function tieneAcceso(empresaId) {
+      return autenticado() && (
+        esTitular(empresaId) ||
+        (idConTitular(empresaId) && invitadoVigente(titularDe(empresaId))) ||
+        (!idConTitular(empresaId) && esMiembro(empresaId))   // ids antiguos
+      );
+    }
+    function tieneRol(empresaId, roles) {
+      return esMiembro(empresaId) && rolEn(empresaId) in roles;
+    }
+    function puedeEscribir(empresaId) {
+      return autenticado() && (
+        esTitular(empresaId) ||
+        (tieneAcceso(empresaId) && tieneRol(empresaId, ['admin', 'contador', 'asistente']))
+      );
+    }
+    function esAdmin(empresaId) {
+      return autenticado() && (
+        esTitular(empresaId) ||
+        (tieneAcceso(empresaId) && tieneRol(empresaId, ['admin']))
+      );
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  perfiles/{uid}
+    // ══════════════════════════════════════════════════════════
+    match /perfiles/{uid} {
+
+      // Propio · invitado del titular · sesión con código vigente del titular
+      allow get: if autenticado() && (
+        request.auth.uid == uid ||
+        request.auth.uid in resource.data.get('invitados', []) ||
+        (esAnonimo() && miVinculo() == uid &&
+          codigoVigente(miPerfil().data.get('codigoAcceso', ''), uid))
+      );
+      allow list: if false;
+
+      // Crear el propio perfil. Cuentas registradas: sin pago activado, sin
+      // invitados ni vínculo precargados. Sesión anónima: solo vínculo + código.
+      allow create: if autenticado() && request.auth.uid == uid && (
+        (!esAnonimo() &&
+          request.resource.data.get('estado', 'pendiente_pago') == 'pendiente_pago' &&
+          request.resource.data.get('plan', 'auditor') == 'auditor' &&
+          request.resource.data.get('invitados', []).size() == 0 &&
+          request.resource.data.get('codigosActivos', []).size() == 0 &&
+          !('vinculadoA' in request.resource.data)) ||
+        (esAnonimo() &&
+          request.resource.data.keys().hasOnly(['vinculadoA', 'codigoAcceso', 'anonimo', 'creadoEn']) &&
+          codigoVigente(request.resource.data.codigoAcceso, request.resource.data.vinculadoA))
+      );
+
+      // Actualizar el propio perfil: sin tocar pago, sin pasar de 4 invitaciones.
+      // (vinculadoA por sí solo no da acceso: además hace falta estar en
+      // perfil-del-titular.invitados, que solo se logra con un canje válido.)
+      allow update: if autenticado() && request.auth.uid == uid &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['estado', 'plan', 'codigoAcceso']) &&
+        request.resource.data.get('codigosActivos', []).size() +
+          request.resource.data.get('invitados', []).size() <= 4;
+
+      // Canje de invitación: quien canjea escribe en el perfil del TITULAR.
+      // Debe quitar exactamente un código, que esa invitación esté marcada como
+      // usada por él, y agregar solo su propio uid a invitados.
+      allow update: if autenticado() && !esAnonimo() && request.auth.uid != uid &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['codigosActivos', 'invitados']) &&
+        request.resource.data.get('invitados', []).toSet() ==
+          resource.data.get('invitados', []).toSet().union([request.auth.uid].toSet()) &&
+        resource.data.codigosActivos.size() - request.resource.data.codigosActivos.size() == 1 &&
+        canjeHecho(resource.data.codigosActivos.removeAll(request.resource.data.codigosActivos)[0], uid);
+
+      allow delete: if autenticado() && request.auth.uid == uid;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  invitaciones/{codigo}
+    // ══════════════════════════════════════════════════════════
+    match /invitaciones/{codigo} {
+
+      // Leer una invitación por su código (el código es el secreto). Sin listar.
+      allow get:  if autenticado();
+      allow list: if false;
+
+      // Solo titulares registrados (no invitados ni anónimos), a su nombre
+      allow create: if autenticado() && !esAnonimo() && miVinculo() == '' &&
+        codigoValido(codigo) &&
+        request.resource.data.titularUid == request.auth.uid &&
+        request.resource.data.usada == false &&
+        request.resource.data.get('revocada', false) == false &&
+        request.resource.data.expira is timestamp;
+
+      allow update: if autenticado() && (
+        // Titular: revocar o editar la suya, sin cambiar de dueño
+        (resource.data.titularUid == request.auth.uid &&
+          request.resource.data.titularUid == request.auth.uid) ||
+        // Invitado: marcarla como usada por él, una vez y antes de que expire
+        (!esAnonimo() &&
+          resource.data.titularUid != request.auth.uid &&
+          resource.data.usada == false &&
+          resource.data.expira > request.time &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['usada', 'usadaPor', 'usadaEn']) &&
+          request.resource.data.usada == true &&
+          request.resource.data.usadaPor == request.auth.uid)
+      );
+
+      allow delete: if autenticado() && resource.data.titularUid == request.auth.uid;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  empresas/{empresaId} y subcolecciones
+    // ══════════════════════════════════════════════════════════
     match /empresas/{empresaId} {
 
-      // Las sesiones anónimas (acceso por código) no pueden crear empresas
-      allow create: if request.auth != null && !esAnonimo();
+      // Crear: solo el titular, con su uid como prefijo del id
+      allow create: if autenticado() && !esAnonimo() && miVinculo() == '' &&
+        esTitular(empresaId);
 
-      // Solo miembros registrados pueden leer datos de la empresa
-      allow read:   if request.auth != null && esMiembro(empresaId);
+      allow read:   if tieneAcceso(empresaId);
+      allow update: if puedeEscribir(empresaId);
+      allow delete: if esTitular(empresaId) ||
+        (!idConTitular(empresaId) && autenticado() && tieneRol(empresaId, ['admin']));
 
-      // Solo miembros con rol distinto de 'lectura' pueden escribir
-      allow update: if request.auth != null &&
-        esMiembro(empresaId) && puedeEscribir(empresaId);
-
-      // Solo el admin puede eliminar la empresa
-      allow delete: if request.auth != null && esAdmin(empresaId);
-
-      // ── Usuarios de la empresa ──────────────────────────
+      // ── Equipo y roles ──────────────────────────────────────
       match /usuarios/{uid} {
+        allow read: if tieneAcceso(empresaId);
 
-        // Cualquier usuario puede registrarse en la empresa (crear su propio doc)
-        allow create: if request.auth != null && request.auth.uid == uid;
-
-        // Cada usuario lee su propio doc; cualquier miembro ve la lista del equipo
-        allow read:   if request.auth != null && (
-          request.auth.uid == uid || esMiembro(empresaId)
+        // Inscribirse uno mismo: el titular como admin; un invitado vigente
+        // con rol distinto de admin (el titular puede subirlo después).
+        allow create: if autenticado() && request.auth.uid == uid && (
+          (esTitular(empresaId) && request.resource.data.rol == 'admin') ||
+          (idConTitular(empresaId) && invitadoVigente(titularDe(empresaId)) &&
+            request.resource.data.rol in ['contador', 'asistente', 'lectura'])
         );
 
-        // Solo admin puede cambiar roles o eliminar usuarios
-        allow update, delete: if request.auth != null && esAdmin(empresaId);
+        // Cambiar roles / quitar: admin; nadie toca el registro del titular salvo él
+        allow update, delete: if esAdmin(empresaId) &&
+          (!idConTitular(empresaId) || uid != titularDe(empresaId) || esTitular(empresaId)) &&
+          (request.resource == null ||
+            request.resource.data.rol in ['admin', 'contador', 'asistente', 'lectura']);
       }
 
-      // ── Datos de módulos (estructura nueva) ─────────────
-      // Cada módulo tiene su propio documento: modulos/asientos, modulos/compras, etc.
+      // ── Datos de cada módulo: modulos/asientos, modulos/compras… ──
       match /modulos/{moduloId} {
-        allow read:   if request.auth != null && esMiembro(empresaId);
-        allow write:  if request.auth != null &&
-          esMiembro(empresaId) && puedeEscribir(empresaId);
+        allow read:           if tieneAcceso(empresaId);
+        allow create, update: if puedeEscribir(empresaId) &&
+          request.resource.data.keys().hasOnly(['data']);
+        allow delete:         if esAdmin(empresaId);
       }
 
-      // ── Log de auditoría ────────────────────────────────
+      // ── Log de auditoría: solo agregar, nunca editar ni borrar ──
       match /audit_log/{logId} {
-        allow read:   if request.auth != null && esAdmin(empresaId);
-        allow create: if request.auth != null && esMiembro(empresaId);
+        allow read:   if esAdmin(empresaId);
+        allow create: if tieneAcceso(empresaId) &&
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.ts == request.time;
+        allow update, delete: if false;
       }
     }
   }

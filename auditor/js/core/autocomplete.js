@@ -172,6 +172,7 @@
             }
 
             if (e.key === 'Escape') {
+                e.preventDefault(); // que no cierre también el modal que contiene el campo
                 cerrar();
                 return;
             }

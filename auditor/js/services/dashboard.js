@@ -83,12 +83,12 @@ function _dashChartColors() {
     const cs = getComputedStyle(document.documentElement);
     const v = (name, fallback) => (cs.getPropertyValue(name) || fallback).trim();
     return {
-        periwinkle: v('--periwinkle', '#92A5FD'),
-        coral:      v('--coral', '#FF8692'),
-        coralDeep:  v('--coral-deep', '#E8687A'),
-        navy:       v('--navy', '#1E1E5D'),
+        periwinkle: v('--periwinkle', '#8FA5B3'),
+        coral:      v('--coral', '#A03A63'),
+        coralDeep:  v('--coral-deep', '#86304F'),
+        navy:       v('--navy', '#0F1B26'),
         ok:         v('--ok', '#1FB579'),
-        ink:        v('--ink', '#1E1E5D'),
+        ink:        v('--ink', '#0F1B26'),
         inkSoft:    v('--ink-soft', '#5B5F82'),
         inkFaint:   v('--ink-faint', '#9498B8'),
         rule:       v('--rule', '#E1E4F3'),
@@ -150,7 +150,7 @@ function _renderBarrasMensuales() {
             responsive: true, maintainAspectRatio: false, animation: false,
             plugins: {
                 legend: { position: 'top', align: 'end', labels: { color: c.inkSoft, font: { family: c.fontSans, size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'rectRounded' } },
-                tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: $${fmt(ctx.parsed.y)}` } },
+                tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmtPeso(ctx.parsed.y)}` } },
             },
             scales: {
                 x: { grid: { display: false }, ticks: { color: c.inkFaint, font: { family: c.fontMono, size: 9.5 } } },
@@ -202,7 +202,7 @@ function _renderDashDonut(canvasId, key, datos) {
                     labels: {
                         color: c.inkSoft, font: { family: c.fontSans, size: 10.5 }, boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: 'circle', padding: 10,
                         generateLabels: (chart) => chart.data.labels.map((label, i) => ({
-                            text: `${label} — $${fmt(chart.data.datasets[0].data[i])}`,
+                            text: `${label} — ${fmtPeso(chart.data.datasets[0].data[i])}`,
                             fillStyle: chart.data.datasets[0].backgroundColor[i],
                             strokeStyle: chart.data.datasets[0].backgroundColor[i],
                             pointStyle: 'circle',
@@ -247,5 +247,5 @@ function _renderTopCuentas(cuentas) {
         .filter(x => x.saldo > 0)
         .sort((a, b) => b.saldo - a.saldo)[0];
 
-    el.innerHTML = `<b>Top cuenta</b>${top ? `${top.nombre} — $${fmt(top.saldo)}` : 'Sin movimientos'}`;
+    el.innerHTML = `<b>Top cuenta</b>${top ? `${escHTML(top.nombre)} — ${fmtPeso(top.saldo)}` : 'Sin movimientos'}`;
 }

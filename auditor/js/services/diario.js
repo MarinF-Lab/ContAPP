@@ -839,44 +839,44 @@ function renderPreasiento() {
 
     preasientoActual.debe.forEach(p => {
         totalDebe += p.monto;
-        tbody.innerHTML += `
+        tbody.insertAdjacentHTML('beforeend', `
         <tr>
             <td class="cuenta-debe">${p.cuenta}</td>
             <td class="monto">${fmt(p.monto)}</td>
             <td class="monto">-</td>
-        </tr>`;
+        </tr>`);
     });
 
     preasientoActual.haber.forEach(p => {
         totalHaber += p.monto;
-        tbody.innerHTML += `
+        tbody.insertAdjacentHTML('beforeend', `
         <tr>
             <td class="cuenta-haber">${p.cuenta}</td>
             <td class="monto">-</td>
             <td class="monto">${fmt(p.monto)}</td>
-        </tr>`;
+        </tr>`);
     });
 
     // Fila de totales
     const cuadrado = Math.abs(totalDebe - totalHaber) < 1;
-    tbody.innerHTML += `
-    <tr style="border-top:2px solid var(--border);font-weight:700;background:${cuadrado ? '#f0fdf4' : '#fef2f2'};">
+    tbody.insertAdjacentHTML('beforeend', `
+    <tr style="border-top:2px solid var(--border);font-weight:700;background:${cuadrado ? 'var(--positive-soft)' : 'var(--negative-soft)'};">
         <td style="font-size:12px;color:${cuadrado ? 'var(--positive)' : 'var(--negative)'};">
-            ${cuadrado ? '⚖️ Cuadrado' : '❌ Descuadrado'}
+            ${cuadrado ? '<i class=cxi-balanza></i> Cuadrado' : '<i class=cxi-cerrar></i> Descuadrado'}
         </td>
-        <td class="monto" style="color:var(--text);">$${fmt(totalDebe)}</td>
-        <td class="monto" style="color:var(--text);">$${fmt(totalHaber)}</td>
-    </tr>`;
+        <td class="monto" style="color:var(--text);">${fmtPeso(totalDebe)}</td>
+        <td class="monto" style="color:var(--text);">${fmtPeso(totalHaber)}</td>
+    </tr>`);
 
     const badge = document.getElementById("badgePreasiento");
     const btnAsiento = document.getElementById("btnGuardarAsiento");
     btnAsiento.innerText = asientoEditando ? "💾 Actualizar Asiento" : "💾 Registrar Asiento";
     if (cuadrado) {
-        badge.innerText  = `⚖️ Cuadrado: $${fmt(totalDebe)}`;
+        badge.innerText  = `Cuadrado: ${fmtPeso(totalDebe)}`;
         badge.className  = "totales-badge ok";
         btnAsiento.disabled = false;
     } else {
-        badge.innerText  = `❌ Descuadrado — Debe: $${fmt(totalDebe)} | Haber: $${fmt(totalHaber)}`;
+        badge.innerText  = `❌ Descuadrado — Debe: ${fmtPeso(totalDebe)} | Haber: ${fmtPeso(totalHaber)}`;
         badge.className  = "totales-badge error";
         btnAsiento.disabled = true;
     }
@@ -1411,7 +1411,7 @@ function _actualizarKpisHistorialDiario(delMes) {
     elHaber.textContent = '$' + fmt(tHaber);
 
     const cuadrado = Math.abs(tDebe - tHaber) < 1;
-    elLabel.textContent = cuadrado ? '⚖️ Cuadrado' : '❌ Descuadrado';
+    elLabel.textContent = cuadrado ? 'Cuadrado' : 'Descuadrado';
     elEstado.textContent = '$' + fmt(Math.max(tDebe, tHaber));
     elEstado.style.color = cuadrado ? 'var(--positive)' : 'var(--negative)';
 }
@@ -1476,38 +1476,38 @@ function renderHistorialDiario() {
 
         const cuadrado = Math.abs(tDebe - tHaber) < 1;
         lineas += `
-        <tr style="border-top:2px solid var(--border);font-weight:700;background:${cuadrado ? '#f0fdf4' : '#fef2f2'};">
+        <tr style="border-top:2px solid var(--border);font-weight:700;background:${cuadrado ? 'var(--positive-soft)' : 'var(--negative-soft)'};">
             <td style="font-size:11px;color:${cuadrado ? 'var(--positive)' : 'var(--negative)'};">
-                ${cuadrado ? '⚖️ Cuadrado' : '❌ Descuadrado'}
+                ${cuadrado ? '<i class=cxi-balanza></i> Cuadrado' : '<i class=cxi-cerrar></i> Descuadrado'}
             </td>
-            <td class="monto">$${fmt(tDebe)}</td>
-            <td class="monto">$${fmt(tHaber)}</td>
+            <td class="monto">${fmtPeso(tDebe)}</td>
+            <td class="monto">${fmtPeso(tHaber)}</td>
         </tr>`;
 
         const anulado = as.estado === 'ANULADO';
 
-        div.innerHTML += `
+        div.insertAdjacentHTML('beforeend', `
         <div class="card" style="margin-bottom:20px;${anulado ? 'opacity:.5;' : ''}">
 
             <div style="padding:12px 20px;background:var(--bg);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;border-radius:var(--radius) var(--radius) 0 0;">
-                <span style="font-weight:600;">📅 ${as.fecha}</span>
-                <span style="color:var(--text-muted);font-size:13px;">"${as.glosa}"</span>
+                <span style="font-weight:600;"><i class=cxi-calendario></i> ${as.fecha}</span>
+                <span style="color:var(--text-muted);font-size:13px;">"${escHTML(as.glosa)}"</span>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    ${as.contacto ? `<span style="background:var(--accent-soft);color:var(--accent);padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">👤 ${as.contacto}</span>` : ''}
-                    ${anulado ? `<span style="background:#fee2e2;color:var(--negative);padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;">ANULADO</span>` : ''}
+                    ${as.contacto ? `<span style="background:var(--accent-soft);color:var(--accent);padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;"><i class=cxi-persona></i> ${escHTML(as.contacto)}</span>` : ''}
+                    ${anulado ? `<span style="background:var(--negative-soft);color:var(--negative);padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;">ANULADO</span>` : ''}
                     <span style="font-size:12px;color:var(--text-muted);">N° ${as.numero}</span>
                 </div>
             </div>
 
             ${!anulado ? `
             <div style="padding:8px 12px;display:flex;gap:8px;border-bottom:1px solid var(--border);">
-                <button class="btn btn-primary" onclick="editarAsiento(${as.id})">✏️ Editar</button>
-                ${as._calcOrigen ? `<button class="btn btn-secondary" onclick="editarAsientoManual(${as.id})" title="Editar las líneas cuenta/debe/haber directamente">✏️ Líneas manual</button>` : ''}
+                <button class="btn btn-primary" onclick="editarAsiento(${as.id})"><i class=cxi-editar></i> Editar</button>
+                ${as._calcOrigen ? `<button class="btn btn-secondary" onclick="editarAsientoManual(${as.id})" title="Editar las líneas cuenta/debe/haber directamente"><i class=cxi-editar></i> Líneas manual</button>` : ''}
                 <button class="btn btn-secondary" onclick="anularAsiento(${as.id})">🚫 Anular</button>
-                ${as.origen ? `<button class="btn btn-secondary" onclick="cierreIrAOrigen(${as.id})" title="Abrir el documento que generó este asiento">📄 Ver origen</button>` : ''}
+                ${as.origen ? `<button class="btn btn-secondary" onclick="cierreIrAOrigen(${as.id})" title="Abrir el documento que generó este asiento"><i class=cxi-documento></i> Ver origen</button>` : ''}
             </div>` : `
             <div style="padding:8px 12px;display:flex;gap:8px;border-bottom:1px solid var(--border);">
-                <button class="btn btn-danger" onclick="eliminarAsiento(${as.id})">🗑 Eliminar</button>
+                <button class="btn btn-danger" onclick="eliminarAsiento(${as.id})"><i class=cxi-eliminar></i> Eliminar</button>
             </div>`}
 
             <table class="cont-table">
@@ -1521,7 +1521,7 @@ function renderHistorialDiario() {
                 <tbody>${lineas}</tbody>
             </table>
 
-        </div>`;
+        </div>`);
     });
 }
 
@@ -1534,7 +1534,7 @@ let filasManual = [];
 function _poblarContactosDL() {
     const opts = (window.dbContactos || [])
         .filter(c => c.activo !== false)
-        .map(c => `<option value="${c.nombre}${c.rut ? ' — ' + c.rut : ''}">`)
+        .map(c => `<option value="${escHTML(c.nombre)}${c.rut ? ' — ' + c.rut : ''}">`)
         .join('');
     ['listaContactosAsiento', 'listaContactosManual'].forEach(id => {
         const el = document.getElementById(id);
@@ -1787,7 +1787,7 @@ function actualizarTotalesManual() {
 
     const cuadrado = Math.abs(totD - totH) < 1;
     badge.innerText = cuadrado
-        ? `⚖️ Cuadrado: ${fmt(totD)}`
+        ? `Cuadrado: ${fmt(totD)}`
         : `❌ Descuadrado  Debe: ${fmt(totD)}  Haber: ${fmt(totH)}`;
     badge.className = 'totales-badge ' + (cuadrado ? 'ok' : 'error');
     if (btn) btn.disabled = !cuadrado;
@@ -2019,7 +2019,7 @@ function calcRenderItems() {
 
     const datalist = document.getElementById('calcProductosList');
     if (datalist) {
-        datalist.innerHTML = productosActivos.map(p => `<option value="${p.nombre}">`).join('');
+        datalist.innerHTML = productosActivos.map(p => `<option value="${escHTML(p.nombre)}">`).join('');
     }
 
     filasCalculadora.forEach((fila, i) => {
@@ -2342,7 +2342,7 @@ function _calcActualizarResumenSplit() {
         el.style.color = Math.abs(suma - 100) < 0.01 ? 'var(--text-muted)' : 'var(--negative,#991b1b)';
     } else {
         const total = filasCalculadora.reduce((s, f) => s + _calcDesglosarItem(f).totalPago, 0);
-        el.textContent = `Asignado: $${fmt(suma)} de $${fmt(total)}`;
+        el.textContent = `Asignado: ${fmtPeso(suma)} de ${fmtPeso(total)}`;
         el.style.color = Math.abs(suma - total) < 1 ? 'var(--text-muted)' : 'var(--negative,#991b1b)';
     }
 }
@@ -2490,7 +2490,7 @@ function calcGenerar() {
             return mostrarToast(`Los porcentajes suman ${sumaValores}% — deben sumar 100%.`, 'error');
         }
         if (calcModoSplit === 'monto' && Math.abs(sumaValores - montoTotalItems) > 1) {
-            return mostrarToast(`Los montos del split suman $${fmt(sumaValores)} pero el total es $${fmt(montoTotalItems)}.`, 'error');
+            return mostrarToast(`Los montos del split suman ${fmtPeso(sumaValores)} pero el total es ${fmtPeso(montoTotalItems)}.`, 'error');
         }
     }
     const splitsResueltos = _calcResolverSplits(montoTotalItems);
@@ -2499,7 +2499,7 @@ function calcGenerar() {
     let glosaTexto = `${_CALC_ETIQUETA_TIPO[calcTipoActual]}: ${partesGlosa.join(', ')}`;
     glosaTexto += !calcPagoDividido
         ? ` — ${_calcTextoMedioPago(calcMedioUnico, calcDiasCreditoUnico)}`
-        : ` — ${splitsResueltos.map(s => `$${fmt(s.monto)} ${_calcTextoMedioPago(s.medioPago, s.diasCredito)}`).join(' + ')}`;
+        : ` — ${splitsResueltos.map(s => `${fmtPeso(s.monto)} ${_calcTextoMedioPago(s.medioPago, s.diasCredito)}`).join(' + ')}`;
 
     let debe = [], haber = [];
     const cuentasHint = {};

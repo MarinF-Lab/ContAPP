@@ -1,70 +1,85 @@
 /* ─────────────────────────────────────────────────────────────
-   CONTAPP FORGE — Design System Variables
-   Light mode (default) + Dark mode via [data-theme="dark"]
-   Nuevo diseño (navy/coral/periwinkle) — ver Diseño de apps/integracion-diseno.md
-   Paso 1 de la integración: tokens de color y tipografía únicamente.
+   CONTAPP — Tokens de diseño (Etapa 1 del rediseño 2026-11)
+   Paleta del logo, tomada de PLANIFICACION/diseno/referencia-contapp-consola.html.
+   Tema claro por defecto + oscuro con [data-theme="dark"].
+
+   Todas las combinaciones de texto/fondo cumplen contraste AA (4,5:1) en ambos
+   temas — verificado con un script al definirlas (ver INTEGRACION_DISENO.md).
+
+   Los nombres antiguos (--coral, --navy, --periwinkle, --blue…) se conservan
+   porque main.css, home-hub.css y los módulos los usan: ahora apuntan a la
+   paleta del logo y CAMBIAN con el tema (antes eran fijos).
 ───────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+/* Fuentes: se cargan con <link> en el <head> de index.html */
 
 /* ══════════════════════════════════════════
-   LIGHT MODE (default)
+   TEMA CLARO (por defecto)
 ══════════════════════════════════════════ */
 :root {
-    /* Tipografía — Space Grotesk (títulos/marca), Manrope (texto), IBM Plex Mono (cifras/mono) */
+    /* Tipografía — Space Grotesk (títulos/marca), Manrope (texto), IBM Plex Mono (cifras) */
     --font-heading: 'Space Grotesk', 'Segoe UI', sans-serif;
     --font-sans:    'Manrope', 'Segoe UI', sans-serif;
+    --ease-out:     cubic-bezier(.23, 1, .32, 1);   /* entradas y salidas de UI */
+    --ease-drawer:  cubic-bezier(.32, .72, 0, 1);   /* paneles laterales */
     --font-mono:    'IBM Plex Mono', 'SF Mono', monospace;
 
-    /* ---- paleta de marca (nuevo diseño) ---- */
-    --navy:             #1E1E5D;
-    --navy-light:       #2B2B74;
-    --coral:            #FF8692;
-    --coral-deep:       #E8687A;
-    --blue:             #587FFC;
-    --periwinkle:       #92A5FD;
-    --periwinkle-soft:  #C7D2FE;
+    /* ---- marca (logo) ---- */
+    --navy:             #0F1B26;   /* tinta */
+    --navy-light:       #182736;
+    --coral:            #A03A63;   /* magenta: acento */
+    --coral-deep:       #86304F;   /* acento al pasar el mouse */
+    --blue:             #2E5C80;   /* acero oscuro: información */
+    --periwinkle:       #8FA5B3;   /* acero */
+    --periwinkle-soft:  #C3CFD8;
+    --on-accent:        #FFFFFF;   /* texto sobre el acento */
+    --on-state:         #FFFFFF;   /* texto sobre botones de estado (rojo/verde/info) */
+    --screen:           #0F1B26;   /* "pantalla": paneles oscuros en ambos temas (cabeceras de boleta, consola) */
+    --on-screen:        #CBD5DE;
+    --screen-2:         #182736;
+    --screen-line:      #2A3B4C;
+    --screen-dim:       #8B9BA8;
+    --screen-accent:    #E8649A;
 
-    /* ---- estados (nuevo diseño) ---- */
-    --ok:               #1FB579;
-    --ok-tint:          #E1F7EC;
-    --warn:             #F2A94E;
-    --warn-tint:        #FCEEDA;
-    --danger:           #EF5B72;
-    --danger-tint:      #FCE4E8;
+    /* ---- estados ---- */
+    --ok:               #1C6E50;
+    --ok-tint:          #D7E3E3;
+    --warn:             #7E540A;
+    --warn-tint:        #E2E1DB;
+    --danger:           #A8341F;
+    --danger-tint:      #E6DDDD;
+    --info-tint:        #D9E2E8;
+    --accent-tint:      #E5DEE5;
 
-    /* ---- superficies (nuevo diseño, tema claro) ---- */
-    --paper:            #F5F6FC;
-    --card-bg:          #FFFFFF;
-    --paper-deep:       #ECEFFA;
-    --ink:              #1E1E5D;
-    --ink-soft:         #5B5F82;
-    --ink-faint:        #9498B8;
-    --rule:             #E1E4F3;
-    --rule-strong:      #CBD1EE;
+    /* ---- superficies ---- */
+    --paper:            #DCE3E9;   /* gris niebla: fondo de la app */
+    --card-bg:          #EEF2F5;   /* superficie */
+    --paper-deep:       #E4EAEF;   /* superficie 2: filas alternas, campos */
+    --ink:              #0F1B26;
+    --ink-soft:         #4A5C6C;
+    --ink-faint:        #506273;
+    --rule:             #C3CFD8;
+    --rule-strong:      #8FA5B3;
 
-    --shadow-1:         0 1px 2px rgba(30,30,93,.06), 0 6px 16px rgba(30,30,93,.08);
-    --shadow-2:         0 2px 4px rgba(30,30,93,.08), 0 14px 32px rgba(30,30,93,.16);
+    --shadow-1:         0 1px 2px rgba(15,27,38,.06), 0 8px 20px -12px rgba(15,27,38,.30);
+    --shadow-2:         0 2px 4px rgba(15,27,38,.06), 0 14px 34px -22px rgba(15,27,38,.45);
     --radius-s:         8px;
     --radius-m:         14px;
-    --wash-a:           rgba(146,165,253,.20);
-    --wash-b:           rgba(255,134,146,.16);
+    --wash-a:           rgba(143,165,179,.20);
+    --wash-b:           rgba(160,58,99,.08);
 
-    /* ══ Tokens existentes del proyecto — remapeados a la paleta nueva ══
-       Se conservan estos nombres porque main.css/auditor.css/remuneraciones.css y los
-       estilos inline del proyecto los consumen; así el nuevo diseño se propaga sin
-       tener que tocar cada archivo todavía (eso ocurre en los pasos siguientes del plan). */
+    /* ══ Tokens que consumen los estilos del proyecto ══ */
     --bg:             var(--paper);
-    --sidebar:        #FFFFFF;                 /* sin tocar aún: el sidebar se rediseña en los pasos 4-5 */
+    --sidebar:        var(--card-bg);
     --card:           var(--card-bg);
     --card-border:    var(--rule-strong);
     --text:           var(--ink);
     --text-muted:     var(--ink-soft);
     --text-subtle:    var(--ink-faint);
     --accent:         var(--coral);
-    --accent-soft:    #FFE9EC;
+    --accent-soft:    var(--accent-tint);
     --accent-grad:    linear-gradient(135deg, var(--coral) 0%, var(--coral-deep) 100%);
-    --accent-glow:    0 4px 16px rgba(255,134,146,.35);
-    --accent-glow-lg: 0 8px 28px rgba(255,134,146,.50);
+    --accent-glow:    0 4px 14px rgba(160,58,99,.22);
+    --accent-glow-lg: 0 8px 24px rgba(160,58,99,.30);
     --positive:       var(--ok);
     --positive-soft:  var(--ok-tint);
     --negative:       var(--danger);
@@ -72,30 +87,30 @@
     --warning:        var(--warn);
     --warning-soft:   var(--warn-tint);
     --info:           var(--blue);
-    --info-soft:      #E3E9FE;
+    --info-soft:      var(--info-tint);
     --divider:        var(--rule);
     --table-stripe:   var(--paper-deep);
     --input-bg:       var(--paper-deep);
     --shadow:         var(--shadow-2);
     --shadow-lg:      var(--shadow-2);
     --shadow-card:    var(--shadow-1);
-    --nav-active:     #F7E8EF;
-    --glow-pink:      rgba(255,134,146,.10);
-    --glow-blue:      rgba(88,127,252,.14);
+    --nav-active:     var(--accent-tint);
+    --glow-pink:      rgba(160,58,99,.10);
+    --glow-blue:      rgba(46,92,128,.12);
 
-    /* Sidebar-specific — sin tocar todavía (pasos 4-5 del plan) */
-    --sidebar-text:          #233443;
-    --sidebar-text-hover:    #0A1922;
-    --sidebar-icon-color:    #5A6E7A;
-    --sidebar-group-clr:     rgba(10,25,34,0.38);
-    --sidebar-item-hover:    #F0F3F6;
-    --sidebar-item-active-bg:  #F7E8EF;
-    --sidebar-item-active-txt: #AC406D;
-    --sidebar-border-clr:    rgba(10,25,34,0.08);
-    --sidebar-logo-border:   rgba(10,25,34,0.10);
-    --sidebar-divider:       1px solid rgba(10,25,34,0.08);
+    /* Menú lateral (la app ya no tiene sidebar; quedan por compatibilidad) */
+    --sidebar-text:          var(--ink-soft);
+    --sidebar-text-hover:    var(--ink);
+    --sidebar-icon-color:    var(--ink-soft);
+    --sidebar-group-clr:     var(--ink-faint);
+    --sidebar-item-hover:    var(--paper-deep);
+    --sidebar-item-active-bg:  var(--accent-tint);
+    --sidebar-item-active-txt: var(--coral);
+    --sidebar-border-clr:    var(--rule);
+    --sidebar-logo-border:   var(--rule);
+    --sidebar-divider:       1px solid var(--rule);
 
-    /* ── Legacy aliases ── */
+    /* ── Alias antiguos ── */
     --primary:        var(--coral);
     --primary-hover:  var(--coral-deep);
     --sidebar-bg:     var(--sidebar);
@@ -108,83 +123,63 @@
     --success-text:   var(--positive);
     --error-bg:       var(--negative-soft);
     --error-text:     var(--negative);
+
+    color-scheme: light;
 }
 
 /* ══════════════════════════════════════════
-   DARK MODE
+   TEMA OSCURO
 ══════════════════════════════════════════ */
 [data-theme="dark"] {
-    /* ---- superficies (nuevo diseño, tema oscuro) ----
-       Nota: --navy/--coral/--blue/--periwinkle y sus variantes NO cambian entre temas
-       (igual que en el prototipo) — solo cambian superficies, texto y los "tint" de estado. */
-    --paper:            #17171d;
-    --card-bg:          #1e1e25;
-    --paper-deep:       #25252d;
-    --ink:              #EDEEF2;
-    --ink-soft:         #A6A7B5;
-    --ink-faint:        #75768A;
-    --rule:             #2b2b34;
-    --rule-strong:      #37373f;
-    --ok-tint:          #132922;
-    --warn-tint:        #302514;
-    --danger-tint:      #301a20;
-    --wash-a:           rgba(146,165,253,.11);
-    --wash-b:           rgba(255,134,146,.10);
+    /* ---- marca (logo) ---- */
+    --navy:             #DDE5EC;   /* tinta clara */
+    --navy-light:       #203043;
+    --coral:            #FF5A8A;   /* rosa neón */
+    --coral-deep:       #FF85A8;
+    --blue:             #7FB0D6;
+    --periwinkle:       #5A6F80;
+    --periwinkle-soft:  #2C3D50;
+    --on-accent:        #131D2A;   /* el blanco no se lee sobre el rosa neón */
+    --on-state:         #131D2A;   /* ni sobre los estados claros del tema oscuro */
+    --screen:           #0C1622;
+    --on-screen:        #D3DCE4;
+    --screen-2:         #14212F;
+    --screen-line:      #253547;
+    --screen-dim:       #8B9BA8;
+    --screen-accent:    #FF5A8A;
 
-    /* ══ Tokens existentes del proyecto — remapeados ══ */
-    --bg:             var(--paper);
-    --sidebar:        #0C1A27;                 /* sin tocar aún: el sidebar se rediseña en los pasos 4-5 */
-    --card:           var(--card-bg);
-    --card-border:    var(--rule-strong);
-    --text:           var(--ink);
-    --text-muted:     var(--ink-soft);
-    --text-subtle:    var(--ink-faint);
-    --accent:         var(--coral);
-    --accent-soft:    #3A1F24;
-    --accent-grad:    linear-gradient(135deg, var(--coral) 0%, var(--coral-deep) 100%);
-    --accent-glow:    0 4px 16px rgba(255,134,146,.40);
-    --accent-glow-lg: 0 8px 28px rgba(255,134,146,.55);
-    --positive:       var(--ok);
-    --positive-soft:  var(--ok-tint);
-    --negative:       var(--danger);
-    --negative-soft:  var(--danger-tint);
-    --warning:        var(--warn);
-    --warning-soft:   var(--warn-tint);
-    --info:           var(--blue);
-    --info-soft:      #16213D;
-    --divider:        var(--rule);
-    --table-stripe:   var(--paper-deep);
-    --input-bg:       #121217;
-    --shadow:         var(--shadow-2);
-    --shadow-lg:      var(--shadow-2);
-    --shadow-card:    var(--shadow-1);
-    --nav-active:     #1C2939;
-    --glow-pink:      rgba(255,134,146,.10);
-    --glow-blue:      rgba(88,127,252,.18);
+    /* ---- estados ---- */
+    --ok:               #4CC59A;
+    --ok-tint:          #203B43;
+    --warn:             #E8B04B;
+    --warn-tint:        #353839;
+    --danger:           #FF7A5C;
+    --danger-tint:      #38313B;
+    --info-tint:        #27384B;
+    --accent-tint:      #312B3E;
 
-    /* Sidebar-specific — sin tocar todavía (pasos 4-5 del plan) */
-    --sidebar-text:          #9CB0BD;
-    --sidebar-text-hover:    #CAD8E2;
-    --sidebar-icon-color:    #717E8B;
-    --sidebar-group-clr:     rgba(202,216,226,0.35);
-    --sidebar-item-hover:    rgba(255,255,255,0.05);
-    --sidebar-item-active-bg:  #1C2939;
-    --sidebar-item-active-txt: #F95A8A;
-    --sidebar-border-clr:    rgba(255,255,255,0.07);
-    --sidebar-logo-border:   rgba(255,255,255,0.08);
-    --sidebar-divider:       1px solid rgba(255,255,255,0.07);
+    /* ---- superficies ---- */
+    --paper:            #131D2A;   /* navy */
+    --card-bg:          #1A2636;
+    --paper-deep:       #203043;
+    --ink:              #DDE5EC;
+    --ink-soft:         #8D9DAC;
+    --ink-faint:        #8A9AAA;
+    --rule:             #2C3D50;
+    --rule-strong:      #5A6F80;
 
-    /* ── Legacy overrides ── */
-    --primary:        var(--coral);
-    --primary-hover:  var(--coral-deep);
-    --sidebar-bg:     var(--sidebar);
-    --sidebar-hover:  var(--sidebar-item-hover);
-    --surface:        var(--card);
-    --background:     var(--bg);
-    --text-main:      var(--text);
-    --border:         var(--divider);
-    --success-bg:     var(--positive-soft);
-    --success-text:   var(--positive);
-    --error-bg:       var(--negative-soft);
-    --error-text:     var(--negative);
+    --shadow-1:         0 1px 2px rgba(0,0,0,.25), 0 8px 20px -12px rgba(0,0,0,.6);
+    --shadow-2:         0 2px 4px rgba(0,0,0,.25), 0 14px 34px -22px rgba(0,0,0,.7);
+    --wash-a:           rgba(90,111,128,.18);
+    --wash-b:           rgba(255,90,138,.08);
+
+    /* ══ Tokens que consumen los estilos del proyecto ══ */
+    --sidebar:        var(--card-bg);
+    --input-bg:       #152131;
+    --accent-glow:    0 4px 14px rgba(255,90,138,.25);
+    --accent-glow-lg: 0 8px 24px rgba(255,90,138,.35);
+    --glow-pink:      rgba(255,90,138,.10);
+    --glow-blue:      rgba(127,176,214,.12);
+
+    color-scheme: dark;
 }

@@ -127,17 +127,17 @@
                 } else {
                     const items = alertas.map(a => {
                         const isError = a.nivel === 'error';
-                        const bg    = isError ? '#fef2f2' : '#fffbeb';
-                        const bdr   = isError ? '#fca5a5' : '#fcd34d';
+                        const bg    = isError ? 'var(--negative-soft)' : 'var(--warning-soft)';
+                        const bdr   = isError ? 'var(--negative)' : 'var(--warning)';
                         const icon  = isError ? '⛔' : '⚠️';
-                        const title = isError ? '#991b1b' : '#92400e';
+                        const title = isError ? 'var(--negative)' : 'var(--warning)';
                         return `<div style="background:${bg};border:1px solid ${bdr};border-radius:8px;padding:10px 14px;margin-bottom:6px;">
                             <div style="font-weight:700;color:${title};margin-bottom:3px;">${icon} ${a.cuenta}</div>
-                            <div style="font-size:13px;color:#374151;">${a.mensaje}</div>
-                            <div style="font-size:12px;color:#6b7280;margin-top:4px;">💡 ${a.sugerencia}</div>
+                            <div style="font-size:13px;color:var(--text-muted);">${a.mensaje}</div>
+                            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">💡 ${a.sugerencia}</div>
                         </div>`;
                     }).join('');
-                    divAlertas.innerHTML = `<div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#374151;">
+                    divAlertas.innerHTML = `<div style="font-weight:700;font-size:14px;margin-bottom:8px;color:var(--text-muted);">
                         Inconsistencias detectadas (${alertas.length})</div>${items}`;
                     divAlertas.style.display = 'block';
                 }
@@ -180,24 +180,24 @@
             }
 
             const fmtCol = (val) => {
-                if (val === 0) return '<span style="color:#94a3b8;">-</span>';
+                if (val === 0) return '<span style="color:var(--text-subtle);">-</span>';
                 const neg = val < 0;
                 const txt = new Intl.NumberFormat('es-CL').format(Math.round(Math.abs(val)));
-                return `<span style="${neg ? 'color:#dc2626;font-weight:600;' : ''}">${neg ? '(' : ''}${txt}${neg ? ')' : ''}</span>`;
+                return `<span style="${neg ? 'color:var(--negative);font-weight:600;' : ''}">${neg ? '(' : ''}${txt}${neg ? ')' : ''}</span>`;
             };
 
             filas.forEach(f => {
-                tbody.innerHTML += `<tr${f.esAnomalio ? ' class="balance-row-anomalo"' : ''} style="cursor:pointer;" onclick="mayorIrACuenta('${f.cuenta.replace(/'/g, "\\'")}')" title="Ver en el Libro Mayor">
-                    <td style="font-weight:600;${f.esAnomalio ? 'color:#dc2626;' : ''}">${f.cuenta}${f.esAnomalio ? ' ⚠' : ''}</td>
+                tbody.insertAdjacentHTML('beforeend', `<tr${f.esAnomalio ? ' class="balance-row-anomalo"' : ''} style="cursor:pointer;" onclick="mayorIrACuenta('${f.cuenta.replace(/'/g, "\\'")}')" title="Ver en el Libro Mayor">
+                    <td style="font-weight:600;${f.esAnomalio ? 'color:var(--negative);' : ''}">${f.cuenta}${f.esAnomalio ? ' <i class=cxi-alerta></i>' : ''}</td>
                     <td class="monto">${fmt(f.debe)}</td>
                     <td class="monto">${fmt(f.haber)}</td>
-                    <td class="monto" style="color:#1d4ed8;">${fmt(f.deudor)}</td>
-                    <td class="monto" style="color:#1d4ed8;">${fmt(f.acreedor)}</td>
+                    <td class="monto" style="color:var(--info);">${fmt(f.deudor)}</td>
+                    <td class="monto" style="color:var(--info);">${fmt(f.acreedor)}</td>
                     <td class="monto">${fmtCol(f.activo)}</td>
                     <td class="monto">${fmtCol(f.pasivo)}</td>
                     <td class="monto">${fmtCol(f.perdida)}</td>
                     <td class="monto">${fmtCol(f.ganancia)}</td>
-                </tr>`;
+                </tr>`);
             });
 
             document.getElementById("balanceTotalesRow").innerHTML = `

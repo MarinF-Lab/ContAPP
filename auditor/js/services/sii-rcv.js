@@ -324,14 +324,14 @@ function siiAbrirRCV() {
                        background:none;color:var(--text);cursor:pointer;font-size:13px;">Cancelar</button>
             <button onclick="siiEjecutarDescargaRCV()"
                 style="padding:9px 22px;border:none;border-radius:8px;background:var(--accent);
-                       color:#fff;cursor:pointer;font-size:13px;font-weight:600;">
-                ⬇ Descargar RCV
+                       color:var(--on-accent);cursor:pointer;font-size:13px;font-weight:600;">
+                <i class=cxi-descargar></i> Descargar RCV
             </button>
         </div>
     </div>`;
 
     document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    modal.addEventListener('click', e => { if (e.target === modal) (window.modalQuitar || (m => m.remove()))(modal); });
 }
 
 async function siiEjecutarDescargaRCV() {
@@ -390,7 +390,7 @@ function siiMostrarGuiaProxy() {
     modal.className = 'modal-overlay';
     modal.innerHTML = `
     <div class="modal-box" style="width:560px;max-height:80vh;overflow-y:auto;">
-        <h3 style="margin-top:0;">🔧 Configurar Proxy CORS (Cloudflare Workers)</h3>
+        <h3 style="margin-top:0;">Configurar Proxy CORS (Cloudflare Workers)</h3>
         <ol style="line-height:2;color:var(--text-muted);font-size:13px;">
             <li>Ve a <strong>workers.cloudflare.com</strong> → crear cuenta gratis</li>
             <li>Crea un nuevo Worker y pega este código:</li>

@@ -95,29 +95,29 @@ function renderCompras() {
                 totTotal  += _nc * (c.total  || 0);
             }
 
-            tbody.innerHTML += `
+            tbody.insertAdjacentHTML('beforeend', `
             <tr class="${anulada ? 'fila-anulada' : ''}">
-                <td class="monto" style="color:#94a3b8;">${anulada ? '—' : corr++}</td>
+                <td class="monto" style="color:var(--text-subtle);">${anulada ? '—' : corr++}</td>
                 <td><span class="badge-doc badge-doc-compra">${info.label}</span></td>
                 <td class="monto">${c.numero_doc || '—'}</td>
                 <td>${c.fecha}</td>
-                <td style="font-family:monospace;font-size:12px;">${c.rut_proveedor || ''}</td>
-                <td style="max-width:180px;">${c.nombre_proveedor || ''}</td>
-                <td style="font-size:12px;color:#64748b;">${_labelMedioPagoCompra(c.medio_pago)}</td>
+                <td style="font-family:var(--font-mono);font-size:12px;white-space:nowrap;">${c.rut_proveedor || ''}</td>
+                <td style="max-width:180px;"><span class="nombre-2l" title="${escHTML(c.nombre_proveedor || '')}">${escHTML(c.nombre_proveedor || '')}</span></td>
+                <td style="font-size:12px;color:var(--text-muted);">${_labelMedioPagoCompra(c.medio_pago)}</td>
                 <td class="monto">${c.exento ? '$' + fmt(c.exento) : '—'}</td>
-                <td class="monto">$${fmt(c.neto   || 0)}</td>
-                <td class="monto">$${fmt(c.iva    || 0)}</td>
-                <td class="monto" style="font-weight:700;">$${fmt(c.total || 0)}</td>
+                <td class="monto">${fmtPeso(c.neto   || 0)}</td>
+                <td class="monto">${fmtPeso(c.iva    || 0)}</td>
+                <td class="monto" style="font-weight:700;">${fmtPeso(c.total || 0)}</td>
                 <td style="white-space:nowrap;">
                     ${anulada
                         ? `<span class="badge-inactivo">Anulada</span>`
                         : `<button class="btn-plan" style="margin-right:4px;"
-                                onclick="editarCompra(${c.id})">✏️ Editar</button>
+                                onclick="editarCompra(${c.id})"><i class=cxi-editar></i> Editar</button>
                            <button class="btn-plan btn-plan-eliminar"
                                 onclick="anularCompra(${c.id})">Anular</button>`
                     }
                 </td>
-            </tr>`;
+            </tr>`);
         });
     }
 
@@ -129,10 +129,10 @@ function renderCompras() {
             <td colspan="7" style="text-align:right;padding:12px 16px;font-weight:700;">
                 TOTALES — ${_nombreMes(comprasMes)} ${comprasAnio}
             </td>
-            <td class="monto">$${fmt(totExento)}</td>
-            <td class="monto">$${fmt(totNeto)}</td>
-            <td class="monto">$${fmt(totIva)}</td>
-            <td class="monto" style="font-weight:800;font-size:15px;">$${fmt(totTotal)}</td>
+            <td class="monto">${fmtPeso(totExento)}</td>
+            <td class="monto">${fmtPeso(totNeto)}</td>
+            <td class="monto">${fmtPeso(totIva)}</td>
+            <td class="monto" style="font-weight:800;font-size:15px;">${fmtPeso(totTotal)}</td>
             <td></td>
         </tr>`;
     }
@@ -160,19 +160,19 @@ function _renderResumenIvaCF(exento, neto, iva, ncIva) {
         </thead>
         <tbody>
             <tr><td>Compras Afectas (Neto)</td>
-                <td class="monto">$${fmt(neto)}</td></tr>
+                <td class="monto">${fmtPeso(neto)}</td></tr>
             <tr><td>Compras Exentas</td>
-                <td class="monto">$${fmt(exento)}</td></tr>
-            ${ncIvaAmt > 0 ? `<tr style="color:#dc2626;font-size:12px;">
+                <td class="monto">${fmtPeso(exento)}</td></tr>
+            ${ncIvaAmt > 0 ? `<tr style="color:var(--negative);font-size:12px;">
                 <td>IVA Notas de Crédito recibidas (${ivaPct()}%)</td>
-                <td class="monto">-$${fmt(ncIvaAmt)}</td></tr>` : ''}
-            <tr><td style="color:#2563eb;font-weight:600;">IVA Crédito Fiscal Neto (${ivaPct()}%)</td>
-                <td class="monto" style="color:#2563eb;font-weight:700;">$${fmt(iva)}</td></tr>
+                <td class="monto">-${fmtPeso(ncIvaAmt)}</td></tr>` : ''}
+            <tr><td style="color:var(--info);font-weight:600;">IVA Crédito Fiscal Neto (${ivaPct()}%)</td>
+                <td class="monto" style="color:var(--info);font-weight:700;">${fmtPeso(iva)}</td></tr>
         </tbody>
         <tfoot>
             <tr style="font-weight:800;">
                 <td>Total Compras Neto del Mes</td>
-                <td class="monto">$${fmt(neto + exento + iva)}</td>
+                <td class="monto">${fmtPeso(neto + exento + iva)}</td>
             </tr>
         </tfoot>
     </table>`;

@@ -5,7 +5,7 @@
 //  Previred publica cada mes un PDF público (sin login) con las tasas AFP, UF,
 //  UTM, IMM, SIS y asignación familiar vigentes. El navegador no puede leerlo
 //  directo por CORS, así que se pasa por un proxy propio (Cloudflare Worker
-//  gratuito, ver PLANIFICACION/previred-proxy-worker.js) que solo reenvía
+//  gratuito, ver herramientas/previred-proxy-worker.js) que solo reenvía
 //  pedidos a *.previred.com.
 //
 //  Flujo: listar página de indicadores → encontrar el PDF más reciente →
