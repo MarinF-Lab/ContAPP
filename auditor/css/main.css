@@ -4779,3 +4779,7 @@ body { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-are
     .page-title-bar h1 { font-size: 22px; }
     .view.active { padding: 16px 14px 96px; }
 }
+
+/* Etapa 6 (web-design-guidelines): títulos sin palabras sueltas; anclas que no quedan bajo la barra fija */
+h1, h2, h3 { text-wrap: balance; }
+[id^="cfgCard"], #cierreCard { scroll-margin-top: 96px; }

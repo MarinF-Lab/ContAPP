@@ -103,6 +103,7 @@
         var i = pila.indexOf(modal);
         if (i === -1) return;
         pila.splice(i, 1);
+        var stc = estado.get(modal); if (stc) stc.sucio = false;
         if (!pila.length) liberarScroll();
 
         var st = estado.get(modal) || {};
@@ -209,7 +210,14 @@
 
         if (e.key === 'Escape') {
             var b = botonCerrar(arriba);
-            if (b) { e.preventDefault(); b.click(); }
+            if (!b) return;
+            e.preventDefault();
+            var st = estado.get(arriba) || {};
+            if (st.sucio && typeof mostrarConfirm === 'function') {
+                mostrarConfirm('Tienes cambios sin guardar en este formulario. ¿Descartarlos?', function () {
+                    st.sucio = false; b.click();
+                }, { titulo: 'Descartar cambios', textoBtn: 'Descartar' });
+            } else b.click();
             return;
         }
 
@@ -254,12 +262,60 @@
             el.setAttribute('tabindex', '0');
             if (!el.hasAttribute('role') && el.tagName !== 'TR') el.setAttribute('role', 'button');
         });
-        var botones = raiz.tagName === 'BUTTON' ? [raiz] : raiz.querySelectorAll('button:not([aria-label])');
+        var botones = raiz.matches('button, [role="button"]') ? [raiz] : raiz.querySelectorAll('button:not([aria-label]), [role="button"]:not([aria-label])');
         Array.prototype.forEach.call(botones, function (b) {
             if (b.hasAttribute('aria-label')) return;
             var texto = (b.textContent || '').replace(/[\s✕×▾▸›‹←→↑↓⋯…]+/g, '').replace(/\p{Extended_Pictographic}/gu, '');
-            if (!texto && b.title) b.setAttribute('aria-label', b.title);
-            else if (!texto && /^\s*[✕×]\s*$/.test(b.textContent || '')) b.setAttribute('aria-label', 'Cerrar');
+            if (texto) return;
+            var ico = b.querySelector('[class^="cxi-"]');
+            if (b.title) b.setAttribute('aria-label', b.title);
+            else if (/^\s*[✕×]\s*$/.test(b.textContent || '')) b.setAttribute('aria-label', 'Cerrar');
+            else if (ico) b.setAttribute('aria-label', NOMBRE_ICONO[ico.className.replace('cxi-', '')] || ico.className.replace('cxi-', ''));
+        });
+        nombrarCampos(raiz);
+    }
+
+    // Botón que solo tiene un ícono: su nombre accesible sale del ícono
+    var NOMBRE_ICONO = { editar: 'Editar', eliminar: 'Eliminar', guardar: 'Guardar', cerrar: 'Cerrar', descargar: 'Descargar',
+        subir: 'Subir', importar: 'Importar', imprimir: 'Imprimir', ia: 'Analizar con IA', agregar: 'Agregar', buscar: 'Buscar',
+        ojo: 'Ver', play: 'Iniciar', stop: 'Detener', refrescar: 'Actualizar', vinculo: 'Abrir enlace', clip: 'Adjuntar',
+        documento: 'Ver documento', candado: 'Cerrar período', abierto: 'Reabrir período', check: 'Confirmar' };
+
+    // Campos con etiqueta visible pero no asociada (<label>Fecha</label><input>): se asocian,
+    // y los que no tienen etiqueta toman un nombre de su contexto (Mes/Año/placeholder).
+    var CAMPOS = 'input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select, textarea';
+    var MESES = /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i;
+    function tieneNombre(el) {
+        return el.hasAttribute('aria-label') || el.hasAttribute('aria-labelledby') || (el.labels && el.labels.length) || el.title;
+    }
+    function textoLimpio(t) {
+        return String(t || '').replace(/\p{Extended_Pictographic}/gu, '').replace(/[:*…]+\s*$/, '').replace(/\s+/g, ' ').trim();
+    }
+    function etiquetaCercana(el) {
+        var prev = el.previousElementSibling;
+        if (prev && prev.tagName === 'LABEL' && !prev.htmlFor && !prev.querySelector('input,select,textarea')) return prev;
+        var padre = el.parentElement;   // <div class="lfield"><label/><div class="linput"><input/></div></div>
+        var pl = padre && padre.previousElementSibling;
+        if (pl && pl.tagName === 'LABEL' && !pl.htmlFor && !pl.querySelector('input,select,textarea') &&
+            padre.querySelectorAll('input,select,textarea').length === 1) return pl;   // una etiqueta que ya envuelve un campo no se reasigna
+        return null;
+    }
+    function nombrarCampos(raiz) {
+        var lista = raiz.matches && raiz.matches(CAMPOS) ? [raiz] : Array.prototype.slice.call(raiz.querySelectorAll ? raiz.querySelectorAll(CAMPOS) : []);
+        lista.forEach(function (el) {
+            if (tieneNombre(el)) return;
+            var lab = etiquetaCercana(el);
+            if (lab && textoLimpio(lab.textContent)) {
+                if (el.id) lab.htmlFor = el.id; else el.setAttribute('aria-label', textoLimpio(lab.textContent));
+                return;
+            }
+            if (el.tagName === 'SELECT' && el.options.length) {
+                var t0 = el.options[0].textContent.trim(), t1 = (el.options[1] || el.options[0]).textContent.trim();
+                if (MESES.test(t0) || MESES.test(t1)) { el.setAttribute('aria-label', 'Mes'); return; }
+                if (/^\d{4}$/.test(t0) || /^\d{4}$/.test(t1)) { el.setAttribute('aria-label', 'Año'); return; }
+            }
+            if (el.placeholder && textoLimpio(el.placeholder)) { el.setAttribute('aria-label', textoLimpio(el.placeholder)); return; }
+            if (el.id) el.setAttribute('aria-label', el.id.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^(sel|inp|cfg|iva|rec|inv|prod|hon)\s*/i, '').trim());
         });
     }
     document.addEventListener('keydown', function (e) {
@@ -279,7 +335,22 @@
         });
     }
 
-    window.ContappModales = { quitar: modalQuitar, abiertos: function () { return pila.slice(); } };
+    // Un formulario abierto queda "con cambios" cuando el usuario escribe en él
+    document.addEventListener('input', function (e) {
+        var m = pila.filter(function (x) { return x.contains(e.target) && !x.classList.contains('modal-confirm'); }).pop();
+        if (!m || !e.isTrusted) return;
+        var st = estado.get(m) || {}; st.sucio = true; estado.set(m, st);
+    }, true);
+    function hayCambiosSinGuardar() {
+        return pila.some(function (m) { var st = estado.get(m); return st && st.sucio && m.isConnected; });
+    }
+    function descartarCambios() { pila.forEach(function (m) { var st = estado.get(m); if (st) st.sucio = false; }); }
+    window.addEventListener('beforeunload', function (e) {
+        if (hayCambiosSinGuardar()) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    window.ContappModales = { quitar: modalQuitar, abiertos: function () { return pila.slice(); },
+        hayCambiosSinGuardar: hayCambiosSinGuardar, descartarCambios: descartarCambios };
     window.modalQuitar = modalQuitar;
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);

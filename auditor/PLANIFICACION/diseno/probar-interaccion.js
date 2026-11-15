@@ -156,6 +156,27 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   }));
   check('tras la salida queda oculto y el scroll liberado', r.d === 'none' && !r.scroll && r.abiertos === 0, r);
 
+  console.log('Cambios sin guardar');
+  await p.evaluate(() => abrirNuevaCompra());
+  await espera(300);
+  await p.fill('#modalCompra input[placeholder*="123456"], #modalCompra input[type=text]', '99999');
+  await p.keyboard.press('Escape');
+  await espera(300);
+  r = await p.evaluate(() => ({ confirm: !!document.querySelector('.modal-confirm'), abierto: getComputedStyle(document.getElementById('modalCompra')).display !== 'none' }));
+  check('Escape en un formulario con cambios pregunta antes de descartarlos', r.confirm && r.abierto, r);
+  await p.click('#_confirmCancelar');
+  await espera(250);
+  await p.evaluate(() => navegar('ventas'));
+  await espera(300);
+  r = await p.evaluate(() => ({ confirm: !!document.querySelector('.modal-confirm'), vista: document.querySelector('.view.active')?.id }));
+  check('cambiar de módulo con cambios sin guardar también pregunta', r.confirm, r);
+  await p.click('#_confirmAceptar');
+  await espera(400);
+  r = await p.evaluate(() => ({ abierto: getComputedStyle(document.getElementById('modalCompra')).display !== 'none', tab: document.querySelector('#tab-ei-ventas.active') !== null }));
+  check('al confirmar, descarta y navega', !r.abierto && r.tab, r);
+  await p.evaluate(() => navegar('compras'));
+  await espera(300);
+
   console.log('Reabrir durante la salida');
   await p.evaluate(() => { abrirNuevaCompra(); });
   await espera(250);

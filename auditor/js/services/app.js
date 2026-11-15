@@ -122,6 +122,14 @@ function _modulosRecientesRegistrar(modulo) {
 }
 
 function navegar(modulo, elNav) {
+    // Formulario abierto con cambios sin guardar: preguntar antes de cerrarlo (web-design-guidelines)
+    if (window.ContappModales && ContappModales.hayCambiosSinGuardar() && typeof mostrarConfirm === 'function') {
+        mostrarConfirm('Tienes cambios sin guardar en el formulario abierto. ¿Salir y descartarlos?', () => {
+            ContappModales.descartarCambios();
+            navegar(modulo, elNav);
+        }, { titulo: 'Descartar cambios', textoBtn: 'Salir sin guardar' });
+        return;
+    }
 
     // Cerrar cualquier modal abierto al cambiar de módulo (evita que quede
     // flotando sobre la vista de destino)
