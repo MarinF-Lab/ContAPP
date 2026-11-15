@@ -205,6 +205,22 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
     check('Remuneraciones: Escape cierra el formulario', r);
   }
 
+  console.log('Login');
+  await p.evaluate(() => _fbShowLogin());
+  await espera(300);
+  r = await p.evaluate(() => ({
+    social: document.querySelectorAll('.lsocial button').length,
+    tbar: !!document.querySelector('.login-tbar'),
+    recordar: !!document.getElementById('loginRecordar'),
+  }));
+  check('login sin botones que no hacen nada (Google/Microsoft) y con "Recordarme" real', r.social === 0 && r.tbar && r.recordar, r);
+  await p.fill('#loginEmail', '');
+  await p.click('.lrow .link-btn');
+  await espera(200);
+  r = await p.evaluate(() => document.getElementById('loginError').textContent);
+  check('"¿Olvidaste tu contraseña?" sin correo pide escribirlo', /correo/i.test(r), r);
+  await p.evaluate(() => { document.getElementById('login-overlay').style.display = 'none'; });
+
   console.log('Errores de página:', errs.length ? errs : 'ninguno');
   if (errs.length) mal++;
   console.log(`\nResultado: ${ok} OK, ${mal} con error`);

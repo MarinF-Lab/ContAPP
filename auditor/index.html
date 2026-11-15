@@ -35,7 +35,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
     <link rel="stylesheet" href="css/variables.css?v=5">
-    <link rel="stylesheet" href="css/main.css?v=20">
+    <link rel="stylesheet" href="css/main.css?v=22">
     <link rel="stylesheet" href="css/home-hub.css?v=4">
     <link rel="stylesheet" href="css/remuneraciones.css?v=5">
     <link rel="stylesheet" href="css/auditor.css?v=5">
@@ -2299,47 +2299,39 @@
     </button>
 
     <div class="login-left">
-        <svg class="login-blob" viewBox="0 0 240 240"><path d="M30 8 H190 A26 26 0 0 1 216 34 V150" fill="none" stroke="var(--coral)" stroke-width="2" opacity="0.55"/></svg>
+        <!-- Etapa 3: panel "pantalla" de la referencia -->
+        <div class="login-globo" aria-hidden="true">
+            <svg viewBox="0 0 400 400"><g fill="none" stroke-width="1.4">
+                <circle cx="200" cy="200" r="190"/><ellipse cx="200" cy="200" rx="190" ry="62"/>
+                <ellipse cx="200" cy="110" rx="160" ry="40"/><ellipse cx="200" cy="290" rx="160" ry="40"/>
+                <ellipse cx="200" cy="40" rx="92" ry="20"/><ellipse cx="200" cy="360" rx="92" ry="20"/>
+                <line x1="200" y1="10" x2="200" y2="390"/>
+                <ellipse class="mer" cx="200" cy="200" rx="120" ry="190"/><ellipse class="mer b" cx="200" cy="200" rx="120" ry="190"/>
+            </g></svg>
+        </div>
 
         <div class="lbrand">
-            <span class="seal seal-logo" aria-hidden="true"><img class="logo-claro" src="icons/brand/isotipo-light-96.png" alt="" width="40" height="40"><img class="logo-oscuro" src="icons/brand/isotipo-dark-96.png" alt="" width="40" height="40"></span>
-            <div class="name">Cont<span class="hi">APP</span></div>
+            <span class="seal seal-logo" aria-hidden="true"><img class="logo-fijo" src="icons/brand/isotipo-dark-96.png" alt="" width="40" height="40"></span>
+            <div class="name">ContApp</div>
         </div>
-        <div class="ltag">Contabilidad · Auditoría · Multi-cliente</div>
 
         <div class="lhead">
-            <h2>Contabilidad multi-cliente para contadores y oficinas contables.</h2>
+            <h2>Toda la cartera de tu estudio en un solo lugar.</h2>
+            <ul class="lfeats">
+                <li>Escribe qué necesitas hacer y te lleva al lugar correcto.</li>
+                <li>Cierre del mes por cliente: lo que falta, en una lista.</li>
+                <li>Sigue trabajando sin internet; se sincroniza al reconectar.</li>
+            </ul>
         </div>
 
-        <div class="login-features">
-            <div class="lfeat">
-                <div class="fic"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 19v-6"/><path d="M13 19v-10"/><path d="M18 19v-3"/></svg></div>
-                <span>Gestión financiera</span>
-            </div>
-            <div class="lfeat">
-                <div class="fic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v8l6 3"/></svg></div>
-                <span>Reportes inteligentes</span>
-            </div>
-            <div class="lfeat">
-                <div class="fic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.5" cy="9" r="2.3"/><path d="M15.7 14.6c2.6.3 4.3 2.2 4.3 5.4"/></svg></div>
-                <span>Control total del negocio</span>
-            </div>
-        </div>
-
-        <svg class="login-wave" viewBox="0 0 400 120" preserveAspectRatio="none">
-            <polyline points="0,100 60,100 120,25 200,100 260,45 400,100" fill="none" stroke="var(--periwinkle)" stroke-width="2"/>
-        </svg>
-
-        <img class="login-badge login-badge-light" src="icons/brand/isotipo-light-tone.png" alt="" aria-hidden="true">
-        <img class="login-badge login-badge-dark" src="icons/brand/isotipo-dark-tone.png" alt="" aria-hidden="true">
-
-        <div class="lfoot">© 2026 ContAPP. Todos los derechos reservados.</div>
+        <div class="lfoot">© 2026 ContApp · Contabilidad multi-cliente para estudios contables</div>
     </div>
 
     <div class="login-right">
       <div class="login-card">
+        <div class="login-tbar" aria-hidden="true"><b>&gt;</b> ingresar</div>
         <h1 class="login-titulo">Bienvenido de vuelta</h1>
-        <p class="login-sub">Inicia sesión para continuar</p>
+        <p class="login-sub">Ingresa con la cuenta de tu estudio.</p>
 
         <!-- Selector de modo de entrada -->
         <div class="login-tabs">
@@ -2369,8 +2361,8 @@
             </div>
 
             <div class="lrow">
-                <label class="lremember"><input type="checkbox" checked> Recordarme</label>
-                <a href="javascript:void(0)">¿Olvidaste tu contraseña?</a>
+                <label class="lremember"><input type="checkbox" id="loginRecordar" checked> Recordarme</label>
+                <button type="button" class="link-btn" onclick="fbRecuperarClave()">¿Olvidaste tu contraseña?</button>
             </div>
 
             <div id="loginError" class="login-error"></div>
@@ -2378,12 +2370,6 @@
             <button id="btnLoginSubmit" class="login-btn" onclick="fbLogin()">
                 Iniciar Sesión
             </button>
-
-            <div class="ldivider">o continúa con</div>
-            <div class="lsocial">
-                <button><svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.4-1.1 2.6-2.4 3.5v2.9h3.9c2.3-2.1 3.5-5.2 3.5-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.9-2.9c-1.1.7-2.4 1.1-4 1.1-3.1 0-5.7-2.1-6.6-4.9H1.4v3C3.4 21.3 7.4 24 12 24z"/><path fill="#FBBC05" d="M5.4 14.4c-.2-.7-.4-1.4-.4-2.4s.1-1.6.4-2.4v-3H1.4C.5 8.3 0 10.1 0 12s.5 3.7 1.4 5.4l4-3z"/><path fill="#EA4335" d="M12 4.7c1.7 0 3.3.6 4.5 1.8l3.4-3.4C17.9 1.2 15.2 0 12 0 7.4 0 3.4 2.7 1.4 6.6l4 3C6.3 6.8 8.9 4.7 12 4.7z"/></svg>Google</button>
-                <button><svg width="15" height="15" viewBox="0 0 24 24"><rect x="1" y="1" width="10" height="10" fill="#F35325"/><rect x="13" y="1" width="10" height="10" fill="#81BC06"/><rect x="1" y="13" width="10" height="10" fill="#05A6F0"/><rect x="13" y="13" width="10" height="10" fill="#FFBA08"/></svg>Microsoft</button>
-            </div>
 
             <p class="login-toggle">
                 <a href="#" onclick="wizardAbrir();return false;">
@@ -3226,7 +3212,7 @@
 <script src="js/services/auth-manager.js?v=2"></script>
 <script src="js/services/exportar.js?v=9"></script>
 <script src="js/services/ia.js?v=4"></script>
-<script src="js/services/firebase-service.js?v=10"></script>
+<script src="js/services/firebase-service.js?v=11"></script>
 <script>
     // Firebase siempre activo — config hardcodeada en firebase-service.js
     fbInit();

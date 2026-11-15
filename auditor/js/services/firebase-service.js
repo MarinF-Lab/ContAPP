@@ -716,12 +716,32 @@ async function fbLogin() {
     if (!email || !pass) { errEl.textContent = 'Ingrese correo y contraseña.'; return; }
     _fbSetLoading(true, 'Ingresando…');
     try {
+        // "Recordarme": sin marcar, la sesión dura hasta cerrar el navegador
+        const recordar = document.getElementById('loginRecordar')?.checked !== false;
+        await _fbAuth.setPersistence(recordar ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
         await _fbAuth.signInWithEmailAndPassword(email, pass);
     } catch(e) {
         errEl.textContent = _fbErrMsg(e.code);
         _fbSetLoading(false);
     }
 }
+
+// "¿Olvidaste tu contraseña?": Firebase envía un enlace para crear una nueva
+async function fbRecuperarClave() {
+    const email = (document.getElementById('loginEmail')?.value || '').trim();
+    const errEl = document.getElementById('loginError');
+    if (errEl) errEl.textContent = '';
+    if (!email) { if (errEl) errEl.textContent = 'Escribe tu correo arriba y vuelve a presionar «¿Olvidaste tu contraseña?».'; document.getElementById('loginEmail')?.focus(); return; }
+    if (!_fbAuth) { if (errEl) errEl.textContent = 'Sin conexión: inténtalo cuando tengas internet.'; return; }
+    try {
+        await _fbAuth.sendPasswordResetEmail(email);
+        mostrarToast(`Te enviamos un enlace a ${email} para crear una nueva contraseña.`, 'ok');
+    } catch (e) {
+        if (errEl) errEl.textContent = e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email'
+            ? 'No encontramos una cuenta con ese correo.' : _fbErrMsg(e.code);
+    }
+}
+window.fbRecuperarClave = fbRecuperarClave;
 
 // Entrada directa con código: sesión anónima vinculada al perfil del titular.
 // Requiere tener habilitado el proveedor "Anónimo" en Firebase Auth.

@@ -35,7 +35,7 @@
 | 0 | Referencia en el repo, auditoría (`web-design-guidelines`, `ui-ux-pro-max`), capturas de línea base claro/oscuro, inventario de colores fijos | ✅ 2026-11-14 |
 | 1 | Paleta del logo en `css/variables.css` (ambos temas, contraste AA verificado), texto sobre acento/estados por token, isotipo en login y cabecera | ✅ 2026-11-15 |
 | 2 | Reemplazar colores fijos de JS/estilos en línea por variables | ✅ 2026-11-15 |
-| 3 | Pantallas: login, Mis clientes (avance de cierre por tarjeta), Inicio con "¿Qué quieres hacer hoy?" sobre el centro de mando | 🔲 |
+| 3 | Pantallas: login, Mis clientes (avance de cierre por tarjeta), Inicio con "¿Qué quieres hacer hoy?" sobre el centro de mando | ✅ 2026-11-15 |
 | 4 | Componentes comunes: botones, tarjetas, tablas, formularios, modales, pestañas (incluye decisión `.plan-tab`/`.rem-tab`) | 🔲 |
 | 5 | Movimiento y móvil (`emil-design-eng`, `review-animations`, `mobile-native`), `prefers-reduced-motion` | 🔲 |
 | 6 | Revisión final: capturas antes/después, `verificar.js`, pruebas de fase, `web-design-guidelines` | 🔲 |
@@ -114,9 +114,26 @@ Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar l
 - Quedan solo falsos positivos: píldoras/insignias (3px vertical a propósito), atajo `Ctrl K`,
   celdas de tablas desplazables. Capturas en `diseno/texto/`.
 
+### Etapa 3 — pantallas ✅ 2026-11-15
+- **Inicio** (`js/services/consola.js`): consola "¿Qué quieres hacer hoy?" encima del centro de
+  mando. Vacía muestra lo pendiente del cierre del cliente (cierre.js); al escribir sugiere áreas
+  por palabras clave, solo de módulos activos (si el módulo está inactivo lo dice y lleva a
+  Configuración); una frase con monto va al Libro Diario con la glosa escrita. ↑/↓, Enter, Escape.
+- **Mis clientes** (`js/auditor/panel-estudio.js`): cabecera con "Agregar cliente" y "Código de
+  invitación", franja de resumen por estado y vencimientos, buscador, filtro por categoría, vistas
+  Tablero (por defecto; tarjetas con barra de avance del cierre, lo que falta, horas de hoy, estado
+  y cronómetro), Lista y Calendario. Arreglo: el buscador perdía el foco al escribir.
+- **Login**: panel "pantalla" con globo y tarjeta con barra "> ingresar". Se quitaron los botones
+  Google/Microsoft (no hacían nada); "¿Olvidaste tu contraseña?" ahora envía el correo de Firebase
+  y "Recordarme" decide si la sesión sobrevive al cerrar el navegador.
+- Tokens `--screen-2`, `--screen-line`, `--screen-dim`, `--screen-accent` (AA verificado).
+- Capturas en `diseno/etapa3/`. Pruebas: 6 casos nuevos en el navegador, 3 en `verificar.js`.
+
 ### Pendientes / próximo paso
-1. **Etapa 3** — pantallas: login, Mis clientes (avance de cierre por tarjeta) e Inicio con
-   "¿Qué quieres hacer hoy?" sobre el centro de mando.
+1. **Etapa 4** — componentes comunes: botones, tarjetas, tablas, formularios, modales, pestañas e
+   íconos SVG en vez de emoji (centro de mando, pestañas de módulo, tarjetas de indicadores).
+2. Probar con Firebase real: "¿Olvidaste tu contraseña?" y "Recordarme" (aquí Firebase no carga).
+3. Si se quiere entrar con Google/Microsoft: activar los proveedores en Firebase Auth y programarlo.
 2. Campos sin etiqueta asociada (~115, H5) y emoji como íconos (H4/H6): se resuelven al rediseñar
    cada pantalla (Etapas 3-4).
 3. Sin pantalla para **revocar códigos o sacar invitados** (las reglas v3 ya lo permiten:

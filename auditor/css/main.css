@@ -4484,3 +4484,53 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
     #homeCierre, #homeCierreSep { display: none !important; }
     .card.card-pad { padding: 16px; }
 }
+
+/* ══════════════════════════════════════════
+   LOGIN (Etapa 3) — panel "pantalla" + tarjeta con barra de terminal, como la referencia
+══════════════════════════════════════════ */
+.login-shell { background: var(--paper); gap: 28px; padding: 24px; align-items: stretch; }
+.login-left {
+    background: var(--screen); color: var(--on-screen); border-radius: 22px; padding: 40px 44px;
+    justify-content: space-between; gap: 28px; box-shadow: var(--shadow-2);
+}
+.login-globo { position: absolute; right: -120px; top: 50%; transform: translateY(-50%); width: 560px; opacity: .55; pointer-events: none; }
+.login-globo svg { width: 100%; height: auto; overflow: visible; }
+.login-globo g { stroke: #8FA5B3; }
+@media (prefers-reduced-motion: no-preference) {
+    .login-globo .mer { animation: consola-giro 16s linear infinite; transform-origin: 200px 200px; }
+    .login-globo .mer.b { animation-delay: -8s; }
+}
+.login-left .lbrand .name { color: var(--on-screen); font-size: 22px; }
+.login-left .lhead { margin-top: 0; max-width: 460px; }
+.login-left .lhead h2 { color: var(--on-screen); font-size: clamp(28px, 3.4vw, 40px); line-height: 1.12; max-width: 15ch; margin: 0 0 22px; }
+.lfeats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; max-width: 40ch; font-size: 15px; color: var(--on-screen); }
+.lfeats li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; }
+.lfeats li::before { content: ">"; font-family: var(--font-mono); color: var(--screen-accent); }
+.login-left .lfoot { color: var(--screen-dim); padding-top: 0; margin-top: 0; }
+.login-right { padding: 24px 40px; }
+.login-card { padding: 0 0 28px; overflow: hidden; text-align: left; }
+.login-card::before { display: none; }
+.login-card > :not(.login-tbar) { margin-left: 30px; margin-right: 30px; }
+.login-tbar { background: var(--screen); color: var(--screen-dim); font-family: var(--font-mono); font-size: 13px; padding: 11px 18px; margin-bottom: 26px; }
+.login-tbar b { color: var(--screen-accent); font-weight: 500; }
+.login-card .login-titulo, .login-card h1 { text-align: left; font-size: 25px; }
+.login-card .login-sub { text-align: left; font-size: 14px; color: var(--text-muted); }
+.link-btn { background: none; border: 0; padding: 0; font: inherit; font-size: inherit; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.login-theme-toggle { z-index: 3; }
+@media (max-width: 900px) {
+    .login-shell { flex-direction: column; padding: 16px; gap: 16px; }
+    .login-left { padding: 26px 24px; min-height: 0; }
+    .login-globo { width: 340px; right: -150px; }
+    .login-left .lhead h2 { font-size: 26px; }
+    .login-right { width: 100%; padding: 0; }
+    .login-card { max-width: none; }
+    .login-card > :not(.login-tbar) { margin-left: 20px; margin-right: 20px; }
+    .login-left { flex: none; overflow: hidden; }
+}
+@media (max-width: 600px) {
+    /* En celular el formulario manda: el panel queda en marca + titular */
+    .login-left .lfeats, .login-left .lfoot { display: none; }
+    .login-left .lhead h2 { font-size: 22px; margin: 0; }
+}
+/* El panel de marca del login es oscuro en ambos temas: usa siempre el isotipo de tono oscuro */
+.seal-logo .logo-fijo { display: block; }

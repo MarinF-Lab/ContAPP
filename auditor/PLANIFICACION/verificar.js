@@ -307,6 +307,13 @@ check('consola "¿Qué quieres hacer hoy?" encima del centro de mando (Etapa 3)'
     (() => { const h = leer('index.html'); return h.indexOf('id="homeConsola"') < h.indexOf('id="homeHubTiles"'); })() &&
     tieneString('js/services/consola.js', 'cierreChecklist'));
 
+check('Mis clientes: tarjetas con barra de avance del cierre (Etapa 3)',
+    tieneString('js/auditor/panel-estudio.js', 'class="mc-bar"') && tieneString('index.html', 'id="empPageSub"'));
+
+check('login: "¿Olvidaste tu contraseña?" y "Recordarme" funcionan; sin botones sociales falsos',
+    tieneFunc('js/services/firebase-service.js', 'fbRecuperarClave') && tieneString('js/services/firebase-service.js', 'setPersistence') &&
+    !tieneString('index.html', 'class="lsocial"'));
+
 // ─────────────────────────────────────────────────────────────
 console.log('\n' + '─'.repeat(50));
 console.log(`Resultado: ${ok} ✅  |  ${errores} ❌`);
