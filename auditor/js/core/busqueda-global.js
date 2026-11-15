@@ -1,5 +1,5 @@
 /**
- * busqueda-global.js — Búsqueda global Ctrl+K para ContApp Auditor
+ * busqueda-global.js — Búsqueda global Ctrl+K para ID Contable Auditor
  * Requiere: navegar(modulo, null), mostrarToast(mensaje, tipo) globales
  */
 

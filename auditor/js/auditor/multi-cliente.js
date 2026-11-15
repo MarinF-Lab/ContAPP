@@ -1,7 +1,7 @@
 'use strict';
 // ─────────────────────────────────────────────────────────────────────────────
 //  MULTI-CLIENTE — Gestión de clientes + despachador de categorías
-//  ContAPP Auditor
+//  ID Contable Auditor
 //
 //  La lógica de módulos vive en:
 //    js/categorias/primera.js  →  CAT1_*, cat1*

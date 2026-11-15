@@ -59,10 +59,10 @@ function _filaContacto(c) {
 
     return `
     <tr style="cursor:pointer;" onclick="verDetalleContacto(${c.id})">
-        <td style="font-family:monospace;font-size:12px;">${c.rut || '—'}</td>
+        <td style="font-family:var(--font-mono);font-size:12px;white-space:nowrap;">${c.rut || '—'}</td>
         <td>
-            <div style="font-weight:600;">${c.nombre}</div>
-            ${c.fantasia ? `<div style="font-size:11px;color:var(--text-muted);">${c.fantasia}</div>` : ''}
+            <div style="font-weight:600;">${escHTML(c.nombre)}</div>
+            ${c.fantasia ? `<div style="font-size:11px;color:var(--text-muted);">${escHTML(c.fantasia)}</div>` : ''}
         </td>
         <td>
             <span style="background:${badge.bg};color:${badge.color};
@@ -71,12 +71,12 @@ function _filaContacto(c) {
             </span>
         </td>
         <td style="font-size:12px;">${c.tipoEmpresa || '—'}</td>
-        <td style="color:var(--text-muted);font-size:12px;">${c.giro || '—'}</td>
+        <td style="color:var(--text-muted);font-size:12px;">${escHTML(c.giro || '—')}</td>
         <td style="font-size:12px;">${c.telefono || c.movil || '—'}</td>
-        <td style="font-size:12px;">${c.email || '—'}</td>
+        <td style="font-size:12px;">${escHTML(c.email || '—')}</td>
         <td class="monto" style="font-size:12px;">
-            ${tieneDeuda   ? `<span style="color:var(--negative);font-weight:700;">-$${fmt(saldo.credito)}</span><br>` : ''}
-            ${tieneCobrar  ? `<span style="color:var(--positive);font-weight:700;">+$${fmt(saldo.cobrar)}</span>`  : ''}
+            ${tieneDeuda   ? `<span style="color:var(--negative);font-weight:700;">-${fmtPeso(saldo.credito)}</span><br>` : ''}
+            ${tieneCobrar  ? `<span style="color:var(--positive);font-weight:700;">+${fmtPeso(saldo.cobrar)}</span>`  : ''}
             ${!tieneDeuda && !tieneCobrar ? '<span style="color:var(--text-subtle);">—</span>' : ''}
         </td>
         <td onclick="event.stopPropagation()">
@@ -100,7 +100,7 @@ function _filaGrupoPlazo(titulo, colorBorde, deudaTotal) {
         <td colspan="9" style="padding:10px 14px;background:var(--table-stripe);
             border-left:4px solid ${colorBorde};font-weight:700;font-size:12.5px;">
             ${titulo}
-            ${deudaTotal > 0 ? `<span style="float:right;color:var(--negative);">Debe: $${fmt(deudaTotal)}</span>` : ''}
+            ${deudaTotal > 0 ? `<span style="float:right;color:var(--negative);">Debe: ${fmtPeso(deudaTotal)}</span>` : ''}
         </td>
     </tr>`;
 }
@@ -145,16 +145,16 @@ function renderContactos() {
 
         if (grupo30.length) {
             const deuda30 = grupo30.reduce((s, c) => s + _calcularSaldo(c).credito, 0);
-            tbody.innerHTML += _filaGrupoPlazo('🔴 Prioridad — 30 días', 'var(--negative)', deuda30);
-            grupo30.forEach(c => { tbody.innerHTML += _filaContacto(c); });
+            tbody.insertAdjacentHTML('beforeend', _filaGrupoPlazo('🔴 Prioridad — 30 días', 'var(--negative)', deuda30));
+            grupo30.forEach(c => { tbody.insertAdjacentHTML('beforeend', _filaContacto(c)); });
         }
         if (grupo60.length) {
             const deuda60 = grupo60.reduce((s, c) => s + _calcularSaldo(c).credito, 0);
-            tbody.innerHTML += _filaGrupoPlazo('🟡 60 días', 'var(--warning)', deuda60);
-            grupo60.forEach(c => { tbody.innerHTML += _filaContacto(c); });
+            tbody.insertAdjacentHTML('beforeend', _filaGrupoPlazo('🟡 60 días', 'var(--warning)', deuda60));
+            grupo60.forEach(c => { tbody.insertAdjacentHTML('beforeend', _filaContacto(c)); });
         }
     } else {
-        lista.forEach(c => { tbody.innerHTML += _filaContacto(c); });
+        lista.forEach(c => { tbody.insertAdjacentHTML('beforeend', _filaContacto(c)); });
     }
 
     // Contadores en tabs
@@ -395,9 +395,9 @@ function _tabDocs(c, tipo) {
             <td style="font-family:monospace;font-size:12px;">${d.numero_doc || '—'}</td>
             <td style="font-size:12px;color:var(--text-muted);">${MEDIOS_LABEL[d.medio_pago] || d.medio_pago || '—'}</td>
             <td class="monto">${d.exento ? '$' + fmt(d.exento) : '—'}</td>
-            <td class="monto">$${fmt(d.neto   || 0)}</td>
-            <td class="monto">$${fmt(d.iva    || 0)}</td>
-            <td class="monto" style="font-weight:700;">$${fmt(d.total || 0)}</td>
+            <td class="monto">${fmtPeso(d.neto   || 0)}</td>
+            <td class="monto">${fmtPeso(d.iva    || 0)}</td>
+            <td class="monto" style="font-weight:700;">${fmtPeso(d.total || 0)}</td>
             <td>
                 <span style="font-size:11px;font-weight:700;color:${estadoColor[d.estado] || 'var(--text-muted)'};">
                     ${d.estado || '—'}
@@ -405,7 +405,7 @@ function _tabDocs(c, tipo) {
             </td>
             <td style="font-size:12px;color:var(--text-muted);max-width:140px;
                        overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-                title="${d.glosa || ''}">${d.glosa || '—'}</td>
+                title="${escHTML(d.glosa || '')}">${escHTML(d.glosa || '—')}</td>
         </tr>`;
     }).join('');
 
@@ -432,10 +432,10 @@ function _tabDocs(c, tipo) {
                     <td colspan="4" style="text-align:right;padding:10px 14px;font-weight:700;">
                         TOTALES (${docs.filter(d => d.estado !== 'anulada').length} documentos)
                     </td>
-                    <td class="monto">$${fmt(totExento)}</td>
-                    <td class="monto">$${fmt(totNeto)}</td>
-                    <td class="monto">$${fmt(totIva)}</td>
-                    <td class="monto" style="font-weight:800;font-size:14px;">$${fmt(totTotal)}</td>
+                    <td class="monto">${fmtPeso(totExento)}</td>
+                    <td class="monto">${fmtPeso(totNeto)}</td>
+                    <td class="monto">${fmtPeso(totIva)}</td>
+                    <td class="monto" style="font-weight:800;font-size:14px;">${fmtPeso(totTotal)}</td>
                     <td colspan="2"></td>
                 </tr>
             </tfoot>
@@ -461,7 +461,7 @@ function _tabSaldo(c) {
                 style="font-size:11px;">${d.tipo_doc?.replace('_',' ')}</span></td>
             <td style="font-family:monospace;font-size:12px;">${d.numero_doc || '—'}</td>
             <td class="monto" style="font-weight:700;color:${esCompra ? 'var(--negative)' : 'var(--positive)'};">
-                $${fmt(d.total || 0)}
+                ${fmtPeso(d.total || 0)}
             </td>
         </tr>`).join('');
 
@@ -469,21 +469,21 @@ function _tabSaldo(c) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
         <div class="kpi-card" style="border-left:4px solid var(--negative);">
             <div class="kpi-label">Saldo pendiente (deuda proveedor)</div>
-            <div class="kpi-valor" style="color:var(--negative);">$${fmt(saldo.credito)}</div>
-            ${saldo.pagosProveedor > 0 ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Pagos registrados en diario: $${fmt(saldo.pagosProveedor)}</div>` : ''}
+            <div class="kpi-valor" style="color:var(--negative);">${fmtPeso(saldo.credito)}</div>
+            ${saldo.pagosProveedor > 0 ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Pagos registrados en diario: ${fmtPeso(saldo.pagosProveedor)}</div>` : ''}
         </div>
         <div class="kpi-card" style="border-left:4px solid var(--positive);">
             <div class="kpi-label">Saldo pendiente (por cobrar cliente)</div>
-            <div class="kpi-valor" style="color:var(--positive);">$${fmt(saldo.cobrar)}</div>
-            ${saldo.cobrosCliente > 0 ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Cobros registrados en diario: $${fmt(saldo.cobrosCliente)}</div>` : ''}
+            <div class="kpi-valor" style="color:var(--positive);">${fmtPeso(saldo.cobrar)}</div>
+            ${saldo.cobrosCliente > 0 ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Cobros registrados en diario: ${fmtPeso(saldo.cobrosCliente)}</div>` : ''}
         </div>
         <div class="kpi-card">
             <div class="kpi-label">Total histórico compras</div>
-            <div class="kpi-valor">$${fmt(saldo.totalCompras)}</div>
+            <div class="kpi-valor">${fmtPeso(saldo.totalCompras)}</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-label">Total histórico ventas</div>
-            <div class="kpi-valor">$${fmt(saldo.totalVentas)}</div>
+            <div class="kpi-valor">${fmtPeso(saldo.totalVentas)}</div>
         </div>
     </div>
 

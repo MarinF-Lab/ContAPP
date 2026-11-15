@@ -98,19 +98,19 @@ function renderVentas() {
                 if (v.tipo_doc === 'boleta')  totBoletas  += v.total || 0;
             }
 
-            tbody.innerHTML += `
+            tbody.insertAdjacentHTML('beforeend', `
             <tr class="${anulada ? 'fila-anulada' : ''}">
                 <td class="monto" style="color:var(--text-subtle);">${anulada ? '—' : corr++}</td>
                 <td><span class="badge-doc badge-doc-venta">${info.label}</span></td>
                 <td class="monto">${v.numero_doc || '—'}</td>
                 <td>${v.fecha}</td>
-                <td style="font-family:monospace;font-size:12px;">${v.rut_cliente || ''}</td>
-                <td style="max-width:180px;">${v.nombre_cliente || ''}</td>
+                <td style="font-family:var(--font-mono);font-size:12px;white-space:nowrap;">${v.rut_cliente || ''}</td>
+                <td style="max-width:180px;"><span class="nombre-2l" title="${escHTML(v.nombre_cliente || '')}">${escHTML(v.nombre_cliente || '')}</span></td>
                 <td style="font-size:12px;color:var(--text-muted);">${_labelMedioPagoVenta(v.medio_pago)}</td>
                 <td class="monto">${v.exento ? '$' + fmt(v.exento) : '—'}</td>
-                <td class="monto">$${fmt(v.neto   || 0)}</td>
-                <td class="monto">$${fmt(v.iva    || 0)}</td>
-                <td class="monto" style="font-weight:700;">$${fmt(v.total || 0)}</td>
+                <td class="monto">${fmtPeso(v.neto   || 0)}</td>
+                <td class="monto">${fmtPeso(v.iva    || 0)}</td>
+                <td class="monto" style="font-weight:700;">${fmtPeso(v.total || 0)}</td>
                 <td style="white-space:nowrap;">
                     ${anulada
                         ? `<span class="badge-inactivo">Anulada</span>`
@@ -120,7 +120,7 @@ function renderVentas() {
                                 onclick="anularVenta(${v.id})">Anular</button>`
                     }
                 </td>
-            </tr>`;
+            </tr>`);
         });
     }
 
@@ -132,10 +132,10 @@ function renderVentas() {
             <td colspan="7" style="text-align:right;padding:12px 16px;font-weight:700;">
                 TOTALES — ${_vNombreMes(ventasMes)} ${ventasAnio}
             </td>
-            <td class="monto">$${fmt(totExento)}</td>
-            <td class="monto">$${fmt(totNeto)}</td>
-            <td class="monto">$${fmt(totIva)}</td>
-            <td class="monto" style="font-weight:800;font-size:15px;">$${fmt(totTotal)}</td>
+            <td class="monto">${fmtPeso(totExento)}</td>
+            <td class="monto">${fmtPeso(totNeto)}</td>
+            <td class="monto">${fmtPeso(totIva)}</td>
+            <td class="monto" style="font-weight:800;font-size:15px;">${fmtPeso(totTotal)}</td>
             <td></td>
         </tr>`;
     }
@@ -164,18 +164,18 @@ function _renderResumenF29(neto, iva, exento, ncIva) {
             <tr><th colspan="2">Resumen IVA — ${_vNombreMes(ventasMes)} ${ventasAnio}</th></tr>
         </thead>
         <tbody>
-            <tr><td>Ventas Afectas (Neto)</td>    <td class="monto">$${fmt(neto)}</td></tr>
-            <tr><td>Ventas Exentas</td>            <td class="monto">$${fmt(exento)}</td></tr>
+            <tr><td>Ventas Afectas (Neto)</td>    <td class="monto">${fmtPeso(neto)}</td></tr>
+            <tr><td>Ventas Exentas</td>            <td class="monto">${fmtPeso(exento)}</td></tr>
             ${ncIvaAmt > 0 ? `<tr style="color:var(--negative);font-size:12px;">
                 <td>IVA Notas de Crédito emitidas (${ivaPct()}%)</td>
-                <td class="monto">-$${fmt(ncIvaAmt)}</td></tr>` : ''}
+                <td class="monto">-${fmtPeso(ncIvaAmt)}</td></tr>` : ''}
             <tr><td style="color:var(--negative);font-weight:600;">IVA Débito Fiscal Neto (${ivaPct()}%)</td>
-                <td class="monto" style="color:var(--negative);font-weight:700;">$${fmt(iva)}</td></tr>
+                <td class="monto" style="color:var(--negative);font-weight:700;">${fmtPeso(iva)}</td></tr>
         </tbody>
         <tfoot>
             <tr style="font-weight:800;">
                 <td>Total Ventas Neto</td>
-                <td class="monto">$${fmt(neto + exento + iva)}</td>
+                <td class="monto">${fmtPeso(neto + exento + iva)}</td>
             </tr>
         </tfoot>
     </table>`;

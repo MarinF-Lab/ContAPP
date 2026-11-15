@@ -154,10 +154,10 @@ function generarBalanceClasificado() {
                     prefijoCuenta = '⚠ ';
                     prefijoMonto  = '(';
                 }
-                const montoStr = `$${fmt(Math.abs(it.saldo))}${esAnom && !esContra ? ')' : ''}`;
+                const montoStr = `${fmtPeso(Math.abs(it.saldo))}${esAnom && !esContra ? ')' : ''}`;
                 const marcaSinReg = it.sinRegistrar ? ' <span title="Cuenta no registrada en el Plan de Cuentas — clasificada automáticamente" style="font-size:10px;color:var(--warning);">(sin registrar)</span>' : '';
                 return `<div class="bc-fila" style="${(esContra || esAnom) ? 'opacity:.9;' : ''}">
-                    <span class="bc-cuenta" style="${colorCuenta}">${prefijoCuenta}${it.nombre}${marcaSinReg}</span>
+                    <span class="bc-cuenta" style="${colorCuenta}">${prefijoCuenta}${escHTML(it.nombre)}${marcaSinReg}</span>
                     <span class="bc-monto"  style="${colorMonto}">${prefijoMonto}${montoStr}</span>
                 </div>`;
             }).join('');
@@ -166,7 +166,7 @@ function generarBalanceClasificado() {
             ${filas}
             <div class="bc-fila bc-subtotal">
                 <span>Total ${titulo}</span>
-                <span>$${fmt(seccion.total)}</span>
+                <span>${fmtPeso(seccion.total)}</span>
             </div>
         </div>`;
     }
@@ -176,7 +176,7 @@ function generarBalanceClasificado() {
         ${htmlSeccion('Activo No Circulante', secciones['Activo No Circulante'], 'bc-hdr-act-nocirc')}
         <div class="bc-total-col">
             <span>TOTAL ACTIVO</span>
-            <span>$${fmt(totalActivo)}</span>
+            <span>${fmtPeso(totalActivo)}</span>
         </div>`;
 
     const colPasivo = `
@@ -185,7 +185,7 @@ function generarBalanceClasificado() {
         ${htmlSeccion('Patrimonio',           secciones['Patrimonio'],           'bc-hdr-patrimonio')}
         <div class="bc-total-col">
             <span>TOTAL PASIVO + PATRIMONIO</span>
-            <span>$${fmt(totalPasPat)}</span>
+            <span>${fmtPeso(totalPasPat)}</span>
         </div>`;
 
     function semaforo(val, ok, warn) {
@@ -216,7 +216,7 @@ function generarBalanceClasificado() {
                 <div class="bc-liq-card">
                     <div class="bc-liq-label">Capital de Trabajo</div>
                     <div class="bc-liq-val" style="${capitalTrabajo >= 0 ? 'color:var(--positive);' : 'color:var(--negative);'}">
-                        $${fmt(capitalTrabajo)}
+                        ${fmtPeso(capitalTrabajo)}
                     </div>
                     <div class="bc-liq-meta">Act. Circ. − Pas. Circ. · Positivo = solvente</div>
                 </div>
@@ -238,7 +238,7 @@ function generarBalanceClasificado() {
 
     cont.innerHTML = `
         <div class="bc-cuadratura ${cuadra ? 'bc-ok' : 'bc-error'}">
-            ${cuadra ? '⚖️ Cuadrado' : '❌ Descuadrado'} — Activo: $${fmt(totalActivo)}  |  Pasivo+Patrimonio: $${fmt(totalPasPat)}${cuadra ? '' : `  |  Diferencia: $${fmt(Math.abs(totalActivo - totalPasPat))}`}
+            ${cuadra ? '⚖️ Cuadrado' : '❌ Descuadrado'} — Activo: ${fmtPeso(totalActivo)}  |  Pasivo+Patrimonio: ${fmtPeso(totalPasPat)}${cuadra ? '' : `  |  Diferencia: ${fmtPeso(Math.abs(totalActivo - totalPasPat))}`}
         </div>
         ${avisoSinRegistrar}
         ${htmlLiquidez}

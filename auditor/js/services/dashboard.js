@@ -150,7 +150,7 @@ function _renderBarrasMensuales() {
             responsive: true, maintainAspectRatio: false, animation: false,
             plugins: {
                 legend: { position: 'top', align: 'end', labels: { color: c.inkSoft, font: { family: c.fontSans, size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'rectRounded' } },
-                tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: $${fmt(ctx.parsed.y)}` } },
+                tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmtPeso(ctx.parsed.y)}` } },
             },
             scales: {
                 x: { grid: { display: false }, ticks: { color: c.inkFaint, font: { family: c.fontMono, size: 9.5 } } },
@@ -202,7 +202,7 @@ function _renderDashDonut(canvasId, key, datos) {
                     labels: {
                         color: c.inkSoft, font: { family: c.fontSans, size: 10.5 }, boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: 'circle', padding: 10,
                         generateLabels: (chart) => chart.data.labels.map((label, i) => ({
-                            text: `${label} — $${fmt(chart.data.datasets[0].data[i])}`,
+                            text: `${label} — ${fmtPeso(chart.data.datasets[0].data[i])}`,
                             fillStyle: chart.data.datasets[0].backgroundColor[i],
                             strokeStyle: chart.data.datasets[0].backgroundColor[i],
                             pointStyle: 'circle',
@@ -247,5 +247,5 @@ function _renderTopCuentas(cuentas) {
         .filter(x => x.saldo > 0)
         .sort((a, b) => b.saldo - a.saldo)[0];
 
-    el.innerHTML = `<b>Top cuenta</b>${top ? `${top.nombre} — $${fmt(top.saldo)}` : 'Sin movimientos'}`;
+    el.innerHTML = `<b>Top cuenta</b>${top ? `${escHTML(top.nombre)} — ${fmtPeso(top.saldo)}` : 'Sin movimientos'}`;
 }

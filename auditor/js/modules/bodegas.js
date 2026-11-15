@@ -56,7 +56,7 @@ function renderBodegas() {
                     ${items.length ? items.map(b => `
                         <tr style="${b.estado === 'INACTIVO' ? 'opacity:.5;' : ''}">
                             <td style="font-family:monospace;font-size:13px;color:var(--text-muted);">${b.codigo || '—'}</td>
-                            <td style="font-weight:600;">${b.nombre}</td>
+                            <td style="font-weight:600;">${escHTML(b.nombre)}</td>
                             <td style="font-size:13px;color:var(--text-muted);">${b.ubicacion || '—'}</td>
                             <td><span class="${b.estado !== 'INACTIVO' ? 'badge-activo' : 'badge-inactivo'}">${b.estado !== 'INACTIVO' ? 'Activo' : 'Inactivo'}</span></td>
                             <td>

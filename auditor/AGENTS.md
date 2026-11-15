@@ -1,4 +1,4 @@
-# ContApp Auditor — Instrucciones para agentes
+# ID Contable Auditor — Instrucciones para agentes
 
 Sigue **`auditor/CLAUDE.md`**: es el protocolo único de trabajo (inicio de sesión, preferencias del
 usuario, reglas, pruebas y mapa de archivos). Este archivo existe solo para que otros agentes

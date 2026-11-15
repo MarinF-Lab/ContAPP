@@ -1,6 +1,6 @@
 'use strict';
 // ─────────────────────────────────────────────────────────────────────────────
-//  ACTIVOS FIJOS Y DEPRECIACIÓN — ContApp Auditor
+//  ACTIVOS FIJOS Y DEPRECIACIÓN — ID Contable Auditor
 // ─────────────────────────────────────────────────────────────────────────────
 
 var ACTIVOS_KEY = 'core_activos';

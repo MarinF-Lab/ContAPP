@@ -1,10 +1,27 @@
 // LOGGER CONDICIONAL — solo activo en localhost o ?debug=1
 const _DEBUG = window.location.hostname === 'localhost' || window.location.search.includes('debug=1');
-const log  = (...a) => _DEBUG && console.log('[ContApp]',  ...a);
-const warn = (...a) => _DEBUG && console.warn('[ContApp]', ...a);
+const log  = (...a) => _DEBUG && console.log('[ID Contable]',  ...a);
+const warn = (...a) => _DEBUG && console.warn('[ID Contable]', ...a);
+
+// TEXTO SEGURO — nombres, glosas y descripciones vienen del usuario o de archivos importados
+// (XML del SII, cartolas): se escapan al mostrarlos dentro de HTML.
+function escHTML(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// PRODUCTO — nombre de la marca y versión que se muestra debajo (Auditor / Educa / Empresa)
+window.PRODUCTO = window.PRODUCTO || { marca: 'ID Contable', version: 'Auditor' };
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-marca-version]').forEach(el => { el.textContent = PRODUCTO.version; });
+});
 
 // FORMATOS MATEMÁTICOS
 function fmt(num) { return num === 0 ? '-' : new Intl.NumberFormat('es-CL').format(Math.round(num)); }
+// Pesos: cero como "—" (convención contable, igual que Exento) y negativos como -$1.000 (antes "$-" y "$-1.000")
+function fmtPeso(num) {
+    const n = Math.round(Number(num) || 0);
+    return n === 0 ? '—' : (n < 0 ? '-$' : '$') + fmt(Math.abs(n));
+}
 function limpiarNum(str) { return parseFloat(String(str).replace(/[$]/g, '').replace(/\./g, '').replace(/,/g, '')) || 0; }
 
 // ─────────────────────────────────────────────────────────────

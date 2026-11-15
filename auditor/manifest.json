@@ -1,6 +1,6 @@
 {
-  "name": "ContAPP Auditor",
-  "short_name": "Auditor",
+  "name": "ID Contable Auditor",
+  "short_name": "ID Contable",
   "description": "Contabilidad multi-cliente para contadores y oficinas contables",
   "start_url": "./index.html",
   "scope": "./",

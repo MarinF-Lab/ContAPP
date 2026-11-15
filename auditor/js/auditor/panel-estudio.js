@@ -1,7 +1,7 @@
 'use strict';
 // ─────────────────────────────────────────────────────────────────────────────
 //  PANEL ESTUDIO — F2.1 Panel global · F2.2 Kanban · F2.3 Calendario tributario
-//  ContAPP Auditor
+//  ID Contable Auditor
 // ─────────────────────────────────────────────────────────────────────────────
 
 let _panelView     = 'tablero'; // 'tablero' | 'lista' | 'calendario'

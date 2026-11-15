@@ -125,7 +125,7 @@ function generarLibroMayor() {
     const cuentasFiltradas = _datosMayorFiltrado();
 
     if (!cuentasFiltradas.length) {
-        contenedor.innerHTML += `<div class="card" style="text-align:center;padding:40px;color:var(--text-muted);">Sin movimientos para los filtros seleccionados.</div>`;
+        contenedor.insertAdjacentHTML('beforeend', `<div class="card" style="text-align:center;padding:40px;color:var(--text-muted);">Sin movimientos para los filtros seleccionados.</div>`);
         return;
     }
 
@@ -143,7 +143,7 @@ function generarLibroMayor() {
 
         const naturaleza = c.saldoFinal >= 0 ? 'DEUDOR' : 'ACREEDOR';
 
-        contenedor.innerHTML += `<div class="card" data-cuenta="${c.cuenta}">
+        contenedor.insertAdjacentHTML('beforeend', `<div class="card" data-cuenta="${c.cuenta}">
             <div class="cuenta-t-titulo">
                 <span>${c.cuenta}</span>
                 <span class="cuenta-t-tipo">${c.tipo}</span>
@@ -165,7 +165,7 @@ function generarLibroMayor() {
                     </tr>
                 </tfoot>
             </table>
-        </div>`;
+        </div>`);
     });
 }
 

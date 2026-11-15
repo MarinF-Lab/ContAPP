@@ -357,7 +357,7 @@ async function empVerificarCodigo() {
 
 // ── Gestión de invitaciones (solo admin, desde Configuración) ─
 
-// ContAPP Auditor: la invitación es a nivel de PERFIL (no por empresa).
+// ID Contable Auditor: la invitación es a nivel de PERFIL (no por empresa).
 // El titular de pago genera hasta MAX_INVITADOS códigos; cada invitado que
 // los canjea queda vinculado al perfil del titular y ve TODOS sus clientes.
 const MAX_INVITADOS = 4;

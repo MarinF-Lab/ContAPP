@@ -19,6 +19,8 @@
     /* Tipografía — Space Grotesk (títulos/marca), Manrope (texto), IBM Plex Mono (cifras) */
     --font-heading: 'Space Grotesk', 'Segoe UI', sans-serif;
     --font-sans:    'Manrope', 'Segoe UI', sans-serif;
+    --ease-out:     cubic-bezier(.23, 1, .32, 1);   /* entradas y salidas de UI */
+    --ease-drawer:  cubic-bezier(.32, .72, 0, 1);   /* paneles laterales */
     --font-mono:    'IBM Plex Mono', 'SF Mono', monospace;
 
     /* ---- marca (logo) ---- */

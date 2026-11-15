@@ -166,7 +166,7 @@ function exportarRespaldoCliente() {
  */
 function datosClienteValidarRespaldo(obj) {
     if (!obj || obj.formato !== 'contapp-respaldo-cliente' || typeof obj.datos !== 'object') {
-        return { ok: false, error: 'El archivo no es un respaldo de ContApp.' };
+        return { ok: false, error: 'El archivo no es un respaldo de ID Contable.' };
     }
     const datos = {};
     Object.keys(obj.datos).forEach(k => { if (DATOS_CLIENTE_DOCS[k]) datos[k] = obj.datos[k]; });

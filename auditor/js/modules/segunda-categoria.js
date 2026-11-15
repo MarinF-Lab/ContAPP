@@ -122,7 +122,7 @@ function honRenderLibro() {
             <td>${b.fecha}</td>
             <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);">${b.folio || '—'}</td>
             <td style="font-family:'JetBrains Mono',monospace;font-size:11px;">${b.rut}</td>
-            <td>${b.nombre}${b.concepto ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${b.concepto}</div>` : ''}</td>
+            <td>${escHTML(b.nombre)}${b.concepto ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${b.concepto}</div>` : ''}</td>
             <td style="font-size:11px;color:var(--text-muted);">${b.periodo || '—'}</td>
             <td class="monto">${fmt(b.bruto)}</td>
             <td class="monto" style="color:var(--negative);">${fmt(b.retencion)}</td>
@@ -377,7 +377,7 @@ function honCalcularCotizaciones() {
     const sisMon    = Math.round(baseTopada * TASA_SIS_HON);
     const total     = afpMonto + saludMon + sisMon;
 
-    _honSet2('cotBase',      fmt(baseTopada) + (topeAplicado ? ` (tope 90 UF = $${fmt(tope)} aplicado, base sin tope: $${fmt(base)})` : ''));
+    _honSet2('cotBase',      fmt(baseTopada) + (topeAplicado ? ` (tope 90 UF = ${fmtPeso(tope)} aplicado, base sin tope: ${fmtPeso(base)})` : ''));
     _honSet2('cotAfpLabel',  `AFP ${afpNombre || 'seleccionada'} (${(tasaAFP*100).toFixed(2)}%)`);
     _honSet2('cotAfp',       fmt(afpMonto));
     _honSet2('cotSalud',     fmt(saludMon));
@@ -399,7 +399,7 @@ function honCalcularGastos() {
     const dif  = efectivos - pres;
 
     _honSet2('gpPresuntosCalc', fmt(pres));
-    _honSet2('gpTope',          `$${fmt(tope)} (15 UTA con UTM $${fmt(utm)})`);
+    _honSet2('gpTope',          `${fmtPeso(tope)} (15 UTA con UTM ${fmtPeso(utm)})`);
     _honSet2('gpDiferencia',    fmt(Math.abs(dif)));
 
     const rec = document.getElementById('gpRecomendacion');
@@ -408,10 +408,10 @@ function honCalcularGastos() {
             rec.textContent = 'Ambas opciones son equivalentes.';
             rec.style.color = 'var(--text-muted)';
         } else if (efectivos > pres) {
-            rec.textContent = `✅ Conviene gastos efectivos — base imponible $${fmt(dif)} menor.`;
+            rec.textContent = `✅ Conviene gastos efectivos — base imponible ${fmtPeso(dif)} menor.`;
             rec.style.color = 'var(--positive)';
         } else {
-            rec.textContent = `✅ Conviene gastos presuntos — base imponible $${fmt(-dif)} menor.`;
+            rec.textContent = `✅ Conviene gastos presuntos — base imponible ${fmtPeso(-dif)} menor.`;
             rec.style.color = 'var(--positive)';
         }
     }
@@ -458,7 +458,7 @@ function honRenderRetenciones() {
             return `<tr>
                 <td>${r.fecha}</td>
                 <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">${r.rut}</td>
-                <td>${r.nombre}</td>
+                <td>${escHTML(r.nombre)}</td>
                 <td class="monto">${fmt(r.bruto)}</td>
                 <td class="monto" style="color:var(--negative);">${fmt(r.retencion)}</td>
                 <td><button onclick="honEliminarRetencion(${r.id})" class="hon-btn-mini hon-btn-peligro">✕</button></td>
@@ -608,7 +608,7 @@ function honCalcularF22() {
     _honSet2('f22BrutoAnual',    fmt(brutoAnual));
     _honSet2('f22Cotizaciones',  fmt(cotizaciones));
     _honSet2('f22Gastos',        fmt(gastos));
-    _honSet2('f22TipoGastos',    usarPres ? `Presuntos 30% (tope $${fmt(tope)})` : 'Efectivos acreditados');
+    _honSet2('f22TipoGastos',    usarPres ? `Presuntos 30% (tope ${fmtPeso(tope)})` : 'Efectivos acreditados');
     _honSet2('f22BaseImponible', fmt(base));
     _honSet2('f22Impuesto',      fmt(imp));
     _honSet2('f22Retenciones',   fmt(credRet));
@@ -618,8 +618,8 @@ function honCalcularF22() {
     const resEl = document.getElementById('f22Resultado');
     if (resEl) {
         resEl.textContent = res > 0
-            ? `Impuesto a pagar: $${fmt(res)}`
-            : `Devolución estimada: $${fmt(Math.abs(res))}`;
+            ? `Impuesto a pagar: ${fmtPeso(res)}`
+            : `Devolución estimada: ${fmtPeso(Math.abs(res))}`;
         resEl.className = res > 0 ? 'hon-res-neg' : 'hon-res-pos';
     }
     document.getElementById('f22Detalle')?.removeAttribute('hidden');
@@ -640,7 +640,7 @@ function honCargarEgresosEnF22() {
     if (campo) { campo.value = String(total); campo.disabled = false; }
     const chk = document.getElementById('f22UsePresuntos');
     if (chk) chk.checked = false;
-    mostrarToast(`Gastos efectivos ${anio}: $${fmt(total)} cargados desde el Libro de Egresos.`, 'ok');
+    mostrarToast(`Gastos efectivos ${anio}: ${fmtPeso(total)} cargados desde el Libro de Egresos.`, 'ok');
 }
 
 // IGC por tramos marginales (2026 aproximado)
@@ -704,8 +704,8 @@ function honProyectarF22() {
     const resEl = document.getElementById('proyResultado');
     if (resEl) {
         resEl.textContent = resProy > 0
-            ? `⚠️ Al ritmo actual, pagarías aprox. $${fmt(resProy)} en el F22.`
-            : `✅ Al ritmo actual, recibirías devolución de aprox. $${fmt(Math.abs(resProy))}.`;
+            ? `⚠️ Al ritmo actual, pagarías aprox. ${fmtPeso(resProy)} en el F22.`
+            : `✅ Al ritmo actual, recibirías devolución de aprox. ${fmtPeso(Math.abs(resProy))}.`;
         resEl.className = resProy > 0 ? 'hon-res-neg' : 'hon-res-pos';
     }
     document.getElementById('proyDetalle')?.removeAttribute('hidden');
@@ -750,7 +750,7 @@ function honRenderPrestadores() {
         const totBruto = bPrest.reduce((s,b) => s + b.bruto, 0);
         return `<tr>
             <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">${p.rut}</td>
-            <td>${p.nombre}</td>
+            <td>${escHTML(p.nombre)}</td>
             <td>${p.correo || '—'}</td>
             <td class="monto">${fmt(totBruto)}</td>
             <td><button onclick="honEliminarPrestador(${p.id})" class="hon-btn-mini hon-btn-peligro">✕</button></td>
@@ -793,7 +793,7 @@ function honRenderDJ1879() {
         totB += d.bruto; totR += d.retencion;
         return `<tr>
             <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">${p.rut}</td>
-            <td>${p.nombre}</td>
+            <td>${escHTML(p.nombre)}</td>
             <td>${p.correo || '—'}</td>
             <td class="monto">${fmt(d.bruto)}</td>
             <td class="monto" style="color:var(--negative);">${fmt(d.retencion)}</td>

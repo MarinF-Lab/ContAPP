@@ -1,4 +1,4 @@
-# Integración de Diseño — ContApp Auditor (estado vivo)
+# Integración de Diseño — ID Contable Auditor (estado vivo)
 
 > **Documento vivo y corto a propósito.** Se lee al iniciar cada sesión: qué se está haciendo, qué
 > está decidido y cuál es el próximo paso. El registro de la integración anterior (jul-sep 2026,
@@ -11,6 +11,16 @@
 | Auditoría inicial y capturas del "antes" | `PLANIFICACION/diseno/LINEA_BASE_DISENO.md`, `diseno/linea-base/` |
 | Conectividad entre módulos (Fases 0-3) | `PLANIFICACION/CONECTIVIDAD.md` |
 | Pruebas | `npm test` · `npm run test:navegador` · `npm run test:reglas` (ver `PLANIFICACION/pruebas.js`) |
+
+## Marca (2026-11-15)
+- El producto se llama **ID Contable**; el isotipo es el de **ID Studio** (marca madre). Debajo del
+  nombre va la versión: **Auditor** (activo), Educa o Empresa. La versión sale de
+  `PRODUCTO.version` (`js/core/helpers.js`) y se pinta en todo elemento `[data-marca-version]`.
+- Se cambiaron solo los textos visibles (pestaña, `manifest.json`, login, barra de Inicio, Mis
+  clientes, planes, PDF/Excel, mensajes). **No** se renombran identificadores internos
+  (`ContappEventos`, `ContappModales`, `ContappIconos`), claves `contapp_*` de localStorage/Firestore
+  ni el formato `contapp-respaldo-cliente`: cambiarlos perdería los datos guardados.
+- "ContApp Consola" sigue siendo el nombre del artefacto de referencia de diseño.
 
 ## Arquitectura vigente (resumen)
 - **Navegación:** `js/services/menu.js` arma el menú desde los catálogos de módulos
@@ -38,7 +48,7 @@
 | 3 | Pantallas: login, Mis clientes (avance de cierre por tarjeta), Inicio con "¿Qué quieres hacer hoy?" sobre el centro de mando | ✅ 2026-11-15 |
 | 4 | Componentes comunes: botones, tarjetas, tablas, formularios, modales, pestañas e íconos SVG | ✅ 2026-11-15 |
 | 5 | Movimiento y móvil (`mobile-native`), `prefers-reduced-motion` | ✅ 2026-11-15 |
-| 6 | Revisión final: capturas antes/después, `verificar.js`, pruebas de fase, `web-design-guidelines` | 🔲 |
+| 6 | Revisión final: `web-design-guidelines`, `break-ui` (datos extremos), `emil-design-eng`, capturas finales, pruebas | ✅ 2026-11-15 |
 
 ### Correcciones previas a la Etapa 1 — ✅ 2026-11-14
 Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar lógica contable:
@@ -166,14 +176,43 @@ Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar l
   iPhone emulado. **Falta confirmar en un teléfono real**: hover pegado, zoom de iOS, muesca, teclado
   y "tirar para recargar" no se reproducen bien en emulación.
 
+### Etapa 6 — revisión final ✅ 2026-11-15
+- **`web-design-guidelines`** (`diseno/auditar-guias.js`, app real en 22 vistas + 3 formularios):
+  97 → **0 hallazgos**. Campos con etiqueta visible ahora asociada, botones de solo ícono con
+  nombre, aviso de cambios sin guardar (Escape, cambiar de módulo, cerrar pestaña), títulos
+  equilibrados.
+- **`break-ui`** (`diseno/datos-extremos.js`, estados demo/peor/vacío/uno/mil; capturas en
+  `diseno/extremos/`):
+  - Libros con 1.000 compras: **55 s → < 1,5 s** (`innerHTML +=` en bucle → `insertAdjacentHTML`
+    en Compras, Ventas, Clientes, Balance, Diario, Mayor y Plan de Cuentas).
+  - Nombres, glosas y descripciones escapados al mostrarse (`escHTML()` en `helpers.js`, 53
+    lugares): "Ferretería <El Tornillo> & Hijos" se perdía y un XML del SII podía inyectar HTML.
+    Las confirmaciones escapan el mensaje y solo permiten `<br>`/`<strong>`.
+  - Montos: `fmtPeso()` en todo el sistema (111 lugares): cero como "—" y negativos "-$1.000"
+    (antes "$-" y "$-1.000").
+  - Celular: Libro Mayor cabe en 360 px; indicadores de Remuneraciones en 2 columnas
+    (`remuneraciones.css` pisaba la regla de `main.css`).
+  - Razón social en 2 líneas con el nombre completo en `title` (Compras, Ventas, Documentos); RUT
+    sin partirse; empresa larga cortada con "…" en la barra; acciones de Documentos en una fila.
+- **`emil-design-eng`**: curvas como tokens (`--ease-out`, `--ease-drawer`); salida de modales
+  sin `ease-in`; sugerencias de la consola sin animación (uso diario y por teclado); tarjetas de
+  datos sin elevarse al pasar el mouse; cronómetro activo con indicador fijo (sin pulso infinito).
+- **Métricas antes → después del rediseño:** colores fijos 446 → 58 · emoji ~509 → 237 ·
+  contraste AA 94/94 (antes fallaban ~30) · `style=` en línea ~1.650 → 1.645 y textos < 12 px
+  262 → 264 (sin cambio: no eran objetivo de ninguna etapa).
+- Pruebas: `npm run test:navegador` 376/376 · `revisar:texto` solo falsos positivos (insignias,
+  `Ctrl K`, celdas de tablas desplazables) · capturas finales en `diseno/etapa6/`.
+- **Frágil:** los libros no tienen paginación; con montos de miles de millones la tabla de Compras
+  a 1366 px se desplaza horizontalmente para ver la columna de acciones.
+
 ### Pendientes / próximo paso
-1. **Etapa 6** — revisión final: capturas antes/después, `npm test`, `web-design-guidelines`.
-2. Probar en un teléfono real (iOS y Android) lo marcado arriba.
-2. Probar con Firebase real: "¿Olvidaste tu contraseña?" y "Recordarme" (aquí Firebase no carga).
-3. Si se quiere entrar con Google/Microsoft: activar los proveedores en Firebase Auth y programarlo.
-2. Campos sin etiqueta asociada (~115, H5) y emoji como íconos (H4/H6): se resuelven al rediseñar
-   cada pantalla (Etapas 3-4).
-3. Sin pantalla para **revocar códigos o sacar invitados** (las reglas v3 ya lo permiten:
+1. Probar en un teléfono real (iOS y Android) lo marcado en la Etapa 5.
+2. Probar con Firebase real: titular, invitado y código; "¿Olvidaste tu contraseña?" y
+   "Recordarme" (aquí Firebase no carga). Publicar las reglas v3 junto con este código.
+3. Revisar en INAPI que "ID Contable" esté libre como marca, y el dominio.
+4. Si se quiere entrar con Google/Microsoft: activar los proveedores en Firebase Auth y programarlo.
+5. Sin pantalla para **revocar códigos o sacar invitados** (las reglas v3 ya lo permiten:
    `invitaciones/{codigo}.revocada = true` o quitar el uid de `perfiles/{titular}.invitados`).
-4. Panel de notificaciones de la barra superior con avisos fijos de ejemplo (no lee datos reales).
-5. Licencia: un perfil sin campo `estado` pasa el control (`licencia.js`); definir al integrar el cobro.
+6. Panel de notificaciones de la barra superior con avisos fijos de ejemplo (no lee datos reales).
+7. Paginación de libros (Compras, Ventas, Diario) para meses con miles de documentos.
+8. Licencia: un perfil sin campo `estado` pasa el control (`licencia.js`); definir al integrar el cobro.

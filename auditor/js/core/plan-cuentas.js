@@ -527,7 +527,7 @@ function renderPlanCuentas() {
             </tr>`;
         });
 
-        contenedor.innerHTML += `
+        contenedor.insertAdjacentHTML('beforeend', `
         <div class="grupo-cuentas" style="margin-bottom:24px;">
 
             <div style="
@@ -561,7 +561,7 @@ function renderPlanCuentas() {
                 </tbody>
             </table>
             </div>
-        </div>`;
+        </div>`);
     });
 
     if (!contenedor.innerHTML) {

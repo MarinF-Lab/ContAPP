@@ -31,7 +31,8 @@
     color: var(--text);
     letter-spacing: -0.5px;
     line-height: 1;
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
 }
 .rem-kpi-label {
     font-size: 12px;
@@ -130,7 +131,8 @@
     font-weight: 700;
     background: var(--table-stripe);
     border-top: 2px solid var(--divider);
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
 }
 
 /* ── Avatar circular ──────────────────────────────────────── */
@@ -196,7 +198,8 @@
     font-size: 12px;
     color: var(--text-muted);
     margin-top: 1px;
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
 }
 
 /* ── Boleta de liquidación ────────────────────────────────── */
@@ -312,7 +315,8 @@
     font-weight: 800;
     letter-spacing: -0.5px;
     line-height: 1;
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
 }
 .rem-total-liq   .rem-total-val { color: var(--positive); }
 .rem-total-costo .rem-total-val { color: var(--negative); }
@@ -472,3 +476,7 @@
     border-radius: 10px;
     font-size: 14px;
 }
+
+/* Etapa 6 (break-ui): en pantallas angostas los 4 indicadores pasan a 2 columnas */
+@media (max-width: 1100px) { .rem-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 380px)  { .rem-kpi-strip { grid-template-columns: minmax(0, 1fr); } }

@@ -132,11 +132,11 @@ function generarFlujoCaja() {
                     <td>${l.fecha}</td>
                     <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                         ${l.glosa}
-                        ${l.contacto ? `<span style="font-size:11px;color:var(--accent);margin-left:6px;"><i class=cxi-persona></i> ${l.contacto}</span>` : ''}
+                        ${l.contacto ? `<span style="font-size:11px;color:var(--accent);margin-left:6px;"><i class=cxi-persona></i> ${escHTML(l.contacto)}</span>` : ''}
                     </td>
                     <td class="monto" style="color:var(--positive);">${l.entrada > 0 ? '$' + fmt(l.entrada) : ''}</td>
                     <td class="monto" style="color:var(--negative);">${l.salida  > 0 ? '$' + fmt(l.salida)  : ''}</td>
-                    <td class="monto" style="${cls}font-weight:600;">${signoNeto}$${fmt(Math.abs(l.neto))}</td>
+                    <td class="monto" style="${cls}font-weight:600;">${signoNeto}${fmtPeso(Math.abs(l.neto))}</td>
                 </tr>`;
             });
         }
@@ -148,7 +148,7 @@ function generarFlujoCaja() {
                 Subtotal ${sec.label}
             </td>
             <td class="monto" style="font-weight:700;font-size:14px;color:${colorTotal};background:var(--table-stripe);">
-                ${signoTotal}$${fmt(Math.abs(sec.total))}
+                ${signoTotal}${fmtPeso(Math.abs(sec.total))}
             </td>
         </tr>`;
     });

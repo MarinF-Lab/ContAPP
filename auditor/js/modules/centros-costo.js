@@ -56,7 +56,7 @@ function renderCentrosCosto() {
                     ${items.length ? items.map(c => `
                         <tr style="${c.estado === 'INACTIVO' ? 'opacity:.5;' : ''}">
                             <td style="font-family:monospace;font-size:13px;color:var(--text-muted);">${c.codigo || '—'}</td>
-                            <td style="font-weight:600;">${c.nombre}</td>
+                            <td style="font-weight:600;">${escHTML(c.nombre)}</td>
                             <td><span class="${c.estado !== 'INACTIVO' ? 'badge-activo' : 'badge-inactivo'}">${c.estado !== 'INACTIVO' ? 'Activo' : 'Inactivo'}</span></td>
                             <td>
                                 <div class="plan-acciones">

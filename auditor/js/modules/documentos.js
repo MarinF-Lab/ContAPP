@@ -155,15 +155,15 @@ function _docHtml() {
         </div>
         <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px 20px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Neto total</div>
-            <div style="font-size:20px;font-weight:800;color:var(--text);margin-top:4px;">$${fmt(totNeto)}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--text);margin-top:4px;">${fmtPeso(totNeto)}</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px 20px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">IVA</div>
-            <div style="font-size:20px;font-weight:800;color:var(--info);margin-top:4px;">$${fmt(totIva)}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--info);margin-top:4px;">${fmtPeso(totIva)}</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px 20px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Total</div>
-            <div style="font-size:20px;font-weight:800;color:var(--positive);margin-top:4px;">$${fmt(totTotal)}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--positive);margin-top:4px;">${fmtPeso(totTotal)}</div>
         </div>
     </div>`;
 
@@ -185,20 +185,20 @@ function _docHtml() {
             <td style="font-family:monospace;font-size:12px;">${d.numero_doc || '—'}</td>
             <td>${d.fecha || '—'}</td>
             <td>
-                <div style="font-weight:600;font-size:13px;">${d.nombre || '—'}</div>
-                ${d.rut ? `<div style="font-size:11px;color:var(--text-muted);font-family:monospace;">${d.rut}</div>` : ''}
+                <div class="nombre-2l" style="font-weight:600;font-size:13px;max-width:26ch;" title="${escHTML(d.nombre || '')}">${escHTML(d.nombre || '—')}</div>
+                ${d.rut ? `<div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap;">${d.rut}</div>` : ''}
             </td>
-            <td class="monto">$${fmt(d.neto || 0)}</td>
-            <td class="monto" style="color:var(--info);">$${fmt(d.iva || 0)}</td>
-            <td class="monto" style="font-weight:700;">$${fmt(d.total || 0)}</td>
+            <td class="monto">${d.neto ? '$' + fmt(d.neto) : '—'}</td>
+            <td class="monto" style="color:var(--info);">${d.iva ? '$' + fmt(d.iva) : '—'}</td>
+            <td class="monto" style="font-weight:700;">${fmtPeso(d.total || 0)}</td>
             <td>
                 <span style="background:${est.color}22;color:${est.color};border:1px solid ${est.color}55;
                              padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;">
                     ${est.label}
                 </span>
             </td>
-            <td>
-                <div style="display:flex;gap:5px;align-items:center;">
+            <td class="doc-acciones-td">
+                <div class="doc-acciones">
                     ${d.adjunto ? `<button onclick="docAbrirAdjunto(${d.id})"
                         style="border:1px solid var(--divider);background:var(--input-bg);
                                border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;"

@@ -1,6 +1,6 @@
 'use strict';
 /**
- * licencia.js — Modelo de cuentas y licencia de ContAPP Auditor
+ * licencia.js — Modelo de cuentas y licencia de ID Contable Auditor
  *
  * MODELO (ver memoria auditor-licencia-model):
  *   • El servicio es de pago. Solo el correo que pagó es TITULAR.

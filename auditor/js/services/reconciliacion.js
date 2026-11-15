@@ -345,7 +345,7 @@ function _recHtmlTabla() {
                     const monto = t.abono > 0 ? t.abono : -t.cargo;
                     return `<tr style="border-top:1px solid var(--divider);">
                         <td style="padding:7px 12px;">${t.fecha}</td>
-                        <td style="padding:7px 12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.descripcion}</td>
+                        <td style="padding:7px 12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHTML(t.descripcion)}</td>
                         <td style="padding:7px 12px;text-align:right;font-family:'JetBrains Mono',monospace;color:${monto>=0?'var(--positive)':'var(--negative)'};">${fmtM(monto)}</td>
                         <td style="padding:7px 12px;color:var(--text-muted);">${a ? '#' + a.numero : '—'}</td>
                         <td style="padding:7px 12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a ? a.glosa : '—'}</td>
@@ -371,7 +371,7 @@ function _recRowBanco(t, asientosCandidatos) {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:11px;color:var(--text-muted);">${t.fecha}</div>
-                <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${t.descripcion}">${t.descripcion}</div>
+                <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escHTML(t.descripcion)}">${escHTML(t.descripcion)}</div>
             </div>
             <div style="font-weight:700;font-size:13px;${mono};color:${monto>=0?'var(--positive)':'var(--negative)'};white-space:nowrap;">${fmtM(monto)}</div>
         </div>
@@ -400,7 +400,7 @@ function _recRowAsiento(a) {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:11px;color:var(--text-muted);">${a.fecha} &nbsp;·&nbsp; #${a.numero}</div>
-                <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${a.glosa}">${a.glosa}</div>
+                <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escHTML(a.glosa)}">${escHTML(a.glosa)}</div>
             </div>
             <div style="font-weight:700;font-size:13px;${mono};color:${monto>=0?'var(--positive)':'var(--negative)'};">${fmtM(monto)}</div>
         </div>

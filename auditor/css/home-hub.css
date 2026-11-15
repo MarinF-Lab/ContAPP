@@ -128,7 +128,7 @@
     --k: var(--navy); padding: 12px 14px; border: 1px solid var(--rule-strong); border-top: 3px solid var(--k);
     border-radius: 11px; background: var(--card-bg); box-shadow: var(--shadow-card); transition: transform .18s, box-shadow .18s;
 }
-@media (hover: hover) and (pointer: fine) { .kpi-mx:hover { transform: translateY(-3px); box-shadow: var(--shadow); } }
+@media (hover: hover) and (pointer: fine) { .kpi-mx:hover { box-shadow: var(--shadow); } }
 .kpi-mx:nth-child(1) { --k: var(--navy); }
 .kpi-mx:nth-child(2) { --k: var(--coral); }
 .kpi-mx:nth-child(3) { --k: var(--ok); }

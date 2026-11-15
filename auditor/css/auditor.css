@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════
-   ContAPP Auditor — Branding y estilos exclusivos
+   ID Contable Auditor — Branding y estilos exclusivos
    Sobreescribe variables del núcleo para esta edición.
 ══════════════════════════════════════════════ */
 
@@ -189,8 +189,7 @@
 .panel-kpi-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-align: center; }
 .panel-kpi-alerta { color: var(--negative) !important; }
 .panel-kpi-ok     { color: var(--positive) !important; }
-.panel-kpi-timer-activo { cursor: pointer; border-color: var(--warning); animation: panel-pulse 1.2s ease-in-out infinite; }
-@keyframes panel-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.4); } 50% { box-shadow: 0 0 0 6px rgba(245,158,11,0); } }
+.panel-kpi-timer-activo { cursor: pointer; border-color: var(--warning); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 22%, transparent); }
 
 /* Toolbar: search + tabs */
 .panel-toolbar {

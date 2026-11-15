@@ -1,6 +1,6 @@
-# ContAPP — Instrucciones del repositorio
+# ID Contable (ID Studio) — Instrucciones del repositorio
 
-Aplicaciones contables para el mercado chileno.
+Aplicaciones contables para el mercado chileno. Marca **ID Contable**, versiones Auditor, Educa y Empresa.
 
 | Carpeta | Estado |
 |---------|--------|

@@ -383,6 +383,7 @@ function aplicarConfiguracion(cfg) {
     txt('headerEmpresa',  cfg.empresa || 'Mi Empresa Ltda.');
     txt('homeGreetEmpresa', cfg.empresa || 'Mi Empresa Ltda.');
     txt('fieldEmpresa', cfg.empresa || 'Mi Empresa Ltda.');
+    ['fieldEmpresa', 'homeGreetEmpresa'].forEach(id => { const el = document.getElementById(id); if (el) el.title = cfg.empresa || ''; });
     txt('fieldEjercicio', cfg.periodo || new Date().getFullYear());
 
     const hp = document.getElementById('headerPeriodo');
@@ -424,6 +425,12 @@ function mostrarToast(mensaje, tipo = 'ok') {
 
 window.mostrarToast = mostrarToast;
 
+// El mensaje es texto (puede traer nombres importados): se escapa y solo se
+// permiten los saltos de línea y negritas que usan las confirmaciones propias.
+function _textoConfirm(m) {
+    return escHTML(m).replace(/&lt;(\/?)(br|strong|b)\s*\/?&gt;/g, '<$1$2>').replace(/\n/g, '<br>');
+}
+
 function mostrarConfirm(mensaje, onConfirm, { titulo = '¿Confirmar?', textoBtn = 'Confirmar', tipo = 'danger' } = {}) {
     // Evita apilar varias confirmaciones si algo la dispara de nuevo mientras
     // ya hay una abierta (ej. Enter repetido antes del fix de foco de abajo).
@@ -434,8 +441,8 @@ function mostrarConfirm(mensaje, onConfirm, { titulo = '¿Confirmar?', textoBtn 
     overlay.setAttribute('role', 'alertdialog');
     overlay.innerHTML = `
         <div class="modal-confirm-box">
-            <h3>${titulo}</h3>
-            <p>${mensaje}</p>
+            <h3>${escHTML(titulo)}</h3>
+            <p>${_textoConfirm(mensaje)}</p>
             <div class="modal-confirm-acciones">
                 <button type="button" id="_confirmCancelar" class="btn btn-secondary">Cancelar</button>
                 <button type="button" id="_confirmAceptar" class="btn ${tipo === 'danger' ? 'btn-danger' : 'btn-primary'}">${textoBtn}</button>

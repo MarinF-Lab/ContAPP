@@ -1,6 +1,8 @@
-# ContApp Auditor — Protocolo de trabajo para Claude Code
+# ID Contable Auditor — Protocolo de trabajo para Claude Code
 
 SaaS contable multi-cliente para estudios contables chilenos (PWA, JS puro, Firebase).
+Marca: **ID Contable** (isotipo de ID Studio) con la versión debajo: **Auditor** · Educa · Empresa.
+No renombrar identificadores internos `Contapp*` ni claves `contapp_*` (se perderían datos).
 Este es el único producto activo del repo (`educa/` y `empresa/` están en pausa).
 
 ---

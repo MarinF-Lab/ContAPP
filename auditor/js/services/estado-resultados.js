@@ -98,7 +98,7 @@ function generarEstadoResultados() {
     const filaItem = (nombre, monto, indent) => `
         <div class="er-fila${indent ? ' er-indent' : ''}">
             <span>${nombre}</span>
-            <span style="color:${clr(monto)};font-family:'JetBrains Mono',monospace;">$${fmt(Math.abs(monto))}</span>
+            <span style="color:${clr(monto)};font-family:'JetBrains Mono',monospace;">${fmtPeso(Math.abs(monto))}</span>
         </div>`;
 
     const filaTitulo = (texto) => `<div class="er-titulo">${texto}</div>`;
@@ -111,7 +111,7 @@ function generarEstadoResultados() {
         const signo = destacado ? (monto >= 0 ? '+' : '-') : '';
         return `<div class="er-total${clsFinal}">
             <span>${texto}</span>
-            <span style="color:${colorMonto};font-family:'JetBrains Mono',monospace;">${signo}$${fmt(Math.abs(monto))}</span>
+            <span style="color:${colorMonto};font-family:'JetBrains Mono',monospace;">${signo}${fmtPeso(Math.abs(monto))}</span>
         </div>`;
     };
 

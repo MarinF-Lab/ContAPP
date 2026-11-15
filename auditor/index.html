@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-    <title>ContAPP Auditor</title>
+    <title>ID Contable · Auditor</title>
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" href="icons/icon-192.png">
 
     <!-- Adaptador web: define window.electronAPI antes que el resto de scripts -->
-    <script src="js/web-adapter.js?v=1"></script>
+    <script src="js/web-adapter.js?v=2"></script>
     <!-- SheetJS para exportar Excel en el navegador -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <!-- jsPDF para exportar PDF (boletas honorarios e informes) -->
@@ -36,11 +36,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-    <link rel="stylesheet" href="css/variables.css?v=5">
-    <link rel="stylesheet" href="css/main.css?v=29">
-    <link rel="stylesheet" href="css/home-hub.css?v=7">
-    <link rel="stylesheet" href="css/remuneraciones.css?v=7">
-    <link rel="stylesheet" href="css/auditor.css?v=7">
+    <link rel="stylesheet" href="css/variables.css?v=6">
+    <link rel="stylesheet" href="css/main.css?v=30">
+    <link rel="stylesheet" href="css/home-hub.css?v=8">
+    <link rel="stylesheet" href="css/remuneraciones.css?v=8">
+    <link rel="stylesheet" href="css/auditor.css?v=8">
     <script>
         // Restaurar tema guardado antes de que el DOM pinte (evita flash)
         (function() {
@@ -64,7 +64,7 @@
     <div id="home-header" class="home-header" style="display:none;">
         <div class="hbrand">
             <span class="seal seal-logo" aria-hidden="true"><img class="logo-claro" src="icons/brand/isotipo-light-96.png" alt="" width="32" height="32"><img class="logo-oscuro" src="icons/brand/isotipo-dark-96.png" alt="" width="32" height="32"></span>
-            <span class="name">ContApp</span>
+            <span class="marca"><span class="name">ID Contable</span><span class="marca-version" data-marca-version>Auditor</span></span>
         </div>
         <div class="home-greet">
             <span class="hg-strong">Bienvenido de nuevo</span>
@@ -2157,7 +2157,7 @@
 
                 <!-- Barra: marca, cuenta y salir (Etapa 3) -->
                 <div class="mc-topbar">
-                    <span class="mc-brand"><span class="seal seal-logo" aria-hidden="true"><img class="logo-claro" src="icons/brand/isotipo-light-96.png" alt="" width="30" height="30"><img class="logo-oscuro" src="icons/brand/isotipo-dark-96.png" alt="" width="30" height="30"></span>ContApp</span>
+                    <span class="mc-brand"><span class="seal seal-logo" aria-hidden="true"><img class="logo-claro" src="icons/brand/isotipo-light-96.png" alt="" width="30" height="30"><img class="logo-oscuro" src="icons/brand/isotipo-dark-96.png" alt="" width="30" height="30"></span><span class="marca"><span class="marca-nombre">ID Contable</span><span class="marca-version" data-marca-version>Auditor</span></span></span>
                     <span class="mc-spacer"></span>
                     <span id="empUserEmail" class="mc-email"></span>
                     <button class="icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema claro u oscuro">
@@ -2315,7 +2315,7 @@
 
         <div class="lbrand">
             <span class="seal seal-logo" aria-hidden="true"><img class="logo-fijo" src="icons/brand/isotipo-dark-96.png" alt="" width="40" height="40"></span>
-            <div class="name">ContApp</div>
+            <div class="marca"><div class="name">ID Contable</div><div class="marca-version" data-marca-version>Auditor</div></div>
         </div>
 
         <div class="lhead">
@@ -2327,7 +2327,7 @@
             </ul>
         </div>
 
-        <div class="lfoot">© 2026 ContApp · Contabilidad multi-cliente para estudios contables</div>
+        <div class="lfoot">© 2026 ID Studio. Contabilidad multi-cliente para estudios contables.</div>
     </div>
 
     <div class="login-right">
@@ -2448,7 +2448,7 @@
             <div class="wiz-plan-card">
                 <div class="wiz-plan-top">
                     <div>
-                        <div class="wiz-plan-nombre">ContAPP Auditor</div>
+                        <div class="wiz-plan-nombre">ID Contable Auditor</div>
                         <div class="wiz-plan-detalle">1 titular + hasta 4 invitados · clientes ilimitados</div>
                     </div>
                     <div class="wiz-plan-precio">$XX.XXX<span>/mes</span></div>
@@ -3102,46 +3102,46 @@
 <!-- ─────────────────────────────────────────────── -->
 <script src="js/core/db.js?v=1"></script>
 <script src="js/core/autocomplete.js?v=3"></script>
-<script src="js/core/helpers.js?v=1"></script>
+<script src="js/core/helpers.js?v=2"></script>
 <script src="js/core/iconos.js?v=1"></script>
 <script src="js/core/modales.js?v=3"></script>
 <script src="js/core/periodo.js?v=1"></script>
-<script src="js/core/datos-cliente.js?v=3"></script>
+<script src="js/core/datos-cliente.js?v=4"></script>
 <script src="js/core/asientos.js?v=1"></script>
 <script src="js/core/parser.js?v=1"></script>
 <script src="js/core/parser-sii.js?v=1"></script>
-<script src="js/core/plan-cuentas.js?v=8"></script>
+<script src="js/core/plan-cuentas.js?v=9"></script>
 <script src="js/core/contabilidad.js?v=4"></script>
 
-<script src="js/services/diario.js?v=38"></script>
-<script src="js/services/mayor.js?v=13"></script>
-<script src="js/services/balance.js?v=8"></script>
-<script src="js/services/dashboard.js?v=7"></script>
-<script src="js/services/flujo-caja.js?v=5"></script>
-<script src="js/services/balance-clasificado.js?v=5"></script>
+<script src="js/services/diario.js?v=39"></script>
+<script src="js/services/mayor.js?v=14"></script>
+<script src="js/services/balance.js?v=9"></script>
+<script src="js/services/dashboard.js?v=8"></script>
+<script src="js/services/flujo-caja.js?v=6"></script>
+<script src="js/services/balance-clasificado.js?v=6"></script>
 <script src="js/services/estado-resultados.js?v=4"></script>
 <script src="js/services/indicadores.js?v=7"></script>
 <script src="js/services/previred-scraper.js?v=2"></script>
 <script src="js/services/iva-resumen.js?v=13"></script>
-<script src="js/services/reconciliacion.js?v=8"></script>
+<script src="js/services/reconciliacion.js?v=9"></script>
 <script src="js/services/sii-rcv.js?v=5"></script>
 
-<script src="js/modules/compras.js?v=7"></script>
-<script src="js/modules/ventas.js?v=7"></script>
-<script src="js/modules/documentos.js?v=9"></script>
-<script src="js/modules/clientes.js?v=6"></script>
+<script src="js/modules/compras.js?v=8"></script>
+<script src="js/modules/ventas.js?v=8"></script>
+<script src="js/modules/documentos.js?v=10"></script>
+<script src="js/modules/clientes.js?v=7"></script>
 <script src="js/modules/productos.js?v=8"></script>
-<script src="js/modules/centros-costo.js?v=5"></script>
-<script src="js/modules/bodegas.js?v=5"></script>
-<script src="js/modules/inventario.js?v=6"></script>
-<script src="js/modules/activos.js?v=13"></script>
+<script src="js/modules/centros-costo.js?v=6"></script>
+<script src="js/modules/bodegas.js?v=6"></script>
+<script src="js/modules/inventario.js?v=7"></script>
+<script src="js/modules/activos.js?v=14"></script>
 <script src="js/modules/cartolas.js?v=9"></script>
-<script src="js/modules/remuneraciones.js?v=10"></script>
-<script src="js/modules/segunda-categoria.js?v=7"></script>
+<script src="js/modules/remuneraciones.js?v=11"></script>
+<script src="js/modules/segunda-categoria.js?v=8"></script>
 <script src="js/core/conexiones.js?v=2"></script>
 <script src="js/core/cierre.js?v=5"></script>
 
-<script src="js/services/app.js?v=14"></script>
+<script src="js/services/app.js?v=15"></script>
 
 <!-- Firebase SDK (compat) — cargado después de app.js -->
 <!-- ═══════════════════════════════════════════════════════
@@ -3213,8 +3213,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="js/services/permisos.js?v=1"></script>
-<script src="js/services/auth-manager.js?v=3"></script>
-<script src="js/services/exportar.js?v=9"></script>
+<script src="js/services/auth-manager.js?v=4"></script>
+<script src="js/services/exportar.js?v=10"></script>
 <script src="js/services/ia.js?v=5"></script>
 <script src="js/services/firebase-service.js?v=12"></script>
 <script>
@@ -3274,7 +3274,7 @@
     }
 </script>
 
-<script src="js/core/busqueda-global.js?v=3"></script>
+<script src="js/core/busqueda-global.js?v=4"></script>
 <script src="js/auditor/licencia.js?v=1"></script>
 <script src="js/categorias/primera.js?v=4"></script>
 <script src="js/categorias/segunda.js?v=3"></script>

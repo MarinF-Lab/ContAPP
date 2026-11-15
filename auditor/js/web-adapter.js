@@ -97,7 +97,7 @@
 
         app: {
             info:     async () => ({ version: '1.0.0-web', plataforma: 'web' }),
-            producto: async () => (window.CONTAPP_PRODUCTO || { id: 'auditor', nombre: 'ContAPP Auditor' }),
+            producto: async () => (window.CONTAPP_PRODUCTO || { id: 'auditor', nombre: 'ID Contable', version: 'Auditor' }),
         },
 
         archivo: {

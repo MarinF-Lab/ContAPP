@@ -116,3 +116,16 @@ temas** (magenta `#A03A63`, gris de texto `#4A5C6C`, verde `#1C6E50`, ámbar `#8
 Reproducir capturas: desde `auditor/`, `python3 -m http.server 8765` y luego
 `node PLANIFICACION/diseno/capturar-linea-base.js` (siembra datos de ejemplo en `localStorage`,
 recorre las 19 pantallas con `navegar()` y guarda JPG por tema en `linea-base/`).
+
+## 4. Resultado final (Etapa 6, 2026-11-15)
+
+| Métrica | Línea base | Final |
+|---|---|---|
+| Colores fijos sueltos | 446 | 58 |
+| Emoji como íconos | ~509 | 237 |
+| Contraste AA (ambos temas) | ~30 fallas | 94/94 |
+| Hallazgos `web-design-guidelines` | 97 | 0 |
+| `style=` en línea | ~1.650 | 1.645 |
+| Textos < 12 px | 262 | 264 |
+
+Capturas finales en `diseno/etapa6/` (comparar con `diseno/linea-base/`). Datos extremos en `diseno/extremos/`.

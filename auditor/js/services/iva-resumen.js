@@ -237,8 +237,8 @@ function _calcularReajusteUTM(monto, mesOrig, anioOrig, mesActual, anioActual) {
     return {
         reajuste,
         reajusteDetalle:
-            `UTM ${mesOrig}/${anioOrig}: $${fmt(utmOrig)} → UTM ${mesActual}/${anioActual}: $${fmt(utmActual)} ` +
-            `(factor ${factor.toFixed(4)}) → reajuste: $${fmt(Math.abs(reajuste))}`,
+            `UTM ${mesOrig}/${anioOrig}: ${fmtPeso(utmOrig)} → UTM ${mesActual}/${anioActual}: ${fmtPeso(utmActual)} ` +
+            `(factor ${factor.toFixed(4)}) → reajuste: ${fmtPeso(Math.abs(reajuste))}`,
     };
 }
 
@@ -379,7 +379,7 @@ function _renderIvaResumen(d) {
                 ${sub ? `<div class="iva-fila-sub">${sub}</div>` : ''}
             </div>
             <span class="iva-fila-monto" style="color:${color};">
-                $${fmt(Math.abs(monto))}
+                ${fmtPeso(Math.abs(monto))}
             </span>
         </div>`;
     };
@@ -391,7 +391,7 @@ function _renderIvaResumen(d) {
         <div class="iva-total-box ${pagar ? 'iva-total-pagar' : 'iva-total-favor'}">
             <span>${label}</span>
             <span style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:800;">
-                $${fmt(Math.abs(monto))}
+                ${fmtPeso(Math.abs(monto))}
             </span>
         </div>`;
 
@@ -431,12 +431,12 @@ function _renderIvaResumen(d) {
     if (d.ivaAPagar > 0) {
         html += totalBox(`IVA neto a PAGAR — F29 línea 39`, d.ivaAPagar, true);
         html += `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
-            Débito $${fmt(d.ivaDebito)} − Crédito total $${fmt(d.creditoTotal)} = <strong>$${fmt(d.ivaAPagar)} a pagar</strong>
+            Débito ${fmtPeso(d.ivaDebito)} − Crédito total ${fmtPeso(d.creditoTotal)} = <strong>${fmtPeso(d.ivaAPagar)} a pagar</strong>
         </div>`;
     } else {
         html += totalBox(`Remanente a FAVOR — arrastrar al mes siguiente`, d.nuevoRemanente, false);
         html += `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
-            Crédito total $${fmt(d.creditoTotal)} − Débito $${fmt(d.ivaDebito)} = <strong>$${fmt(d.nuevoRemanente)} a favor</strong>
+            Crédito total ${fmtPeso(d.creditoTotal)} − Débito ${fmtPeso(d.ivaDebito)} = <strong>${fmtPeso(d.nuevoRemanente)} a favor</strong>
         </div>`;
     }
 
@@ -465,7 +465,7 @@ function _renderIvaResumen(d) {
     html += `<div class="iva-total-box iva-total-pagar" style="margin-top:10px;">
         <span>Total a pagar en el F29 (IVA + PPM + retenciones)</span>
         <span style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:800;">
-            $${fmt(totalDeclarar)}
+            ${fmtPeso(totalDeclarar)}
         </span>
     </div>`;
 
@@ -604,7 +604,7 @@ function generarAsientoRemanenteIVA(mes, anio, ivaDebito, ivaCredito, remanente,
     const mesSig  = mes === 12 ? 1 : mes + 1;
     const anioSig = mes === 12 ? anio + 1 : anio;
     _guardarRemanenteOrigen(mes, anio, nuevoRemanente);
-    mostrarToast(`Remanente de $${fmt(nuevoRemanente)} guardado (origen ${_nombreMes(mes)} ${anio}). Se aplicará en ${mesSig}/${anioSig}.`, 'ok');
+    mostrarToast(`Remanente de ${fmtPeso(nuevoRemanente)} guardado (origen ${_nombreMes(mes)} ${anio}). Se aplicará en ${mesSig}/${anioSig}.`, 'ok');
 }
 window.generarAsientoRemanenteIVA = generarAsientoRemanenteIVA;
 
