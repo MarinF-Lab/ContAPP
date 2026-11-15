@@ -6,10 +6,10 @@
 const PROD_KEY = 'core_productos';
 
 const PROD_TIPOS = [
-    { id: 'servicio',    label: 'Servicio',    icon: '⚙️' },
-    { id: 'mercaderia',  label: 'Mercadería',  icon: '📦' },
-    { id: 'insumo',      label: 'Insumo',      icon: '🔧' },
-    { id: 'activo_fijo', label: 'Activo Fijo', icon: '🏗' },
+    { id: 'servicio',    label: 'Servicio',    icon: '<i class=cxi-engranaje></i>' },
+    { id: 'mercaderia',  label: 'Mercadería',  icon: '<i class=cxi-caja></i>' },
+    { id: 'insumo',      label: 'Insumo',      icon: '<i class=cxi-etiqueta></i>' },
+    { id: 'activo_fijo', label: 'Activo Fijo', icon: '<i class=cxi-edificio></i>' },
 ];
 
 const PROD_UNIDADES = ['Un','Hr','Kg','Lt','M2','M3','Ml','Cm','Gl','Cj','Par','Set'];
@@ -59,7 +59,7 @@ function renderProductos() {
                 '<input id="prod-busqueda" class="input" style="flex:1;min-width:180px;" placeholder="Buscar por nombre, código o categoría…">' +
                 '<select id="prod-filtro-tipo" class="input" style="width:auto;">' +
                     '<option value="todos">Todos los tipos</option>' +
-                    PROD_TIPOS.map(function(t){ return '<option value="' + t.id + '">' + t.icon + ' ' + t.label + '</option>'; }).join('') +
+                    PROD_TIPOS.map(function(t){ return '<option value="' + t.id + '">' + t.label + '</option>'; }).join('') +
                 '</select>' +
             '</div>' +
             '<div class="card" style="overflow-x:auto;padding:0;">' +
@@ -81,7 +81,7 @@ function renderProductos() {
                     '<tbody id="prod-tabla-body"></tbody>' +
                 '</table>' +
                 '<div id="prod-tabla-vacia" style="display:none;text-align:center;padding:48px 24px;color:var(--text-muted);">' +
-                    '<div style="font-size:36px;margin-bottom:10px;">📦</div>' +
+                    '<div style="font-size:36px;margin-bottom:10px;color:var(--accent);"><i class=cxi-caja></i></div>' +
                     '<p id="prod-vacia-msg">Sin productos aún. Agrega el primer ítem del catálogo.</p>' +
                 '</div>' +
             '</div>';
@@ -204,8 +204,8 @@ function _prodActualizarTabla() {
                     '<span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;background:' + staBg + ';color:' + staColor + ';">' + staLabel + '</span>' +
                 '</td>' +
                 '<td style="padding:10px 12px;text-align:right;white-space:nowrap;">' +
-                    '<button class="btn btn-sm prod-btn-editar" data-id="' + p.id + '" style="margin-right:4px;" title="Editar">✏️</button>' +
-                    '<button class="btn btn-sm prod-btn-eliminar" data-id="' + p.id + '" style="color:var(--error);" title="Eliminar">🗑</button>' +
+                    '<button class="btn btn-sm prod-btn-editar" data-id="' + p.id + '" style="margin-right:4px;" title="Editar"><i class=cxi-editar></i></button>' +
+                    '<button class="btn btn-sm prod-btn-eliminar" data-id="' + p.id + '" style="color:var(--error);" title="Eliminar"><i class=cxi-eliminar></i></button>' +
                 '</td>' +
             '</tr>';
     });
@@ -246,7 +246,7 @@ function prodAbrirForm(id) {
 
     var optTipos = PROD_TIPOS.map(function(t) {
         var sel = prod && prod.tipo === t.id ? ' selected' : (!prod && t.id === 'servicio' ? ' selected' : '');
-        return '<option value="' + t.id + '"' + sel + '>' + t.icon + ' ' + t.label + '</option>';
+        return '<option value="' + t.id + '"' + sel + '>' + t.label + '</option>';
     }).join('');
 
     var optUnidades = PROD_UNIDADES.map(function(u) {
@@ -451,7 +451,7 @@ function prodAbrirForm(id) {
         // ── Footer fijo ──
         '<div style="padding:16px 24px;border-top:1px solid var(--divider);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px;">' +
             '<button id="prod-btn-cancelar" class="btn btn-secondary">Cancelar</button>' +
-            '<button id="prod-btn-guardar"  class="btn btn-primary" style="min-width:120px;">💾 Guardar</button>' +
+            '<button id="prod-btn-guardar"  class="btn btn-primary" style="min-width:120px;"><i class=cxi-guardar></i> Guardar</button>' +
         '</div>';
 
     overlay.appendChild(backdrop);

@@ -519,9 +519,9 @@ function renderPlanCuentas() {
                 <td>
                     <div class="plan-acciones">
                         <button class="btn-plan btn-plan-editar"
-                            onclick="editarCuentaUI('${nombre.replace(/'/g,"\\'")}')">✏️ Editar</button>
+                            onclick="editarCuentaUI('${nombre.replace(/'/g,"\\'")}')"><i class=cxi-editar></i> Editar</button>
                         <button class="btn-plan btn-plan-eliminar"
-                            onclick="eliminarCuentaUI('${nombre.replace(/'/g,"\\'")}')">🗑️</button>
+                            onclick="eliminarCuentaUI('${nombre.replace(/'/g,"\\'")}')"><i class=cxi-eliminar></i></button>
                     </div>
                 </td>
             </tr>`;

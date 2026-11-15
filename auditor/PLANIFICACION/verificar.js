@@ -314,6 +314,10 @@ check('login: "¿Olvidaste tu contraseña?" y "Recordarme" funcionan; sin botone
     tieneFunc('js/services/firebase-service.js', 'fbRecuperarClave') && tieneString('js/services/firebase-service.js', 'setPersistence') &&
     !tieneString('index.html', 'class="lsocial"'));
 
+check('Etapa 4: íconos SVG (cxi-*) definidos y usados en vez de emoji en botones y pestañas',
+    tieneString('css/main.css', '.cxi-editar') && tieneString('js/core/iconos.js', 'ContappIconos') &&
+    !/class="mod-tab-btn[^>]*>[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/u.test(leer('index.html')));
+
 // ─────────────────────────────────────────────────────────────
 console.log('\n' + '─'.repeat(50));
 console.log(`Resultado: ${ok} ✅  |  ${errores} ❌`);

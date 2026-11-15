@@ -38,7 +38,7 @@ function iaVerificarKeyAlCargar() {
     if (el) {
         if (key) {
             const oculta = key.slice(0, 6) + '••••••••••••' + key.slice(-4);
-            el.innerHTML = `<span style="color:var(--positive,#166534);">✅ Key configurada: <code>${oculta}</code></span>`;
+            el.innerHTML = `<span style="color:var(--positive,#166534);"><i class=cxi-check></i> Key configurada: <code>${oculta}</code></span>`;
         } else {
             el.textContent = '⚠️ Sin API key — ingresa tu key de Google AI Studio para activar las funciones de IA.';
         }

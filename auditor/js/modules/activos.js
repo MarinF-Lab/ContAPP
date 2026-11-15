@@ -246,7 +246,7 @@ function renderActivos() {
                     '<tbody id="activo-tabla-body"></tbody>' +
                 '</table>' +
                 '<div id="activo-tabla-vacia" style="display:none;text-align:center;padding:48px 24px;color:var(--text-muted);">' +
-                    '<div style="font-size:36px;margin-bottom:10px;">🏗</div>' +
+                    '<div style="font-size:36px;margin-bottom:10px;color:var(--accent);"><i class=cxi-caja></i></div>' +
                     '<p>Sin activos registrados. Agrega el primer activo fijo.</p>' +
                 '</div>' +
             '</div>';
@@ -287,10 +287,10 @@ function _activoActualizarKpis() {
     });
 
     var kpis = [
-        { label: 'Total activos',         valor: activos.length,    fmt: false, icon: '🏗' },
-        { label: 'Valor adquisición',      valor: totalAdq,          fmt: true,  icon: '💰' },
-        { label: 'Dep. acumulada total',   valor: totalDep,          fmt: true,  icon: '📉' },
-        { label: 'Valor libro total',      valor: totalLibro,        fmt: true,  icon: '📋' },
+        { label: 'Total activos',         valor: activos.length,    fmt: false, icon: '<i class=cxi-caja></i>' },
+        { label: 'Valor adquisición',      valor: totalAdq,          fmt: true,  icon: '<i class=cxi-dinero></i>' },
+        { label: 'Dep. acumulada total',   valor: totalDep,          fmt: true,  icon: '<i class=cxi-grafico></i>' },
+        { label: 'Valor libro total',      valor: totalLibro,        fmt: true,  icon: '<i class=cxi-libro></i>' },
     ];
 
     var html = '';
@@ -298,7 +298,7 @@ function _activoActualizarKpis() {
         var valStr = k.fmt ? _fmt(k.valor) : String(k.valor);
         html +=
             '<div style="padding:12px;border-radius:8px;border:1px solid var(--divider);background:var(--surface);">' +
-                '<div style="font-size:18px;margin-bottom:4px;">' + k.icon + '</div>' +
+                '<div style="font-size:18px;margin-bottom:4px;color:var(--accent);">' + k.icon + '</div>' +
                 '<div style="font-size:18px;font-weight:700;line-height:1.2;">' + valStr + '</div>' +
                 '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + k.label + '</div>' +
             '</div>';
@@ -366,8 +366,8 @@ function _activoActualizarTabla() {
                         : 'Nunca') +
                 '</td>' +
                 '<td style="padding:10px 12px;text-align:right;white-space:nowrap;">' +
-                    '<button class="btn btn-sm activo-btn-editar"   data-id="' + a.id + '" style="margin-right:4px;" title="Editar">✏️</button>' +
-                    '<button class="btn btn-sm activo-btn-eliminar" data-id="' + a.id + '" style="color:var(--error);" title="Eliminar">🗑</button>' +
+                    '<button class="btn btn-sm activo-btn-editar"   data-id="' + a.id + '" style="margin-right:4px;" title="Editar"><i class=cxi-editar></i></button>' +
+                    '<button class="btn btn-sm activo-btn-eliminar" data-id="' + a.id + '" style="color:var(--error);" title="Eliminar"><i class=cxi-eliminar></i></button>' +
                 '</td>' +
             '</tr>';
     });
@@ -540,7 +540,7 @@ function activoAbrirForm(id) {
         // Footer
         '<div style="padding:16px 24px;border-top:1px solid var(--divider);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px;">' +
             '<button id="activo-btn-cancelar" class="btn btn-secondary">Cancelar</button>' +
-            '<button id="activo-btn-guardar"  class="btn btn-primary" style="min-width:130px;">💾 Guardar activo</button>' +
+            '<button id="activo-btn-guardar"  class="btn btn-primary" style="min-width:130px;"><i class=cxi-guardar></i> Guardar activo</button>' +
         '</div>';
 
     overlay.appendChild(backdrop);

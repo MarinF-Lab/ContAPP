@@ -302,22 +302,22 @@ function remHtmlShell() {
 <div class="rem-root">
   <div class="rem-kpi-strip">
     <div class="rem-kpi-card">
-      <div class="rem-kpi-icon">👷</div>
+      <div class="rem-kpi-icon"><i class=cxi-personas></i></div>
       <div class="rem-kpi-val">${s.trabajadores.length}</div>
       <div class="rem-kpi-label">Trabajadores</div>
     </div>
     <div class="rem-kpi-card">
-      <div class="rem-kpi-icon">💰</div>
+      <div class="rem-kpi-icon"><i class=cxi-dinero></i></div>
       <div class="rem-kpi-val" style="color:var(--negative)">${fmt$(totalCosto)}</div>
       <div class="rem-kpi-label">Costo empleador</div>
     </div>
     <div class="rem-kpi-card">
-      <div class="rem-kpi-icon">💵</div>
+      <div class="rem-kpi-icon"><i class=cxi-dinero></i></div>
       <div class="rem-kpi-val" style="color:var(--positive)">${fmt$(totalLiq)}</div>
       <div class="rem-kpi-label">Total líquido</div>
     </div>
     <div class="rem-kpi-card">
-      <div class="rem-kpi-icon">✅</div>
+      <div class="rem-kpi-icon"><i class=cxi-check></i></div>
       <div class="rem-kpi-val">${liqPer.length}<span style="font-size:14px;font-weight:500;color:var(--text-muted)"> / ${s.trabajadores.length}</span></div>
       <div class="rem-kpi-label">Liquidados · ${fmtPeriodo(s.periodo)}</div>
     </div>
@@ -325,7 +325,7 @@ function remHtmlShell() {
 
   <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;">
     <div class="rem-tabs">
-      ${[['trabajadores','👤 Trabajadores'],['liquidar','💵 Liquidar'],['libro','📋 Libro'],['vacaciones','🏖 Vacaciones'],['finiquito','📄 Finiquito'],['ia','✨ Auditoría IA']]
+      ${[['trabajadores','Trabajadores'],['liquidar','Liquidar'],['libro','Libro'],['vacaciones','Vacaciones'],['finiquito','Finiquito'],['ia','Auditoría IA']]
         .map(([id,lbl]) => `<button class="rem-tab${s.tab===id?' active':''}" onclick="remSetTab('${id}')">${lbl}</button>`).join('')}
     </div>
     <div style="display:flex;gap:10px;align-items:center;padding-bottom:2px;">
@@ -394,7 +394,7 @@ function remHtmlTrabajadores() {
 
     if (!filtrados.length) return toolbar + `
       <div class="rem-empty">
-        <div class="rem-empty-icon">👥</div>
+        <div class="rem-empty-icon"><i class=cxi-personas></i></div>
         <p>${buscar ? 'Sin resultados.' : 'No hay trabajadores registrados.'}</p>
         ${!buscar ? '<small>Haz clic en "+ Nuevo trabajador" para comenzar.</small>' : ''}
       </div>`;
@@ -417,16 +417,16 @@ function remHtmlTrabajadores() {
           <td style="text-align:right;font-family:'Courier New',monospace;font-weight:600;">${fmt$(t.sueldoBruto)}</td>
           <td>
             <div style="display:flex;gap:6px;align-items:center;">
-              <span class="rem-badge ${yaLiq?'rem-badge-ok':'rem-badge-warn'}">${yaLiq?'✔ Liquidado':'Pendiente'}</span>
-              ${t.contrato?'<span class="rem-badge rem-badge-gray" title="Contrato adjunto">📎</span>':''}
+              <span class="rem-badge ${yaLiq?'rem-badge-ok':'rem-badge-warn'}">${yaLiq?'<i class=cxi-check></i> Liquidado':'Pendiente'}</span>
+              ${t.contrato?'<span class="rem-badge rem-badge-gray" title="Contrato adjunto"><i class=cxi-clip></i></span>':''}
             </div>
           </td>
           <td>
             <div style="display:flex;gap:6px;">
               <button onclick="remAbrirModal('${t.id}')"
-                style="border:1px solid var(--divider);background:var(--input-bg);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;">✏️</button>
+                style="border:1px solid var(--divider);background:var(--input-bg);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;"><i class=cxi-editar></i></button>
               <button onclick="remEliminar('${t.id}')"
-                style="border:1px solid var(--negative);background:var(--negative-soft);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;">🗑</button>
+                style="border:1px solid var(--negative);background:var(--negative-soft);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;"><i class=cxi-eliminar></i></button>
             </div>
           </td>
         </tr>`;
@@ -454,7 +454,7 @@ function remHtmlLiquidar() {
     const { trabajadores, liquidaciones, periodo, trabSelId } = remState;
     if (!trabajadores.length) return `
       <div class="rem-empty">
-        <div class="rem-empty-icon">💵</div>
+        <div class="rem-empty-icon"><i class=cxi-dinero></i></div>
         <p>Primero registra trabajadores en la pestaña "Trabajadores".</p>
       </div>`;
 
@@ -471,7 +471,7 @@ function remHtmlLiquidar() {
             <div class="rem-worker-nombre">${w.nombre}</div>
             <div class="rem-worker-sub">${fmt$(w.sueldoBruto)}</div>
           </div>
-          <span class="rem-badge ${yaLiq?'rem-badge-ok':'rem-badge-warn'}" style="font-size:11px;">${yaLiq?'✔':'Pend.'}</span>
+          <span class="rem-badge ${yaLiq?'rem-badge-ok':'rem-badge-warn'}" style="font-size:11px;">${yaLiq?'<i class=cxi-check></i>':'Pend.'}</span>
         </div>`;
     }).join('');
 
@@ -597,7 +597,7 @@ function remHtmlVarsYBoleta(t) {
           </div>
           <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px;margin-top:4px;"
             onclick="remRecalcular('${id}')">
-            🔄 Calcular liquidación
+            <i class=cxi-refrescar></i> Calcular liquidación
           </button>
         </div>
       </div>
@@ -783,18 +783,18 @@ function remHtmlBoleta(liq, t) {
         <button onclick="remImprimirBoleta('${liq.trabajadorId}','${liq.periodo}')"
           style="border:1px solid var(--divider);background:var(--input-bg);color:var(--text);
                  padding:10px 18px;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;">
-          🖨️ Imprimir / PDF
+          <i class=cxi-imprimir></i> Imprimir / PDF
         </button>
         ${!yaLiq
             ? `<button class="btn btn-primary" style="padding:10px 22px;font-size:14px;"
                 onclick="remGuardarLiquidacion('${liq.trabajadorId}')">
-                💾 Guardar liquidación
+                <i class=cxi-guardar></i> Guardar liquidación
                </button>`
             : `<button class="btn btn-primary" style="padding:10px 22px;font-size:14px;"
                 onclick="remEnviarAsiento('${liq.trabajadorId}')">
-                📒 Generar asiento contable
+                <i class=cxi-libro></i> Generar asiento contable
                </button>
-               <span class="rem-badge rem-badge-ok" style="padding:9px 16px;font-size:13px;">✔ Guardada</span>`
+               <span class="rem-badge rem-badge-ok" style="padding:9px 16px;font-size:13px;"><i class=cxi-check></i> Guardada</span>`
         }
       </div>
     </div>`;
@@ -807,7 +807,7 @@ function remHtmlLibro() {
     const { liquidaciones } = remState;
     if (!liquidaciones.length) return `
       <div class="rem-empty">
-        <div class="rem-empty-icon">📋</div>
+        <div class="rem-empty-icon"><i class=cxi-lista></i></div>
         <p>No hay liquidaciones procesadas aún.</p>
       </div>`;
 
@@ -848,11 +848,11 @@ function remHtmlLibro() {
               <div style="display:flex;gap:8px;">
                 <button onclick="remLibroPDF('${p}')"
                   style="padding:7px 14px;font-size:13px;border:1px solid var(--divider);background:var(--input-bg);border-radius:7px;cursor:pointer;color:var(--text);font-family:inherit;">
-                  🖨️ PDF
+                  <i class=cxi-imprimir></i> PDF
                 </button>
                 <button class="btn btn-primary" onclick="remPreviredCSV('${p}')"
                   style="padding:7px 14px;font-size:13px;">
-                  ⬇️ Previred CSV
+                  <i class=cxi-descargar></i> Previred CSV
                 </button>
               </div>
             </div>
@@ -903,13 +903,13 @@ function remHtmlIA() {
     <div class="rem-toolbar">
       <button class="btn btn-primary" style="padding:10px 20px;font-size:14px;"
         onclick="remAnalizarIA()" ${!liqPer.length?'disabled':''}>
-        ✨ Analizar liquidaciones
+        <i class=cxi-ia></i> Analizar liquidaciones
       </button>
       <button onclick="remVerificarPrevired()"
         style="padding:10px 20px;font-size:14px;border:1px solid var(--divider);background:var(--input-bg);
                color:var(--text);border-radius:8px;cursor:pointer;font-family:inherit;"
         ${!liqPer.length?'disabled':''}>
-        ⚖ Verificar planilla Previred
+        <i class=cxi-balanza></i> Verificar planilla Previred
       </button>
       ${!liqPer.length?'<span class="rem-badge rem-badge-warn">Sin liquidaciones en este período</span>':''}
     </div>
@@ -1020,7 +1020,7 @@ function remHtmlModal() {
       <div class="rem-form-divider">Documento de contrato (PDF / imagen, máx. 5 MB)</div>
       ${t.contrato
           ? `<div class="rem-contrato-adjunto">
-               <span style="font-size:24px;">📎</span>
+               <span style="font-size:24px;"><i class=cxi-clip></i></span>
                <div style="flex:1;min-width:0;">
                  <div style="font-weight:600;font-size:14px;">${t.contratoNombre||'Contrato adjunto'}</div>
                </div>
@@ -1110,7 +1110,7 @@ function remHtmlModal() {
                      color:var(--text);font-family:inherit;">Cancelar</button>
             <button type="button" class="btn btn-primary" onclick="remGuardarTrab()"
               style="padding:10px 22px;font-size:14px;">
-              💾 ${t.id?'Guardar cambios':'Crear trabajador'}
+              <i class=cxi-guardar></i> ${t.id?'Guardar cambios':'Crear trabajador'}
             </button>
           </div>
         </div>
@@ -1435,7 +1435,7 @@ function remAnalizarIA() {
         cont.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:16px 20px;
           background:var(--positive-soft);border:1.5px solid var(--positive);border-radius:12px;
           color:var(--positive);font-weight:600;font-size:14px;margin-top:16px;">
-          <span style="font-size:24px;">✅</span>No se detectaron errores.</div>`;
+          <span style="font-size:24px;"><i class=cxi-check></i></span>No se detectaron errores.</div>`;
         return;
     }
     cont.innerHTML = `
@@ -1645,7 +1645,7 @@ function remHtmlVacaciones() {
     const trabajadores = remState.trabajadores;
     if (!trabajadores.length) return `
       <div class="rem-empty">
-        <div class="rem-empty-icon">🏖</div>
+        <div class="rem-empty-icon"><i class=cxi-calendario></i></div>
         <p>Primero registra trabajadores en la pestaña "Trabajadores".</p>
       </div>`;
 
@@ -1864,7 +1864,7 @@ function remHtmlFiniquito() {
     const trabajadores = remState.trabajadores;
     if (!trabajadores.length) return `
       <div class="rem-empty">
-        <div class="rem-empty-icon">📄</div>
+        <div class="rem-empty-icon"><i class=cxi-documento></i></div>
         <p>Primero registra trabajadores en la pestaña "Trabajadores".</p>
       </div>`;
 
@@ -2083,11 +2083,11 @@ function remHtmlFiqResultado(t, c, fechaTermino, causal, avisoPrevio) {
         <button onclick="remImprimirFiniquito('${t.id}','${fechaTermino}','${causal}',${avisoPrevio})"
           style="padding:10px 20px;border:1px solid var(--divider);background:var(--input-bg);
                  color:var(--text);border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;">
-          🖨️ Imprimir finiquito
+          <i class=cxi-imprimir></i> Imprimir finiquito
         </button>
         <button class="btn btn-primary" style="padding:10px 22px;font-size:13px;"
           onclick="remFiqAsiento('${t.id}','${fechaTermino}','${causal}',${avisoPrevio})">
-          📒 Generar asiento contable
+          <i class=cxi-libro></i> Generar asiento contable
         </button>
       </div>
     </div>`;

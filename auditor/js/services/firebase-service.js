@@ -424,7 +424,7 @@ async function _fbCargarListaEmpresas() {
     if (!empresas.length) {
         lista.innerHTML = `
             <div class="emp-empty">
-                <div class="emp-empty-icon">🏢</div>
+                <div class="emp-empty-icon"><i class=cxi-edificio></i></div>
                 <div>Aún no tienes clientes registrados.</div>
                 <div style="font-size:12px;margin-top:6px;color:var(--text-muted);">
                     Crea un cliente nuevo o únete con un código de invitación.
@@ -446,7 +446,7 @@ async function _fbCargarListaEmpresas() {
 
         const validas = cards.filter(Boolean);
         if (!validas.length) {
-            lista.innerHTML = '<div class="emp-empty"><div class="emp-empty-icon">⚠️</div><div>No se pudieron cargar los clientes.</div></div>';
+            lista.innerHTML = '<div class="emp-empty"><div class="emp-empty-icon"><i class=cxi-alerta></i></div><div>No se pudieron cargar los clientes.</div></div>';
             return;
         }
 
@@ -473,9 +473,9 @@ async function _fbCargarListaEmpresas() {
                         <div class="emp-item-nombre">${e.empresa || '(Sin nombre)'}</div>
                     </div>
                     <div class="emp-item-meta">
-                        <span>🪪 ${e.rut || '—'}</span>
-                        <span>📂 ${catLabel}</span>
-                        ${e.giro ? `<span>📋 ${e.giro}</span>` : ''}
+                        <span><i class=cxi-id></i> ${e.rut || '—'}</span>
+                        <span><i class=cxi-carpeta></i> ${catLabel}</span>
+                        ${e.giro ? `<span><i class=cxi-lista></i> ${e.giro}</span>` : ''}
                     </div>
                 </div>`;
             }).join('');
@@ -686,7 +686,7 @@ async function _fbRenderHomeClientSwitch() {
         }
         listEl.innerHTML = items.map(it => `
             <button class="hcs-item ${it.id === activoId ? 'active' : ''}" onclick="event.stopPropagation();document.getElementById('homeClientPanel').classList.remove('open');seleccionarEmpresa('${it.id}')">
-                <span class="hcs-ic">🏢</span>
+                <span class="hcs-ic"><i class=cxi-edificio></i></span>
                 <span class="hcs-item-meta">${it.nombre}<span class="hcs-item-rut">${it.rut}</span></span>
             </button>`).join('');
         _homeClientSwitchCargado = true;

@@ -115,7 +115,7 @@ function renderVentas() {
                     ${anulada
                         ? `<span class="badge-inactivo">Anulada</span>`
                         : `<button class="btn-plan" style="margin-right:4px;"
-                                onclick="editarVenta(${v.id})">✏️ Editar</button>
+                                onclick="editarVenta(${v.id})"><i class=cxi-editar></i> Editar</button>
                            <button class="btn-plan btn-plan-eliminar"
                                 onclick="anularVenta(${v.id})">Anular</button>`
                     }

@@ -256,7 +256,7 @@
     function _mostrarVacioInicial(container) {
         container.innerHTML =
             '<div class="bg-vacio">' +
-                '<div class="bg-vacio-icono">🔍</div>' +
+                '<div class="bg-vacio-icono"><i class=cxi-buscar></i></div>' +
                 '<p><strong>Busca en toda la app</strong></p>' +
                 '<p>Asientos, compras, ventas, contactos, productos, activos…</p>' +
             '</div>';

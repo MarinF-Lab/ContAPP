@@ -82,9 +82,9 @@ function _filaContacto(c) {
         <td onclick="event.stopPropagation()">
             <div class="plan-acciones">
                 <button class="btn-plan btn-plan-editar"
-                    onclick="editarContacto(${c.id})">✏️</button>
+                    onclick="editarContacto(${c.id})"><i class=cxi-editar></i></button>
                 <button class="btn-plan btn-plan-eliminar"
-                    onclick="eliminarContacto(${c.id})">🗑️</button>
+                    onclick="eliminarContacto(${c.id})"><i class=cxi-eliminar></i></button>
             </div>
         </td>
     </tr>`;

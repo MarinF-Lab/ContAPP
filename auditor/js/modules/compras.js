@@ -112,7 +112,7 @@ function renderCompras() {
                     ${anulada
                         ? `<span class="badge-inactivo">Anulada</span>`
                         : `<button class="btn-plan" style="margin-right:4px;"
-                                onclick="editarCompra(${c.id})">✏️ Editar</button>
+                                onclick="editarCompra(${c.id})"><i class=cxi-editar></i> Editar</button>
                            <button class="btn-plan btn-plan-eliminar"
                                 onclick="anularCompra(${c.id})">Anular</button>`
                     }

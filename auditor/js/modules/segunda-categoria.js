@@ -128,7 +128,7 @@ function honRenderLibro() {
             <td class="monto" style="color:var(--negative);">${fmt(b.retencion)}</td>
             <td class="monto" style="color:var(--positive);">${fmt(b.liquido)}</td>
             <td>${retBadge}</td>
-            <td><span style="${eCls};font-weight:600;font-size:11px;">${b.estado === 'pagada' ? '✔ Pagada' : '⏳ Pend.'}</span></td>
+            <td><span style="${eCls};font-weight:600;font-size:11px;">${b.estado === 'pagada' ? '<i class=cxi-check></i> Pagada' : '<i class=cxi-reloj></i> Pend.'}</span></td>
             <td style="white-space:nowrap;">
                 <button onclick="honCambiarEstado(${b.id})" class="hon-btn-mini">${b.estado === 'pagada' ? 'Revertir' : 'Pagada'}</button>
                 <button onclick="honEliminarBoleta(${b.id})" class="hon-btn-mini hon-btn-peligro">✕</button>

@@ -41,7 +41,7 @@ function renderCentrosCosto() {
         <div class="card card-pad" style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                 <div>
-                    <h2 style="margin:0 0 4px;">🏢 Centros de Costo</h2>
+                    <h2 style="margin:0 0 4px;">Centros de Costo</h2>
                     <p style="color:var(--text-muted);font-size:12px;margin:0;">Clasificación para asignar gastos e ingresos por área — disponible desde la calculadora de ítems del Diario.</p>
                 </div>
                 <button class="btn btn-primary" onclick="ccAbrirForm(null)">+ Agregar</button>
@@ -60,8 +60,8 @@ function renderCentrosCosto() {
                             <td><span class="${c.estado !== 'INACTIVO' ? 'badge-activo' : 'badge-inactivo'}">${c.estado !== 'INACTIVO' ? 'Activo' : 'Inactivo'}</span></td>
                             <td>
                                 <div class="plan-acciones">
-                                    <button class="btn-plan btn-plan-editar" onclick="ccAbrirForm('${c.id}')">✏️ Editar</button>
-                                    <button class="btn-plan btn-plan-eliminar" onclick="ccEliminar('${c.id}')">🗑️</button>
+                                    <button class="btn-plan btn-plan-editar" onclick="ccAbrirForm('${c.id}')"><i class=cxi-editar></i> Editar</button>
+                                    <button class="btn-plan btn-plan-eliminar" onclick="ccEliminar('${c.id}')"><i class=cxi-eliminar></i></button>
                                 </div>
                             </td>
                         </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Sin centros de costo aún.</td></tr>`}
@@ -79,7 +79,7 @@ function renderCentrosCosto() {
                     <select id="ccEstado"><option value="ACTIVO">ACTIVA</option><option value="INACTIVO">INACTIVA</option></select>
                 </div>
                 <div class="modal-actions">
-                    <button class="btn btn-primary"   onclick="ccGuardar()">💾 Guardar</button>
+                    <button class="btn btn-primary"   onclick="ccGuardar()"><i class=cxi-guardar></i> Guardar</button>
                     <button class="btn btn-secondary" onclick="ccCerrarForm()">Cancelar</button>
                 </div>
             </div>

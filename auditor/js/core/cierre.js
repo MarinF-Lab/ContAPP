@@ -424,7 +424,7 @@ function cierreIrAOrigen(asientoId) {
 //  TARJETA DE CIERRE (Inicio → Financiero y actividad)
 // ═════════════════════════════════════════════════════════════
 const _CI_ICONO = {
-    ok:        '<span style="color:var(--positive);font-weight:700;">✔</span>',
+    ok:        '<span style="color:var(--positive);font-weight:700;"><i class=cxi-check></i></span>',
     pendiente: '<span style="color:var(--warning);font-weight:700;">●</span>',
     na:        '<span style="color:var(--text-muted);">–</span>',
 };
@@ -446,7 +446,7 @@ function _ciRenderCampoTopbar(c) {
     const [y, m] = c.periodo.split('-');
     const mes = (CI_MESES[parseInt(m, 10) - 1] || '').slice(0, 3);
     const color = c.cerrado || c.avance === 100 ? 'var(--positive)' : 'var(--warning)';
-    const estado = `<strong style="color:${color};">${c.cerrado ? '🔒 cerrado' : c.avance + '%'}</strong>`;
+    const estado = `<strong style="color:${color};">${c.cerrado ? '<i class=cxi-candado></i> cerrado' : c.avance + '%'}</strong>`;
     const titulo = c.pendientes.length ? 'Falta: ' + c.pendientes.join(' · ') : 'Ver el checklist de cierre del mes';
     if (box && val) { val.innerHTML = `${mes} ${y} · ${estado}`; box.title = titulo; box.style.display = ''; }
     if (home) { home.innerHTML = `Cierre ${mes} ${y}: ${estado}`; home.title = titulo; home.style.display = ''; }
@@ -505,8 +505,8 @@ function cierreRenderTarjeta() {
             ${filas}
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap;">
                 ${c.cerrado
-                    ? `<button class="btn btn-secondary" data-requiere-rol="contador" onclick="cierreAccionReabrir()">🔓 Reabrir ${_ciEsc(c.etiqueta)}</button>`
-                    : `<button class="btn btn-primary" data-requiere-rol="contador" onclick="cierreAccionCerrar()">🔒 Cerrar ${_ciEsc(c.etiqueta)}</button>`}
+                    ? `<button class="btn btn-secondary" data-requiere-rol="contador" onclick="cierreAccionReabrir()"><i class=cxi-abierto></i> Reabrir ${_ciEsc(c.etiqueta)}</button>`
+                    : `<button class="btn btn-primary" data-requiere-rol="contador" onclick="cierreAccionCerrar()"><i class=cxi-candado></i> Cerrar ${_ciEsc(c.etiqueta)}</button>`}
             </div>
         </div>
     </div>`;

@@ -132,7 +132,7 @@ function generarFlujoCaja() {
                     <td>${l.fecha}</td>
                     <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                         ${l.glosa}
-                        ${l.contacto ? `<span style="font-size:11px;color:var(--accent);margin-left:6px;">👤 ${l.contacto}</span>` : ''}
+                        ${l.contacto ? `<span style="font-size:11px;color:var(--accent);margin-left:6px;"><i class=cxi-persona></i> ${l.contacto}</span>` : ''}
                     </td>
                     <td class="monto" style="color:var(--positive);">${l.entrada > 0 ? '$' + fmt(l.entrada) : ''}</td>
                     <td class="monto" style="color:var(--negative);">${l.salida  > 0 ? '$' + fmt(l.salida)  : ''}</td>
@@ -228,7 +228,7 @@ function fcAbrirOverrides() {
     modal.innerHTML = `
     <div class="modal-box" style="width:600px;max-height:80vh;display:flex;flex-direction:column;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3 style="margin:0;">⚙️ Clasificación de cuentas — Flujo de Caja</h3>
+            <h3 style="margin:0;">Clasificación de cuentas — Flujo de Caja</h3>
             <button class="btn btn-secondary" onclick="fcCerrarOverrides()">✕</button>
         </div>
         <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
@@ -237,9 +237,9 @@ function fcAbrirOverrides() {
         <div style="display:flex;gap:8px;margin-bottom:12px;">
             <input id="fcOvCuenta" class="input" placeholder="Nombre exacto de la cuenta" style="flex:1;">
             <select id="fcOvCategoria" class="input" style="width:180px;">
-                <option value="operacional">⚙️ Operacional</option>
-                <option value="inversion">🏗️ Inversión</option>
-                <option value="financiamiento">🏦 Financiamiento</option>
+                <option value="operacional">Operacional</option>
+                <option value="inversion">Inversión</option>
+                <option value="financiamiento">Financiamiento</option>
             </select>
             <button class="btn btn-primary" onclick="fcAgregarOverride()">+ Agregar</button>
         </div>
@@ -276,7 +276,7 @@ function _fcRenderOverridesTabla() {
             ${overrides.map((o, i) => `<tr>
                 <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.cuenta}</td>
                 <td>${icons[o.categoria] || ''} ${o.categoria}</td>
-                <td><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="fcEliminarOverride(${i})">🗑</button></td>
+                <td><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="fcEliminarOverride(${i})"><i class=cxi-eliminar></i></button></td>
             </tr>`).join('')}
         </tbody>
     </table>`;

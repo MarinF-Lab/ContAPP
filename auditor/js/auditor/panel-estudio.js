@@ -77,7 +77,7 @@ function _panelAvanceHtml(cliente) {
     const pend = (r.pendientes || []).length ? ` · Falta: ${(r.pendientes || []).slice(0, 2).join(', ')}${r.pendientes.length > 2 ? '…' : ''}` : '';
     return `<div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;" title="${(r.pendientes || []).join(' · ')}">
         Cierre ${lbl}: <strong style="color:${color};">${r.cerrado ? 'cerrado' : r.avance + '%'}</strong>${pend}
-        ${r.modificaciones ? ` · <span style="color:var(--warning);">⚠️ ${r.modificaciones} cambio(s) tras el cierre</span>` : ''}
+        ${r.modificaciones ? ` · <span style="color:var(--warning);"><i class=cxi-alerta></i> ${r.modificaciones} cambio(s) tras el cierre</span>` : ''}
     </div>`;
 }
 
@@ -198,7 +198,7 @@ function panelEstudioRender() {
         <div><strong>${_panelClientes.length}</strong><small>clientes</small></div>
         ${KANBAN_ESTADOS.map(e => `<div><strong>${cnt(e.id)}</strong><small><i style="background:${e.color}"></i>${e.label.toLowerCase()}</small></div>`).join('')}
         <div class="${alertas.some(a => a.urgencia === 'critica') ? 'mc-alerta' : ''}"><strong>${alertas.length}</strong><small>vencimientos próximos</small></div>
-        ${_ttActivo ? `<div class="mc-timer" role="button" tabindex="0" onclick="panelTTStop()" title="Detener cronómetro"><strong>⏹</strong><small>cronómetro activo · detener</small></div>` : ''}`;
+        ${_ttActivo ? `<div class="mc-timer" role="button" tabindex="0" onclick="panelTTStop()" title="Detener cronómetro"><strong><i class=cxi-stop></i></strong><small>cronómetro activo · detener</small></div>` : ''}`;
 
     document.querySelectorAll('.mc-seg [data-vista]').forEach(b => b.setAttribute('aria-pressed', b.dataset.vista === _panelView));
     document.querySelectorAll('.mc-seg [data-cat]').forEach(b => b.setAttribute('aria-pressed', b.dataset.cat === _panelCat));

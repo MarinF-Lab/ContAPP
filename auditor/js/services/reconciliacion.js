@@ -299,7 +299,7 @@ function _recHtmlTabla() {
         <!-- Columna banco -->
         <div class="card" style="padding:0;overflow:hidden;">
             <div style="padding:10px 14px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:12px;display:flex;justify-content:space-between;">
-                <span>🏦 EXTRACTO BANCO (${txPend.length} pendientes)</span>
+                <span><i class=cxi-banco></i> EXTRACTO BANCO (${txPend.length} pendientes)</span>
             </div>
             <div style="max-height:460px;overflow-y:auto;">
                 ${txPend.length === 0
@@ -311,7 +311,7 @@ function _recHtmlTabla() {
         <!-- Columna libro -->
         <div class="card" style="padding:0;overflow:hidden;">
             <div style="padding:10px 14px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:12px;display:flex;justify-content:space-between;">
-                <span>📝 LIBRO DIARIO (${asientosPend.length} pendientes)</span>
+                <span><i class=cxi-editar></i> LIBRO DIARIO (${asientosPend.length} pendientes)</span>
             </div>
             <div style="max-height:460px;overflow-y:auto;">
                 ${asientosPend.length === 0

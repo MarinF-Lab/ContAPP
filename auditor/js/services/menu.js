@@ -100,12 +100,12 @@ function renderModuleSwitch(menu) {
         <div class="mp-group">
             <div class="mp-glabel">${g.label}</div>
             ${g.modulos.map(m => `<div class="mp-item ${m.id === activo ? 'active' : ''}" onclick="event.stopPropagation();cerrarModulePanel();navegar('${m.id}')">
-                <span class="mp-ic">${m.icono}</span>${m.label}
+                <span class="mp-ic">${window.ContappIconos ? ContappIconos.grupo(g.label) : m.icono}</span>${m.label}
             </div>`).join('')}
         </div>`).join('')
         + `<div class="mp-group">
             <div class="mp-item ${activo === 'configuracion' ? 'active' : ''}" onclick="event.stopPropagation();cerrarModulePanel();navegar('configuracion')">
-                <span class="mp-ic">⚙️</span>Configuración
+                <span class="mp-ic"><i class=cxi-engranaje></i></span>Configuración
             </div>
         </div>`;
 }
@@ -127,13 +127,14 @@ function cerrarModulePanel() {
 // Busca label/icono de un módulo dentro del menú actual (para el label del
 // selector en el topbar). 'inicio'/'configuracion' se resuelven aparte.
 function buscarInfoModulo(id) {
-    if (id === 'configuracion') return { label: 'Configuración', icono: '⚙️' };
-    if (id === 'inicio')        return { label: 'Inicio', icono: '🏠' };
+    const svg = n => window.ContappIconos ? ContappIconos.svg(n) : '';
+    if (id === 'configuracion') return { label: 'Configuración', icono: '⚙️', svg: svg('engranaje') };
+    if (id === 'inicio')        return { label: 'Inicio', icono: '🏠', svg: svg('brujula') };
     for (const g of construirMenu()) {
         const f = g.modulos.find(m => m.id === id);
-        if (f) return { label: f.label, icono: f.icono };
+        if (f) return { label: f.label, icono: f.icono, svg: window.ContappIconos ? ContappIconos.grupo(g.label) : '' };
     }
-    return { label: id, icono: '📄' };
+    return { label: id, icono: '📄', svg: svg('documento') };
 }
 
 // Muestra/oculta home-header vs app-topbar según el módulo activo, y
@@ -157,7 +158,7 @@ function actualizarTopbarModulo(modulo) {
         const lbl = document.getElementById('msLabel');
         const ic  = document.getElementById('msIcon');
         if (lbl) lbl.textContent = info.label;
-        if (ic)  ic.textContent  = info.icono;
+        if (ic) { if (info.svg) ic.innerHTML = info.svg; else ic.textContent = info.icono; }
         renderModuleSwitch(construirMenu());
     }
 }

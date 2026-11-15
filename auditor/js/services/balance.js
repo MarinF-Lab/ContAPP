@@ -188,7 +188,7 @@
 
             filas.forEach(f => {
                 tbody.innerHTML += `<tr${f.esAnomalio ? ' class="balance-row-anomalo"' : ''} style="cursor:pointer;" onclick="mayorIrACuenta('${f.cuenta.replace(/'/g, "\\'")}')" title="Ver en el Libro Mayor">
-                    <td style="font-weight:600;${f.esAnomalio ? 'color:var(--negative);' : ''}">${f.cuenta}${f.esAnomalio ? ' ⚠' : ''}</td>
+                    <td style="font-weight:600;${f.esAnomalio ? 'color:var(--negative);' : ''}">${f.cuenta}${f.esAnomalio ? ' <i class=cxi-alerta></i>' : ''}</td>
                     <td class="monto">${fmt(f.debe)}</td>
                     <td class="monto">${fmt(f.haber)}</td>
                     <td class="monto" style="color:var(--info);">${fmt(f.deudor)}</td>

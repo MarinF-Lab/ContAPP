@@ -35,10 +35,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
     <link rel="stylesheet" href="css/variables.css?v=5">
-    <link rel="stylesheet" href="css/main.css?v=24">
+    <link rel="stylesheet" href="css/main.css?v=25">
     <link rel="stylesheet" href="css/home-hub.css?v=6">
     <link rel="stylesheet" href="css/remuneraciones.css?v=6">
-    <link rel="stylesheet" href="css/auditor.css?v=5">
+    <link rel="stylesheet" href="css/auditor.css?v=6">
     <script>
         // Restaurar tema guardado antes de que el DOM pinte (evita flash)
         (function() {
@@ -73,7 +73,7 @@
                 <div class="hcs-panel" id="homeClientPanel" onclick="event.stopPropagation()">
                     <div class="hcs-label">Clientes recientes</div>
                     <div id="homeClientList" class="hcs-list"></div>
-                    <button class="hcs-all" onclick="cambiarEmpresa()">🏢 Ver todos mis clientes</button>
+                    <button class="hcs-all" onclick="cambiarEmpresa()"><i class=cxi-edificio></i> Ver todos mis clientes</button>
                 </div>
             </div>
             <!-- Fase 3: avance de cierre del mes (abre el checklist) -->
@@ -105,7 +105,7 @@
                 Inicio
             </button>
             <div class="module-switch" id="moduleSwitch" onclick="toggleModulePanel(event)" aria-haspopup="true" aria-label="Cambiar de módulo">
-                <span class="ms-ic" id="msIcon">📁</span>
+                <span class="ms-ic" id="msIcon"><i class=cxi-carpeta></i></span>
                 <span id="msLabel">Módulo</span>
                 <span class="ms-car">▾</span>
                 <div class="module-panel" id="modulePanel" onclick="event.stopPropagation()"></div>
@@ -150,9 +150,9 @@
                                 <span id="fbUserRolBadge" class="badge" style="display:none;font-size:10px;"></span>
                             </div>
                             <div class="userbar-actions">
-                                <button id="btnModoPrueba" onclick="toggleModoPrueba()" class="topbar-user-btn" title="Modo Prueba — deshabilita validaciones SII">🧪 Modo Prueba</button>
-                                <button onclick="cambiarEmpresa()" class="topbar-user-btn" title="Cambiar empresa">🏢 Cambiar empresa</button>
-                                <button onclick="fbSyncToCloud()" class="topbar-user-btn" title="Sincronizar con la nube"><span id="fbSyncIcon">☁</span> Sincronizar</button>
+                                <button id="btnModoPrueba" onclick="toggleModoPrueba()" class="topbar-user-btn" title="Modo Prueba — deshabilita validaciones SII"><i class=cxi-matraz></i> Modo Prueba</button>
+                                <button onclick="cambiarEmpresa()" class="topbar-user-btn" title="Cambiar empresa"><i class=cxi-edificio></i> Cambiar empresa</button>
+                                <button onclick="fbSyncToCloud()" class="topbar-user-btn" title="Sincronizar con la nube"><span id="fbSyncIcon"><i class=cxi-nube></i></span> Sincronizar</button>
                                 <button onclick="fbLogout()" class="topbar-user-btn topbar-user-btn--danger" title="Cerrar sesión">✕ Salir</button>
                             </div>
                         </div>
@@ -286,10 +286,10 @@
         ════════════════════════════════ -->
         <div id="view-estructura-contable" class="view">
             <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="tab-diario"       onclick="modTab('view-estructura-contable','tab-diario')">📝 Libro Diario</button>
-                <button class="mod-tab-btn"        data-tab="tab-mayor"        onclick="modTab('view-estructura-contable','tab-mayor')">📚 Libro Mayor</button>
-                <button class="mod-tab-btn"        data-tab="tab-balance"      onclick="modTab('view-estructura-contable','tab-balance')">⚖️ Balance General</button>
-                <button class="mod-tab-btn"        data-tab="tab-plan-cuentas" onclick="modTab('view-estructura-contable','tab-plan-cuentas')">⚙️ Plan de Cuentas</button>
+                <button class="mod-tab-btn active" data-tab="tab-diario"       onclick="modTab('view-estructura-contable','tab-diario')">Libro Diario</button>
+                <button class="mod-tab-btn"        data-tab="tab-mayor"        onclick="modTab('view-estructura-contable','tab-mayor')">Libro Mayor</button>
+                <button class="mod-tab-btn"        data-tab="tab-balance"      onclick="modTab('view-estructura-contable','tab-balance')">Balance General</button>
+                <button class="mod-tab-btn"        data-tab="tab-plan-cuentas" onclick="modTab('view-estructura-contable','tab-plan-cuentas')">Plan de Cuentas</button>
             </div>
 
             <!-- ── TAB: Libro Diario ── -->
@@ -299,7 +299,7 @@
                 <div class="diario-glosa-row">
                     <div class="glosa-main">
                     <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-                        <button class="btn btn-danger" onclick="vaciarDiario()">🗑 Vaciar Diario</button>
+                        <button class="btn btn-danger" onclick="vaciarDiario()"><i class=cxi-eliminar></i> Vaciar Diario</button>
                     </div>
                     <div id="diarioDisponibleIndicador" class="disponible-indicador"></div>
                     <textarea id="glosaInput" class="glosa-input" rows="2"
@@ -344,9 +344,9 @@
                         </div>
                         <div style="display:flex;gap:10px;flex-wrap:wrap;">
                             <button class="btn btn-primary" id="btnGuardarAsiento" onclick="manejarBotonAsiento()">Generar Asiento →</button>
-                            <button class="btn btn-secondary" onclick="abrirAsientoManual()">✏ Asiento Manual</button>
+                            <button class="btn btn-secondary" onclick="abrirAsientoManual()"><i class=cxi-editar></i> Asiento Manual</button>
                             <button class="btn btn-secondary" onclick="navegar('plan-cuentas', null); abrirNuevaCuenta();">+ Agregar Cuenta</button>
-                            <button class="btn btn-secondary" id="btnCalcAbrir" onclick="calcAbrir()">🧮 Varios productos</button>
+                            <button class="btn btn-secondary" id="btnCalcAbrir" onclick="calcAbrir()"><i class=cxi-calculadora></i> Varios productos</button>
                         </div>
                     </div>
 
@@ -366,7 +366,7 @@
                     <div class="totales-bar">
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                             <div id="badgePreasiento" class="totales-badge error">Balance: Cuadrado $0</div>
-                            <span id="badgeIaGlosa" style="display:none;background:var(--info-soft);color:var(--info);border:1px solid var(--info);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Propuesto por IA — revisa antes de guardar</span>
+                            <span id="badgeIaGlosa" style="display:none;background:var(--info-soft);color:var(--info);border:1px solid var(--info);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;"><i class=cxi-ia></i> Propuesto por IA — revisa antes de guardar</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                             <div style="position:relative;">
@@ -387,16 +387,16 @@
                         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                             <select id="calcTipo" onchange="calcCambiarTipo(this.value)"
                                 style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-weight:600;">
-                                <option value="compra">🧮 Compra</option>
-                                <option value="venta">🧮 Venta</option>
-                                <option value="pago">🧮 Pago</option>
-                                <option value="cobro">🧮 Cobro</option>
+                                <option value="compra">Compra</option>
+                                <option value="venta">Venta</option>
+                                <option value="pago">Pago</option>
+                                <option value="cobro">Cobro</option>
                             </select>
                             <button class="btn btn-secondary" onclick="calcCerrar()" style="padding:5px 10px;font-size:12px;">✕</button>
                         </div>
                         <div id="calcTbody" style="display:flex;flex-direction:column;gap:10px;"></div>
                         <datalist id="calcProductosList"></datalist>
-                        <button class="btn btn-secondary" onclick="calcAgregarItem()" style="width:100%;">➕ Agregar producto</button>
+                        <button class="btn btn-secondary" onclick="calcAgregarItem()" style="width:100%;"><i class=cxi-agregar></i> Agregar producto</button>
                         <div id="calcPagoPanel" style="border-top:1px dashed var(--border);padding-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
                         <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;font-family:'IBM Plex Mono';padding-top:4px;border-top:1px dashed var(--border);">
                             <span>Total</span><span id="calcTotal">$0</span>
@@ -407,7 +407,7 @@
                 </div>
             </div>
 
-            <h3 style="margin-bottom:12px;">📚 Registros Históricos del Diario</h3>
+            <h3 style="margin-bottom:12px;">Registros Históricos del Diario</h3>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
                     <select id="selDiarioHistMes" class="sel-periodo"
@@ -425,7 +425,7 @@
                         <option value="2025">2025</option><option value="2026" selected>2026</option>
                         <option value="2027">2027</option>
                     </select>
-                    <button class="btn-export btn-export-pdf" onclick="exportarPDFDiario()">⬇ PDF</button>
+                    <button class="btn-export btn-export-pdf" onclick="exportarPDFDiario()"><i class=cxi-descargar></i> PDF</button>
                 </div>
                 <div class="libro-kpis">
                     <div class="libro-kpi">
@@ -448,9 +448,9 @@
             <!-- ── TAB: Libro Mayor ── -->
             <div id="tab-mayor" class="mod-tab-panel">
             <div class="export-bar">
-                <button class="btn-export btn-export-pdf"   onclick="exportarPDFMayor()">⬇ PDF</button>
-                <button class="btn-export btn-export-excel" onclick="exportarExcelMayor()">⬇ Excel</button>
-                <button class="btn-export btn-export-print" onclick="imprimirMayor()">🖨 Imprimir</button>
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFMayor()"><i class=cxi-descargar></i> PDF</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelMayor()"><i class=cxi-descargar></i> Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirMayor()"><i class=cxi-imprimir></i> Imprimir</button>
             </div>
             <div class="mayor-grid" id="contenedorMayor"></div>
 
@@ -460,9 +460,9 @@
                 <div style="font-size:11.5px;color:var(--text-muted);text-transform:uppercase;font-weight:700;">Glosa</div>
                 <div id="mayorDetalleGlosaTexto" style="font-size:13px;">—</div>
                 <div style="display:flex;gap:8px;">
-                    <button class="btn-plan btn-plan-relacionadas" onclick="mayorFiltrarCuentasIntervinientes()">🔗 Relacionadas</button>
-                    <button class="btn-plan btn-plan-editar" onclick="mayorEditarAsiento()">✏️ Editar</button>
-                    <button class="btn-plan btn-plan-relacionadas" onclick="mayorVerOrigen()" title="Abrir el documento que generó este asiento">📄 Origen</button>
+                    <button class="btn-plan btn-plan-relacionadas" onclick="mayorFiltrarCuentasIntervinientes()"><i class=cxi-vinculo></i> Relacionadas</button>
+                    <button class="btn-plan btn-plan-editar" onclick="mayorEditarAsiento()"><i class=cxi-editar></i> Editar</button>
+                    <button class="btn-plan btn-plan-relacionadas" onclick="mayorVerOrigen()" title="Abrir el documento que generó este asiento"><i class=cxi-documento></i> Origen</button>
                 </div>
             </div>
             </div><!-- /tab-mayor -->
@@ -470,11 +470,11 @@
             <!-- ── TAB: Balance General ── -->
             <div id="tab-balance" class="mod-tab-panel">
             <div class="export-bar">
-                <button class="btn-export btn-export-pdf"   onclick="exportarPDFBalance()">⬇ PDF</button>
-                <button class="btn-export btn-export-excel" onclick="exportarExcelBalance()">⬇ Excel</button>
-                <button class="btn-export btn-export-print" onclick="imprimirBalance()">🖨 Imprimir</button>
-                <button class="btn-export btn-export-ia"    onclick="iaAnalizarBalance()">✨ Analizar con IA</button>
-                <button class="btn-export btn-export-ia"    onclick="iaCompararPeriodos('Balance General')" title="Comparar dos períodos">⚖ Comparar períodos</button>
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFBalance()"><i class=cxi-descargar></i> PDF</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelBalance()"><i class=cxi-descargar></i> Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirBalance()"><i class=cxi-imprimir></i> Imprimir</button>
+                <button class="btn-export btn-export-ia"    onclick="iaAnalizarBalance()"><i class=cxi-ia></i> Analizar con IA</button>
+                <button class="btn-export btn-export-ia"    onclick="iaCompararPeriodos('Balance General')" title="Comparar dos períodos"><i class=cxi-balanza></i> Comparar períodos</button>
             </div>
             <!-- Balance acumulado a fin del mes/año elegido — ver _calcularBalance() en balance.js -->
             <div class="libro-toolbar card">
@@ -533,14 +533,14 @@
             <div id="tab-plan-cuentas" class="mod-tab-panel">
             <div class="card card-pad">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-                    <h2>⚙️ Plan de Cuentas</h2>
+                    <h2>Plan de Cuentas</h2>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                         <input type="text" id="busquedaPlanInput"
                             placeholder="🔍  Buscar cuenta o código…"
                             oninput="busquedaPlan=this.value; renderPlanCuentas()"
                             style="padding:9px 14px;border:1px solid var(--border);border-radius:8px;
                                    font-size:14px;width:260px;max-width:100%;">
-                        <button class="btn btn-secondary" onclick="auditarCuentasFaltantes()">🔍 Auditar cuentas faltantes</button>
+                        <button class="btn btn-secondary" onclick="auditarCuentasFaltantes()"><i class=cxi-buscar></i> Auditar cuentas faltantes</button>
                         <button class="btn btn-primary" onclick="abrirNuevaCuenta()">+ Nueva Cuenta</button>
                     </div>
                 </div>
@@ -549,12 +549,12 @@
                 <div class="plan-tabs">
                     <button class="plan-tab active" id="planTab-activos"
                         onclick="planSetTab('activos')">
-                        💵 Activos
+                        <i class=cxi-dinero></i> Activos
                         <span id="planCnt-activos" style="font-size:11px;font-weight:400;margin-left:5px;opacity:.7;"></span>
                     </button>
                     <button class="plan-tab" id="planTab-pasivos"
                         onclick="planSetTab('pasivos')">
-                        📋 Pasivos
+                        <i class=cxi-lista></i> Pasivos
                         <span id="planCnt-pasivos" style="font-size:11px;font-weight:400;margin-left:5px;opacity:.7;"></span>
                     </button>
                     <button class="plan-tab" id="planTab-patrimonio"
@@ -564,7 +564,7 @@
                     </button>
                     <button class="plan-tab" id="planTab-resultados"
                         onclick="planSetTab('resultados')">
-                        📊 Resultados
+                        <i class=cxi-grafico></i> Resultados
                         <span id="planCnt-resultados" style="font-size:11px;font-weight:400;margin-left:5px;opacity:.7;"></span>
                     </button>
                 </div>
@@ -591,8 +591,8 @@
         ═════════════════════ -->
         <div id="view-conciliacion-cartolas" class="view">
             <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="tab-cc-cartolas"     onclick="modTab('view-conciliacion-cartolas','tab-cc-cartolas')">🏦 Cartolas Bancarias</button>
-                <button class="mod-tab-btn"        data-tab="tab-cc-conciliacion" onclick="modTab('view-conciliacion-cartolas','tab-cc-conciliacion')">🔗 Conciliación Bancaria</button>
+                <button class="mod-tab-btn active" data-tab="tab-cc-cartolas"     onclick="modTab('view-conciliacion-cartolas','tab-cc-cartolas')">Cartolas Bancarias</button>
+                <button class="mod-tab-btn"        data-tab="tab-cc-conciliacion" onclick="modTab('view-conciliacion-cartolas','tab-cc-conciliacion')">Conciliación Bancaria</button>
             </div>
             <div id="tab-cc-cartolas"     class="mod-tab-panel active"></div>
             <div id="tab-cc-conciliacion" class="mod-tab-panel"></div>
@@ -612,9 +612,9 @@
         ═════════════════════ -->
         <div id="view-egresos-ingresos" class="view">
             <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="tab-ei-compras"    onclick="modTab('view-egresos-ingresos','tab-ei-compras')">🛒 Libro de Compras</button>
-                <button class="mod-tab-btn"        data-tab="tab-ei-ventas"     onclick="modTab('view-egresos-ingresos','tab-ei-ventas')">💰 Libro de Ventas</button>
-                <button class="mod-tab-btn"        data-tab="tab-ei-honorarios" onclick="modTab('view-egresos-ingresos','tab-ei-honorarios')">🧾 Boletas de Honorarios</button>
+                <button class="mod-tab-btn active" data-tab="tab-ei-compras"    onclick="modTab('view-egresos-ingresos','tab-ei-compras')">Libro de Compras</button>
+                <button class="mod-tab-btn"        data-tab="tab-ei-ventas"     onclick="modTab('view-egresos-ingresos','tab-ei-ventas')">Libro de Ventas</button>
+                <button class="mod-tab-btn"        data-tab="tab-ei-honorarios" onclick="modTab('view-egresos-ingresos','tab-ei-honorarios')">Boletas de Honorarios</button>
             </div>
             <div id="tab-ei-compras"    class="mod-tab-panel active"></div>
             <div id="tab-ei-ventas"     class="mod-tab-panel"></div>
@@ -627,7 +627,7 @@
         ═════════════════════ -->
         <div id="view-tributario-1cat" class="view">
             <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="tab-trib-iva" onclick="modTab('view-tributario-1cat','tab-trib-iva')">🧾 Declaración de Impuestos (F29)</button>
+                <button class="mod-tab-btn active" data-tab="tab-trib-iva" onclick="modTab('view-tributario-1cat','tab-trib-iva')">Declaración de Impuestos (F29)</button>
             </div>
             <div id="tab-trib-iva" class="mod-tab-panel active"></div>
         </div><!-- /view-tributario-1cat -->
@@ -638,11 +638,11 @@
         <div id="view-compras" class="view">
 
             <div class="export-bar">
-                <button class="btn-export btn-export-pdf"   onclick="exportarPDFCompras()">⬇ PDF</button>
-                <button class="btn-export btn-export-excel" onclick="exportarExcelCompras()">⬇ Excel</button>
-                <button class="btn-export btn-export-print" onclick="imprimirCompras()">🖨 Imprimir</button>
-                <button class="btn-export" style="background:var(--accent);color:var(--on-accent);font-weight:600;" onclick="siiAbrirImportador('compras')">⬆ XML SII</button>
-                <button class="btn-export" style="background:var(--positive);color:var(--on-state);font-weight:600;" onclick="siiAbrirRCV()">☁ Descargar RCV</button>
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFCompras()"><i class=cxi-descargar></i> PDF</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelCompras()"><i class=cxi-descargar></i> Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirCompras()"><i class=cxi-imprimir></i> Imprimir</button>
+                <button class="btn-export" style="background:var(--accent);color:var(--on-accent);font-weight:600;" onclick="siiAbrirImportador('compras')"><i class=cxi-subir></i> XML SII</button>
+                <button class="btn-export" style="background:var(--positive);color:var(--on-state);font-weight:600;" onclick="siiAbrirRCV()"><i class=cxi-nube></i> Descargar RCV</button>
             </div>
 
             <!-- Barra superior: filtros + resumen + acciones -->
@@ -663,7 +663,7 @@
                         <option value="2025">2025</option><option value="2026">2026</option>
                     </select>
                     <button class="btn btn-primary"   onclick="abrirNuevaCompra()">+ Registrar Compra</button>
-                    <button class="btn btn-danger"    onclick="vaciarLibroCompras()">🗑 Vaciar Libro</button>
+                    <button class="btn btn-danger"    onclick="vaciarLibroCompras()"><i class=cxi-eliminar></i> Vaciar Libro</button>
                 </div>
                 <div class="libro-kpis">
                     <div class="libro-kpi">
@@ -683,7 +683,7 @@
 
             <!-- Panel de centralización -->
             <div class="card centralizacion-panel">
-                <div class="centralizacion-title">⚙️ Asiento Centralizado</div>
+                <div class="centralizacion-title">Asiento centralizado</div>
                 <div class="centralizacion-cuerpo">
                     <div class="centralizacion-campo">
                         <label>Cuenta de cargo (Debe)</label>
@@ -694,7 +694,7 @@
                         (Caja, Banco, Proveedores, etc.)
                     </div>
                     <button class="btn btn-primary" onclick="generarAsientoCompras()">
-                        📋 Generar Asiento → Diario
+                        <i class=cxi-lista></i> Generar Asiento → Diario
                     </button>
                 </div>
             </div>
@@ -735,11 +735,11 @@
         <div id="view-ventas" class="view">
 
             <div class="export-bar">
-                <button class="btn-export btn-export-pdf"   onclick="exportarPDFVentas()">⬇ PDF</button>
-                <button class="btn-export btn-export-excel" onclick="exportarExcelVentas()">⬇ Excel</button>
-                <button class="btn-export btn-export-print" onclick="imprimirVentas()">🖨 Imprimir</button>
-                <button class="btn-export" style="background:var(--accent);color:var(--on-accent);font-weight:600;" onclick="siiAbrirImportador('ventas')">⬆ XML SII</button>
-                <button class="btn-export" style="background:var(--positive);color:var(--on-state);font-weight:600;" onclick="siiAbrirRCV()">☁ Descargar RCV</button>
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFVentas()"><i class=cxi-descargar></i> PDF</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelVentas()"><i class=cxi-descargar></i> Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirVentas()"><i class=cxi-imprimir></i> Imprimir</button>
+                <button class="btn-export" style="background:var(--accent);color:var(--on-accent);font-weight:600;" onclick="siiAbrirImportador('ventas')"><i class=cxi-subir></i> XML SII</button>
+                <button class="btn-export" style="background:var(--positive);color:var(--on-state);font-weight:600;" onclick="siiAbrirRCV()"><i class=cxi-nube></i> Descargar RCV</button>
             </div>
 
             <!-- Barra superior -->
@@ -760,7 +760,7 @@
                         <option value="2025">2025</option><option value="2026">2026</option>
                     </select>
                     <button class="btn btn-primary" onclick="abrirNuevaVenta()">+ Registrar Venta</button>
-                    <button class="btn btn-danger"  onclick="vaciarLibroVentas()">🗑 Vaciar Libro</button>
+                    <button class="btn btn-danger"  onclick="vaciarLibroVentas()"><i class=cxi-eliminar></i> Vaciar Libro</button>
                 </div>
                 <div class="libro-kpis">
                     <div class="libro-kpi">
@@ -784,7 +784,7 @@
 
             <!-- Panel de centralización -->
             <div class="card centralizacion-panel">
-                <div class="centralizacion-title">⚙️ Asiento Centralizado</div>
+                <div class="centralizacion-title">Asiento centralizado</div>
                 <div class="centralizacion-cuerpo">
                     <div class="centralizacion-campo">
                         <label>Cuenta de ingreso (Haber)</label>
@@ -795,7 +795,7 @@
                         (Caja, Banco, Clientes, etc.)
                     </div>
                     <button class="btn btn-primary" onclick="generarAsientoVentas()">
-                        📋 Generar Asiento → Diario
+                        <i class=cxi-lista></i> Generar Asiento → Diario
                     </button>
                 </div>
             </div>
@@ -855,7 +855,7 @@
         <div id="view-clientes" class="view">
 
             <div class="export-bar">
-                <button class="btn-export btn-export-excel" onclick="exportarExcelContactos()">⬇ Excel</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelContactos()"><i class=cxi-descargar></i> Excel</button>
             </div>
 
             <!-- Barra superior -->
@@ -880,10 +880,10 @@
                 </div>
                 <div style="display:flex;gap:8px;">
                     <button class="btn btn-primary" onclick="abrirNuevoContacto()">
-                        ➕ Nuevo Contacto
+                        <i class=cxi-agregar></i> Nuevo Contacto
                     </button>
                     <button class="btn btn-danger" onclick="vaciarContactos()">
-                        🗑 Vaciar Directorio
+                        <i class=cxi-eliminar></i> Vaciar Directorio
                     </button>
                 </div>
             </div>
@@ -926,11 +926,11 @@
         ═════════════════════ -->
         <div id="view-inventario-activos" class="view">
             <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="tab-inv-centros"     onclick="modTab('view-inventario-activos','tab-inv-centros')">🏢 Centros de Costo</button>
-                <button class="mod-tab-btn"        data-tab="tab-inv-bodegas"     onclick="modTab('view-inventario-activos','tab-inv-bodegas')">🏬 Bodegas</button>
-                <button class="mod-tab-btn"        data-tab="tab-inv-movimientos" onclick="modTab('view-inventario-activos','tab-inv-movimientos')">📦 Movimientos</button>
-                <button class="mod-tab-btn"        data-tab="tab-ap-activos"      onclick="modTab('view-inventario-activos','tab-ap-activos')">🏦 Activos Fijos</button>
-                <button class="mod-tab-btn"        data-tab="tab-ap-productos"    onclick="modTab('view-inventario-activos','tab-ap-productos')">🏷 Productos / Servicios</button>
+                <button class="mod-tab-btn active" data-tab="tab-inv-centros"     onclick="modTab('view-inventario-activos','tab-inv-centros')">Centros de Costo</button>
+                <button class="mod-tab-btn"        data-tab="tab-inv-bodegas"     onclick="modTab('view-inventario-activos','tab-inv-bodegas')">Bodegas</button>
+                <button class="mod-tab-btn"        data-tab="tab-inv-movimientos" onclick="modTab('view-inventario-activos','tab-inv-movimientos')">Movimientos</button>
+                <button class="mod-tab-btn"        data-tab="tab-ap-activos"      onclick="modTab('view-inventario-activos','tab-ap-activos')">Activos Fijos</button>
+                <button class="mod-tab-btn"        data-tab="tab-ap-productos"    onclick="modTab('view-inventario-activos','tab-ap-productos')">Productos / Servicios</button>
             </div>
             <div id="tab-inv-centros"     class="mod-tab-panel active"></div>
             <div id="tab-inv-bodegas"     class="mod-tab-panel"></div>
@@ -964,40 +964,40 @@
                     </select>
                 </div>
                 <div style="margin-top:20px;">
-                    <button class="btn btn-primary" data-requiere-rol="contador" onclick="guardarConfiguracion()">💾 Guardar Configuración</button>
+                    <button class="btn btn-primary" data-requiere-rol="contador" onclick="guardarConfiguracion()"><i class=cxi-guardar></i> Guardar Configuración</button>
                 </div>
             </div>
 
             <!-- Módulos activos -->
             <div class="card" id="cfgCardModulos" style="padding:24px;">
-                <h2 style="margin-bottom:4px;">🧩 Módulos activos</h2>
+                <h2 style="margin-bottom:4px;">Módulos activos</h2>
                 <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
                     Activa o desactiva módulos del menú para este cliente. Los cambios aplican de inmediato.
                 </p>
                 <div id="cfgModulosContainer"></div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;">
-                    <button class="btn btn-primary" data-requiere-rol="contador" onclick="guardarModulosConfig()">💾 Guardar módulos</button>
+                    <button class="btn btn-primary" data-requiere-rol="contador" onclick="guardarModulosConfig()"><i class=cxi-guardar></i> Guardar módulos</button>
                     <button class="btn btn-secondary" data-requiere-rol="contador" onclick="resetearModulosConfig()" style="font-size:12px;">↺ Restablecer por defecto</button>
                 </div>
             </div>
 
             <!-- Certificado Digital (4.4) -->
             <div class="card" id="cfgCardRespaldo" style="padding:24px;" data-requiere-rol="contador">
-                <h2 style="margin-bottom:4px;">💾 Respaldo del cliente</h2>
+                <h2 style="margin-bottom:4px;">Respaldo del cliente</h2>
                 <p style="color:var(--text-muted);font-size:13px;margin:0 0 16px;">
                     Descarga todos los datos de este cliente en un archivo (.json) o restaura uno anterior.
                     Restaurar reemplaza los datos del cliente abierto.
                 </p>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-                    <button class="btn btn-primary" onclick="exportarRespaldoCliente()">⬇️ Descargar respaldo</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('cfgRespaldoArchivo').click()">⬆️ Restaurar respaldo</button>
+                    <button class="btn btn-primary" onclick="exportarRespaldoCliente()"><i class=cxi-descargar></i> Descargar respaldo</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('cfgRespaldoArchivo').click()"><i class=cxi-subir></i> Restaurar respaldo</button>
                     <input type="file" id="cfgRespaldoArchivo" accept=".json,application/json" style="display:none;"
                         onchange="if (this.files[0]) importarRespaldoCliente(this.files[0]); this.value='';">
                 </div>
             </div>
 
             <div class="card" id="cfgCardCertificado" style="padding:24px;" data-requiere-rol="admin">
-                <h2 style="margin-bottom:4px;">🔐 Certificado Digital</h2>
+                <h2 style="margin-bottom:4px;">Certificado Digital</h2>
                 <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
                     Carga tu certificado digital (.pfx / .p12) para firma electrónica de documentos SII.
                     Se almacena de forma segura en este equipo.
@@ -1005,20 +1005,20 @@
                 <div id="certEstadoBox" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;margin-bottom:14px;"></div>
                 <input type="file" id="certFileInput" accept=".pfx,.p12" style="display:none;" onchange="procesarCertificado(this)">
                 <div style="display:flex;gap:10px;">
-                    <button class="btn btn-primary" onclick="cargarCertificado()">📂 Cargar Certificado</button>
-                    <button class="btn btn-secondary" onclick="eliminarCertificado()">🗑️ Eliminar</button>
+                    <button class="btn btn-primary" onclick="cargarCertificado()"><i class=cxi-carpeta></i> Cargar Certificado</button>
+                    <button class="btn btn-secondary" onclick="eliminarCertificado()"><i class=cxi-eliminar></i> Eliminar</button>
                 </div>
             </div>
 
             <!-- Gestión de Usuarios / Invitaciones (4.5 + 4.6) -->
             <div class="card" id="cfgCardUsuarios" style="padding:24px;" data-requiere-rol="admin">
-                <h2 style="margin-bottom:4px;">👥 Usuarios de la Empresa</h2>
+                <h2 style="margin-bottom:4px;">Usuarios de la Empresa</h2>
                 <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
                     Invita colaboradores compartiendo un código de 6 caracteres. El código expira en 48 horas.
                 </p>
 
                 <div id="usuariosListaCont" style="margin-bottom:20px;"></div>
-                <button class="btn btn-secondary" style="margin-bottom:20px;" onclick="cargarUsuariosEmpresa()">🔄 Cargar lista de usuarios</button>
+                <button class="btn btn-secondary" style="margin-bottom:20px;" onclick="cargarUsuariosEmpresa()"><i class=cxi-refrescar></i> Cargar lista de usuarios</button>
 
                 <div style="border-top:1px solid var(--border);padding-top:16px;">
                     <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Nueva Invitación</h3>
@@ -1040,14 +1040,14 @@
                     <div id="invCodigoBox" style="display:none;margin-top:16px;background:var(--card);border:2px solid var(--accent);border-radius:10px;padding:16px;text-align:center;">
                         <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Código de invitación (válido 48h) — comparte este código manualmente</div>
                         <div id="invCodigoGen" style="font-size:32px;font-weight:800;letter-spacing:.3em;color:var(--accent);font-family:'IBM Plex Mono',monospace;"></div>
-                        <button class="btn btn-secondary" style="margin-top:10px;" onclick="copiarCodigoInvitacion()">📋 Copiar</button>
+                        <button class="btn btn-secondary" style="margin-top:10px;" onclick="copiarCodigoInvitacion()"><i class=cxi-lista></i> Copiar</button>
                     </div>
                 </div>
             </div>
 
             <!-- Sesión activa -->
             <div class="card" id="cfgCardSesion" style="padding:24px;">
-                <h2 style="margin-bottom:4px;">👤 Sesión activa</h2>
+                <h2 style="margin-bottom:4px;">Sesión activa</h2>
                 <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
                     Cuenta conectada en este dispositivo. Puedes cerrar sesión o cambiar de cuenta.
                 </p>
@@ -1058,7 +1058,7 @@
                 </div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <button class="btn btn-secondary" onclick="fbSyncToCloud()" style="display:flex;align-items:center;gap:6px;">
-                        ☁ Sincronizar ahora
+                        <i class=cxi-nube></i> Sincronizar ahora
                     </button>
                     <button class="btn" onclick="fbLogout()"
                         style="background:var(--negative-soft);color:var(--negative);border:1px solid var(--negative);border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">
@@ -1066,14 +1066,14 @@
                     </button>
                     <button class="btn btn-secondary" onclick="fbCambiarCuenta()"
                         style="display:flex;align-items:center;gap:6px;">
-                        🔄 Cambiar cuenta
+                        <i class=cxi-refrescar></i> Cambiar cuenta
                     </button>
                 </div>
             </div>
 
             <!-- IA — API Key Gemini (Fase 6) -->
             <div class="card" id="cfgCardIA" style="padding:24px;">
-                <h2 style="margin-bottom:4px;">✨ Inteligencia Artificial — Google Gemini</h2>
+                <h2 style="margin-bottom:4px;">Inteligencia Artificial — Google Gemini</h2>
                 <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
                     Ingresa tu API key de Google AI Studio para activar las funciones de IA. Se almacena localmente en este equipo y solo se envía a Google.
                     Obtén tu key gratis en <strong>aistudio.google.com/app/apikey</strong>.
@@ -1082,18 +1082,18 @@
                 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                     <input type="password" id="iaApiKeyInput" autocomplete="off" spellcheck="false" placeholder="AIza…"
                         style="flex:1;min-width:260px;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--input-bg);color:var(--text);">
-                    <button class="btn btn-primary" onclick="iaGuardarApiKey()">💾 Guardar Key</button>
-                    <button class="btn btn-secondary" onclick="iaBorrarApiKey()">🗑 Eliminar</button>
+                    <button class="btn btn-primary" onclick="iaGuardarApiKey()"><i class=cxi-guardar></i> Guardar Key</button>
+                    <button class="btn btn-secondary" onclick="iaBorrarApiKey()"><i class=cxi-eliminar></i> Eliminar</button>
                 </div>
                 <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-                    <button class="btn btn-secondary" onclick="iaAlertasTribu()">⚠️ Analizar obligaciones tributarias</button>
-                    <button class="btn btn-secondary" onclick="iaVerificarConsistencia()">🔍 Verificar consistencia de libros</button>
+                    <button class="btn btn-secondary" onclick="iaAlertasTribu()"><i class=cxi-alerta></i> Analizar obligaciones tributarias</button>
+                    <button class="btn btn-secondary" onclick="iaVerificarConsistencia()"><i class=cxi-buscar></i> Verificar consistencia de libros</button>
                 </div>
             </div>
 
             <!-- Info Firebase -->
             <div class="card" id="cfgCardFirebase" style="padding:24px;">
-                <h2 style="margin-bottom:4px;">☁️ Sincronización Firebase</h2>
+                <h2 style="margin-bottom:4px;">Sincronización Firebase</h2>
                 <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
                     Los datos se sincronizan automáticamente con Firebase al guardar cualquier registro.
                     Cada cuenta tiene sus datos completamente separados.
@@ -1110,18 +1110,18 @@
         ════════════════════════════════ -->
         <div id="view-reportes-financieros" class="view">
             <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="tab-balance-clasificado" onclick="modTab('view-reportes-financieros','tab-balance-clasificado')">🏦 Balance Clasificado</button>
-                <button class="mod-tab-btn"        data-tab="tab-estado-resultados"   onclick="modTab('view-reportes-financieros','tab-estado-resultados')">📊 Estado de Resultados</button>
-                <button class="mod-tab-btn"        data-tab="tab-flujo-caja"          onclick="modTab('view-reportes-financieros','tab-flujo-caja')">💵 Flujo de Caja</button>
+                <button class="mod-tab-btn active" data-tab="tab-balance-clasificado" onclick="modTab('view-reportes-financieros','tab-balance-clasificado')">Balance Clasificado</button>
+                <button class="mod-tab-btn"        data-tab="tab-estado-resultados"   onclick="modTab('view-reportes-financieros','tab-estado-resultados')">Estado de Resultados</button>
+                <button class="mod-tab-btn"        data-tab="tab-flujo-caja"          onclick="modTab('view-reportes-financieros','tab-flujo-caja')">Flujo de Caja</button>
             </div>
 
             <!-- ── TAB: Balance Clasificado ── -->
             <div id="tab-balance-clasificado" class="mod-tab-panel active">
             <div class="export-bar">
-                <button class="btn-export btn-export-pdf"   onclick="exportarPDFBalanceClasificado()">⬇ PDF</button>
-                <button class="btn-export btn-export-ia"    onclick="iaAnalizarBalanceClasificado()">✨ Analizar con IA</button>
-                <button class="btn-export btn-export-excel" onclick="exportarExcelBalanceClasificado()">⬇ Excel</button>
-                <button class="btn-export btn-export-print" onclick="imprimirBalanceClasificado()">🖨 Imprimir</button>
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFBalanceClasificado()"><i class=cxi-descargar></i> PDF</button>
+                <button class="btn-export btn-export-ia"    onclick="iaAnalizarBalanceClasificado()"><i class=cxi-ia></i> Analizar con IA</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelBalanceClasificado()"><i class=cxi-descargar></i> Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirBalanceClasificado()"><i class=cxi-imprimir></i> Imprimir</button>
             </div>
             <!-- Balance clasificado acumulado a fin del mes/año elegido — ver generarBalanceClasificado() -->
             <div class="libro-toolbar card">
@@ -1148,11 +1148,11 @@
             <!-- ── TAB: Estado de Resultados ── -->
             <div id="tab-estado-resultados" class="mod-tab-panel">
             <div class="export-bar">
-                <button class="btn-export btn-export-pdf"   onclick="exportarPDFEstadoResultados()">⬇ PDF</button>
-                <button class="btn-export btn-export-ia"    onclick="iaAnalizarEstadoResultados()">✨ Analizar con IA</button>
-                <button class="btn-export btn-export-ia"    onclick="iaCompararPeriodos('Estado de Resultados')" title="Comparar dos períodos">⚖ Comparar períodos</button>
-                <button class="btn-export btn-export-excel" onclick="exportarExcelEstadoResultados()">⬇ Excel</button>
-                <button class="btn-export btn-export-print" onclick="imprimirEstadoResultados()">🖨 Imprimir</button>
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFEstadoResultados()"><i class=cxi-descargar></i> PDF</button>
+                <button class="btn-export btn-export-ia"    onclick="iaAnalizarEstadoResultados()"><i class=cxi-ia></i> Analizar con IA</button>
+                <button class="btn-export btn-export-ia"    onclick="iaCompararPeriodos('Estado de Resultados')" title="Comparar dos períodos"><i class=cxi-balanza></i> Comparar períodos</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelEstadoResultados()"><i class=cxi-descargar></i> Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirEstadoResultados()"><i class=cxi-imprimir></i> Imprimir</button>
             </div>
             <div class="libro-toolbar card">
                 <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
@@ -1197,10 +1197,10 @@
             <!-- ── TAB: Flujo de Caja ── -->
             <div id="tab-flujo-caja" class="mod-tab-panel">
             <div class="export-bar">
-                <button class="btn-export btn-export-pdf"   onclick="exportarPDFFlujoCaja()">⬇ PDF</button>
-                <button class="btn-export btn-export-ia"    onclick="iaAnalizarFlujoCaja()">✨ Analizar con IA</button>
-                <button class="btn-export btn-export-excel" onclick="exportarExcelFlujoCaja()">⬇ Excel</button>
-                <button class="btn-export btn-export-print" onclick="imprimirFlujoCaja()">🖨 Imprimir</button>
+                <button class="btn-export btn-export-pdf"   onclick="exportarPDFFlujoCaja()"><i class=cxi-descargar></i> PDF</button>
+                <button class="btn-export btn-export-ia"    onclick="iaAnalizarFlujoCaja()"><i class=cxi-ia></i> Analizar con IA</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelFlujoCaja()"><i class=cxi-descargar></i> Excel</button>
+                <button class="btn-export btn-export-print" onclick="imprimirFlujoCaja()"><i class=cxi-imprimir></i> Imprimir</button>
             </div>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
@@ -1219,7 +1219,7 @@
                         <option value="2027">2027</option>
                     </select>
                     <button class="btn btn-primary" onclick="generarFlujoCaja()">Generar</button>
-                    <button class="btn btn-secondary" onclick="fcAbrirOverrides()" style="font-size:12px;">⚙️ Clasificación</button>
+                    <button class="btn btn-secondary" onclick="fcAbrirOverrides()" style="font-size:12px;"><i class=cxi-engranaje></i> Clasificación</button>
                 </div>
                 <div style="display:flex;gap:16px;flex-wrap:wrap;">
                     <div class="libro-kpi"><span class="libro-kpi-label">Entradas</span><span class="libro-kpi-val" id="fcEntradas">$0</span></div>
@@ -1382,7 +1382,7 @@
                     </div>
                 </div>
                 <button class="btn btn-primary" style="margin-top:12px;" onclick="guardarRemanenteIVA()">
-                    💾 Guardar remanente
+                    <i class=cxi-guardar></i> Guardar remanente
                 </button>
             </div>
 
@@ -1399,8 +1399,8 @@
         ═════════════════════ -->
         <div id="view-remuneraciones" class="view">
             <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="tab-rem-liquidaciones" onclick="modTab('view-remuneraciones','tab-rem-liquidaciones')">👷 Liquidaciones</button>
-                <button class="mod-tab-btn"        data-tab="tab-rem-previsional"   onclick="modTab('view-remuneraciones','tab-rem-previsional')">📋 Indicadores Previsionales</button>
+                <button class="mod-tab-btn active" data-tab="tab-rem-liquidaciones" onclick="modTab('view-remuneraciones','tab-rem-liquidaciones')">Liquidaciones</button>
+                <button class="mod-tab-btn"        data-tab="tab-rem-previsional"   onclick="modTab('view-remuneraciones','tab-rem-previsional')">Indicadores Previsionales</button>
             </div>
             <div id="tab-rem-liquidaciones" class="mod-tab-panel active"></div>
             <div id="tab-rem-previsional" class="mod-tab-panel">
@@ -1441,7 +1441,7 @@
                             </div>
                             <button class="btn" style="font-size:12px;white-space:nowrap;"
                                 onclick="electronAPI.shell.openExternal('https://www.previred.com/web/previred/indicadores-previsionales')">
-                                🔗 previred.com
+                                <i class=cxi-vinculo></i> previred.com
                             </button>
                         </div>
 
@@ -1488,7 +1488,7 @@
         <div id="view-honorarios" class="view">
             <div class="grid-2col">
                 <div class="card" style="padding:24px;">
-                    <h2 style="margin-bottom:18px;">📄 Emitir Boleta de Honorarios</h2>
+                    <h2 style="margin-bottom:18px;">Emitir Boleta de Honorarios</h2>
                     <div class="form-grid" style="grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;">
                         <label>Fecha</label>
                         <input id="honFecha" type="date" class="wiz-input" style="margin:0;">
@@ -1505,11 +1505,11 @@
                         </select>
                     </div>
                     <button class="btn btn-primary" style="width:100%;margin-top:18px;" onclick="honEmitirBoleta()">
-                        ✅ Registrar Boleta
+                        <i class=cxi-check></i> Registrar Boleta
                     </button>
                 </div>
                 <div class="card" style="padding:24px;">
-                    <h2 style="margin-bottom:18px;">🧮 Desglose de Retención</h2>
+                    <h2 style="margin-bottom:18px;">Desglose de Retención</h2>
                     <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Tasa vigente 2026: <strong>15,25%</strong></div>
                     <div class="hon-desglose">
                         <div class="hon-desglose-fila"><span>Bruto</span><span id="honResBruto">$0</span></div>
@@ -1530,16 +1530,16 @@
         ═════════════════════ -->
         <div id="view-libros-contables-hon" class="view">
             <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="view-libro-honorarios"   onclick="modTab('view-libros-contables-hon','view-libro-honorarios')">📒 Libro de Honorarios</button>
-                <button class="mod-tab-btn"        data-tab="view-libro-ingresos-hon" onclick="modTab('view-libros-contables-hon','view-libro-ingresos-hon')">📥 Libro de Ingresos</button>
-                <button class="mod-tab-btn"        data-tab="view-libro-egresos-hon"  onclick="modTab('view-libros-contables-hon','view-libro-egresos-hon')">📤 Libro de Egresos</button>
+                <button class="mod-tab-btn active" data-tab="view-libro-honorarios"   onclick="modTab('view-libros-contables-hon','view-libro-honorarios')">Libro de Honorarios</button>
+                <button class="mod-tab-btn"        data-tab="view-libro-ingresos-hon" onclick="modTab('view-libros-contables-hon','view-libro-ingresos-hon')">Libro de Ingresos</button>
+                <button class="mod-tab-btn"        data-tab="view-libro-egresos-hon"  onclick="modTab('view-libros-contables-hon','view-libro-egresos-hon')">Libro de Egresos</button>
             </div>
         </div><!-- /view-libros-contables-hon -->
 
         <!-- ── Libro de Ingresos (segunda categoría) — reubicado a tab vía JS ── -->
         <div id="view-libro-ingresos-hon" class="view">
             <div class="export-bar">
-                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('ingBody','Libro de Ingresos')">⬇ PDF</button>
+                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('ingBody','Libro de Ingresos')"><i class=cxi-descargar></i> PDF</button>
             </div>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
@@ -1604,7 +1604,7 @@
         <!-- ── Libro de Egresos (segunda categoría) ─── -->
         <div id="view-libro-egresos-hon" class="view">
             <div class="export-bar">
-                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('egrBody','Libro de Egresos')">⬇ PDF</button>
+                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('egrBody','Libro de Egresos')"><i class=cxi-descargar></i> PDF</button>
             </div>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
@@ -1790,7 +1790,7 @@
                 </div>
             </div>
             <div class="export-bar" style="margin-top:0;">
-                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('honLibroBody','Libro de Honorarios')">⬇ PDF</button>
+                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('honLibroBody','Libro de Honorarios')"><i class=cxi-descargar></i> PDF</button>
             </div>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
@@ -1848,7 +1848,7 @@
         <!-- ── Gastos Presuntos vs Efectivos ──────── -->
         <div id="view-gastos-presuntos" class="view">
             <div class="card" style="max-width:600px;padding:28px;">
-                <h2 style="margin-bottom:6px;">🧮 Gastos Presuntos vs. Efectivos</h2>
+                <h2 style="margin-bottom:6px;">Gastos Presuntos vs. Efectivos</h2>
                 <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">
                     Tope gastos presuntos: <strong>15 UTA</strong> — calculado con UTM vigente del módulo Indicadores.
                 </p>
@@ -1859,7 +1859,7 @@
                     <input id="gpEfectivos" class="wiz-input" type="text" placeholder="0" oninput="fmtMoneyInput(this)" style="margin:0;">
                 </div>
                 <p style="font-size:12px;color:var(--text-muted);margin:10px 0;">
-                    ⚠️ Gastos efectivos deben estar respaldados por documentos válidos.
+                    <i class=cxi-alerta></i> Gastos efectivos deben estar respaldados por documentos válidos.
                 </p>
                 <button class="btn btn-primary" style="width:100%;margin-top:6px;" onclick="honCalcularGastos()">Comparar opciones</button>
                 <div id="gpResultado" style="margin-top:22px;border-top:1px solid var(--divider);padding-top:18px;" hidden>
@@ -1924,8 +1924,8 @@
         ═════════════════════ -->
         <div id="view-declaracion-impuestos-hon" class="view">
             <div class="mod-tabs">
-                <button class="mod-tab-btn active" data-tab="view-f29-hon" onclick="modTab('view-declaracion-impuestos-hon','view-f29-hon')">🧾 Formulario 29</button>
-                <button class="mod-tab-btn"        data-tab="view-f22-hon" onclick="modTab('view-declaracion-impuestos-hon','view-f22-hon')">📋 Formulario 22</button>
+                <button class="mod-tab-btn active" data-tab="view-f29-hon" onclick="modTab('view-declaracion-impuestos-hon','view-f29-hon')">Formulario 29</button>
+                <button class="mod-tab-btn"        data-tab="view-f22-hon" onclick="modTab('view-declaracion-impuestos-hon','view-f22-hon')">Formulario 22</button>
             </div>
         </div><!-- /view-declaracion-impuestos-hon -->
 
@@ -1935,7 +1935,7 @@
                 <!-- PPM voluntario -->
                 <div style="display:flex;flex-direction:column;gap:16px;">
                     <div class="card" style="padding:22px;">
-                        <h2 style="margin-bottom:6px;">🧾 F29 — Segunda Categoría</h2>
+                        <h2 style="margin-bottom:6px;">F29 — Segunda Categoría</h2>
                         <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
                             Declara PPM voluntario (cód. 67) y retenciones pagadas a prestadores (cód. 72).
                         </p>
@@ -1963,7 +1963,7 @@
                             Cód. 74 aparece solo cuando hay boletas emitidas a personas naturales donde te auto-retuviste.
                         </p>
                         <button class="btn btn-secondary" style="width:100%;margin-top:16px;opacity:.5;cursor:not-allowed;" disabled>
-                            🌐 Declarar en SII (próximamente)
+                            <i class=cxi-globo></i> Declarar en SII (próximamente)
                         </button>
                     </div>
                     <!-- Registrar PPM -->
@@ -2012,7 +2012,7 @@
         <div id="view-f22-hon" class="view">
             <div class="grid-2col">
                 <div class="card" style="padding:24px;">
-                    <h2 style="margin-bottom:6px;">📋 Formulario 22 — Renta Anual</h2>
+                    <h2 style="margin-bottom:6px;">Formulario 22 — Renta Anual</h2>
                     <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;">
                         Calcula el Impuesto Global Complementario (IGC) sobre honorarios brutos del año, descontando cotizaciones, gastos y créditos (retenciones + PPM).
                     </p>
@@ -2067,7 +2067,7 @@
                         </div>
                         <div id="f22Resultado" style="margin-top:16px;padding:16px;border-radius:10px;font-weight:800;font-size:16px;text-align:center;"></div>
                         <button class="btn btn-secondary" style="width:100%;margin-top:12px;opacity:.5;cursor:not-allowed;" disabled>
-                            🌐 Declarar en SII (próximamente)
+                            <i class=cxi-globo></i> Declarar en SII (próximamente)
                         </button>
                     </div>
                 </div>
@@ -2077,8 +2077,8 @@
         <!-- ── DJ 1879 ─────────────────────────────── -->
         <div id="view-dj1879" class="view">
             <div class="export-bar">
-                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('dj1879Body','DJ 1879')">⬇ PDF</button>
-                <button class="btn-export btn-export-excel" onclick="exportarExcelGenerico('dj1879Body','DJ_1879')">⬇ Excel</button>
+                <button class="btn-export btn-export-pdf" onclick="exportarPDFGenerico('dj1879Body','DJ 1879')"><i class=cxi-descargar></i> PDF</button>
+                <button class="btn-export btn-export-excel" onclick="exportarExcelGenerico('dj1879Body','DJ_1879')"><i class=cxi-descargar></i> Excel</button>
             </div>
             <div class="libro-toolbar card">
                 <div class="libro-toolbar-left">
@@ -2111,10 +2111,10 @@
             <div class="card" style="padding:24px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                     <div>
-                        <h2 style="margin:0;">📆 Calendario Tributario</h2>
+                        <h2 style="margin:0;">Calendario Tributario</h2>
                         <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">Vencimientos calculados en base a tus registros actuales.</p>
                     </div>
-                    <button class="btn btn-secondary" onclick="honRenderCalendario()">🔄 Actualizar</button>
+                    <button class="btn btn-secondary" onclick="honRenderCalendario()"><i class=cxi-refrescar></i> Actualizar</button>
                 </div>
                 <div id="calendarCont" class="cal-grid"></div>
             </div>
@@ -2131,7 +2131,7 @@
                     <button class="btn btn-primary" onclick="honAgregarPrestador()">Agregar</button>
                 </div>
                 <p style="font-size:12px;color:var(--text-muted);margin-top:10px;">
-                    💡 Los prestadores registrados aquí alimentan la <strong>DJ 1879</strong> automáticamente.
+                    <i class=cxi-idea></i> Los prestadores registrados aquí alimentan la <strong>DJ 1879</strong> automáticamente.
                 </p>
             </div>
             <div class="card">
@@ -2186,7 +2186,7 @@
                 <!-- Lista dinámica de empresas (fallback / formularios) -->
                 <div class="emp-lista" id="empLista" style="display:none;">
                     <div class="emp-empty">
-                        <div class="emp-empty-icon">🏢</div>
+                        <div class="emp-empty-icon"><i class=cxi-edificio></i></div>
                         <div>Cargando empresas…</div>
                     </div>
                 </div>
@@ -2507,7 +2507,7 @@
             <select id="cuentaEstado"><option>ACTIVA</option><option>INACTIVA</option></select>
         </div>
         <div class="modal-actions">
-            <button class="btn btn-primary"   onclick="guardarCuentaModal()">💾 Guardar</button>
+            <button class="btn btn-primary"   onclick="guardarCuentaModal()"><i class=cxi-guardar></i> Guardar</button>
             <button class="btn btn-secondary" onclick="cerrarModalCuenta()">Cancelar</button>
         </div>
     </div>
@@ -2518,7 +2518,7 @@
 ════════════════════════════════════════════════════════ -->
 <div id="modalManual" class="modal-overlay">
     <div class="modal-box" style="width:850px;max-height:92vh;display:flex;flex-direction:column;">
-        <h2 id="modalManualTitulo">✏️ Asiento Manual</h2>
+        <h2 id="modalManualTitulo">Asiento Manual</h2>
         <div id="manualDisponibleIndicador" class="disponible-indicador"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;">
             <div>
@@ -2533,7 +2533,7 @@
                         style="flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);">
                     <button type="button" id="btnIaGlosaManual" class="btn btn-secondary" title="Sugerir cuenta con IA"
                         onclick="iaSugerirCuentaGlosa()"
-                        style="white-space:nowrap;font-size:12px;padding:8px 12px;display:none;">✨ Sugerir cuenta</button>
+                        style="white-space:nowrap;font-size:12px;padding:8px 12px;display:none;"><i class=cxi-ia></i> Sugerir cuenta</button>
                 </div>
                 <div id="iaGlosaSugerencia" style="display:none;margin-top:6px;font-size:12px;padding:8px 12px;background:var(--accent-soft,#f0f4ff);border-radius:6px;color:var(--accent);"></div>
             </div>
@@ -2559,14 +2559,14 @@
             </table>
         </div>
         <div style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;">
-            <button class="btn btn-secondary" onclick="agregarFilaManual()">➕ Agregar Línea</button>
+            <button class="btn btn-secondary" onclick="agregarFilaManual()"><i class=cxi-agregar></i> Agregar Línea</button>
             <button class="btn btn-secondary" onclick="ordenarFilasManual()" title="Debe primero, luego Haber, cada grupo por orden del plan de cuentas">↕ Ordenar cuentas</button>
         </div>
         <div class="totales-bar" style="border-top:1px solid var(--border);">
             <div id="badgeManual" class="totales-badge error">Descuadrado</div>
             <div style="display:flex;gap:10px;">
                 <button class="btn btn-primary" id="btnGuardarManual" disabled onclick="guardarAsientoManual()">
-                    💾 Registrar en Diario
+                    <i class=cxi-guardar></i> Registrar en Diario
                 </button>
                 <button class="btn btn-secondary" onclick="cerrarModalManual()">Cancelar</button>
             </div>
@@ -2580,7 +2580,7 @@
 ════════════════════════════════════════════════════════ -->
 <div id="modalCompra" class="modal-overlay">
     <div class="modal-box" style="width:720px;">
-        <h2>🛒 Registrar Compra</h2>
+        <h2>Registrar Compra</h2>
 
         <div class="form-libro">
             <div class="form-libro-fila2">
@@ -2614,7 +2614,7 @@
                 <div style="grid-column:span 2;">
                     <label style="display:flex;justify-content:space-between;align-items:center;">
                         Razón Social / Proveedor
-                        <button type="button" class="btn btn-secondary" style="padding:5px 10px;font-size:11px;height:auto;" onclick="prodAbrirSelector(_onProductoSeleccionadoCompra)">📦 Autocomplete producto</button>
+                        <button type="button" class="btn btn-secondary" style="padding:5px 10px;font-size:11px;height:auto;" onclick="prodAbrirSelector(_onProductoSeleccionadoCompra)"><i class=cxi-caja></i> Autocomplete producto</button>
                     </label>
                     <input type="text" id="compraNombre" placeholder="Escriba para buscar o ingrese manualmente">
                 </div>
@@ -2720,17 +2720,17 @@
             <div>
                 <label>Documento Adjunto</label>
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                    <button type="button" class="btn btn-secondary" onclick="adjuntarArchivoCompra()">📎 Adjuntar PDF/Imagen</button>
+                    <button type="button" class="btn btn-secondary" onclick="adjuntarArchivoCompra()"><i class=cxi-clip></i> Adjuntar PDF/Imagen</button>
                     <span id="compraAdjuntoBadge" class="adjunto-badge" style="display:none;"
                           onclick="abrirAdjuntoCompra()" title="Abrir archivo adjunto"></span>
                     <button type="button" id="compraAdjuntoEliminar" style="display:none;background:none;border:none;cursor:pointer;color:var(--negative);font-size:18px;" onclick="eliminarAdjuntoCompra()" title="Quitar adjunto">✕</button>
-                    <span id="compraIaBadge" style="display:none;background:var(--info-soft);color:var(--info);border:1px solid var(--info);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Completado por IA</span>
+                    <span id="compraIaBadge" style="display:none;background:var(--info-soft);color:var(--info);border:1px solid var(--info);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;"><i class=cxi-ia></i> Completado por IA</span>
                 </div>
             </div>
         </div>
 
         <div class="modal-actions">
-            <button class="btn btn-primary"   onclick="guardarCompra()">💾 Guardar</button>
+            <button class="btn btn-primary"   onclick="guardarCompra()"><i class=cxi-guardar></i> Guardar</button>
             <button class="btn btn-secondary" onclick="cerrarModalCompra()">Cancelar</button>
         </div>
     </div>
@@ -2741,7 +2741,7 @@
 ════════════════════════════════════════════════════════ -->
 <div id="modalVenta" class="modal-overlay">
     <div class="modal-box" style="width:720px;">
-        <h2>💰 Registrar Venta</h2>
+        <h2>Registrar Venta</h2>
 
         <div class="form-libro">
             <div class="form-libro-fila2">
@@ -2775,7 +2775,7 @@
                 <div style="grid-column:span 2;">
                     <label style="display:flex;justify-content:space-between;align-items:center;">
                         Razón Social / Cliente
-                        <button type="button" class="btn btn-secondary" style="padding:5px 10px;font-size:11px;height:auto;" onclick="prodAbrirSelector(_onProductoSeleccionadoVenta)">📦 Autocomplete producto</button>
+                        <button type="button" class="btn btn-secondary" style="padding:5px 10px;font-size:11px;height:auto;" onclick="prodAbrirSelector(_onProductoSeleccionadoVenta)"><i class=cxi-caja></i> Autocomplete producto</button>
                     </label>
                     <input type="text" id="ventaNombre" placeholder="Escriba para buscar o ingrese manualmente">
                 </div>
@@ -2864,17 +2864,17 @@
             <div>
                 <label>Documento Adjunto</label>
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                    <button type="button" class="btn btn-secondary" onclick="adjuntarArchivoVenta()">📎 Adjuntar PDF/Imagen</button>
+                    <button type="button" class="btn btn-secondary" onclick="adjuntarArchivoVenta()"><i class=cxi-clip></i> Adjuntar PDF/Imagen</button>
                     <span id="ventaAdjuntoBadge" class="adjunto-badge" style="display:none;"
                           onclick="abrirAdjuntoVenta()" title="Abrir archivo adjunto"></span>
                     <button type="button" id="ventaAdjuntoEliminar" style="display:none;background:none;border:none;cursor:pointer;color:var(--negative);font-size:18px;" onclick="eliminarAdjuntoVenta()" title="Quitar adjunto">✕</button>
-                    <span id="ventaIaBadge" style="display:none;background:var(--info-soft);color:var(--info);border:1px solid var(--info);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Completado por IA</span>
+                    <span id="ventaIaBadge" style="display:none;background:var(--info-soft);color:var(--info);border:1px solid var(--info);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;"><i class=cxi-ia></i> Completado por IA</span>
                 </div>
             </div>
         </div>
 
         <div class="modal-actions">
-            <button class="btn btn-primary"   onclick="guardarVenta()">💾 Guardar</button>
+            <button class="btn btn-primary"   onclick="guardarVenta()"><i class=cxi-guardar></i> Guardar</button>
             <button class="btn btn-secondary" onclick="cerrarModalVenta()">Cancelar</button>
         </div>
     </div>
@@ -2916,7 +2916,7 @@
                             style="display:none;padding:8px 12px;font-size:12px;white-space:nowrap;
                                    background:var(--accent);color:var(--on-accent);border:none;border-radius:6px;
                                    cursor:pointer;font-weight:600;">
-                            🔍 SII
+                            <i class=cxi-buscar></i> SII
                         </button>
                     </div>
                     <div id="ctcSiiEstado" style="font-size:11px;margin-top:4px;min-height:16px;"></div>
@@ -3066,8 +3066,8 @@
                 </div>
                 <div style="display:flex;gap:16px;margin-top:4px;font-size:13px;color:var(--text-muted);">
                     <span>📞 <span id="detalleTel">—</span></span>
-                    <span>✉️ <span id="detalleEmail">—</span></span>
-                    <span>📍 <span id="detalleDirec">—</span></span>
+                    <span><i class=cxi-correo></i> <span id="detalleEmail">—</span></span>
+                    <span><i class=cxi-pin></i> <span id="detalleDirec">—</span></span>
                 </div>
             </div>
             <button class="btn btn-secondary" onclick="cerrarDetalleContacto()">✕ Cerrar</button>
@@ -3079,13 +3079,13 @@
                 ℹ️ Información
             </button>
             <button class="tab-detalle-btn" data-tab="compras">
-                🛒 Compras
+                <i class=cxi-carrito></i> Compras
             </button>
             <button class="tab-detalle-btn" data-tab="ventas">
-                💰 Ventas
+                <i class=cxi-dinero></i> Ventas
             </button>
             <button class="tab-detalle-btn" data-tab="saldo">
-                📊 Estado de Cuenta
+                <i class=cxi-grafico></i> Estado de Cuenta
             </button>
         </div>
 
@@ -3108,36 +3108,36 @@
 <script src="js/core/asientos.js?v=1"></script>
 <script src="js/core/parser.js?v=1"></script>
 <script src="js/core/parser-sii.js?v=1"></script>
-<script src="js/core/plan-cuentas.js?v=7"></script>
+<script src="js/core/plan-cuentas.js?v=8"></script>
 <script src="js/core/contabilidad.js?v=4"></script>
 
-<script src="js/services/diario.js?v=36"></script>
+<script src="js/services/diario.js?v=38"></script>
 <script src="js/services/mayor.js?v=13"></script>
-<script src="js/services/balance.js?v=7"></script>
+<script src="js/services/balance.js?v=8"></script>
 <script src="js/services/dashboard.js?v=7"></script>
-<script src="js/services/flujo-caja.js?v=4"></script>
+<script src="js/services/flujo-caja.js?v=5"></script>
 <script src="js/services/balance-clasificado.js?v=5"></script>
 <script src="js/services/estado-resultados.js?v=4"></script>
-<script src="js/services/indicadores.js?v=6"></script>
+<script src="js/services/indicadores.js?v=7"></script>
 <script src="js/services/previred-scraper.js?v=2"></script>
-<script src="js/services/iva-resumen.js?v=12"></script>
-<script src="js/services/reconciliacion.js?v=7"></script>
-<script src="js/services/sii-rcv.js?v=3"></script>
+<script src="js/services/iva-resumen.js?v=13"></script>
+<script src="js/services/reconciliacion.js?v=8"></script>
+<script src="js/services/sii-rcv.js?v=5"></script>
 
-<script src="js/modules/compras.js?v=6"></script>
-<script src="js/modules/ventas.js?v=6"></script>
-<script src="js/modules/documentos.js?v=7"></script>
-<script src="js/modules/clientes.js?v=5"></script>
-<script src="js/modules/productos.js?v=6"></script>
-<script src="js/modules/centros-costo.js?v=4"></script>
-<script src="js/modules/bodegas.js?v=4"></script>
-<script src="js/modules/inventario.js?v=5"></script>
-<script src="js/modules/activos.js?v=11"></script>
-<script src="js/modules/cartolas.js?v=8"></script>
-<script src="js/modules/remuneraciones.js?v=7"></script>
-<script src="js/modules/segunda-categoria.js?v=6"></script>
+<script src="js/modules/compras.js?v=7"></script>
+<script src="js/modules/ventas.js?v=7"></script>
+<script src="js/modules/documentos.js?v=9"></script>
+<script src="js/modules/clientes.js?v=6"></script>
+<script src="js/modules/productos.js?v=8"></script>
+<script src="js/modules/centros-costo.js?v=5"></script>
+<script src="js/modules/bodegas.js?v=5"></script>
+<script src="js/modules/inventario.js?v=6"></script>
+<script src="js/modules/activos.js?v=13"></script>
+<script src="js/modules/cartolas.js?v=9"></script>
+<script src="js/modules/remuneraciones.js?v=10"></script>
+<script src="js/modules/segunda-categoria.js?v=7"></script>
 <script src="js/core/conexiones.js?v=2"></script>
-<script src="js/core/cierre.js?v=4"></script>
+<script src="js/core/cierre.js?v=5"></script>
 
 <script src="js/services/app.js?v=13"></script>
 
@@ -3149,7 +3149,7 @@
 <!-- 6.4 — Modal alerta duplicado / monto inusual -->
 <div id="iaModalAlerta" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="max-width:480px;">
-        <h2 style="margin-bottom:12px;">⚠️ Alerta IA</h2>
+        <h2 style="margin-bottom:12px;">Alerta IA</h2>
         <p id="iaModalAlertaMsg" style="font-size:14px;line-height:1.6;color:var(--text-main);margin-bottom:20px;"></p>
         <div class="modal-actions">
             <button class="btn btn-primary"   onclick="iaConfirmarAlerta()">Guardar de todas formas</button>
@@ -3162,7 +3162,7 @@
 <div id="iaModalAnalisis" class="modal-overlay" style="display:none;">
     <div class="modal-box ia-modal-analisis">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:12px;">
-            <h2 id="iaModalAnalisisTit" style="margin:0;font-size:17px;flex:1;">✨ Análisis IA</h2>
+            <h2 id="iaModalAnalisisTit" style="margin:0;font-size:17px;flex:1;">Análisis IA</h2>
             <button onclick="iaCerrarAnalisis()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);line-height:1;">✕</button>
         </div>
         <!-- Selectores para comparación de períodos (6.6) -->
@@ -3187,7 +3187,7 @@
 <!-- 6.7 — Panel chat flotante -->
 <div id="iaChatPanel" class="ia-chat-panel" style="display:none;">
     <div class="ia-chat-header">
-        <span>✨ Asistente Financiero</span>
+        <span><i class=cxi-ia></i> Asistente Financiero</span>
         <div style="display:flex;gap:8px;">
             <button onclick="iaLimpiarChat()" title="Nueva conversación" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);font-size:16px;">↺</button>
             <button onclick="iaCerrarChat()" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);font-size:20px;line-height:1;">✕</button>
@@ -3205,16 +3205,16 @@
 </div>
 
 <!-- Botón flotante para abrir el chat -->
-<button id="iaChatFab" class="ia-chat-fab" onclick="iaAbrirChat()" title="Asistente IA">✨</button>
+<button id="iaChatFab" class="ia-chat-fab" onclick="iaAbrirChat()" title="Asistente IA"><i class=cxi-ia></i></button>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="js/services/permisos.js?v=1"></script>
-<script src="js/services/auth-manager.js?v=2"></script>
+<script src="js/services/auth-manager.js?v=3"></script>
 <script src="js/services/exportar.js?v=9"></script>
-<script src="js/services/ia.js?v=4"></script>
-<script src="js/services/firebase-service.js?v=11"></script>
+<script src="js/services/ia.js?v=5"></script>
+<script src="js/services/firebase-service.js?v=12"></script>
 <script>
     // Firebase siempre activo — config hardcodeada en firebase-service.js
     fbInit();
@@ -3271,11 +3271,11 @@
     }
 </script>
 
-<script src="js/core/busqueda-global.js?v=2"></script>
+<script src="js/core/busqueda-global.js?v=3"></script>
 <script src="js/auditor/licencia.js?v=1"></script>
 <script src="js/categorias/primera.js?v=4"></script>
 <script src="js/categorias/segunda.js?v=3"></script>
-<script src="js/services/menu.js?v=6"></script>
+<script src="js/services/menu.js?v=7"></script>
 <script src="js/services/consola.js?v=3"></script>
 <script src="js/services/home-hub.js?v=4"></script>
 <script src="js/auditor/multi-cliente.js?v=1"></script>

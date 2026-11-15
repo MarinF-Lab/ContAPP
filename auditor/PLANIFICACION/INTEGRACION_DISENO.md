@@ -36,7 +36,7 @@
 | 1 | Paleta del logo en `css/variables.css` (ambos temas, contraste AA verificado), texto sobre acento/estados por token, isotipo en login y cabecera | ✅ 2026-11-15 |
 | 2 | Reemplazar colores fijos de JS/estilos en línea por variables | ✅ 2026-11-15 |
 | 3 | Pantallas: login, Mis clientes (avance de cierre por tarjeta), Inicio con "¿Qué quieres hacer hoy?" sobre el centro de mando | ✅ 2026-11-15 |
-| 4 | Componentes comunes: botones, tarjetas, tablas, formularios, modales, pestañas (incluye decisión `.plan-tab`/`.rem-tab`) | 🔲 |
+| 4 | Componentes comunes: botones, tarjetas, tablas, formularios, modales, pestañas e íconos SVG | ✅ 2026-11-15 |
 | 5 | Movimiento y móvil (`emil-design-eng`, `review-animations`, `mobile-native`), `prefers-reduced-motion` | 🔲 |
 | 6 | Revisión final: capturas antes/después, `verificar.js`, pruebas de fase, `web-design-guidelines` | 🔲 |
 
@@ -135,9 +135,24 @@ Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar l
   de secciones con íconos SVG. Íconos compartidos en `js/core/iconos.js`.
 - Capturas en `diseno/etapa3/`. Pruebas: 6 casos nuevos en el navegador, 3 en `verificar.js`.
 
+### Etapa 4 — componentes e íconos ✅ 2026-11-15
+- **Componentes** (`css/main.css`, sección "SISTEMA DE COMPONENTES"): botones radio 10px sin sombra
+  dura; secundario neutro; peligro en contorno rojo (relleno solo en la confirmación final);
+  exportación y botones de tabla neutros. Pestañas de módulo y de Remuneraciones subrayadas con el
+  acento (decisión `.rem-tab`: subrayada; `.plan-tab`: control segmentado). Tablas sin bordes
+  verticales ni cebra, encabezado gris de 13px. Campos con borde visible. Tarjetas y modales radio
+  16-18px sin sombra ni salto. Estados como píldora con punto.
+- **Íconos**: 54 íconos SVG como máscaras CSS (`<i class=cxi-nombre></i>`, sin comillas para poder
+  usarse dentro de textos de JS); `js/core/iconos.js` para SVG en línea (selector de módulo,
+  Inicio). Emoji: de ~509 a 237. Reemplazados en botones, estados, indicadores y categorías;
+  quitados de pestañas, títulos y opciones de listas. Los que quedan están en avisos/mensajes,
+  comentarios del código, datos internos y exportación a PDF.
+- Arreglo de colores con transparencia en hexadecimal de 8 dígitos (`#10b98155`) que la Etapa 2 no
+  detectaba (Documentos, panel del estudio).
+- Capturas en `diseno/etapa4/`.
+
 ### Pendientes / próximo paso
-1. **Etapa 4** — componentes comunes: botones, tarjetas, tablas, formularios, modales, pestañas e
-   íconos SVG en vez de emoji (centro de mando, pestañas de módulo, tarjetas de indicadores).
+1. **Etapa 5** — movimiento y móvil (`emil-design-eng`, `review-animations`, `mobile-native`).
 2. Probar con Firebase real: "¿Olvidaste tu contraseña?" y "Recordarme" (aquí Firebase no carga).
 3. Si se quiere entrar con Google/Microsoft: activar los proveedores en Firebase Auth y programarlo.
 2. Campos sin etiqueta asociada (~115, H5) y emoji como íconos (H4/H6): se resuelven al rediseñar

@@ -494,7 +494,7 @@ function _actualizarEstadoCertificado(nombre, valido) {
     if (!box) return;
     box.style.display = 'block';
     box.innerHTML = valido
-        ? `<span style="color:var(--positive);">✔ Certificado cargado: <strong>${nombre}</strong></span>`
+        ? `<span style="color:var(--positive);"><i class=cxi-check></i> Certificado cargado: <strong>${nombre}</strong></span>`
         : `<span style="color:var(--text-muted);">Sin certificado digital cargado.</span>`;
 }
 

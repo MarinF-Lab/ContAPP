@@ -862,7 +862,7 @@ function renderPreasiento() {
     tbody.innerHTML += `
     <tr style="border-top:2px solid var(--border);font-weight:700;background:${cuadrado ? 'var(--positive-soft)' : 'var(--negative-soft)'};">
         <td style="font-size:12px;color:${cuadrado ? 'var(--positive)' : 'var(--negative)'};">
-            ${cuadrado ? '⚖️ Cuadrado' : '❌ Descuadrado'}
+            ${cuadrado ? '<i class=cxi-balanza></i> Cuadrado' : '<i class=cxi-cerrar></i> Descuadrado'}
         </td>
         <td class="monto" style="color:var(--text);">$${fmt(totalDebe)}</td>
         <td class="monto" style="color:var(--text);">$${fmt(totalHaber)}</td>
@@ -872,7 +872,7 @@ function renderPreasiento() {
     const btnAsiento = document.getElementById("btnGuardarAsiento");
     btnAsiento.innerText = asientoEditando ? "💾 Actualizar Asiento" : "💾 Registrar Asiento";
     if (cuadrado) {
-        badge.innerText  = `⚖️ Cuadrado: $${fmt(totalDebe)}`;
+        badge.innerText  = `Cuadrado: $${fmt(totalDebe)}`;
         badge.className  = "totales-badge ok";
         btnAsiento.disabled = false;
     } else {
@@ -1411,7 +1411,7 @@ function _actualizarKpisHistorialDiario(delMes) {
     elHaber.textContent = '$' + fmt(tHaber);
 
     const cuadrado = Math.abs(tDebe - tHaber) < 1;
-    elLabel.textContent = cuadrado ? '⚖️ Cuadrado' : '❌ Descuadrado';
+    elLabel.textContent = cuadrado ? 'Cuadrado' : 'Descuadrado';
     elEstado.textContent = '$' + fmt(Math.max(tDebe, tHaber));
     elEstado.style.color = cuadrado ? 'var(--positive)' : 'var(--negative)';
 }
@@ -1478,7 +1478,7 @@ function renderHistorialDiario() {
         lineas += `
         <tr style="border-top:2px solid var(--border);font-weight:700;background:${cuadrado ? 'var(--positive-soft)' : 'var(--negative-soft)'};">
             <td style="font-size:11px;color:${cuadrado ? 'var(--positive)' : 'var(--negative)'};">
-                ${cuadrado ? '⚖️ Cuadrado' : '❌ Descuadrado'}
+                ${cuadrado ? '<i class=cxi-balanza></i> Cuadrado' : '<i class=cxi-cerrar></i> Descuadrado'}
             </td>
             <td class="monto">$${fmt(tDebe)}</td>
             <td class="monto">$${fmt(tHaber)}</td>
@@ -1490,10 +1490,10 @@ function renderHistorialDiario() {
         <div class="card" style="margin-bottom:20px;${anulado ? 'opacity:.5;' : ''}">
 
             <div style="padding:12px 20px;background:var(--bg);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;border-radius:var(--radius) var(--radius) 0 0;">
-                <span style="font-weight:600;">📅 ${as.fecha}</span>
+                <span style="font-weight:600;"><i class=cxi-calendario></i> ${as.fecha}</span>
                 <span style="color:var(--text-muted);font-size:13px;">"${as.glosa}"</span>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    ${as.contacto ? `<span style="background:var(--accent-soft);color:var(--accent);padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">👤 ${as.contacto}</span>` : ''}
+                    ${as.contacto ? `<span style="background:var(--accent-soft);color:var(--accent);padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;"><i class=cxi-persona></i> ${as.contacto}</span>` : ''}
                     ${anulado ? `<span style="background:var(--negative-soft);color:var(--negative);padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;">ANULADO</span>` : ''}
                     <span style="font-size:12px;color:var(--text-muted);">N° ${as.numero}</span>
                 </div>
@@ -1501,13 +1501,13 @@ function renderHistorialDiario() {
 
             ${!anulado ? `
             <div style="padding:8px 12px;display:flex;gap:8px;border-bottom:1px solid var(--border);">
-                <button class="btn btn-primary" onclick="editarAsiento(${as.id})">✏️ Editar</button>
-                ${as._calcOrigen ? `<button class="btn btn-secondary" onclick="editarAsientoManual(${as.id})" title="Editar las líneas cuenta/debe/haber directamente">✏️ Líneas manual</button>` : ''}
+                <button class="btn btn-primary" onclick="editarAsiento(${as.id})"><i class=cxi-editar></i> Editar</button>
+                ${as._calcOrigen ? `<button class="btn btn-secondary" onclick="editarAsientoManual(${as.id})" title="Editar las líneas cuenta/debe/haber directamente"><i class=cxi-editar></i> Líneas manual</button>` : ''}
                 <button class="btn btn-secondary" onclick="anularAsiento(${as.id})">🚫 Anular</button>
-                ${as.origen ? `<button class="btn btn-secondary" onclick="cierreIrAOrigen(${as.id})" title="Abrir el documento que generó este asiento">📄 Ver origen</button>` : ''}
+                ${as.origen ? `<button class="btn btn-secondary" onclick="cierreIrAOrigen(${as.id})" title="Abrir el documento que generó este asiento"><i class=cxi-documento></i> Ver origen</button>` : ''}
             </div>` : `
             <div style="padding:8px 12px;display:flex;gap:8px;border-bottom:1px solid var(--border);">
-                <button class="btn btn-danger" onclick="eliminarAsiento(${as.id})">🗑 Eliminar</button>
+                <button class="btn btn-danger" onclick="eliminarAsiento(${as.id})"><i class=cxi-eliminar></i> Eliminar</button>
             </div>`}
 
             <table class="cont-table">
@@ -1787,7 +1787,7 @@ function actualizarTotalesManual() {
 
     const cuadrado = Math.abs(totD - totH) < 1;
     badge.innerText = cuadrado
-        ? `⚖️ Cuadrado: ${fmt(totD)}`
+        ? `Cuadrado: ${fmt(totD)}`
         : `❌ Descuadrado  Debe: ${fmt(totD)}  Haber: ${fmt(totH)}`;
     badge.className = 'totales-badge ' + (cuadrado ? 'ok' : 'error');
     if (btn) btn.disabled = !cuadrado;

@@ -472,12 +472,12 @@ function _renderIvaResumen(d) {
     if (d.ivaAPagar > 0) {
         html += `<button class="btn btn-primary" style="margin-top:12px;"
             onclick="generarAsientoPagoIVA(${d.mes}, ${d.anio}, ${d.ivaDebito}, ${d.ivaCredito}, ${d.remanente}, ${d.reajuste}, ${d.ivaAPagar}, ${d.ppmMonto})">
-            📝 Generar asiento de pago en el Diario
+            <i class=cxi-editar></i> Generar asiento de pago en el Diario
         </button>`;
     } else {
         html += `<button class="btn btn-primary" style="margin-top:12px;"
             onclick="generarAsientoRemanenteIVA(${d.mes}, ${d.anio}, ${d.ivaDebito}, ${d.ivaCredito}, ${d.remanente}, ${d.reajuste}, ${d.nuevoRemanente}, ${d.ppmMonto})">
-            📝 Generar asiento de cierre en el Diario
+            <i class=cxi-editar></i> Generar asiento de cierre en el Diario
         </button>`;
     }
 
