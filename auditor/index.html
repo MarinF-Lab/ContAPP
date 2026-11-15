@@ -7,7 +7,7 @@
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#F4F6FB">
+    <meta name="theme-color" content="#DCE3E9">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 
     <!-- Adaptador web: define window.electronAPI antes que el resto de scripts -->
@@ -33,11 +33,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-    <link rel="stylesheet" href="css/variables.css?v=2">
-    <link rel="stylesheet" href="css/main.css?v=15">
-    <link rel="stylesheet" href="css/home-hub.css?v=2">
-    <link rel="stylesheet" href="css/remuneraciones.css?v=1">
-    <link rel="stylesheet" href="css/auditor.css?v=2">
+    <link rel="stylesheet" href="css/variables.css?v=3">
+    <link rel="stylesheet" href="css/main.css?v=16">
+    <link rel="stylesheet" href="css/home-hub.css?v=3">
+    <link rel="stylesheet" href="css/remuneraciones.css?v=3">
+    <link rel="stylesheet" href="css/auditor.css?v=3">
     <script>
         // Restaurar tema guardado antes de que el DOM pinte (evita flash)
         (function() {
@@ -60,7 +60,7 @@
     <!-- Header exclusivo de la pantalla Inicio (marca, saludo, acciones) — oculto en cualquier otro módulo -->
     <div id="home-header" class="home-header" style="display:none;">
         <div class="hbrand">
-            <span class="seal">CA</span>
+            <span class="seal seal-logo" aria-hidden="true"><img class="logo-claro" src="icons/brand/isotipo-light-96.png" alt="" width="32" height="32"><img class="logo-oscuro" src="icons/brand/isotipo-dark-96.png" alt="" width="32" height="32"></span>
             <span class="name">ContApp</span>
         </div>
         <div class="home-greet">
@@ -637,7 +637,7 @@
                 <button class="btn-export btn-export-pdf"   onclick="exportarPDFCompras()">⬇ PDF</button>
                 <button class="btn-export btn-export-excel" onclick="exportarExcelCompras()">⬇ Excel</button>
                 <button class="btn-export btn-export-print" onclick="imprimirCompras()">🖨 Imprimir</button>
-                <button class="btn-export" style="background:var(--accent);color:#fff;font-weight:600;" onclick="siiAbrirImportador('compras')">⬆ XML SII</button>
+                <button class="btn-export" style="background:var(--accent);color:var(--on-accent);font-weight:600;" onclick="siiAbrirImportador('compras')">⬆ XML SII</button>
                 <button class="btn-export" style="background:#0f766e;color:#fff;font-weight:600;" onclick="siiAbrirRCV()">☁ Descargar RCV</button>
             </div>
 
@@ -734,7 +734,7 @@
                 <button class="btn-export btn-export-pdf"   onclick="exportarPDFVentas()">⬇ PDF</button>
                 <button class="btn-export btn-export-excel" onclick="exportarExcelVentas()">⬇ Excel</button>
                 <button class="btn-export btn-export-print" onclick="imprimirVentas()">🖨 Imprimir</button>
-                <button class="btn-export" style="background:var(--accent);color:#fff;font-weight:600;" onclick="siiAbrirImportador('ventas')">⬆ XML SII</button>
+                <button class="btn-export" style="background:var(--accent);color:var(--on-accent);font-weight:600;" onclick="siiAbrirImportador('ventas')">⬆ XML SII</button>
                 <button class="btn-export" style="background:#0f766e;color:#fff;font-weight:600;" onclick="siiAbrirRCV()">☁ Descargar RCV</button>
             </div>
 
@@ -2289,7 +2289,7 @@
         <svg class="login-blob" viewBox="0 0 240 240"><path d="M30 8 H190 A26 26 0 0 1 216 34 V150" fill="none" stroke="var(--coral)" stroke-width="2" opacity="0.55"/></svg>
 
         <div class="lbrand">
-            <div class="seal">C</div>
+            <span class="seal seal-logo" aria-hidden="true"><img class="logo-claro" src="icons/brand/isotipo-light-96.png" alt="" width="40" height="40"><img class="logo-oscuro" src="icons/brand/isotipo-dark-96.png" alt="" width="40" height="40"></span>
             <div class="name">Cont<span class="hi">APP</span></div>
         </div>
         <div class="ltag">Contabilidad · Auditoría · Multi-cliente</div>
@@ -2914,7 +2914,7 @@
                             onclick="consultarSII()"
                             title="Consultar razón social en el SII"
                             style="display:none;padding:8px 12px;font-size:12px;white-space:nowrap;
-                                   background:var(--accent);color:#fff;border:none;border-radius:6px;
+                                   background:var(--accent);color:var(--on-accent);border:none;border-radius:6px;
                                    cursor:pointer;font-weight:600;">
                             🔍 SII
                         </button>
@@ -3111,16 +3111,16 @@
 <script src="js/core/contabilidad.js?v=4"></script>
 
 <script src="js/services/diario.js?v=35"></script>
-<script src="js/services/mayor.js?v=12"></script>
+<script src="js/services/mayor.js?v=13"></script>
 <script src="js/services/balance.js?v=6"></script>
-<script src="js/services/dashboard.js?v=6"></script>
+<script src="js/services/dashboard.js?v=7"></script>
 <script src="js/services/flujo-caja.js?v=3"></script>
 <script src="js/services/balance-clasificado.js?v=4"></script>
 <script src="js/services/estado-resultados.js?v=4"></script>
-<script src="js/services/indicadores.js?v=5"></script>
+<script src="js/services/indicadores.js?v=6"></script>
 <script src="js/services/previred-scraper.js?v=2"></script>
 <script src="js/services/iva-resumen.js?v=12"></script>
-<script src="js/services/reconciliacion.js?v=6"></script>
+<script src="js/services/reconciliacion.js?v=7"></script>
 <script src="js/services/sii-rcv.js?v=2"></script>
 
 <script src="js/modules/compras.js?v=5"></script>
@@ -3228,7 +3228,7 @@
         // Controles nativos (scroll, inputs, selects) y barra del navegador acordes al tema
         document.documentElement.style.colorScheme = t === 'dark' ? 'dark' : 'light';
         var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || (t === 'dark' ? '#16161b' : '#F4F6FB'));
+        if (meta) meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || (t === 'dark' ? '#131D2A' : '#DCE3E9'));
         document.querySelectorAll('.theme-toggle-btn').forEach(function (btn) {
             var sun = btn.querySelector('.ic-sun'), moon = btn.querySelector('.ic-moon');
             if (sun) sun.style.display = t === 'dark' ? 'none' : 'block';
@@ -3275,7 +3275,7 @@
 <script src="js/categorias/primera.js?v=4"></script>
 <script src="js/categorias/segunda.js?v=3"></script>
 <script src="js/services/menu.js?v=6"></script>
-<script src="js/services/home-hub.js?v=2"></script>
+<script src="js/services/home-hub.js?v=3"></script>
 <script src="js/auditor/multi-cliente.js?v=1"></script>
 <script src="js/auditor/panel-estudio.js?v=2"></script>
 

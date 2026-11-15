@@ -749,7 +749,7 @@ function renderPreviredTablas() {
     const mono = "font-family:'JetBrains Mono','Courier New',monospace;";
 
     const secHead = (title, sub = '') => `
-        <div style="padding:10px 14px;background:var(--accent);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+        <div style="padding:10px 14px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
             ${title}${sub ? `<span style="font-size:11px;font-weight:400;opacity:.82;">${sub}</span>` : ''}
         </div>`;
     const thR = `padding:7px 10px;text-align:right;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-bottom:2px solid var(--divider);white-space:nowrap;`;

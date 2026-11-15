@@ -298,7 +298,7 @@ function _recHtmlTabla() {
 
         <!-- Columna banco -->
         <div class="card" style="padding:0;overflow:hidden;">
-            <div style="padding:10px 14px;background:var(--accent);color:#fff;font-weight:700;font-size:12px;display:flex;justify-content:space-between;">
+            <div style="padding:10px 14px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:12px;display:flex;justify-content:space-between;">
                 <span>🏦 EXTRACTO BANCO (${txPend.length} pendientes)</span>
             </div>
             <div style="max-height:460px;overflow-y:auto;">
@@ -310,7 +310,7 @@ function _recHtmlTabla() {
 
         <!-- Columna libro -->
         <div class="card" style="padding:0;overflow:hidden;">
-            <div style="padding:10px 14px;background:var(--accent);color:#fff;font-weight:700;font-size:12px;display:flex;justify-content:space-between;">
+            <div style="padding:10px 14px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:12px;display:flex;justify-content:space-between;">
                 <span>📝 LIBRO DIARIO (${asientosPend.length} pendientes)</span>
             </div>
             <div style="max-height:460px;overflow-y:auto;">
@@ -325,7 +325,7 @@ function _recHtmlTabla() {
     <!-- Conciliados -->
     ${txConc.length > 0 ? `
     <div class="card" style="padding:0;overflow:hidden;margin-top:16px;">
-        <div style="padding:10px 14px;background:var(--positive);color:#fff;font-weight:700;font-size:12px;">
+        <div style="padding:10px 14px;background:var(--positive);color:var(--on-state);font-weight:700;font-size:12px;">
             ✓ CONCILIADOS (${txConc.length})
         </div>
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
@@ -379,7 +379,7 @@ function _recRowBanco(t, asientosCandidatos) {
         <div style="margin-top:6px;display:flex;align-items:center;gap:6px;background:var(--accent-soft);border-radius:6px;padding:5px 8px;">
             <span style="font-size:11px;color:var(--accent);">Sugerido: #${sugerido.numero} — ${sugerido.glosa.slice(0,40)}</span>
             <button onclick="recLigar('${t._id}', ${sugerido.id})"
-                style="margin-left:auto;font-size:11px;padding:2px 10px;border:none;border-radius:4px;background:var(--accent);color:#fff;cursor:pointer;">Ligar</button>
+                style="margin-left:auto;font-size:11px;padding:2px 10px;border:none;border-radius:4px;background:var(--accent);color:var(--on-accent);cursor:pointer;">Ligar</button>
         </div>` : ''}
         <div style="margin-top:6px;">
             <select onchange="if(this.value) recLigar('${t._id}', parseInt(this.value))"

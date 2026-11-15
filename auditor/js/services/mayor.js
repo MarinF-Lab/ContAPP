@@ -48,7 +48,7 @@ function _mayorRenderToolbar(cuentas) {
         periodos.map(p => `<option value="${p}" ${_mayorFiltrosPeriodo === p ? 'selected' : ''}>${p}</option>`).join('');
 
     const avisoRelacionadas = _mayorCuentasIntervinientes ? `
-        <div style="display:flex;align-items:center;gap:8px;background:var(--info-soft,#e3e9fe);color:var(--info,#587FFC);padding:6px 12px;border-radius:6px;font-size:12.5px;font-weight:600;">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--info-soft);color:var(--info);padding:6px 12px;border-radius:6px;font-size:12.5px;font-weight:600;">
             🔗 Mostrando solo las cuentas del asiento N° ${_mayorAsientoIntervinienteNumero ?? ''}
             <button class="btn btn-secondary" style="padding:3px 9px;font-size:11.5px;" onclick="mayorQuitarFiltroCuentas()">✕ Quitar filtro</button>
         </div>` : '';

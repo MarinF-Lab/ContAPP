@@ -97,13 +97,13 @@ firestore.rules → reglas v3 · firebase.json → emulador y despliegue de regl
 ## Pruebas — comandos exactos (desde `auditor/`)
 
 ```bash
-npm test                 # verificar.js (estática) + test-fase0..3.js (conectividad)
+npm test                 # verificar.js (estática) + contraste AA + test-fase0..3.js (conectividad)
 npm run test:navegador   # + interacción en Chromium (modales, teclado, tema, avisos)
 npm run test:reglas      # firestore.rules en el emulador (requiere Java; 63 casos)
 ```
 
-Capturas: `node PLANIFICACION/diseno/capturar-linea-base.js` (con un servidor en el puerto 8765)
-para comparar contra la línea base `PLANIFICACION/diseno/linea-base/`.
+Capturas: `node PLANIFICACION/diseno/capturar-linea-base.js <carpeta>` (con un servidor en el
+puerto 8765) para comparar contra la línea base `PLANIFICACION/diseno/linea-base/` (Etapa 1: `etapa1/`).
 
 ---
 

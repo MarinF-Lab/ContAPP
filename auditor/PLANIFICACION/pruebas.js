@@ -17,6 +17,7 @@ const PUERTO = 8765; // el que usan probar-interaccion.js y capturar-linea-base.
 
 const PASOS = [
   ['Verificación estática', 'PLANIFICACION/verificar.js'],
+  ['Contraste de colores AA (ambos temas)', 'PLANIFICACION/diseno/contraste.js'],
   ['Conectividad · Fase 0 (datos por cliente)', 'PLANIFICACION/test-fase0.js'],
   ['Conectividad · Fase 1 (asientos)', 'PLANIFICACION/test-fase1.js'],
   ['Conectividad · Fase 2 (conexiones)', 'PLANIFICACION/test-fase2.js'],

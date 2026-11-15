@@ -21,7 +21,7 @@
 
 // 5 colores — igual a la cantidad máxima de grupos hoy (primera categoría,
 // G1-G5); segunda categoría (3 grupos) simplemente usa los 3 primeros.
-const HOME_HUB_ACCENTS = ['var(--blue)', 'var(--coral)', 'var(--periwinkle)', 'var(--ok)', 'var(--navy)'];
+const HOME_HUB_ACCENTS = ['var(--blue)', 'var(--coral)', 'var(--ok)', 'var(--warn)', 'var(--navy)']; // todos con contraste AA como texto
 
 // ── Sección 1: grupos de módulos reales ─────────────────────────────────────
 function renderHomeHubTiles(menu) {

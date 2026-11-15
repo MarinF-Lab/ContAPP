@@ -46,19 +46,19 @@
 
 .home-hub-tile {
     width: 260px; background: var(--card-bg); border: 1px solid var(--rule-strong); border-radius: var(--radius-m);
-    padding: 26px 24px 22px; box-shadow: 0 12px 28px rgba(30,30,93,.1), 0 2px 6px rgba(30,30,93,.06);
+    padding: 26px 24px 22px; box-shadow: 0 12px 28px rgba(15,27,38,.1), 0 2px 6px rgba(15,27,38,.06);
     cursor: pointer; position: relative; text-align: left; transition: transform .2s, box-shadow .2s;
 }
 .home-hub-tile::before {
     content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px;
     border-radius: var(--radius-m) var(--radius-m) 0 0; background: var(--accent, var(--coral));
 }
-.home-hub-tile:hover { transform: translateY(-4px); box-shadow: 0 18px 36px rgba(30,30,93,.16), 0 0 0 3px var(--wash-a); }
+.home-hub-tile:hover { transform: translateY(-4px); box-shadow: 0 18px 36px rgba(15,27,38,.16), 0 0 0 3px var(--wash-a); }
 
 .hh-tile-ic {
     width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, var(--periwinkle-soft), var(--coral) 150%);
     display: flex; align-items: center; justify-content: center; color: var(--navy); margin-bottom: 14px;
-    box-shadow: 0 6px 18px rgba(88,127,252,.22); font-size: 24px;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--blue) 22%, transparent); font-size: 24px;
 }
 [data-theme="dark"] .hh-tile-ic { background: linear-gradient(135deg, var(--paper-deep), var(--navy-light)); box-shadow: none; }
 .hh-tile-title { font-size: 18px; font-weight: 700; color: var(--ink); font-family: var(--font-heading); letter-spacing: -.01em; margin-bottom: 5px; }
@@ -74,7 +74,7 @@
 
 .hh-panel {
     width: min(60vw, 560px); border-radius: 20px; overflow: hidden;
-    background: var(--card-bg); border: 1px solid var(--rule-strong); box-shadow: 0 24px 60px rgba(30,30,93,.28);
+    background: var(--card-bg); border: 1px solid var(--rule-strong); box-shadow: 0 24px 60px rgba(15,27,38,.28);
     position: relative; transform: scale(.94); opacity: 0; transition: transform .22s cubic-bezier(.22,1,.36,1), opacity .22s;
 }
 .hh-overlay.abierto .hh-panel { transform: scale(1); opacity: 1; }

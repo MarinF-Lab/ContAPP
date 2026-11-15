@@ -5,7 +5,8 @@
  * Requiere Playwright (require('playwright')). Guarda JPG en PLANIFICACION/diseno/linea-base/.
  */
 const { chromium } = require('playwright');
-const OUT = require('path').join(__dirname, 'linea-base') + '/';
+const OUT = require('path').join(__dirname, process.argv[2] || 'linea-base') + '/';
+require('fs').mkdirSync(OUT, { recursive: true });
 const SEED = () => {
   if (sessionStorage.getItem('seeded')) return;
   sessionStorage.setItem('seeded', '1');

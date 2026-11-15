@@ -33,7 +33,7 @@
 | Etapa | Qué incluye | Estado |
 |-------|-------------|--------|
 | 0 | Referencia en el repo, auditoría (`web-design-guidelines`, `ui-ux-pro-max`), capturas de línea base claro/oscuro, inventario de colores fijos | ✅ 2026-11-14 |
-| 1 | Paleta del logo y tipografía en `css/variables.css` (ambos temas, contraste AA), logos en login y cabecera (`color-scheme` y `prefers-color-scheme` ya hechos en las correcciones) | 🔲 |
+| 1 | Paleta del logo en `css/variables.css` (ambos temas, contraste AA verificado), texto sobre acento/estados por token, isotipo en login y cabecera | ✅ 2026-11-15 |
 | 2 | Reemplazar colores fijos de JS/estilos en línea por variables (prioridad: Documentos, Cartolas, cierre, tablas, insignias) | 🔲 |
 | 3 | Pantallas: login, Mis clientes (avance de cierre por tarjeta), Inicio con "¿Qué quieres hacer hoy?" sobre el centro de mando | 🔲 |
 | 4 | Componentes comunes: botones, tarjetas, tablas, formularios, modales, pestañas (incluye decisión `.plan-tab`/`.rem-tab`) | 🔲 |
@@ -70,9 +70,26 @@ Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar l
   histórico en `archivo/`, el worker de Previred en `herramientas/`, maquetas viejas eliminadas.
 - Un solo comando de pruebas: `npm test` (estática + conectividad) y `npm run test:navegador`.
 
+### Etapa 1 — paleta del logo ✅ 2026-11-15
+- `css/variables.css` reescrito con la paleta de la referencia. Los nombres antiguos (`--coral`,
+  `--navy`, `--periwinkle`, `--blue`) apuntan a la paleta nueva y **cambian con el tema** (antes
+  eran fijos: `--navy` como texto quedaba invisible en oscuro).
+- Tokens nuevos: `--on-accent` (blanco en claro, navy en oscuro: el blanco no se lee sobre el rosa
+  neón) y `--on-state` (texto sobre botones rojo/verde/info). Aplicados en 32 reglas CSS y 8
+  estilos en línea que fijaban `color:#fff`.
+- 25 colores fijos de la paleta anterior (`rgba(255,134,146…)`, `#587FFC`, `rgba(30,30,93…)`)
+  pasados a variables.
+- Isotipo del logo (claro/oscuro, `icons/brand/isotipo-*-96.png`) en la cabecera de Inicio y el login.
+- Arreglado: la pestaña activa de Remuneraciones no mostraba su texto (mismo color que el fondo,
+  por dos hojas de estilo en conflicto) — ya pasaba antes de la Etapa 1.
+- `PLANIFICACION/diseno/contraste.js` (en `npm test`): 80 combinaciones texto/fondo, todas ≥ 4,5:1
+  en ambos temas (la paleta anterior fallaba ~30). Capturas del después en `diseno/etapa1/`.
+
 ### Pendientes / próximo paso
-1. **Etapa 1** — tokens de la paleta del logo en `css/variables.css` (ver tabla de contraste en
-   `LINEA_BASE_DISENO.md`: el coral actual no cumple AA en tema claro — H2).
+1. **Etapa 2** — colores fijos que aún no siguen la paleta (visibles en `diseno/etapa1/`): recuadro
+   "Total mes"/"Cuadrado" rosado, botón "Editar" gris y "Descargar RCV" verde azulado en Compras,
+   textos tenues dentro de tablas en oscuro, degradado de los íconos del centro de mando, avatar,
+   insignias de Remuneraciones y Activos. Ícono de la PWA (`icons/icon.svg`) sigue con el azul antiguo.
 2. Campos sin etiqueta asociada (~115, H5) y emoji como íconos (H4/H6): se resuelven al rediseñar
    cada pantalla (Etapas 3-4).
 3. Sin pantalla para **revocar códigos o sacar invitados** (las reglas v3 ya lo permiten:

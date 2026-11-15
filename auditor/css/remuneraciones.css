@@ -65,7 +65,7 @@
     white-space: nowrap;
 }
 .rem-tab:hover { color: var(--text); }
-.rem-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.rem-tab.active { color: var(--on-accent); border-bottom-color: var(--accent); } /* fondo de acento lo pone main.css; antes el texto quedaba del mismo color que el fondo */
 
 /* ── Toolbar ──────────────────────────────────────────────── */
 .rem-toolbar {
@@ -90,7 +90,7 @@
 .rem-search:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(255,134,146,.1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 /* ── Tabla ────────────────────────────────────────────────── */
@@ -431,7 +431,7 @@
 .rem-input:focus, .rem-select:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(255,134,146,.1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 .rem-input.rem-input-warn { border-color: var(--warning); }
 .rem-fg-hint { font-size: 12px; color: var(--text-muted); line-height: 1.4; }

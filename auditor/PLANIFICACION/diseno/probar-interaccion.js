@@ -3,13 +3,14 @@
  * probar-interaccion.js — Pruebas en navegador de las correcciones de interacción
  * (gestor de modales, teclado, tema, avisos, Inicio sin conexión).
  * Uso: desde auditor/: python3 -m http.server 8765 &  luego  node PLANIFICACION/diseno/probar-interaccion.js
- * Guarda capturas en PLANIFICACION/diseno/correcciones/.
+ * Con --capturas guarda capturas en PLANIFICACION/diseno/correcciones/.
  */
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 const OUT = path.join(__dirname, 'correcciones') + '/';
-fs.mkdirSync(OUT, { recursive: true });
+const CAPTURAS = process.argv.includes('--capturas'); // sin el flag no reescribe las capturas
+if (CAPTURAS) fs.mkdirSync(OUT, { recursive: true });
 
 const fuente = fs.readFileSync(path.join(__dirname, 'capturar-linea-base.js'), 'utf8');
 const SEED = fuente.slice(fuente.indexOf('const SEED = () =>') + 'const SEED = '.length, fuente.indexOf('\nconst PANTALLAS')).trim().replace(/;$/, '');
@@ -53,7 +54,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   console.log('Inicio sin conexión (H1)');
   const grupos = await p.evaluate(() => document.querySelectorAll('#homeHubTiles .home-hub-tile').length);
   check('el centro de mando muestra grupos sin refrescar a mano', grupos >= 3, grupos);
-  await p.screenshot({ path: OUT + '01-inicio.jpg', type: 'jpeg', quality: 70 });
+  if (CAPTURAS) await p.screenshot({ path: OUT + '01-inicio.jpg', type: 'jpeg', quality: 70 });
 
   console.log('Teclado');
   const tile = await p.evaluate(() => {
@@ -80,7 +81,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   const anim = await p.evaluate(() => getComputedStyle(document.querySelector('#modalCompra > *')).animationName);
   check('entrada animada', anim === 'cm-caja-in', anim);
   await espera(250);
-  await p.screenshot({ path: OUT + '02-modal-compra.jpg', type: 'jpeg', quality: 70 });
+  if (CAPTURAS) await p.screenshot({ path: OUT + '02-modal-compra.jpg', type: 'jpeg', quality: 70 });
   let r = await p.evaluate(() => ({
     foco: document.getElementById('modalCompra').contains(document.activeElement),
     tag: document.activeElement.tagName,
@@ -104,7 +105,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
     return { zc: +getComputedStyle(c).zIndex, zm: +getComputedStyle(m).zIndex, foco: c.contains(document.activeElement) };
   });
   check('la confirmación queda encima y con foco', r.zc > r.zm && r.foco, r);
-  await p.screenshot({ path: OUT + '03-confirmacion.jpg', type: 'jpeg', quality: 70 });
+  if (CAPTURAS) await p.screenshot({ path: OUT + '03-confirmacion.jpg', type: 'jpeg', quality: 70 });
   await p.keyboard.press('Escape');
   await espera(200);
   r = await p.evaluate(() => ({
@@ -140,20 +141,20 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   await espera(250);
   r = await p.evaluate(() => { const t = document.getElementById('toast-global'); return { cls: t.className, live: t.getAttribute('aria-live'), role: t.getAttribute('role') }; });
   check('aviso info no se ve como error y es anunciado', r.cls.includes('t-info') && r.live === 'polite' && r.role === 'status', r);
-  await p.screenshot({ path: OUT + '04-aviso.jpg', type: 'jpeg', quality: 70 });
+  if (CAPTURAS) await p.screenshot({ path: OUT + '04-aviso.jpg', type: 'jpeg', quality: 70 });
 
   console.log('Pantallas');
   await p.evaluate(() => navegar('cartolas'));
   await espera(800);
   r = await p.evaluate(() => { const b = document.querySelector('.btn-clasificar'); return b && getComputedStyle(b).borderRadius; });
   check('botones de Cartolas con estilo de la app', r && r !== '0px', r);
-  await p.screenshot({ path: OUT + '05-cartolas.jpg', type: 'jpeg', quality: 70 });
+  if (CAPTURAS) await p.screenshot({ path: OUT + '05-cartolas.jpg', type: 'jpeg', quality: 70 });
   await p.evaluate(() => navegar('mayor'));
   await espera(800);
-  await p.screenshot({ path: OUT + '06-mayor.jpg', type: 'jpeg', quality: 70 });
+  if (CAPTURAS) await p.screenshot({ path: OUT + '06-mayor.jpg', type: 'jpeg', quality: 70 });
   await p.evaluate(() => { document.documentElement.setAttribute('data-theme', 'dark'); });
   await espera(300);
-  await p.screenshot({ path: OUT + '07-mayor-oscuro.jpg', type: 'jpeg', quality: 70 });
+  if (CAPTURAS) await p.screenshot({ path: OUT + '07-mayor-oscuro.jpg', type: 'jpeg', quality: 70 });
   await p.evaluate(() => { document.documentElement.setAttribute('data-theme', 'light'); navegar('remuneraciones'); });
   await espera(800);
   const hayRem = await p.evaluate(() => typeof remAbrirModal === 'function');

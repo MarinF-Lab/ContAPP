@@ -83,12 +83,12 @@ function _dashChartColors() {
     const cs = getComputedStyle(document.documentElement);
     const v = (name, fallback) => (cs.getPropertyValue(name) || fallback).trim();
     return {
-        periwinkle: v('--periwinkle', '#92A5FD'),
-        coral:      v('--coral', '#FF8692'),
-        coralDeep:  v('--coral-deep', '#E8687A'),
-        navy:       v('--navy', '#1E1E5D'),
+        periwinkle: v('--periwinkle', '#8FA5B3'),
+        coral:      v('--coral', '#A03A63'),
+        coralDeep:  v('--coral-deep', '#86304F'),
+        navy:       v('--navy', '#0F1B26'),
         ok:         v('--ok', '#1FB579'),
-        ink:        v('--ink', '#1E1E5D'),
+        ink:        v('--ink', '#0F1B26'),
         inkSoft:    v('--ink-soft', '#5B5F82'),
         inkFaint:   v('--ink-faint', '#9498B8'),
         rule:       v('--rule', '#E1E4F3'),
