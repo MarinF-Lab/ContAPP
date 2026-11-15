@@ -46,12 +46,12 @@
 .rem-tabs {
     display: flex;
     gap: 4px;
-    border-bottom: 2px solid var(--divider);
+    border-bottom: 1px solid var(--divider);
     padding-bottom: 0;
     margin-bottom: 0;
 }
 .rem-tab {
-    padding: 10px 22px;
+    padding: 10px 12px;
     font-size: 14px;
     font-weight: 600;
     font-family: inherit;
@@ -60,12 +60,12 @@
     background: transparent;
     color: var(--text-muted);
     border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
+    margin-bottom: -1px;
     transition: color .15s, border-color .15s;
     white-space: nowrap;
 }
 .rem-tab:hover { color: var(--text); }
-.rem-tab.active { color: var(--on-accent); border-bottom-color: var(--accent); } /* fondo de acento lo pone main.css; antes el texto quedaba del mismo color que el fondo */
+.rem-tab.active { color: var(--text); border-bottom-color: var(--accent); }  /* Etapa 4: subrayada como las pestañas de módulo */
 
 /* ── Toolbar ──────────────────────────────────────────────── */
 .rem-toolbar {
