@@ -3595,7 +3595,7 @@ body[data-imprimiendo] .ia-chat-panel { display: none !important; }
 .rem-tabla-wrap {
     border: 1px solid var(--card-border);
     border-radius: 12px;
-    overflow: hidden;
+    overflow-x: auto;
     box-shadow: var(--shadow);
 }
 .rem-tabla {
@@ -3678,6 +3678,8 @@ body[data-imprimiendo] .ia-chat-panel { display: none !important; }
 .rem-form-tabs {
     display: flex;
     gap: 4px;
+    overflow-x: auto;           /* en celular las pestañas se desplazan en vez de salirse */
+    scrollbar-width: thin;
     border-bottom: 1px solid var(--divider);
     margin-bottom: 20px;
 }
@@ -4454,3 +4456,31 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 .seal-logo .logo-oscuro { display: none; }
 [data-theme="dark"] .seal-logo .logo-claro { display: none; }
 [data-theme="dark"] .seal-logo .logo-oscuro { display: block; }
+
+/* ══════════════════════════════════════════
+   ESPACIADO DEL TEXTO — revisión 2026-11 (PLANIFICACION/diseno/revisar-texto.js)
+══════════════════════════════════════════ */
+/* .card no tiene relleno (las que llevan tablas van a sangre); las de texto usan .card-pad */
+.card.card-pad { padding: 20px 22px; }
+.rem-form-tab { white-space: nowrap; flex-shrink: 0; }
+
+.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.grid-2col > * { min-width: 0; }
+
+@media (max-width: 760px) {
+    .grid-2col { grid-template-columns: 1fr; }
+    .cartola-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cartola-kpis .kpi-valor { font-size: clamp(14px, 4.4vw, 22px); white-space: nowrap; }
+    /* Pestañas de módulo: se desplazan; el borde derecho se desvanece para indicar que hay más */
+    .mod-tab-btn { flex-shrink: 0; white-space: nowrap; }
+    .mod-tabs { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+                mask-image: linear-gradient(90deg, #000 85%, transparent); scrollbar-width: none; }
+}
+@media (max-width: 600px) {
+    /* Barra superior: el buscador queda solo como ícono */
+    .float-search { flex: 0 0 auto; min-width: 0; padding: 9px 11px; }
+    .float-search .fs-txt, .float-search kbd { display: none; }
+    /* Cabecera de Inicio: el avance del cierre ya está en la tarjeta de cierre */
+    #homeCierre, #homeCierreSep { display: none !important; }
+    .card.card-pad { padding: 16px; }
+}

@@ -507,7 +507,7 @@ function renderPlanCuentas() {
                 <td>
                     <span style="
                         background:${badge.bg};color:${badge.color};
-                        padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
+                        padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;display:inline-block;
                     ">${data.tipo}</span>
                 </td>
                 <td style="font-size:12px;color:var(--text-muted);">${data.subgrupo || '—'}</td>

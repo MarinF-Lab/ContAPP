@@ -98,7 +98,7 @@
     background: var(--card);
     border: 1px solid var(--card-border);
     border-radius: 14px;
-    overflow: hidden;
+    overflow-x: auto;   /* antes hidden: en celular cortaba las columnas */
     box-shadow: var(--shadow);
 }
 .rem-tabla {

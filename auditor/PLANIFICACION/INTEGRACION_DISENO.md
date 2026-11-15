@@ -102,6 +102,18 @@ Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar l
   estudio, categorías del buscador), texto blanco de avatares, logos de Google/Microsoft, valores
   de respaldo de los gráficos. Capturas del después en `diseno/etapa2/`.
 
+### Revisión de texto pegado a bordes o desbordado ✅ 2026-11-15
+- `npm run revisar:texto` (`PLANIFICACION/diseno/revisar-texto.js`): mide en todas las vistas y
+  pestañas, ambos temas, 1366 y 390px, la separación entre cada texto y el borde de su caja.
+- `.card` no tiene relleno (las tarjetas con tablas van a sangre); las tarjetas de texto usan la
+  clase nueva `.card-pad`. Aplicada en Inventario y Activos (5 pestañas), Plan de Cuentas y F29.
+- Celular: buscador solo con ícono, avance del cierre fuera de la cabecera de Inicio, indicadores
+  de Cartolas en 2 columnas, rejillas de 2 columnas (Honorarios y otras) en 1 columna, tabla de
+  Remuneraciones y pestañas del formulario de trabajador desplazables, pestañas de módulo con
+  desvanecido a la derecha.
+- Quedan solo falsos positivos: píldoras/insignias (3px vertical a propósito), atajo `Ctrl K`,
+  celdas de tablas desplazables. Capturas en `diseno/texto/`.
+
 ### Pendientes / próximo paso
 1. **Etapa 3** — pantallas: login, Mis clientes (avance de cierre por tarjeta) e Inicio con
    "¿Qué quieres hacer hoy?" sobre el centro de mando.

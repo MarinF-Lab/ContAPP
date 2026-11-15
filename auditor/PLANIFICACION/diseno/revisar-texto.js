@@ -8,7 +8,7 @@
  * Agrupa los hallazgos por componente (clases CSS) para saber qué estilo arreglar.
  *
  * Uso (desde auditor/, con un servidor en el puerto 8765):
- *   node PLANIFICACION/diseno/revisar-texto.js            → resumen
+ *   npm run revisar:texto                                  → resumen (unos 10 minutos)
  *   node PLANIFICACION/diseno/revisar-texto.js --json f   → además guarda el detalle en f
  */
 const { chromium } = require('playwright');
@@ -44,10 +44,12 @@ function medir() {
   };
   const transparente = c => c === 'rgba(0, 0, 0, 0)' || c === 'transparent';
   // ¿Esta caja dibuja un límite visible? (borde, fondo propio distinto del de su padre, sombra)
-  function esCaja(el) {
+  // Devuelve los lados que marcan límite: todos si tiene fondo o sombra; si no, solo los que tienen borde.
+  function ladosCaja(el) {
     const s = getComputedStyle(el);
-    const borde = ['Top', 'Right', 'Bottom', 'Left'].some(l => parseFloat(s['border' + l + 'Width']) > 0 &&
+    const conBorde = ['Top', 'Right', 'Bottom', 'Left'].filter(l => parseFloat(s['border' + l + 'Width']) > 0 &&
       !transparente(s['border' + l + 'Color']) && s['border' + l + 'Style'] !== 'none');
+    const borde = conBorde.length > 0;
     let fondo = !transparente(s.backgroundColor);
     if (fondo && el.parentElement) {
       // fondo igual al del contenedor visible más cercano = no marca un límite
@@ -56,7 +58,10 @@ function medir() {
         if (!transparente(bg)) { if (bg === s.backgroundColor) fondo = false; break; }
       }
     }
-    return borde || fondo || (s.boxShadow !== 'none' && !s.boxShadow.includes('inset'));
+    if (fondo || (s.boxShadow !== 'none' && !s.boxShadow.includes('inset'))) return ['izq', 'der', 'arr', 'aba'];
+    if (!borde) return null;
+    const nombre = { Top: 'arr', Right: 'der', Bottom: 'aba', Left: 'izq' };
+    return conBorde.map(l => nombre[l]);
   }
   const firma = el => {
     const partes = [];
@@ -93,9 +98,10 @@ function medir() {
       top: Math.min(...rects.map(r => r.top)), bottom: Math.max(...rects.map(r => r.bottom)),
     };
     // Caja que lo contiene
-    let caja = null;
+    let caja = null, ladosLimite = null;
     for (let e = el; e && e !== document.documentElement; e = e.parentElement) {
-      if (esCaja(e)) { caja = e; break; }
+      const l = ladosCaja(e);
+      if (l) { caja = e; ladosLimite = l; break; }
     }
     const texto = n.textContent.trim().replace(/\s+/g, ' ').slice(0, 50);
     if (caja && caja !== document.body) {
@@ -107,7 +113,9 @@ function medir() {
         arr: t.top - (r.top + bT), aba: (r.bottom - bB) - t.bottom,
       };
       // Las celdas de tabla comparten bordes verticales: solo cuentan izq/der
-      const lados = caja.tagName === 'TD' || caja.tagName === 'TH' ? ['izq', 'der'] : ['izq', 'der', 'arr', 'aba'];
+      // Celdas de tabla: comparten bordes verticales, solo cuentan izq/der
+      const lados = (caja.tagName === 'TD' || caja.tagName === 'TH' ? ['izq', 'der'] : ladosLimite)
+        .filter(l => caja.tagName === 'TD' || caja.tagName === 'TH' || ladosLimite.includes(l));
       const pegados = lados.filter(l => sep[l] < MIN && sep[l] > -50);
       const fuera = lados.filter(l => sep[l] <= -2);
       if (fuera.length) out.push({ tipo: 'desborde', vista: vista(), firma: firma(el), caja: firma(caja), texto, lados: fuera, sep });

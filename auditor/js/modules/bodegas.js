@@ -38,7 +38,7 @@ function renderBodegas() {
     const items = getBodegas().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 
     view.innerHTML = `
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card card-pad" style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                 <div>
                     <h2 style="margin:0 0 4px;">🏬 Bodegas</h2>

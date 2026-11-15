@@ -35,9 +35,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
     <link rel="stylesheet" href="css/variables.css?v=4">
-    <link rel="stylesheet" href="css/main.css?v=18">
+    <link rel="stylesheet" href="css/main.css?v=20">
     <link rel="stylesheet" href="css/home-hub.css?v=3">
-    <link rel="stylesheet" href="css/remuneraciones.css?v=4">
+    <link rel="stylesheet" href="css/remuneraciones.css?v=5">
     <link rel="stylesheet" href="css/auditor.css?v=4">
     <script>
         // Restaurar tema guardado antes de que el DOM pinte (evita flash)
@@ -121,7 +121,7 @@
 
             <div class="float-search" onclick="busquedaGlobalAbrir()" title="Búsqueda global (Ctrl+K)" aria-label="Buscar en todo el sistema (Ctrl+K)">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-3.6-3.6"/></svg>
-                Buscar en todo el sistema…
+                <span class="fs-txt">Buscar en todo el sistema…</span>
                 <kbd>Ctrl K</kbd>
             </div>
 
@@ -528,7 +528,7 @@
 
             <!-- ── TAB: Plan de Cuentas ── -->
             <div id="tab-plan-cuentas" class="mod-tab-panel">
-            <div class="card">
+            <div class="card card-pad">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
                     <h2>⚙️ Plan de Cuentas</h2>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -1306,14 +1306,14 @@
 
             <!-- Detalle del cálculo -->
             <div class="card">
-                <div id="ivaResumenCont" style="padding:8px 0;"></div>
+                <div id="ivaResumenCont" style="padding:8px 22px 18px;"></div>
             </div>
 
             <!-- Panel de parámetros del asiento (fecha y tasa PPM) — viven
                  fuera de #ivaResumenCont para no perder foco/valor cada vez
                  que se recalcula el resumen (ver comentarios en
                  iva-resumen.js: _ivaSyncFechaDefault(), _ivaOnCambioTasaPPM()). -->
-            <div class="card" style="max-width:560px;">
+            <div class="card card-pad" style="max-width:560px;">
                 <div style="font-weight:700;font-size:14px;margin-bottom:4px;">
                     🧮 Parámetros del asiento F29
                 </div>
@@ -1339,7 +1339,7 @@
             </div>
 
             <!-- Panel remanente manual -->
-            <div class="card" style="max-width:560px;">
+            <div class="card card-pad" style="max-width:560px;">
                 <div style="font-weight:700;font-size:14px;margin-bottom:4px;">
                     📥 Remanente mes anterior (ingreso manual)
                 </div>
@@ -1483,7 +1483,7 @@
 
         <!-- ── Boleta de Honorarios ───────────────── -->
         <div id="view-honorarios" class="view">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+            <div class="grid-2col">
                 <div class="card" style="padding:24px;">
                     <h2 style="margin-bottom:18px;">📄 Emitir Boleta de Honorarios</h2>
                     <div class="form-grid" style="grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;">
@@ -1928,7 +1928,7 @@
 
         <!-- ── F29 Segunda Categoría — reubicado a tab vía JS ──────────────── -->
         <div id="view-f29-hon" class="view">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+            <div class="grid-2col">
                 <!-- PPM voluntario -->
                 <div style="display:flex;flex-direction:column;gap:16px;">
                     <div class="card" style="padding:22px;">
@@ -2007,7 +2007,7 @@
 
         <!-- ── F22 Renta Anual ────────────────────── -->
         <div id="view-f22-hon" class="view">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+            <div class="grid-2col">
                 <div class="card" style="padding:24px;">
                     <h2 style="margin-bottom:6px;">📋 Formulario 22 — Renta Anual</h2>
                     <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;">
@@ -2615,7 +2615,7 @@
                 <div style="grid-column:span 2;">
                     <label style="display:flex;justify-content:space-between;align-items:center;">
                         Razón Social / Proveedor
-                        <button type="button" class="btn btn-secondary" style="padding:2px 10px;font-size:11px;height:auto;" onclick="prodAbrirSelector(_onProductoSeleccionadoCompra)">📦 Autocomplete producto</button>
+                        <button type="button" class="btn btn-secondary" style="padding:5px 10px;font-size:11px;height:auto;" onclick="prodAbrirSelector(_onProductoSeleccionadoCompra)">📦 Autocomplete producto</button>
                     </label>
                     <input type="text" id="compraNombre" placeholder="Escriba para buscar o ingrese manualmente">
                 </div>
@@ -2776,7 +2776,7 @@
                 <div style="grid-column:span 2;">
                     <label style="display:flex;justify-content:space-between;align-items:center;">
                         Razón Social / Cliente
-                        <button type="button" class="btn btn-secondary" style="padding:2px 10px;font-size:11px;height:auto;" onclick="prodAbrirSelector(_onProductoSeleccionadoVenta)">📦 Autocomplete producto</button>
+                        <button type="button" class="btn btn-secondary" style="padding:5px 10px;font-size:11px;height:auto;" onclick="prodAbrirSelector(_onProductoSeleccionadoVenta)">📦 Autocomplete producto</button>
                     </label>
                     <input type="text" id="ventaNombre" placeholder="Escriba para buscar o ingrese manualmente">
                 </div>
@@ -3108,7 +3108,7 @@
 <script src="js/core/asientos.js?v=1"></script>
 <script src="js/core/parser.js?v=1"></script>
 <script src="js/core/parser-sii.js?v=1"></script>
-<script src="js/core/plan-cuentas.js?v=6"></script>
+<script src="js/core/plan-cuentas.js?v=7"></script>
 <script src="js/core/contabilidad.js?v=4"></script>
 
 <script src="js/services/diario.js?v=36"></script>
@@ -3127,12 +3127,12 @@
 <script src="js/modules/compras.js?v=6"></script>
 <script src="js/modules/ventas.js?v=6"></script>
 <script src="js/modules/documentos.js?v=7"></script>
-<script src="js/modules/clientes.js?v=4"></script>
-<script src="js/modules/productos.js?v=5"></script>
-<script src="js/modules/centros-costo.js?v=3"></script>
-<script src="js/modules/bodegas.js?v=3"></script>
-<script src="js/modules/inventario.js?v=4"></script>
-<script src="js/modules/activos.js?v=10"></script>
+<script src="js/modules/clientes.js?v=5"></script>
+<script src="js/modules/productos.js?v=6"></script>
+<script src="js/modules/centros-costo.js?v=4"></script>
+<script src="js/modules/bodegas.js?v=4"></script>
+<script src="js/modules/inventario.js?v=5"></script>
+<script src="js/modules/activos.js?v=11"></script>
 <script src="js/modules/cartolas.js?v=8"></script>
 <script src="js/modules/remuneraciones.js?v=7"></script>
 <script src="js/modules/segunda-categoria.js?v=6"></script>

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node PLANIFICACION/pruebas.js",
     "test:navegador": "node PLANIFICACION/pruebas.js --navegador",
-    "test:reglas": "firebase emulators:exec --only firestore --project contapp-reglas \"node PLANIFICACION/test-reglas.mjs\""
+    "test:reglas": "firebase emulators:exec --only firestore --project contapp-reglas \"node PLANIFICACION/test-reglas.mjs\"",
+    "revisar:texto": "node PLANIFICACION/diseno/revisar-texto.js"
   },
   "keywords": [],
   "author": "",

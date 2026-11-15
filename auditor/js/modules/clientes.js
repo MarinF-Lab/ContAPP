@@ -326,7 +326,7 @@ function _tabInfo(c) {
         : '';
 
     return `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+    <div class="grid-2col">
 
         <div>
             <div class="ctc-info-bloque-title">Identificación</div>
