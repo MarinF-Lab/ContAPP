@@ -424,14 +424,14 @@ function obtenerTodasLasCuentas() {
 // ─────────────────────────────────────────────────────────────
 
 const BADGE_TIPO = {
-    'Activo':           { bg: '#dbeafe', color: '#1e40af' },
-    'Pasivo':           { bg: '#fee2e2', color: '#991b1b' },
-    'Patrimonio':       { bg: '#fef9c3', color: '#854d0e' },
-    'Pérdida':          { bg: '#ffe4e6', color: '#9f1239' },
-    'Ganancia':         { bg: '#dcfce7', color: '#166534' },
-    'Contra Activo':    { bg: '#e0e7ff', color: '#3730a3' },
-    'Contra Pasivo':    { bg: '#fce7f3', color: '#9d174d' },
-    'Contra Patrimonio':{ bg: '#fef3c7', color: '#92400e' },
+    'Activo':           { bg: 'var(--info-soft)', color: 'var(--info)' },
+    'Pasivo':           { bg: 'var(--negative-soft)', color: 'var(--negative)' },
+    'Patrimonio':       { bg: 'var(--warning-soft)', color: 'var(--warning)' },
+    'Pérdida':          { bg: 'var(--negative-soft)', color: 'var(--negative)' },
+    'Ganancia':         { bg: 'var(--positive-soft)', color: 'var(--positive)' },
+    'Contra Activo':    { bg: 'var(--info-soft)', color: 'var(--info)' },
+    'Contra Pasivo':    { bg: 'var(--accent-soft)', color: 'var(--accent)' },
+    'Contra Patrimonio':{ bg: 'var(--warning-soft)', color: 'var(--warning)' },
 };
 
 let busquedaPlan = '';
@@ -497,12 +497,12 @@ function renderPlanCuentas() {
 
         let filas = '';
         entradas.forEach(([nombre, data]) => {
-            const badge  = BADGE_TIPO[data.tipo] || { bg: '#f1f5f9', color: '#334155' };
+            const badge  = BADGE_TIPO[data.tipo] || { bg: 'var(--table-stripe)', color: 'var(--text-muted)' };
             const activa = data.estado !== 'INACTIVA';
 
             filas += `
             <tr style="${!activa ? 'opacity:.5;' : ''}">
-                <td style="font-family:monospace;font-size:13px;color:#64748b;">${data.codigo || '—'}</td>
+                <td style="font-family:monospace;font-size:13px;color:var(--text-muted);">${data.codigo || '—'}</td>
                 <td style="font-weight:${activa ? '600' : '400'};">${nombre}</td>
                 <td>
                     <span style="
@@ -510,7 +510,7 @@ function renderPlanCuentas() {
                         padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
                     ">${data.tipo}</span>
                 </td>
-                <td style="font-size:12px;color:#64748b;">${data.subgrupo || '—'}</td>
+                <td style="font-size:12px;color:var(--text-muted);">${data.subgrupo || '—'}</td>
                 <td>
                     <span class="${activa ? 'badge-activo' : 'badge-inactivo'}">
                         ${activa ? 'Activa' : 'Inactiva'}
@@ -532,7 +532,7 @@ function renderPlanCuentas() {
 
             <div style="
                 display:flex;align-items:center;gap:10px;
-                padding:10px 16px;background:#1e293b;color:white;
+                padding:10px 16px;background:var(--screen);color:white;
                 border-radius:8px 8px 0 0;
             ">
                 <span style="font-size:18px;">${iconoGrupo}</span>
@@ -557,7 +557,7 @@ function renderPlanCuentas() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${filas || `<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">Sin cuentas en este grupo</td></tr>`}
+                    ${filas || `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-subtle);">Sin cuentas en este grupo</td></tr>`}
                 </tbody>
             </table>
             </div>

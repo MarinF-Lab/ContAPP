@@ -100,13 +100,13 @@ function renderVentas() {
 
             tbody.innerHTML += `
             <tr class="${anulada ? 'fila-anulada' : ''}">
-                <td class="monto" style="color:#94a3b8;">${anulada ? '—' : corr++}</td>
+                <td class="monto" style="color:var(--text-subtle);">${anulada ? '—' : corr++}</td>
                 <td><span class="badge-doc badge-doc-venta">${info.label}</span></td>
                 <td class="monto">${v.numero_doc || '—'}</td>
                 <td>${v.fecha}</td>
                 <td style="font-family:monospace;font-size:12px;">${v.rut_cliente || ''}</td>
                 <td style="max-width:180px;">${v.nombre_cliente || ''}</td>
-                <td style="font-size:12px;color:#64748b;">${_labelMedioPagoVenta(v.medio_pago)}</td>
+                <td style="font-size:12px;color:var(--text-muted);">${_labelMedioPagoVenta(v.medio_pago)}</td>
                 <td class="monto">${v.exento ? '$' + fmt(v.exento) : '—'}</td>
                 <td class="monto">$${fmt(v.neto   || 0)}</td>
                 <td class="monto">$${fmt(v.iva    || 0)}</td>
@@ -166,11 +166,11 @@ function _renderResumenF29(neto, iva, exento, ncIva) {
         <tbody>
             <tr><td>Ventas Afectas (Neto)</td>    <td class="monto">$${fmt(neto)}</td></tr>
             <tr><td>Ventas Exentas</td>            <td class="monto">$${fmt(exento)}</td></tr>
-            ${ncIvaAmt > 0 ? `<tr style="color:#dc2626;font-size:12px;">
+            ${ncIvaAmt > 0 ? `<tr style="color:var(--negative);font-size:12px;">
                 <td>IVA Notas de Crédito emitidas (${ivaPct()}%)</td>
                 <td class="monto">-$${fmt(ncIvaAmt)}</td></tr>` : ''}
-            <tr><td style="color:#dc2626;font-weight:600;">IVA Débito Fiscal Neto (${ivaPct()}%)</td>
-                <td class="monto" style="color:#dc2626;font-weight:700;">$${fmt(iva)}</td></tr>
+            <tr><td style="color:var(--negative);font-weight:600;">IVA Débito Fiscal Neto (${ivaPct()}%)</td>
+                <td class="monto" style="color:var(--negative);font-weight:700;">$${fmt(iva)}</td></tr>
         </tbody>
         <tfoot>
             <tr style="font-weight:800;">

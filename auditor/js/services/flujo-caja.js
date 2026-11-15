@@ -189,25 +189,25 @@ function _renderGraficoFlujoCaja(meses) {
         const x  = padL + i * grupW;
         const hE = Math.round((m.entrada / max) * (H - padB));
         const hS = Math.round((m.salida  / max) * (H - padB));
-        bars    += `<rect x="${x}" y="${H-padB-hE}" width="${barW}" height="${hE}" fill="#3b82f6" rx="2" opacity="0.85"/>`;
-        bars    += `<rect x="${x+barW+barGap}" y="${H-padB-hS}" width="${barW}" height="${hS}" fill="#f87171" rx="2" opacity="0.85"/>`;
-        xLabels += `<text x="${x+barW}" y="${H}" text-anchor="middle" font-size="9" fill="#64748b">${labels[i]}</text>`;
+        bars    += `<rect x="${x}" y="${H-padB-hE}" width="${barW}" height="${hE}" style="fill:var(--info)" rx="2" opacity="0.85"/>`;
+        bars    += `<rect x="${x+barW+barGap}" y="${H-padB-hS}" width="${barW}" height="${hS}" style="fill:var(--negative)" rx="2" opacity="0.85"/>`;
+        xLabels += `<text x="${x+barW}" y="${H}" text-anchor="middle" font-size="9" style="fill:var(--text-muted)">${labels[i]}</text>`;
     });
 
     let yLines = '';
     for (let i = 0; i <= 4; i++) {
         const y   = Math.round((H - padB) * (1 - i / 4));
         const val = Math.round(max * i / 4);
-        yLines += `<line x1="${padL-4}" y1="${y}" x2="${padL+12*grupW}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
-        yLines += `<text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#94a3b8">$${val >= 1e6 ? (val/1e6).toFixed(1)+'M' : val >= 1e3 ? (val/1e3).toFixed(0)+'K' : val}</text>`;
+        yLines += `<line x1="${padL-4}" y1="${y}" x2="${padL+12*grupW}" y2="${y}" style="stroke:var(--divider)" stroke-width="1"/>`;
+        yLines += `<text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="9" style="fill:var(--text-subtle)">$${val >= 1e6 ? (val/1e6).toFixed(1)+'M' : val >= 1e3 ? (val/1e3).toFixed(0)+'K' : val}</text>`;
     }
 
     const svg = `<svg viewBox="0 0 ${W} ${H+10}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:${W}px;">
         ${yLines}${bars}${xLabels}
-        <rect x="${W-110}" y="8"  width="12" height="10" fill="#3b82f6" rx="2"/>
-        <text x="${W-95}"  y="17" font-size="10" fill="#64748b">Entradas</text>
-        <rect x="${W-110}" y="24" width="12" height="10" fill="#f87171" rx="2"/>
-        <text x="${W-95}"  y="33" font-size="10" fill="#64748b">Salidas</text>
+        <rect x="${W-110}" y="8"  width="12" height="10" style="fill:var(--info)" rx="2"/>
+        <text x="${W-95}"  y="17" font-size="10" style="fill:var(--text-muted)">Entradas</text>
+        <rect x="${W-110}" y="24" width="12" height="10" style="fill:var(--negative)" rx="2"/>
+        <text x="${W-95}"  y="33" font-size="10" style="fill:var(--text-muted)">Salidas</text>
     </svg>`;
 
     const cont = document.getElementById('graficoFlujoCaja');

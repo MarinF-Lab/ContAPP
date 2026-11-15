@@ -34,7 +34,7 @@
 |-------|-------------|--------|
 | 0 | Referencia en el repo, auditoría (`web-design-guidelines`, `ui-ux-pro-max`), capturas de línea base claro/oscuro, inventario de colores fijos | ✅ 2026-11-14 |
 | 1 | Paleta del logo en `css/variables.css` (ambos temas, contraste AA verificado), texto sobre acento/estados por token, isotipo en login y cabecera | ✅ 2026-11-15 |
-| 2 | Reemplazar colores fijos de JS/estilos en línea por variables (prioridad: Documentos, Cartolas, cierre, tablas, insignias) | 🔲 |
+| 2 | Reemplazar colores fijos de JS/estilos en línea por variables | ✅ 2026-11-15 |
 | 3 | Pantallas: login, Mis clientes (avance de cierre por tarjeta), Inicio con "¿Qué quieres hacer hoy?" sobre el centro de mando | 🔲 |
 | 4 | Componentes comunes: botones, tarjetas, tablas, formularios, modales, pestañas (incluye decisión `.plan-tab`/`.rem-tab`) | 🔲 |
 | 5 | Movimiento y móvil (`emil-design-eng`, `review-animations`, `mobile-native`), `prefers-reduced-motion` | 🔲 |
@@ -85,11 +85,26 @@ Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar l
 - `PLANIFICACION/diseno/contraste.js` (en `npm test`): 80 combinaciones texto/fondo, todas ≥ 4,5:1
   en ambos temas (la paleta anterior fallaba ~30). Capturas del después en `diseno/etapa1/`.
 
+### Etapa 2 — colores fijos a variables ✅ 2026-11-15
+- 446 colores hex sueltos → 67. Reemplazo automático **solo dentro de declaraciones CSS** (hojas de
+  estilo, `style="…"`, `el.style.x = …`) según familia (rojo/verde/ámbar/azul/gris/neutro) y tipo
+  de propiedad (texto, fondo, borde); en reglas del tema oscuro, los fondos oscuros pasan al tinte
+  suave. Más ~60 reemplazos a mano en JS (insignias de tipo de cuenta, estados de documentos,
+  clientes/proveedores, activos, productos, márgenes, cuadre del Diario, avisos del Balance,
+  gráfico del Flujo de caja).
+- Tokens nuevos: `--screen` / `--on-screen` (paneles oscuros en ambos temas, como la "pantalla"
+  del artefacto: cabecera de la boleta de sueldo, encabezado del plan de cuentas).
+- Arreglos: `auditor.css` redefinía `--accent-soft` con el coral antiguo y pisaba la paleta
+  (recuadros rosados "Total mes"/"Cuadrado"); botón "Editar" de Compras/Ventas tomaba el gris
+  nativo del navegador; se quitó el truco `[style*="#f1f5f9"]` que forzaba colores en oscuro.
+- Ícono de la PWA y favicon con el isotipo (`icons/icon-192.png`, `-512`, `-maskable-512`).
+- Quedan a propósito (67): paletas por categoría (color de cada cliente, avatares, plazos del
+  estudio, categorías del buscador), texto blanco de avatares, logos de Google/Microsoft, valores
+  de respaldo de los gráficos. Capturas del después en `diseno/etapa2/`.
+
 ### Pendientes / próximo paso
-1. **Etapa 2** — colores fijos que aún no siguen la paleta (visibles en `diseno/etapa1/`): recuadro
-   "Total mes"/"Cuadrado" rosado, botón "Editar" gris y "Descargar RCV" verde azulado en Compras,
-   textos tenues dentro de tablas en oscuro, degradado de los íconos del centro de mando, avatar,
-   insignias de Remuneraciones y Activos. Ícono de la PWA (`icons/icon.svg`) sigue con el azul antiguo.
+1. **Etapa 3** — pantallas: login, Mis clientes (avance de cierre por tarjeta) e Inicio con
+   "¿Qué quieres hacer hoy?" sobre el centro de mando.
 2. Campos sin etiqueta asociada (~115, H5) y emoji como íconos (H4/H6): se resuelven al rediseñar
    cada pantalla (Etapas 3-4).
 3. Sin pantalla para **revocar códigos o sacar invitados** (las reglas v3 ya lo permiten:

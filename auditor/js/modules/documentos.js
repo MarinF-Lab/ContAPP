@@ -18,9 +18,9 @@ const DOC_CATEGORIAS = [
 ];
 
 const DOC_ESTADOS = [
-    { value: 'pendiente', label: 'Pendiente', color: '#f59e0b' },
-    { value: 'pagada',    label: 'Pagada',    color: '#10b981' },
-    { value: 'anulada',   label: 'Anulada',   color: '#94a3b8' },
+    { value: 'pendiente', label: 'Pendiente', color: 'var(--warning)' },
+    { value: 'pagada',    label: 'Pagada',    color: 'var(--positive)' },
+    { value: 'anulada',   label: 'Anulada',   color: 'var(--text-subtle)' },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -138,10 +138,10 @@ function _docHtml() {
                    border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;
                    border:1.5px solid ${active ? 'var(--accent)' : 'var(--divider)'};
                    background:${active ? 'var(--accent)' : 'var(--input-bg)'};
-                   color:${active ? '#fff' : 'var(--text)'};font-weight:${active ? '700' : '400'};">
+                   color:${active ? 'var(--on-accent)' : 'var(--text)'};font-weight:${active ? '700' : '400'};">
             ${cat.icon} ${cat.label}
-            <span style="background:${active ? 'rgba(255,255,255,.25)' : 'var(--divider)'};
-                         color:${active ? '#fff' : 'var(--text-muted)'};padding:1px 7px;
+            <span style="background:${active ? 'color-mix(in srgb, var(--on-accent) 22%, transparent)' : 'var(--divider)'};
+                         color:${active ? 'var(--on-accent)' : 'var(--text-muted)'};padding:1px 7px;
                          border-radius:12px;font-size:11px;">${count}</span>
         </button>`;
     }).join('');
@@ -159,7 +159,7 @@ function _docHtml() {
         </div>
         <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px 20px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">IVA</div>
-            <div style="font-size:20px;font-weight:800;color:#2563eb;margin-top:4px;">$${fmt(totIva)}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--info);margin-top:4px;">$${fmt(totIva)}</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px 20px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Total</div>
@@ -189,7 +189,7 @@ function _docHtml() {
                 ${d.rut ? `<div style="font-size:11px;color:var(--text-muted);font-family:monospace;">${d.rut}</div>` : ''}
             </td>
             <td class="monto">$${fmt(d.neto || 0)}</td>
-            <td class="monto" style="color:#2563eb;">$${fmt(d.iva || 0)}</td>
+            <td class="monto" style="color:var(--info);">$${fmt(d.iva || 0)}</td>
             <td class="monto" style="font-weight:700;">$${fmt(d.total || 0)}</td>
             <td>
                 <span style="background:${est.color}22;color:${est.color};border:1px solid ${est.color}55;
@@ -210,12 +210,12 @@ function _docHtml() {
                     ${_docBotonLibro(d)}
                     ${d.estado === 'pendiente' ? `
                     <button onclick="docMarcarPagada(${d.id})"
-                        style="border:1px solid #10b98155;background:#10b98111;color:#10b981;
+                        style="border:1px solid #10b98155;background:#10b98111;color:var(--positive);
                                border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;">
                         ✔ Pagar</button>` : ''}
                     ${d.estado !== 'anulada' ? `
                     <button onclick="docAnular(${d.id})"
-                        style="border:1px solid #fca5a5;background:var(--negative-soft);
+                        style="border:1px solid var(--negative);background:var(--negative-soft);
                                border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;">
                         Anular</button>` : ''}
                 </div>
@@ -574,28 +574,28 @@ function _docBotonLibro(d) {
     if (typeof conexDocDestino !== 'function') return '';
     if (d.libro && d.libro_id) {
         return `<span title="Registrado en el ${_DOC_LIBRO_LABEL[d.libro] || d.libro}"
-            style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+            style="border:1px solid #2563eb55;background:#2563eb11;color:var(--info);
                    border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;white-space:nowrap;">
             📗 En libro</span>`;
     }
     if (d.categoria === 'honorarios' && typeof conexHonorarioContabilizar === 'function') {
         if (d.contabilizado) {
             return `<span title="Asiento con retención registrado en el Libro Diario"
-                style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+                style="border:1px solid #2563eb55;background:#2563eb11;color:var(--info);
                        border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;white-space:nowrap;">
                 📗 Contabilizada</span>`;
         }
         if (d.estado === 'anulada') return '';
         return `<button onclick="docContabilizarHonorario(${d.id})"
             title="Registra el gasto, la retención (va al F29) y el honorario por pagar"
-            style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+            style="border:1px solid #2563eb55;background:#2563eb11;color:var(--info);
                    border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap;">
             📗 Contabilizar</button>`;
     }
     if (d.estado === 'anulada' || !conexDocDestino(d)) return '';
     return `<button onclick="docPasarALibro(${d.id})"
         title="Registrar este documento en el libro sin volver a digitarlo"
-        style="border:1px solid #2563eb55;background:#2563eb11;color:#2563eb;
+        style="border:1px solid #2563eb55;background:#2563eb11;color:var(--info);
                border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap;">
         📗 Pasar al libro</button>`;
 }

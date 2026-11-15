@@ -42,11 +42,11 @@ for (const fondo of ['--card', '--bg', '--table-stripe']) {
   }
 }
 PARES.push(['--on-accent', '--accent'], ['--on-accent', '--primary-hover'],
-  ['--on-state', '--negative'], ['--on-state', '--positive'], ['--on-state', '--info'],
+  ['--on-state', '--negative'], ['--on-state', '--positive'], ['--on-state', '--info'], ['--on-state', '--warning'],
   ['--positive', '--positive-soft'], ['--negative', '--negative-soft'], ['--warning', '--warning-soft'],
   ['--info', '--info-soft'], ['--accent', '--accent-soft'], ['--text', '--accent-soft'],
   ['--text', '--positive-soft'], ['--text', '--negative-soft'], ['--text', '--warning-soft'],
-  ['--text', '--input-bg'], ['--text-subtle', '--input-bg']);
+  ['--text', '--input-bg'], ['--text-subtle', '--input-bg'], ['--on-screen', '--screen']);
 
 let ok = 0, mal = 0;
 for (const [nombreTema, vars] of [['claro', claro], ['oscuro', oscuro]]) {

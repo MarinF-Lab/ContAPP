@@ -329,10 +329,10 @@ function _activoActualizarTabla() {
         var d        = _calcDepreciacion(a);
         var opacity  = a.activo !== false ? '' : 'opacity:.55;';
         var metLabel = a.metodo === 'acelerada' ? 'Acelerada' : 'Lineal';
-        var metColor = a.metodo === 'acelerada' ? '#1e40af'   : '#166534';
-        var metBg    = a.metodo === 'acelerada' ? '#dbeafe'   : '#dcfce7';
-        var staBg    = a.activo !== false ? '#dcfce7' : '#fee2e2';
-        var staColor = a.activo !== false ? '#166534' : '#991b1b';
+        var metColor = a.metodo === 'acelerada' ? 'var(--info)' : 'var(--positive)';
+        var metBg    = a.metodo === 'acelerada' ? 'var(--info-soft)' : 'var(--positive-soft)';
+        var staBg    = a.activo !== false ? 'var(--positive-soft)' : 'var(--negative-soft)';
+        var staColor = a.activo !== false ? 'var(--positive)' : 'var(--negative)';
         var staLabel = a.activo !== false ? 'Activo'  : 'Dado de baja';
         var vidaStr  = a.vida_util_anos + ' año' + (Number(a.vida_util_anos) !== 1 ? 's' : '');
         if (a.metodo === 'acelerada') {
@@ -354,7 +354,7 @@ function _activoActualizarTabla() {
                 '</td>' +
                 '<td style="padding:10px 12px;text-align:center;font-size:12px;color:var(--text-muted);">' + vidaStr + '</td>' +
                 '<td style="padding:10px 12px;text-align:right;font-family:monospace;font-size:12px;">' + _fmt(d.cuotaAnual) + '</td>' +
-                '<td style="padding:10px 12px;text-align:right;font-family:monospace;font-size:12px;color:#991b1b;">' + _fmt(d.depAcumulada) +
+                '<td style="padding:10px 12px;text-align:right;font-family:monospace;font-size:12px;color:var(--negative);">' + _fmt(d.depAcumulada) +
                     (d.tiempo ? '<div style="font-size:10px;color:var(--text-muted);font-family:inherit;white-space:nowrap;">' + d.tiempo + '</div>' : '') + '</td>' +
                 '<td style="padding:10px 12px;text-align:right;font-family:monospace;font-weight:600;">' + _fmt(d.valorLibro) + '</td>' +
                 '<td style="padding:10px 12px;text-align:center;">' +
@@ -589,7 +589,7 @@ function activoAbrirForm(id) {
         prev.innerHTML =
             '<strong>Cuota anual:</strong> ' + _fmt(cuotaA) +
             ' &nbsp;|&nbsp; <strong>Cuota mensual:</strong> ' + _fmt(cuotaM) +
-            (met === 'acelerada' ? ' &nbsp;|&nbsp; <span style="color:#1e40af;">Vida útil efectiva: ' + anosEf + ' año' + (anosEf !== 1 ? 's' : '') + '</span>' : '') +
+            (met === 'acelerada' ? ' &nbsp;|&nbsp; <span style="color:var(--info);">Vida útil efectiva: ' + anosEf + ' año' + (anosEf !== 1 ? 's' : '') + '</span>' : '') +
             extra;
     }
 

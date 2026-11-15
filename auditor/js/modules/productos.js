@@ -167,20 +167,20 @@ function _prodActualizarTabla() {
             margenColor = 'var(--text-muted)';
         } else if (margen >= 30) {
             margenStr   = margen + '%';
-            margenColor = '#166534';
+            margenColor = 'var(--positive)';
         } else if (margen >= 10) {
             margenStr   = margen + '%';
-            margenColor = '#92400e';
+            margenColor = 'var(--warning)';
         } else {
             margenStr   = margen + '%';
-            margenColor = '#991b1b';
+            margenColor = 'var(--negative)';
         }
 
-        var ivaBg    = p.iva === 'exento' ? '#f3f4f6' : '#dbeafe';
-        var ivaColor = p.iva === 'exento' ? '#6b7280'  : '#1e40af';
+        var ivaBg    = p.iva === 'exento' ? 'var(--table-stripe)' : 'var(--info-soft)';
+        var ivaColor = p.iva === 'exento' ? 'var(--text-muted)' : 'var(--info)';
         var ivaLabel = p.iva === 'exento' ? 'Exento'   : 'Afecto';
-        var staBg    = p.activo !== false  ? '#dcfce7'  : '#fee2e2';
-        var staColor = p.activo !== false  ? '#166534'  : '#991b1b';
+        var staBg    = p.activo !== false  ? 'var(--positive-soft)' : 'var(--negative-soft)';
+        var staColor = p.activo !== false  ? 'var(--positive)' : 'var(--negative)';
         var staLabel = p.activo !== false  ? 'Activo'   : 'Inactivo';
         var opacity  = p.activo !== false  ? '' : 'opacity:.55;';
         var provStr  = p.proveedor_nombre || '—';
@@ -522,7 +522,7 @@ function _esc(str) {
 
 function _margenColor(m) {
     if (m === null || m === undefined) return 'var(--text-muted)';
-    return m >= 30 ? '#166534' : m >= 10 ? '#92400e' : '#991b1b';
+    return m >= 30 ? 'var(--positive)' : m >= 10 ? 'var(--warning)' : 'var(--negative)';
 }
 
 function _getProveedores() {

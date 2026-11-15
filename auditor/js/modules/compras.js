@@ -97,13 +97,13 @@ function renderCompras() {
 
             tbody.innerHTML += `
             <tr class="${anulada ? 'fila-anulada' : ''}">
-                <td class="monto" style="color:#94a3b8;">${anulada ? '—' : corr++}</td>
+                <td class="monto" style="color:var(--text-subtle);">${anulada ? '—' : corr++}</td>
                 <td><span class="badge-doc badge-doc-compra">${info.label}</span></td>
                 <td class="monto">${c.numero_doc || '—'}</td>
                 <td>${c.fecha}</td>
                 <td style="font-family:monospace;font-size:12px;">${c.rut_proveedor || ''}</td>
                 <td style="max-width:180px;">${c.nombre_proveedor || ''}</td>
-                <td style="font-size:12px;color:#64748b;">${_labelMedioPagoCompra(c.medio_pago)}</td>
+                <td style="font-size:12px;color:var(--text-muted);">${_labelMedioPagoCompra(c.medio_pago)}</td>
                 <td class="monto">${c.exento ? '$' + fmt(c.exento) : '—'}</td>
                 <td class="monto">$${fmt(c.neto   || 0)}</td>
                 <td class="monto">$${fmt(c.iva    || 0)}</td>
@@ -163,11 +163,11 @@ function _renderResumenIvaCF(exento, neto, iva, ncIva) {
                 <td class="monto">$${fmt(neto)}</td></tr>
             <tr><td>Compras Exentas</td>
                 <td class="monto">$${fmt(exento)}</td></tr>
-            ${ncIvaAmt > 0 ? `<tr style="color:#dc2626;font-size:12px;">
+            ${ncIvaAmt > 0 ? `<tr style="color:var(--negative);font-size:12px;">
                 <td>IVA Notas de Crédito recibidas (${ivaPct()}%)</td>
                 <td class="monto">-$${fmt(ncIvaAmt)}</td></tr>` : ''}
-            <tr><td style="color:#2563eb;font-weight:600;">IVA Crédito Fiscal Neto (${ivaPct()}%)</td>
-                <td class="monto" style="color:#2563eb;font-weight:700;">$${fmt(iva)}</td></tr>
+            <tr><td style="color:var(--info);font-weight:600;">IVA Crédito Fiscal Neto (${ivaPct()}%)</td>
+                <td class="monto" style="color:var(--info);font-weight:700;">$${fmt(iva)}</td></tr>
         </tbody>
         <tfoot>
             <tr style="font-weight:800;">

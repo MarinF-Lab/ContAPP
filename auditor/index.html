@@ -8,7 +8,8 @@
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#DCE3E9">
-    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="icons/icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
 
     <!-- Adaptador web: define window.electronAPI antes que el resto de scripts -->
     <script src="js/web-adapter.js?v=1"></script>
@@ -33,11 +34,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-    <link rel="stylesheet" href="css/variables.css?v=3">
-    <link rel="stylesheet" href="css/main.css?v=16">
+    <link rel="stylesheet" href="css/variables.css?v=4">
+    <link rel="stylesheet" href="css/main.css?v=18">
     <link rel="stylesheet" href="css/home-hub.css?v=3">
-    <link rel="stylesheet" href="css/remuneraciones.css?v=3">
-    <link rel="stylesheet" href="css/auditor.css?v=3">
+    <link rel="stylesheet" href="css/remuneraciones.css?v=4">
+    <link rel="stylesheet" href="css/auditor.css?v=4">
     <script>
         // Restaurar tema guardado antes de que el DOM pinte (evita flash)
         (function() {
@@ -362,7 +363,7 @@
                     <div class="totales-bar">
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                             <div id="badgePreasiento" class="totales-badge error">Balance: Cuadrado $0</div>
-                            <span id="badgeIaGlosa" style="display:none;background:#f0f4ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Propuesto por IA — revisa antes de guardar</span>
+                            <span id="badgeIaGlosa" style="display:none;background:var(--info-soft);color:var(--info);border:1px solid var(--info);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Propuesto por IA — revisa antes de guardar</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                             <div style="position:relative;">
@@ -638,7 +639,7 @@
                 <button class="btn-export btn-export-excel" onclick="exportarExcelCompras()">⬇ Excel</button>
                 <button class="btn-export btn-export-print" onclick="imprimirCompras()">🖨 Imprimir</button>
                 <button class="btn-export" style="background:var(--accent);color:var(--on-accent);font-weight:600;" onclick="siiAbrirImportador('compras')">⬆ XML SII</button>
-                <button class="btn-export" style="background:#0f766e;color:#fff;font-weight:600;" onclick="siiAbrirRCV()">☁ Descargar RCV</button>
+                <button class="btn-export" style="background:var(--positive);color:var(--on-state);font-weight:600;" onclick="siiAbrirRCV()">☁ Descargar RCV</button>
             </div>
 
             <!-- Barra superior: filtros + resumen + acciones -->
@@ -735,7 +736,7 @@
                 <button class="btn-export btn-export-excel" onclick="exportarExcelVentas()">⬇ Excel</button>
                 <button class="btn-export btn-export-print" onclick="imprimirVentas()">🖨 Imprimir</button>
                 <button class="btn-export" style="background:var(--accent);color:var(--on-accent);font-weight:600;" onclick="siiAbrirImportador('ventas')">⬆ XML SII</button>
-                <button class="btn-export" style="background:#0f766e;color:#fff;font-weight:600;" onclick="siiAbrirRCV()">☁ Descargar RCV</button>
+                <button class="btn-export" style="background:var(--positive);color:var(--on-state);font-weight:600;" onclick="siiAbrirRCV()">☁ Descargar RCV</button>
             </div>
 
             <!-- Barra superior -->
@@ -1057,7 +1058,7 @@
                         ☁ Sincronizar ahora
                     </button>
                     <button class="btn" onclick="fbLogout()"
-                        style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">
+                        style="background:var(--negative-soft);color:var(--negative);border:1px solid var(--negative);border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">
                         🚪 Cerrar sesión
                     </button>
                     <button class="btn btn-secondary" onclick="fbCambiarCuenta()"
@@ -1094,7 +1095,7 @@
                     Los datos se sincronizan automáticamente con Firebase al guardar cualquier registro.
                     Cada cuenta tiene sus datos completamente separados.
                 </p>
-                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;font-size:13px;color:#166534;">
+                <div style="background:var(--positive-soft);border:1px solid var(--positive);border-radius:8px;padding:14px;font-size:13px;color:var(--positive);">
                     ✅ Proyecto conectado: <strong>cont-app-forge</strong>
                 </div>
             </div>
@@ -2724,7 +2725,7 @@
                     <span id="compraAdjuntoBadge" class="adjunto-badge" style="display:none;"
                           onclick="abrirAdjuntoCompra()" title="Abrir archivo adjunto"></span>
                     <button type="button" id="compraAdjuntoEliminar" style="display:none;background:none;border:none;cursor:pointer;color:var(--negative);font-size:18px;" onclick="eliminarAdjuntoCompra()" title="Quitar adjunto">✕</button>
-                    <span id="compraIaBadge" style="display:none;background:#f0f4ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Completado por IA</span>
+                    <span id="compraIaBadge" style="display:none;background:var(--info-soft);color:var(--info);border:1px solid var(--info);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Completado por IA</span>
                 </div>
             </div>
         </div>
@@ -2868,7 +2869,7 @@
                     <span id="ventaAdjuntoBadge" class="adjunto-badge" style="display:none;"
                           onclick="abrirAdjuntoVenta()" title="Abrir archivo adjunto"></span>
                     <button type="button" id="ventaAdjuntoEliminar" style="display:none;background:none;border:none;cursor:pointer;color:var(--negative);font-size:18px;" onclick="eliminarAdjuntoVenta()" title="Quitar adjunto">✕</button>
-                    <span id="ventaIaBadge" style="display:none;background:#f0f4ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Completado por IA</span>
+                    <span id="ventaIaBadge" style="display:none;background:var(--info-soft);color:var(--info);border:1px solid var(--info);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">✨ Completado por IA</span>
                 </div>
             </div>
         </div>
@@ -3107,38 +3108,38 @@
 <script src="js/core/asientos.js?v=1"></script>
 <script src="js/core/parser.js?v=1"></script>
 <script src="js/core/parser-sii.js?v=1"></script>
-<script src="js/core/plan-cuentas.js?v=5"></script>
+<script src="js/core/plan-cuentas.js?v=6"></script>
 <script src="js/core/contabilidad.js?v=4"></script>
 
-<script src="js/services/diario.js?v=35"></script>
+<script src="js/services/diario.js?v=36"></script>
 <script src="js/services/mayor.js?v=13"></script>
-<script src="js/services/balance.js?v=6"></script>
+<script src="js/services/balance.js?v=7"></script>
 <script src="js/services/dashboard.js?v=7"></script>
-<script src="js/services/flujo-caja.js?v=3"></script>
-<script src="js/services/balance-clasificado.js?v=4"></script>
+<script src="js/services/flujo-caja.js?v=4"></script>
+<script src="js/services/balance-clasificado.js?v=5"></script>
 <script src="js/services/estado-resultados.js?v=4"></script>
 <script src="js/services/indicadores.js?v=6"></script>
 <script src="js/services/previred-scraper.js?v=2"></script>
 <script src="js/services/iva-resumen.js?v=12"></script>
 <script src="js/services/reconciliacion.js?v=7"></script>
-<script src="js/services/sii-rcv.js?v=2"></script>
+<script src="js/services/sii-rcv.js?v=3"></script>
 
-<script src="js/modules/compras.js?v=5"></script>
-<script src="js/modules/ventas.js?v=5"></script>
-<script src="js/modules/documentos.js?v=6"></script>
-<script src="js/modules/clientes.js?v=3"></script>
-<script src="js/modules/productos.js?v=4"></script>
-<script src="js/modules/centros-costo.js?v=2"></script>
-<script src="js/modules/bodegas.js?v=2"></script>
+<script src="js/modules/compras.js?v=6"></script>
+<script src="js/modules/ventas.js?v=6"></script>
+<script src="js/modules/documentos.js?v=7"></script>
+<script src="js/modules/clientes.js?v=4"></script>
+<script src="js/modules/productos.js?v=5"></script>
+<script src="js/modules/centros-costo.js?v=3"></script>
+<script src="js/modules/bodegas.js?v=3"></script>
 <script src="js/modules/inventario.js?v=4"></script>
-<script src="js/modules/activos.js?v=9"></script>
+<script src="js/modules/activos.js?v=10"></script>
 <script src="js/modules/cartolas.js?v=8"></script>
-<script src="js/modules/remuneraciones.js?v=6"></script>
-<script src="js/modules/segunda-categoria.js?v=5"></script>
+<script src="js/modules/remuneraciones.js?v=7"></script>
+<script src="js/modules/segunda-categoria.js?v=6"></script>
 <script src="js/core/conexiones.js?v=2"></script>
 <script src="js/core/cierre.js?v=3"></script>
 
-<script src="js/services/app.js?v=12"></script>
+<script src="js/services/app.js?v=13"></script>
 
 <!-- Firebase SDK (compat) — cargado después de app.js -->
 <!-- ═══════════════════════════════════════════════════════
@@ -3270,7 +3271,7 @@
     }
 </script>
 
-<script src="js/core/busqueda-global.js?v=1"></script>
+<script src="js/core/busqueda-global.js?v=2"></script>
 <script src="js/auditor/licencia.js?v=1"></script>
 <script src="js/categorias/primera.js?v=4"></script>
 <script src="js/categorias/segunda.js?v=3"></script>

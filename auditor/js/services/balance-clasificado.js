@@ -144,18 +144,18 @@ function generarBalanceClasificado() {
                 // Anomalía: cuenta normal con saldo contrario a su naturaleza
                 let colorCuenta = '', colorMonto = '', prefijoCuenta = '', prefijoMonto = '';
                 if (esContra) {
-                    colorCuenta  = 'color:#dc2626;font-style:italic;padding-left:14px;';
-                    colorMonto   = 'color:#dc2626;';
+                    colorCuenta  = 'color:var(--negative);font-style:italic;padding-left:14px;';
+                    colorMonto   = 'color:var(--negative);';
                     prefijoCuenta = '(-) ';
                     prefijoMonto  = '-';
                 } else if (esAnom) {
-                    colorCuenta  = 'color:#dc2626;font-weight:600;';
-                    colorMonto   = 'color:#dc2626;font-weight:600;';
+                    colorCuenta  = 'color:var(--negative);font-weight:600;';
+                    colorMonto   = 'color:var(--negative);font-weight:600;';
                     prefijoCuenta = '⚠ ';
                     prefijoMonto  = '(';
                 }
                 const montoStr = `$${fmt(Math.abs(it.saldo))}${esAnom && !esContra ? ')' : ''}`;
-                const marcaSinReg = it.sinRegistrar ? ' <span title="Cuenta no registrada en el Plan de Cuentas — clasificada automáticamente" style="font-size:10px;color:#d97706;">(sin registrar)</span>' : '';
+                const marcaSinReg = it.sinRegistrar ? ' <span title="Cuenta no registrada en el Plan de Cuentas — clasificada automáticamente" style="font-size:10px;color:var(--warning);">(sin registrar)</span>' : '';
                 return `<div class="bc-fila" style="${(esContra || esAnom) ? 'opacity:.9;' : ''}">
                     <span class="bc-cuenta" style="${colorCuenta}">${prefijoCuenta}${it.nombre}${marcaSinReg}</span>
                     <span class="bc-monto"  style="${colorMonto}">${prefijoMonto}${montoStr}</span>
@@ -189,10 +189,10 @@ function generarBalanceClasificado() {
         </div>`;
 
     function semaforo(val, ok, warn) {
-        if (val === null) return 'color:#94a3b8;';
-        if (val >= ok)   return 'color:#16a34a;';
-        if (val >= warn) return 'color:#d97706;';
-        return 'color:#dc2626;';
+        if (val === null) return 'color:var(--text-subtle);';
+        if (val >= ok)   return 'color:var(--positive);';
+        if (val >= warn) return 'color:var(--warning);';
+        return 'color:var(--negative);';
     }
 
     const htmlLiquidez = `
@@ -215,7 +215,7 @@ function generarBalanceClasificado() {
                 </div>
                 <div class="bc-liq-card">
                     <div class="bc-liq-label">Capital de Trabajo</div>
-                    <div class="bc-liq-val" style="${capitalTrabajo >= 0 ? 'color:#16a34a;' : 'color:#dc2626;'}">
+                    <div class="bc-liq-val" style="${capitalTrabajo >= 0 ? 'color:var(--positive);' : 'color:var(--negative);'}">
                         $${fmt(capitalTrabajo)}
                     </div>
                     <div class="bc-liq-meta">Act. Circ. − Pas. Circ. · Positivo = solvente</div>
@@ -230,7 +230,7 @@ function generarBalanceClasificado() {
     if (!cont) return;
 
     const avisoSinRegistrar = sinRegistrar.length ? `
-        <div class="bc-cuadratura" style="background:#fffbeb;color:#92400e;border:1px solid #fcd34d;">
+        <div class="bc-cuadratura" style="background:var(--warning-soft);color:var(--warning);border:1px solid var(--warning);">
             ⚠ ${sinRegistrar.length} cuenta(s) usada(s) en el Diario no están en el Plan de Cuentas y se clasificaron
             automáticamente: <strong>${sinRegistrar.join(', ')}</strong>.
             Regístralas en Plan de Cuentas → «Auditar cuentas faltantes» para confirmar su clasificación.

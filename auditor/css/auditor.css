@@ -4,17 +4,10 @@
 ══════════════════════════════════════════════ */
 
 :root {
-    --accent:        var(--coral);
+    /* Antes redefinía --accent-soft con el coral antiguo y pisaba variables.css.
+       Ahora solo agrega lo que variables.css no define (vale para ambos temas). */
     --accent-hover:  var(--coral-deep);
-    --accent-soft:   #FFE9EC;
-    --accent-border: #F7C1C7;
-}
-
-[data-theme="dark"] {
-    --accent:        var(--coral);
-    --accent-hover:  var(--coral-deep);
-    --accent-soft:   #3A1F24;
-    --accent-border: #5A2E33;
+    --accent-border: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 /* Logo y título de la edición */
@@ -90,8 +83,8 @@
     letter-spacing: .04em;
 }
 .aud-cat-badge   { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
-.aud-cat-primera { background: #dbeafe; color: #1d4ed8; }
-.aud-cat-segunda { background: #d1fae5; color: #065f46; }
+.aud-cat-primera { background: var(--info-soft); color: var(--info); }
+.aud-cat-segunda { background: var(--positive-soft); color: var(--positive); }
 
 /* ── Color picker ────────────────────────────────────────── */
 .aud-color-picker {
@@ -109,7 +102,7 @@
     transition: transform .12s, border-color .12s;
 }
 .aud-color-dot:hover     { transform: scale(1.18); }
-.aud-color-dot-sel       { border-color: #0f172a !important; transform: scale(1.22); }
+.aud-color-dot-sel       { border-color: var(--text) !important; transform: scale(1.22); }
 
 /* ── Módulos toggle ──────────────────────────────────────── */
 .aud-modulos-header {
@@ -194,9 +187,9 @@
 }
 .panel-kpi-num { font-size: 22px; font-weight: 800; color: var(--text); }
 .panel-kpi-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-align: center; }
-.panel-kpi-alerta { color: #ef4444 !important; }
-.panel-kpi-ok     { color: #10b981 !important; }
-.panel-kpi-timer-activo { cursor: pointer; border-color: #f59e0b; animation: panel-pulse 1.2s ease-in-out infinite; }
+.panel-kpi-alerta { color: var(--negative) !important; }
+.panel-kpi-ok     { color: var(--positive) !important; }
+.panel-kpi-timer-activo { cursor: pointer; border-color: var(--warning); animation: panel-pulse 1.2s ease-in-out infinite; }
 @keyframes panel-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.4); } 50% { box-shadow: 0 0 0 6px rgba(245,158,11,0); } }
 
 /* Toolbar: search + tabs */
@@ -256,9 +249,9 @@
     border-radius: 4px;
     border: 1px solid transparent;
 }
-.panel-alerta-normal  { background: #dbeafe20; color: #3b82f6; border-color: #3b82f640; }
-.panel-alerta-alta    { background: #fef3c720; color: #f59e0b; border-color: #f59e0b40; }
-.panel-alerta-critica { background: #fee2e220; color: #ef4444; border-color: #ef444440; }
+.panel-alerta-normal  { background: #dbeafe20; color: var(--info); border-color: #3b82f640; }
+.panel-alerta-alta    { background: #fef3c720; color: var(--warning); border-color: #f59e0b40; }
+.panel-alerta-critica { background: #fee2e220; color: var(--negative); border-color: #ef444440; }
 
 /* Card actions (kanban select + timer) */
 .panel-card-actions {
@@ -293,10 +286,10 @@
     justify-content: center;
     transition: background .12s;
 }
-.panel-tt-btn:hover      { background: #10b98120; border-color: #10b981; }
-.panel-tt-btn-stop       { background: #ef444420; border-color: #ef4444; color: #ef4444; }
+.panel-tt-btn:hover      { background: #10b98120; border-color: var(--positive); }
+.panel-tt-btn-stop       { background: #ef444420; border-color: var(--negative); color: var(--negative); }
 .panel-tt-badge          { font-size: 11px; color: var(--text-muted); }
-.panel-tt-activo         { color: #f59e0b; font-weight: 700; }
+.panel-tt-activo         { color: var(--warning); font-weight: 700; }
 
 /* Kanban */
 .panel-kanban-periodo {

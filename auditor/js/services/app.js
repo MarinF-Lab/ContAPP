@@ -689,10 +689,10 @@ function validarRutInput(input) {
 
     // En modo prueba: limpiar estado visual y ocultar botón SII
     if (window.MODO_PRUEBA) {
-        if (elEstado) { elEstado.textContent = '🧪 Modo Prueba — RUT libre'; elEstado.style.color = '#854d0e'; }
+        if (elEstado) { elEstado.textContent = '🧪 Modo Prueba — RUT libre'; elEstado.style.color = 'var(--warning)'; }
         if (btnSII)   btnSII.style.display = 'none';
         if (elSII)    elSII.textContent = '';
-        input.style.borderColor = raw.length > 2 ? '#fbbf24' : '';
+        input.style.borderColor = raw.length > 2 ? 'var(--warning)' : '';
         return;
     }
 

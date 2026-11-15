@@ -116,7 +116,7 @@ function honRenderLibro() {
         totB += b.bruto; totR += b.retencion; totL += b.liquido;
         const eCls     = b.estado === 'pagada' ? 'color:var(--positive)' : 'color:var(--warning)';
         const retBadge = b.tipoRet === 'auto'
-            ? `<span style="font-size:11px;background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-weight:600;">Auto-ret.</span>`
+            ? `<span style="font-size:11px;background:var(--warning-soft);color:var(--warning);padding:2px 6px;border-radius:4px;font-weight:600;">Auto-ret.</span>`
             : `<span style="font-size:11px;background:var(--sidebar-bg);color:var(--text-muted);padding:2px 6px;border-radius:4px;">Pagador</span>`;
         return `<tr>
             <td>${b.fecha}</td>
@@ -846,7 +846,7 @@ function honRenderCalendario() {
         const dias = Math.ceil((fv - hoy) / 86400000);
         let estadoTxt = '', color = '';
         if (dias < 0)       { estadoTxt = 'Vencido';          color = 'var(--negative)'; }
-        else if (dias <= 7) { estadoTxt = `⚠️ ${dias} días`;  color = '#d97706'; }
+        else if (dias <= 7) { estadoTxt = `⚠️ ${dias} días`;  color = 'var(--warning)'; }
         else                { estadoTxt = `${dias} días`;      color = 'var(--text-muted)'; }
 
         const tipoCls = v.tipo === 'f29' ? 'cal-tipo-f29' : v.tipo === 'f22' ? 'cal-tipo-f22' : 'cal-tipo-dj';

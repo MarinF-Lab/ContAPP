@@ -31,6 +31,8 @@
     --periwinkle-soft:  #C3CFD8;
     --on-accent:        #FFFFFF;   /* texto sobre el acento */
     --on-state:         #FFFFFF;   /* texto sobre botones de estado (rojo/verde/info) */
+    --screen:           #0F1B26;   /* "pantalla": paneles oscuros en ambos temas (cabeceras de boleta, consola) */
+    --on-screen:        #CBD5DE;
 
     /* ---- estados ---- */
     --ok:               #1C6E50;
@@ -133,6 +135,8 @@
     --periwinkle-soft:  #2C3D50;
     --on-accent:        #131D2A;   /* el blanco no se lee sobre el rosa neón */
     --on-state:         #131D2A;   /* ni sobre los estados claros del tema oscuro */
+    --screen:           #0C1622;
+    --on-screen:        #D3DCE4;
 
     /* ---- estados ---- */
     --ok:               #4CC59A;

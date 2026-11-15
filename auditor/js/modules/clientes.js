@@ -13,9 +13,9 @@ let tabDetalleActiva = 'info';
 let contactoDetalleId = null;
 
 const TIPO_BADGE = {
-    cliente:   { label: 'Cliente',      bg: '#d1fae5', color: '#065f46' },
-    proveedor: { label: 'Proveedor',    bg: '#fef3c7', color: '#92400e' },
-    ambos:     { label: 'Cli./Prov.',   bg: '#dbeafe', color: '#1e40af' },
+    cliente:   { label: 'Cliente',      bg: 'var(--positive-soft)', color: 'var(--positive)' },
+    proveedor: { label: 'Proveedor',    bg: 'var(--warning-soft)', color: 'var(--warning)' },
+    ambos:     { label: 'Cli./Prov.',   bg: 'var(--info-soft)', color: 'var(--info)' },
 };
 
 // Normaliza RUT para comparaciones: elimina puntos, guiones y espacios,
@@ -75,9 +75,9 @@ function _filaContacto(c) {
         <td style="font-size:12px;">${c.telefono || c.movil || '—'}</td>
         <td style="font-size:12px;">${c.email || '—'}</td>
         <td class="monto" style="font-size:12px;">
-            ${tieneDeuda   ? `<span style="color:#dc2626;font-weight:700;">-$${fmt(saldo.credito)}</span><br>` : ''}
-            ${tieneCobrar  ? `<span style="color:#16a34a;font-weight:700;">+$${fmt(saldo.cobrar)}</span>`  : ''}
-            ${!tieneDeuda && !tieneCobrar ? '<span style="color:#94a3b8;">—</span>' : ''}
+            ${tieneDeuda   ? `<span style="color:var(--negative);font-weight:700;">-$${fmt(saldo.credito)}</span><br>` : ''}
+            ${tieneCobrar  ? `<span style="color:var(--positive);font-weight:700;">+$${fmt(saldo.cobrar)}</span>`  : ''}
+            ${!tieneDeuda && !tieneCobrar ? '<span style="color:var(--text-subtle);">—</span>' : ''}
         </td>
         <td onclick="event.stopPropagation()">
             <div class="plan-acciones">
@@ -100,7 +100,7 @@ function _filaGrupoPlazo(titulo, colorBorde, deudaTotal) {
         <td colspan="9" style="padding:10px 14px;background:var(--table-stripe);
             border-left:4px solid ${colorBorde};font-weight:700;font-size:12.5px;">
             ${titulo}
-            ${deudaTotal > 0 ? `<span style="float:right;color:#dc2626;">Debe: $${fmt(deudaTotal)}</span>` : ''}
+            ${deudaTotal > 0 ? `<span style="float:right;color:var(--negative);">Debe: $${fmt(deudaTotal)}</span>` : ''}
         </td>
     </tr>`;
 }
@@ -145,12 +145,12 @@ function renderContactos() {
 
         if (grupo30.length) {
             const deuda30 = grupo30.reduce((s, c) => s + _calcularSaldo(c).credito, 0);
-            tbody.innerHTML += _filaGrupoPlazo('🔴 Prioridad — 30 días', '#dc2626', deuda30);
+            tbody.innerHTML += _filaGrupoPlazo('🔴 Prioridad — 30 días', 'var(--negative)', deuda30);
             grupo30.forEach(c => { tbody.innerHTML += _filaContacto(c); });
         }
         if (grupo60.length) {
             const deuda60 = grupo60.reduce((s, c) => s + _calcularSaldo(c).credito, 0);
-            tbody.innerHTML += _filaGrupoPlazo('🟡 60 días', '#f59e0b', deuda60);
+            tbody.innerHTML += _filaGrupoPlazo('🟡 60 días', 'var(--warning)', deuda60);
             grupo60.forEach(c => { tbody.innerHTML += _filaContacto(c); });
         }
     } else {
@@ -350,7 +350,7 @@ function _tabInfo(c) {
 
     </div>
     ${c.notas ? `
-    <div style="margin-top:16px;padding:14px 16px;background:#f8fafc;border-radius:10px;
+    <div style="margin-top:16px;padding:14px 16px;background:var(--table-stripe);border-radius:10px;
                 border-left:3px solid var(--primary);">
         <div style="font-weight:700;font-size:11px;color:var(--text-muted);
                     letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;">Notas</div>
@@ -386,20 +386,20 @@ function _tabDocs(c, tipo) {
             totTotal  += d.total  || 0;
         }
         const estadoColor = {
-            pendiente: '#f59e0b', pagada: '#16a34a', cobrada: '#16a34a', anulada: '#ef4444'
+            pendiente: 'var(--warning)', pagada: 'var(--positive)', cobrada: 'var(--positive)', anulada: 'var(--negative)'
         };
         return `<tr class="${anulada ? 'fila-anulada' : ''}">
             <td>${d.fecha}</td>
             <td><span class="badge-doc ${esCompra ? 'badge-doc-compra' : 'badge-doc-venta'}"
                 style="font-size:11px;">${d.tipo_doc?.replace('_',' ')}</span></td>
             <td style="font-family:monospace;font-size:12px;">${d.numero_doc || '—'}</td>
-            <td style="font-size:12px;color:#64748b;">${MEDIOS_LABEL[d.medio_pago] || d.medio_pago || '—'}</td>
+            <td style="font-size:12px;color:var(--text-muted);">${MEDIOS_LABEL[d.medio_pago] || d.medio_pago || '—'}</td>
             <td class="monto">${d.exento ? '$' + fmt(d.exento) : '—'}</td>
             <td class="monto">$${fmt(d.neto   || 0)}</td>
             <td class="monto">$${fmt(d.iva    || 0)}</td>
             <td class="monto" style="font-weight:700;">$${fmt(d.total || 0)}</td>
             <td>
-                <span style="font-size:11px;font-weight:700;color:${estadoColor[d.estado] || '#64748b'};">
+                <span style="font-size:11px;font-weight:700;color:${estadoColor[d.estado] || 'var(--text-muted)'};">
                     ${d.estado || '—'}
                 </span>
             </td>
@@ -460,7 +460,7 @@ function _tabSaldo(c) {
             <td><span class="badge-doc ${esCompra ? 'badge-doc-compra' : 'badge-doc-venta'}"
                 style="font-size:11px;">${d.tipo_doc?.replace('_',' ')}</span></td>
             <td style="font-family:monospace;font-size:12px;">${d.numero_doc || '—'}</td>
-            <td class="monto" style="font-weight:700;color:${esCompra ? '#dc2626' : '#16a34a'};">
+            <td class="monto" style="font-weight:700;color:${esCompra ? 'var(--negative)' : 'var(--positive)'};">
                 $${fmt(d.total || 0)}
             </td>
         </tr>`).join('');
@@ -489,7 +489,7 @@ function _tabSaldo(c) {
 
     ${comprasPend.length ? `
     <div style="margin-bottom:16px;">
-        <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:#dc2626;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--negative);">
             Compras pendientes de pago (${comprasPend.length})
         </div>
         <table class="cont-table" style="font-size:12px;">
@@ -500,7 +500,7 @@ function _tabSaldo(c) {
 
     ${ventasPend.length ? `
     <div>
-        <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:#16a34a;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--positive);">
             Ventas pendientes de cobro (${ventasPend.length})
         </div>
         <table class="cont-table" style="font-size:12px;">

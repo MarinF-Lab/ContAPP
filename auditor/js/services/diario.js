@@ -860,7 +860,7 @@ function renderPreasiento() {
     // Fila de totales
     const cuadrado = Math.abs(totalDebe - totalHaber) < 1;
     tbody.innerHTML += `
-    <tr style="border-top:2px solid var(--border);font-weight:700;background:${cuadrado ? '#f0fdf4' : '#fef2f2'};">
+    <tr style="border-top:2px solid var(--border);font-weight:700;background:${cuadrado ? 'var(--positive-soft)' : 'var(--negative-soft)'};">
         <td style="font-size:12px;color:${cuadrado ? 'var(--positive)' : 'var(--negative)'};">
             ${cuadrado ? '⚖️ Cuadrado' : '❌ Descuadrado'}
         </td>
@@ -1476,7 +1476,7 @@ function renderHistorialDiario() {
 
         const cuadrado = Math.abs(tDebe - tHaber) < 1;
         lineas += `
-        <tr style="border-top:2px solid var(--border);font-weight:700;background:${cuadrado ? '#f0fdf4' : '#fef2f2'};">
+        <tr style="border-top:2px solid var(--border);font-weight:700;background:${cuadrado ? 'var(--positive-soft)' : 'var(--negative-soft)'};">
             <td style="font-size:11px;color:${cuadrado ? 'var(--positive)' : 'var(--negative)'};">
                 ${cuadrado ? '⚖️ Cuadrado' : '❌ Descuadrado'}
             </td>
@@ -1494,7 +1494,7 @@ function renderHistorialDiario() {
                 <span style="color:var(--text-muted);font-size:13px;">"${as.glosa}"</span>
                 <div style="display:flex;align-items:center;gap:8px;">
                     ${as.contacto ? `<span style="background:var(--accent-soft);color:var(--accent);padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">👤 ${as.contacto}</span>` : ''}
-                    ${anulado ? `<span style="background:#fee2e2;color:var(--negative);padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;">ANULADO</span>` : ''}
+                    ${anulado ? `<span style="background:var(--negative-soft);color:var(--negative);padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;">ANULADO</span>` : ''}
                     <span style="font-size:12px;color:var(--text-muted);">N° ${as.numero}</span>
                 </div>
             </div>

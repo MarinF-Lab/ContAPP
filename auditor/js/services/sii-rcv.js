@@ -324,7 +324,7 @@ function siiAbrirRCV() {
                        background:none;color:var(--text);cursor:pointer;font-size:13px;">Cancelar</button>
             <button onclick="siiEjecutarDescargaRCV()"
                 style="padding:9px 22px;border:none;border-radius:8px;background:var(--accent);
-                       color:#fff;cursor:pointer;font-size:13px;font-weight:600;">
+                       color:var(--on-accent);cursor:pointer;font-size:13px;font-weight:600;">
                 ⬇ Descargar RCV
             </button>
         </div>
