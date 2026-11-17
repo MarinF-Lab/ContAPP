@@ -4820,3 +4820,6 @@ h1, h2, h3 { text-wrap: balance; }
     .mayor-grid .cont-table th:nth-child(3), .mayor-grid .cont-table th:nth-child(4) { width: auto !important; }
     .mayor-grid .cont-table th, .mayor-grid .cont-table td { padding-left: 8px; padding-right: 8px; }
 }
+
+/* Barra "Busca o escribe qué hacer" de la cabecera: es un <button> que abre la consola */
+button.float-search { font-family: inherit; text-align: left; }

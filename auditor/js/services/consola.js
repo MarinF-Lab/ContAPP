@@ -1,12 +1,17 @@
 /* ─────────────────────────────────────────────────────────────
-   CONSOLA "¿Qué quieres hacer hoy?" — Inicio, encima del centro de mando
-   (Etapa 3 del rediseño; referencia: PLANIFICACION/diseno/referencia-contapp-consola.html)
+   CONSOLA "¿Qué quieres hacer hoy?" — un solo motor para dos lugares:
+     · Inicio: encima del centro de mando (#homeConsola).
+     · Resto de la app: barra "Buscar o hacer algo" de la cabecera y Ctrl K abren la misma
+       consola como paleta (en Inicio, Ctrl K enfoca la consola de la página).
+   (Referencia: PLANIFICACION/diseno/referencia-contapp-consola.html)
 
    · Vacía: muestra lo pendiente del cierre del mes del cliente abierto (cierre.js).
-   · Al escribir: sugiere áreas de la app según palabras clave (catálogo ACCIONES),
-     solo de los módulos que el cliente tiene activos (construirMenu()).
+   · Al escribir: áreas de la app según palabras clave (catálogo ACCIONES), solo de los módulos
+     activos del cliente, y datos del cliente (asientos, compras, ventas, contactos, productos,
+     activos). Reemplaza a la antigua busqueda-global.js.
    · Si la frase trae un monto, propone llevarla al Libro Diario y deja la glosa escrita.
-   · Teclado: ↑/↓ elige, Enter abre, Escape limpia.
+   · Teclado: ↑/↓ elige, Enter abre, Escape limpia (en la paleta, cierra). Sin animación al
+     abrir: se usa muchas veces al día y desde el teclado.
    ───────────────────────────────────────────────────────────── */
 (function () {
     'use strict';
@@ -21,6 +26,7 @@
         check:    '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
         edificio: '<path d="M5 21V5l7-2v18M12 8h7v13M8 9h1M8 13h1M8 17h1M15 12h1M15 16h1M3 21h18"/>',
         nube:     '<path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z"/>',
+        doc:      '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
     };
     const ico = n => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONOS[n] || ICONOS.libro}</svg>`;
 
@@ -78,12 +84,40 @@
           kw: 'respaldo backup exportar descargar copia seguridad nube sincronizar configuracion' },
     ];
 
+    // Datos del cliente abierto donde busca la consola (antes: busqueda-global.js).
+    // mod = destino de navegar(); req = módulo del catálogo que debe estar activo.
+    const fecha = r => r.fecha || '';
+    const FUENTES = [
+        { clave: 'core_asientos', grupo: 'Libro Diario', ic: 'libro', mod: 'diario', req: 'estructura-contable',
+          campos: ['glosa', 'contacto'], titulo: r => r.glosa || '(sin glosa)',
+          sub: r => [r.numero ? 'Asiento N° ' + r.numero : '', r.contacto].filter(Boolean).join(' · '), tag: fecha },
+        { clave: 'core_compras', grupo: 'Compras', ic: 'doc', mod: 'compras', req: 'egresos-ingresos',
+          campos: ['nombre_proveedor', 'rut_proveedor', 'numero_doc'], titulo: r => r.nombre_proveedor || r.rut_proveedor || '(sin nombre)',
+          sub: r => [r.rut_proveedor, r.numero_doc ? 'N° ' + r.numero_doc : '', r.fecha].filter(Boolean).join(' · '),
+          tag: r => (typeof fmtPeso === 'function' ? fmtPeso(r.total) : '') },
+        { clave: 'core_ventas', grupo: 'Ventas', ic: 'doc', mod: 'ventas', req: 'egresos-ingresos',
+          campos: ['nombre_cliente', 'rut_cliente', 'numero_doc'], titulo: r => r.nombre_cliente || r.rut_cliente || '(sin nombre)',
+          sub: r => [r.rut_cliente, r.numero_doc ? 'N° ' + r.numero_doc : '', r.fecha].filter(Boolean).join(' · '),
+          tag: r => (typeof fmtPeso === 'function' ? fmtPeso(r.total) : '') },
+        { clave: 'core_contactos', grupo: 'Clientes y proveedores', ic: 'personas', mod: 'clientes', req: 'clientes',
+          campos: ['nombre', 'fantasia', 'rut', 'giro'], titulo: r => r.nombre || r.rut || '(sin nombre)',
+          sub: r => [r.rut, r.giro].filter(Boolean).join(' · '), tag: () => '' },
+        { clave: 'core_productos', grupo: 'Productos', ic: 'caja', mod: 'productos', req: 'inventario-activos',
+          campos: ['nombre', 'codigo', 'categoria'], titulo: r => r.nombre || r.codigo || '(sin nombre)',
+          sub: r => [r.codigo ? 'Cód. ' + r.codigo : '', r.categoria].filter(Boolean).join(' · '), tag: () => '' },
+        { clave: 'core_activos', grupo: 'Activos fijos', ic: 'caja', mod: 'activos', req: 'inventario-activos',
+          campos: ['nombre', 'descripcion'], titulo: r => r.nombre || '(sin nombre)', sub: r => r.descripcion || '', tag: () => '' },
+    ];
+    const MAX_POR_FUENTE = 3, MAX_DATOS = 9;
+
     const STOP = new Set(['que', 'quiero', 'hacer', 'necesito', 'como', 'los', 'las', 'del', 'para', 'con', 'una', 'uno',
         'unos', 'mis', 'por', 'este', 'esta', 'hoy', 'ver', 'tengo', 'debo', 'donde', 'cual', 'cuales', 'sobre', 'todo',
         'todos', 'algo', 'mes']);
     const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const tieneMonto = q => /\d{1,3}(\.\d{3})+|\d{4,}/.test(q);
+    // Frase con monto y palabras ("pagué 50.000 de arriendo"); un número solo es un N° de documento o un RUT
+    const tieneMonto = q => /\d{1,3}(\.\d{3})+|\d{4,}/.test(q) && /[a-zñáéíóú]{3,}/i.test(q);
+    const $ = id => document.getElementById(id);
 
     function modulosActivos() {
         try { return new Set(construirMenu().flatMap(g => g.modulos.map(m => m.id))); }
@@ -106,6 +140,31 @@
         return s;
     }
 
+    function leer(clave) {
+        try { const v = JSON.parse(localStorage.getItem(clave) || '[]'); return Array.isArray(v) ? v : []; }
+        catch (e) { return []; }
+    }
+
+    // Registros del cliente que contienen el texto (sin tildes ni mayúsculas), agrupados por libro
+    function buscarDatos(q) {
+        const t = norm(q.trim());
+        if (t.length < 2) return [];
+        const act = modulosActivos();
+        const out = [];
+        for (const f of FUENTES) {
+            if (out.length >= MAX_DATOS) break;
+            if (f.req && act && !act.has(f.req)) continue;
+            let n = 0;
+            for (const r of leer(f.clave)) {
+                if (n >= MAX_POR_FUENTE || out.length >= MAX_DATOS) break;
+                if (!f.campos.some(c => r[c] != null && norm(r[c]).includes(t))) continue;
+                out.push({ t: f.titulo(r), a: f.sub(r), ic: f.ic, mod: f.mod, tag: f.tag(r), grupo: f.grupo, dato: { fuente: f.clave, id: r.id, fecha: r.fecha } });
+                n++;
+            }
+        }
+        return out;
+    }
+
     // Sugerencias del día: lo pendiente del cierre del cliente abierto
     function sugerenciasHoy() {
         if (typeof cierreChecklist !== 'function') return [];
@@ -122,6 +181,150 @@
         return pend;
     }
 
+    function nombreCliente() {
+        return window.currentUser?.empresaNombre ||
+            (() => { try { return JSON.parse(localStorage.getItem('core_config') || '{}').empresa; } catch (e) { return ''; } })() || 'tu cliente';
+    }
+
+    // Resultados para una frase: acciones (o el aviso de módulo inactivo) y luego datos del cliente
+    function resultados(q) {
+        if (!q) {
+            const s = sugerenciasHoy();
+            return { titulo: s.length ? 'Sugerencias para hoy en ' + nombreCliente() : '', items: s };
+        }
+        const act = modulosActivos();
+        let acciones = disponibles().map(a => ({ ...a, s: puntaje(a, q) })).filter(a => a.s > 0)
+            .sort((x, y) => y.s - x.s).slice(0, 5);
+        if (tieneMonto(q) && (!act || act.has('estructura-contable'))) {
+            acciones = [{ t: `Registrar «${q}» en el Libro Diario`, a: 'Contabilidad › Libro Diario (motor de glosas)', ic: 'libro',
+                          mod: 'diario', glosa: q, tag: 'Arma el asiento' }, ...acciones.filter(a => a.mod !== 'diario')].slice(0, 5);
+        }
+        acciones.forEach(a => { a.grupo = 'Ir a'; });
+        const datos = buscarDatos(q);
+        if (!acciones.length && !datos.length) {
+            // Coincide con un módulo que este cliente no tiene activo: decirlo y llevar a activarlo
+            const inactivos = ACCIONES.filter(a => a.req && act && !act.has(a.req))
+                .map(a => ({ ...a, s: puntaje(a, q) })).filter(a => a.s > 0).sort((x, y) => y.s - x.s).slice(0, 3)
+                .map(a => ({ ...a, mod: 'configuracion', glosa: null, tag: 'Módulo no activo · activar' }));
+            if (inactivos.length) return { titulo: 'Está en un módulo que este cliente no tiene activo', items: inactivos };
+        }
+        return { titulo: '', items: acciones.concat(datos) };
+    }
+
+    // Abre el registro encontrado: Compras y Ventas se muestran en el mes del documento
+    function abrirDato(d) {
+        const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(d.fecha || '');
+        try {
+            if (m && d.fuente === 'core_compras' && typeof comprasMes !== 'undefined') { comprasMes = +m[2]; comprasAnio = +m[3]; }
+            if (m && d.fuente === 'core_ventas' && typeof ventasMes !== 'undefined') { ventasMes = +m[2]; ventasAnio = +m[3]; }
+        } catch (e) { /* módulo no cargado: se abre en su mes actual */ }
+        if (d.fuente === 'core_contactos' && d.id != null && typeof verDetalleContacto === 'function') {
+            setTimeout(() => verDetalleContacto(d.id), 150);
+        }
+    }
+
+    function ejecutar(a) {
+        if (!a) return;
+        if (a.accion === 'cierre') { if (typeof cierreAbrirChecklist === 'function') cierreAbrirChecklist(); return; }
+        if (a.accion === 'clientes') { if (typeof cambiarEmpresa === 'function') cambiarEmpresa(); return; }
+        if (!a.mod || typeof navegar !== 'function') return;
+        if (a.dato) abrirDato(a.dato);
+        navegar(a.mod);
+        if (a.glosa) {
+            // Deja la frase escrita en el motor de glosas del Diario
+            setTimeout(() => {
+                const g = document.getElementById('glosaInput');
+                if (!g) return;
+                g.value = a.glosa;
+                g.dispatchEvent(new Event('input', { bubbles: true }));
+                g.focus();
+            }, 200);
+        }
+    }
+
+    // ── Una consola (Inicio o paleta): campo + lista con su propio estado ─────────
+    function crearConsola(ids, { alEjecutar, alEscapeVacio } = {}) {
+        let sugs = [], sel = 0;
+        const input = () => $(ids.input);
+
+        function render() {
+            const el = input();
+            if (!el) return;
+            const q = el.value.trim();
+            const r = resultados(q);
+            sugs = r.items;
+            sel = 0;
+            $(ids.titulo).textContent = r.titulo;
+            let grupo = null, html = '';
+            sugs.forEach((a, i) => {
+                if (q && a.grupo && a.grupo !== grupo) { grupo = a.grupo; html += `<li class="sug-grupo" role="presentation">${esc(grupo)}</li>`; }
+                html += `
+                <li class="sugi" role="option" id="${ids.lista}-${i}" aria-selected="${i === sel}" data-i="${i}">
+                    <span class="ic">${ico(a.ic)}</span>
+                    <span class="sugi-txt"><b>${esc(a.t)}</b>${a.a ? `<span class="a">${esc(a.a)}</span>` : ''}</span>
+                    ${a.tag ? `<span class="tag">${esc(a.tag)}</span>` : '<span></span>'}
+                </li>`;
+            });
+            $(ids.lista).innerHTML = sugs.length ? html
+                : (q ? '<li class="sug-vacio">No encontré nada para eso. Prueba con un nombre, un RUT, un N° de documento o palabras como sueldos, IVA, banco o cierre.</li>' : '');
+            el.setAttribute('aria-activedescendant', sugs.length ? ids.lista + '-0' : '');
+        }
+
+        function marcar(i) {
+            if (!sugs.length) return;
+            sel = (i + sugs.length) % sugs.length;
+            document.querySelectorAll('#' + ids.lista + ' .sugi').forEach((li, k) => li.setAttribute('aria-selected', k === sel));
+            input().setAttribute('aria-activedescendant', ids.lista + '-' + sel);
+            $(ids.lista + '-' + sel)?.scrollIntoView({ block: 'nearest' });
+        }
+
+        function elegir(a) {
+            if (!a) return;
+            if (alEjecutar) alEjecutar();
+            ejecutar(a);
+            const el = input();
+            if (el && el.isConnected) { el.value = ''; render(); }
+        }
+
+        function enlazar() {
+            const el = input();
+            el.addEventListener('keydown', e => {
+                if (e.key === 'ArrowDown') { e.preventDefault(); marcar(sel + 1); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); marcar(sel - 1); }
+                else if (e.key === 'Escape') {
+                    e.preventDefault(); e.stopPropagation();
+                    if (el.value && !alEscapeVacio.siempre) { el.value = ''; render(); }
+                    else alEscapeVacio.fn();
+                }
+            });
+            $(ids.lista).addEventListener('mousedown', e => { if (e.target.closest('.sugi')) e.preventDefault(); });
+            $(ids.lista).addEventListener('click', e => {
+                const li = e.target.closest('.sugi'); if (li) elegir(sugs[+li.dataset.i]);
+            });
+            $(ids.form).addEventListener('submit', e => { e.preventDefault(); elegir(sugs[sel]); });
+        }
+
+        return { render, enlazar };
+    }
+
+    const PROMPT = (ids, placeholder, extra) => `
+                <form class="consola-prompt" id="${ids.form}" autocomplete="off" role="search">
+                    <svg class="chev" viewBox="0 0 22 26" aria-hidden="true"><path d="M4 4l13 9-13 9"/></svg>
+                    <label for="${ids.input}" class="sr-only">¿Qué quieres hacer hoy?</label>
+                    <input id="${ids.input}" type="text" spellcheck="false" placeholder="${placeholder}"
+                           role="combobox" aria-expanded="false" aria-controls="${ids.lista}" aria-autocomplete="list">
+                    ${extra}
+                </form>`;
+    const LISTA = ids => `
+            <div class="consola-sug">
+                <div class="sug-t" id="${ids.titulo}"></div>
+                <ul class="suglist" id="${ids.lista}" role="listbox" aria-labelledby="${ids.titulo}"></ul>
+            </div>`;
+
+    // ── Consola de Inicio ──────────────────────────────────────────────────────
+    const IDS_INICIO = { input: 'cmdConsola', form: 'consolaForm', titulo: 'consolaSugTitulo', lista: 'consolaSugList' };
+    let inicio = null;
+
     function resumenCierre() {
         const b = $('consolaResumen');
         if (!b) return;
@@ -134,79 +337,6 @@
                 : `Cierre de ${c.etiqueta} al día · ${c.avance}%`;
         b.title = 'Ver sugerencias para hoy';
         b.hidden = false;
-    }
-
-    let sugs = [], sel = 0;
-    const $ = id => document.getElementById(id);
-
-    function nombreCliente() {
-        return window.currentUser?.empresaNombre ||
-            (() => { try { return JSON.parse(localStorage.getItem('core_config') || '{}').empresa; } catch (e) { return ''; } })() || 'tu cliente';
-    }
-
-    function render() {
-        const input = $('cmdConsola');
-        if (!input) return;
-        const q = input.value.trim();
-        let titulo;
-        if (!q) {
-            sugs = sugerenciasHoy();
-            titulo = sugs.length ? 'Sugerencias para hoy en ' + nombreCliente() : '';
-        } else {
-            sugs = disponibles().map(a => ({ ...a, s: puntaje(a, q) })).filter(a => a.s > 0)
-                .sort((x, y) => y.s - x.s).slice(0, 5);
-            const act = modulosActivos();
-            if (tieneMonto(q) && (!act || act.has('estructura-contable'))) {
-                sugs = [{ t: `Registrar «${q}» en el Libro Diario`, a: 'Contabilidad › Libro Diario (motor de glosas)', ic: 'libro',
-                          mod: 'diario', glosa: q, tag: 'Arma el asiento' }, ...sugs.filter(a => a.mod !== 'diario')].slice(0, 5);
-            }
-            titulo = sugs.length ? 'Áreas relacionadas' : '';
-            if (!sugs.length) {
-                // Coincide con un módulo que este cliente no tiene activo: decirlo y llevar a activarlo
-                const inactivos = ACCIONES.filter(a => a.req && act && !act.has(a.req))
-                    .map(a => ({ ...a, s: puntaje(a, q) })).filter(a => a.s > 0).sort((x, y) => y.s - x.s).slice(0, 3)
-                    .map(a => ({ ...a, mod: 'configuracion', glosa: null, tag: 'Módulo no activo · activar' }));
-                if (inactivos.length) { sugs = inactivos; titulo = 'Está en un módulo que este cliente no tiene activo'; }
-            }
-        }
-        sel = 0;
-        $('consolaSugTitulo').textContent = titulo;
-        $('consolaSugList').innerHTML = sugs.length ? sugs.map((a, i) => `
-            <li class="sugi" role="option" id="consola-sug-${i}" aria-selected="${i === sel}" data-i="${i}">
-                <span class="ic">${ico(a.ic)}</span>
-                <span class="sugi-txt"><b>${esc(a.t)}</b><span class="a">${esc(a.a)}</span></span>
-                ${a.tag ? `<span class="tag">${esc(a.tag)}</span>` : '<span></span>'}
-            </li>`).join('')
-            : (q ? '<li class="sug-vacio">No encontré un área para eso. Prueba con palabras como sueldos, IVA, banco, compras o cierre.</li>' : '');
-        input.setAttribute('aria-activedescendant', sugs.length ? 'consola-sug-0' : '');
-    }
-
-    function marcar(i) {
-        if (!sugs.length) return;
-        sel = (i + sugs.length) % sugs.length;
-        document.querySelectorAll('#consolaSugList .sugi').forEach((li, k) => li.setAttribute('aria-selected', k === sel));
-        $('cmdConsola').setAttribute('aria-activedescendant', 'consola-sug-' + sel);
-        document.getElementById('consola-sug-' + sel)?.scrollIntoView({ block: 'nearest' });
-    }
-
-    function ejecutar(a) {
-        if (!a) return;
-        if (a.accion === 'cierre') { if (typeof cierreAbrirChecklist === 'function') cierreAbrirChecklist(); return; }
-        if (a.accion === 'clientes') { if (typeof cambiarEmpresa === 'function') cambiarEmpresa(); return; }
-        if (!a.mod || typeof navegar !== 'function') return;
-        navegar(a.mod);
-        if (a.glosa) {
-            // Deja la frase escrita en el motor de glosas del Diario
-            setTimeout(() => {
-                const g = document.getElementById('glosaInput');
-                if (!g) return;
-                g.value = a.glosa;
-                g.dispatchEvent(new Event('input', { bubbles: true }));
-                g.focus();
-            }, 200);
-        }
-        const input = $('cmdConsola');
-        if (input) { input.value = ''; render(); }
     }
 
     function montar() {
@@ -227,44 +357,79 @@
                     <h2>¿Qué quieres hacer hoy?</h2>
                     <button type="button" class="consola-resumen" id="consolaResumen" hidden></button>
                 </div>
-                <form class="consola-prompt" id="consolaForm" autocomplete="off" role="search">
-                    <svg class="chev" viewBox="0 0 22 26" aria-hidden="true"><path d="M4 4l13 9-13 9"/></svg>
-                    <label for="cmdConsola" class="sr-only">¿Qué quieres hacer hoy?</label>
-                    <input id="cmdConsola" type="text" spellcheck="false"
-                           placeholder="Ej.: pagar los sueldos, cuánto IVA pago, conciliar el banco"
-                           role="combobox" aria-expanded="true" aria-controls="consolaSugList" aria-autocomplete="list">
-                    <button class="consola-go" type="submit">Ir</button>
-                </form>
+                ${PROMPT(IDS_INICIO, 'Ej.: pagar los sueldos, cuánto IVA pago, un proveedor o un RUT', '<button class="consola-go" type="submit">Ir</button>')}
             </div>
-            <div class="consola-sug">
-                <div class="sug-t" id="consolaSugTitulo"></div>
-                <ul class="suglist" id="consolaSugList" role="listbox" aria-labelledby="consolaSugTitulo"></ul>
-            </div>`;
+            ${LISTA(IDS_INICIO)}`;
         const input = $('cmdConsola');
         // Compacta: la lista se despliega solo mientras se usa el campo
         const abrir = () => { cont.classList.add('abierta'); input.setAttribute('aria-expanded', 'true'); };
         const cerrar = () => { if (input.value) return; cont.classList.remove('abierta'); input.setAttribute('aria-expanded', 'false'); };
-        input.setAttribute('aria-expanded', 'false');
-        input.addEventListener('input', () => { abrir(); render(); });
-        input.addEventListener('focus', () => { abrir(); if (!input.value) render(); });
+        inicio = crearConsola(IDS_INICIO, {
+            alEscapeVacio: { siempre: false, fn: () => { input.blur(); cont.classList.remove('abierta'); } },
+        });
+        inicio.enlazar();
+        input.addEventListener('input', () => { abrir(); inicio.render(); });
+        input.addEventListener('focus', () => { abrir(); if (!input.value) inicio.render(); });
         cont.addEventListener('focusout', () => setTimeout(() => { if (!cont.contains(document.activeElement)) cerrar(); }, 120));
         $('consolaResumen').addEventListener('click', () => input.focus());
-        input.addEventListener('keydown', e => {
-            if (e.key === 'ArrowDown') { e.preventDefault(); marcar(sel + 1); }
-            else if (e.key === 'ArrowUp') { e.preventDefault(); marcar(sel - 1); }
-            else if (e.key === 'Escape') {
-                if (input.value) { e.preventDefault(); input.value = ''; render(); }
-                else { e.preventDefault(); input.blur(); cont.classList.remove('abierta'); }
-            }
-        });
-        $('consolaSugList').addEventListener('click', e => {
-            const li = e.target.closest('.sugi'); if (li) ejecutar(sugs[+li.dataset.i]);
-        });
-        $('consolaForm').addEventListener('submit', e => { e.preventDefault(); ejecutar(sugs[sel]); });
-        render();
+        inicio.render();
     }
 
-    function refrescar() { montar(); resumenCierre(); const i = $('cmdConsola'); if (i && !i.value) render(); }
+    function refrescar() { montar(); resumenCierre(); const i = $('cmdConsola'); if (inicio && i && !i.value) inicio.render(); }
+
+    // ── Paleta: la misma consola sobre cualquier módulo (cabecera y Ctrl K) ───────
+    const IDS_PALETA = { input: 'paletaInput', form: 'paletaForm', titulo: 'paletaSugTitulo', lista: 'paletaSugList' };
+    let focoPrevio = null;
+
+    function paletaCerrar() {
+        const p = $('consolaPaleta');
+        if (!p) return;
+        p.remove();
+        if (focoPrevio && focoPrevio.isConnected && typeof focoPrevio.focus === 'function') focoPrevio.focus();
+        focoPrevio = null;
+    }
+
+    function enInicio() {
+        const v = $('view-inicio'), i = $('cmdConsola');
+        return !!(v && v.classList.contains('active') && i && i.offsetParent);
+    }
+
+    function paletaAbrir() {
+        if (enInicio()) { const i = $('cmdConsola'); i.focus(); i.select(); return; }
+        if ($('consolaPaleta')) { $('paletaInput').focus(); return; }
+        focoPrevio = document.activeElement;
+        const p = document.createElement('div');
+        p.id = 'consolaPaleta';
+        p.className = 'consola-paleta';
+        p.setAttribute('role', 'dialog');
+        p.setAttribute('aria-modal', 'true');
+        p.setAttribute('aria-label', 'Buscar o hacer algo');
+        p.innerHTML = `
+            <section class="consola abierta">
+                <div class="consola-in">
+                    ${PROMPT(IDS_PALETA, 'Busca o escribe qué quieres hacer…', '<kbd class="consola-esc">Esc</kbd>')}
+                </div>
+                ${LISTA(IDS_PALETA)}
+            </section>`;
+        document.body.appendChild(p);
+        const input = $('paletaInput');
+        input.setAttribute('aria-expanded', 'true');
+        const c = crearConsola(IDS_PALETA, { alEjecutar: paletaCerrar, alEscapeVacio: { siempre: true, fn: paletaCerrar } });
+        c.enlazar();
+        input.addEventListener('input', c.render);
+        // El foco no sale de la paleta mientras está abierta (Tab no lleva a la página de atrás)
+        p.addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); input.focus(); } });
+        p.addEventListener('mousedown', e => { if (e.target === p) { e.preventDefault(); paletaCerrar(); } });
+        c.render();
+        input.focus();
+    }
+
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            paletaAbrir();
+        }
+    });
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refrescar);
     else refrescar();
@@ -274,6 +439,12 @@
     }
 
     window.consolaRefrescar = refrescar;
+    window.consolaAbrir = paletaAbrir;
+    window.consolaCerrar = paletaCerrar;
+    // Nombres que usaba la búsqueda global (cabecera de index.html y otros llamados)
+    window.busquedaGlobalAbrir = paletaAbrir;
+    window.busquedaGlobalCerrar = paletaCerrar;
     window.CONSOLA_ACCIONES = ACCIONES;   // para pruebas
     window.consolaPuntaje = puntaje;
+    window.consolaBuscarDatos = buscarDatos;
 })();

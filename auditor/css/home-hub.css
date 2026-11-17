@@ -186,11 +186,11 @@
 .consola-prompt:focus-within { border-color: var(--screen-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--screen-accent) 25%, transparent); }
 .consola-prompt .chev { width: 16px; height: 20px; flex: none; }
 .consola-prompt .chev path { stroke: var(--screen-accent); stroke-width: 4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-#cmdConsola {
+#cmdConsola, #paletaInput {
     flex: 1; min-width: 0; background: none; border: 0; outline: none; box-shadow: none; padding: 4px 0;
     color: var(--on-screen); font-family: var(--font-mono); font-size: clamp(14px, 1.7vw, 16px); caret-color: var(--screen-accent);
 }
-#cmdConsola::placeholder { color: var(--screen-dim); }
+#cmdConsola::placeholder, #paletaInput::placeholder { color: var(--screen-dim); }
 .consola-go {
     border: 0; background: var(--screen-accent); color: var(--screen); font-weight: 700; border-radius: 10px;
     padding: 8px 16px; font-size: 14px; flex: none; cursor: pointer; font-family: inherit;
@@ -305,4 +305,29 @@
 @media (max-width: 600px) {
     .in-slide-hub, .home-bg-dash { padding-left: 14px; padding-right: 52px; }
     .consola-resumen { text-align: left; }
+}
+
+/* ── Consola: grupos de resultados (Ir a · Compras · Ventas…) ── */
+.consola .sug-grupo { font-size: 12px; font-weight: 600; color: var(--screen-dim); padding: 10px 10px 4px; }
+.consola .sug-grupo:first-child { padding-top: 4px; }
+
+/* ── Consola como paleta sobre cualquier módulo (cabecera y Ctrl K). Sin animación: se usa
+      muchas veces al día y desde el teclado. ── */
+.consola-paleta {
+    position: fixed; inset: 0; z-index: 99000;
+    display: flex; justify-content: center; align-items: flex-start;
+    padding: max(12vh, env(safe-area-inset-top)) 16px 16px;
+    background: color-mix(in srgb, var(--screen) 55%, transparent);
+}
+.consola-paleta .consola { width: min(640px, 100%); box-shadow: 0 24px 64px rgba(0, 0, 0, .35); }
+.consola-paleta .consola-in { padding: 12px; }
+.consola-paleta .suglist { max-height: min(56vh, 440px); }
+.consola-paleta .consola-sug:has(.suglist:empty) { display: none; }
+.consola-esc {
+    flex: none; font-family: var(--font-mono); font-size: 11px; color: var(--screen-dim);
+    border: 1px solid var(--screen-line); border-radius: 6px; padding: 2px 7px;
+}
+@media (max-width: 600px) {
+    .consola-paleta { padding: max(10px, env(safe-area-inset-top)) 10px 10px; }
+    .consola-esc { display: none; }
 }

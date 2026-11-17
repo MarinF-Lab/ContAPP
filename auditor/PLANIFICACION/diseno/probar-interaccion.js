@@ -86,6 +86,47 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
   r = await p.evaluate(() => document.getElementById('cmdConsola').value);
   check('Escape limpia la consola', r === '', r);
 
+  console.log('Búsqueda unificada (consola de Inicio + Ctrl K en los módulos)');
+  await p.fill('#cmdConsola', 'molinera');
+  await espera(100);
+  r = await p.evaluate(() => ({
+    grupos: [...document.querySelectorAll('#consolaSugList .sug-grupo')].map(g => g.textContent),
+    items: [...document.querySelectorAll('#consolaSugList .sugi b')].map(b => b.textContent) }));
+  check('la consola de Inicio también busca datos: un proveedor por su nombre', r.grupos.includes('Compras') && r.items.includes('Molinera del Sur S.A.'), r);
+  await p.keyboard.press('Escape');
+  await p.keyboard.press('Control+k');
+  await espera(100);
+  r = await p.evaluate(() => ({ foco: document.activeElement?.id, paleta: !!document.getElementById('consolaPaleta') }));
+  check('en Inicio, Ctrl K enfoca la consola (no abre otra ventana)', r.foco === 'cmdConsola' && !r.paleta, r);
+  await p.evaluate(() => { document.activeElement.blur(); navegar('balance'); });
+  await espera(350);
+  await p.keyboard.press('Control+k');
+  await espera(100);
+  r = await p.evaluate(() => ({ paleta: !!document.getElementById('consolaPaleta'), foco: document.activeElement?.id,
+    sug: document.querySelectorAll('#paletaSugList .sugi').length }));
+  check('en un módulo, Ctrl K abre la misma consola como paleta, con las sugerencias del día', r.paleta && r.foco === 'paletaInput' && r.sug > 0, r);
+  await p.keyboard.type('41221');
+  await espera(100);
+  r = await p.evaluate(() => [...document.querySelectorAll('#paletaSugList .sugi b')].map(b => b.textContent));
+  check('la paleta encuentra una compra por N° de documento (sin proponer el Diario)', r[0] === 'Molinera del Sur S.A.', r);
+  await p.keyboard.press('Enter');
+  await espera(450);
+  r = await p.evaluate(() => ({ paleta: !!document.getElementById('consolaPaleta'),
+    libro: !!document.getElementById('tbodyCompras')?.offsetParent, mes: typeof comprasMes !== 'undefined' ? comprasMes : null }));
+  check('Enter abre la compra en el Libro de Compras, en el mes del documento, y cierra la paleta', !r.paleta && r.libro && r.mes === 10, r);
+  await p.click('.float-search');
+  await espera(100);
+  await p.keyboard.type('sueldos');
+  await espera(100);
+  r = await p.evaluate(() => [...document.querySelectorAll('#paletaSugList .sugi b')].map(b => b.textContent));
+  check('la barra de la cabecera abre la paleta y propone acciones', r[0] === 'Calcular y pagar sueldos', r);
+  await p.keyboard.press('Escape');
+  await espera(100);
+  r = await p.evaluate(() => ({ paleta: !!document.getElementById('consolaPaleta'), foco: document.activeElement?.className }));
+  check('Escape cierra la paleta y devuelve el foco a la barra', !r.paleta && /float-search/.test(r.foco || ''), r);
+  await p.evaluate(() => navegar('inicio'));
+  await espera(300);
+
   console.log('Teclado');
   const tile = await p.evaluate(() => {
     const b = document.querySelector('#homeHubTiles .hh-mod');

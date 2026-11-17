@@ -205,10 +205,24 @@ Errores reales y de interacción de la línea base (H1, H3, H5, H6), sin tocar l
 - **Frágil:** los libros no tienen paginación; con montos de miles de millones la tabla de Compras
   a 1366 px se desplaza horizontalmente para ver la columna de acciones.
 
+### Consola y búsqueda unificadas ✅ 2026-11-17
+- Un solo motor (`js/services/consola.js`) para la consola de Inicio y la barra "Busca o escribe
+  qué hacer" de la cabecera (Ctrl K). Se eliminó `js/core/busqueda-global.js`.
+- Resultados en grupos: **Ir a** (acciones de los módulos activos, o "Registrar en el Diario" si la
+  frase trae un monto y palabras) y **datos del cliente** (Libro Diario, Compras, Ventas, Clientes y
+  proveedores, Productos, Activos). Vacía: sugerencias del día (pendientes del cierre).
+- En Inicio, Ctrl K enfoca la consola; en los módulos abre la misma consola como paleta, sin
+  animación (Escape cierra y devuelve el foco). Elegir una compra o venta abre el libro en el mes
+  del documento; un contacto abre su detalle.
+- Corregido: la búsqueda por nombre en Compras y Ventas no encontraba nada (buscaba `razon_social`;
+  los libros guardan `nombre_proveedor` / `nombre_cliente`).
+- Pruebas: 7 nuevas en `probar-interaccion.js` (41/41) · `web-design-guidelines` 0 hallazgos ·
+  capturas en `diseno/consola-unificada/`. Reglas v3 publicadas por el usuario (2026-11-17).
+
 ### Pendientes / próximo paso
 1. Probar en un teléfono real (iOS y Android) lo marcado en la Etapa 5.
 2. Probar con Firebase real: titular, invitado y código; "¿Olvidaste tu contraseña?" y
-   "Recordarme" (aquí Firebase no carga). Publicar las reglas v3 junto con este código.
+   "Recordarme" (aquí Firebase no carga). Reglas v3 ya publicadas.
 3. Revisar en INAPI que "ID Contable" esté libre como marca, y el dominio.
 4. Si se quiere entrar con Google/Microsoft: activar los proveedores en Firebase Auth y programarlo.
 5. Sin pantalla para **revocar códigos o sacar invitados** (las reglas v3 ya lo permiten:
